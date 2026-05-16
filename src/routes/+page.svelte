@@ -1,2 +1,9 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+	// Importa qui in sequenza le macro-sezioni dalla cartella components/sections/
+	import HeroSection from '$lib/components/sections/HeroSection.svelte';
+</script>
+
+<main>
+	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
+	<HeroSection />
+</main>
