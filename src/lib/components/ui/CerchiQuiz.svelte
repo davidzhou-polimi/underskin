@@ -1,23 +1,65 @@
 <script>
 	import imgSfumatura from '$lib/assets/cerchi-quiz/sfumatura.svg';
+	import { drawBorder } from '$lib/actions/drawBorder.js';
 
 	let leftState = $state('default');
 	let rightState = $state('default');
 
 	let showBottone = $derived(leftState === 'click' || rightState === 'click');
+
+	function handleLeftEnter() {
+		leftState = 'hover';
+	}
+
+	function handleLeftLeave() {
+		leftState = 'default';
+	}
+
+	function handleLeftClick() {
+		leftState = leftState === 'click' ? 'default' : 'click';
+	}
+
+	function handleRightEnter() {
+		rightState = 'hover';
+	}
+
+	function handleRightLeave() {
+		rightState = 'default';
+	}
+
+	function handleRightClick() {
+		rightState = rightState === 'click' ? 'default' : 'click';
+	}
 </script>
 
 <div class="cerchi-quiz" class:expanded={showBottone}>
-	<!-- Left Circle -->
+	<!-- Cerchio Sinistro (Mentale) -->
 	<button
 		class="circle left"
 		class:hover={leftState === 'hover'}
 		class:clicked={leftState === 'click'}
-		onmouseenter={() => leftState = 'hover'}
-		onmouseleave={() => leftState = 'default'}
-		onclick={() => leftState = 'click'}
+		onmouseenter={handleLeftEnter}
+		onmouseleave={handleLeftLeave}
+		onclick={handleLeftClick}
+		use:drawBorder={{ clicked: leftState === 'click' }}
 	>
 		<svg class="border-svg" viewBox="0 0 407 407">
+			<defs>
+				<mask id="mask-left">
+					<circle 
+						class="mask-circle" 
+						cx="203.5" 
+						cy="203.5" 
+						r="201.5" 
+						fill="none" 
+						stroke="white" 
+						stroke-width="10" 
+						stroke-dasharray="1266" 
+						stroke-dashoffset="1266" 
+					/>
+				</mask>
+			</defs>
+			
 			<circle 
 				cx="203.5" 
 				cy="203.5" 
@@ -27,6 +69,7 @@
 				stroke-width="4" 
 				stroke-dasharray="0 16" 
 				stroke-linecap="round" 
+				mask="url(#mask-left)"
 			/>
 		</svg>
 
@@ -38,16 +81,33 @@
 		<span class="text" class:gradient={leftState !== 'default'}>mentale</span>
 	</button>
 
-	<!-- Right Circle -->
+	<!-- Cerchio Destro (Fisico) -->
 	<button
 		class="circle right"
 		class:hover={rightState === 'hover'}
 		class:clicked={rightState === 'click'}
-		onmouseenter={() => rightState = 'hover'}
-		onmouseleave={() => rightState = 'default'}
-		onclick={() => rightState = 'click'}
+		onmouseenter={handleRightEnter}
+		onmouseleave={handleRightLeave}
+		onclick={handleRightClick}
+		use:drawBorder={{ clicked: rightState === 'click' }}
 	>
 		<svg class="border-svg" viewBox="0 0 407 407">
+			<defs>
+				<mask id="mask-right">
+					<circle 
+						class="mask-circle" 
+						cx="203.5" 
+						cy="203.5" 
+						r="201.5" 
+						fill="none" 
+						stroke="white" 
+						stroke-width="10" 
+						stroke-dasharray="1266" 
+						stroke-dashoffset="1266" 
+					/>
+				</mask>
+			</defs>
+			
 			<circle 
 				cx="203.5" 
 				cy="203.5" 
@@ -57,6 +117,7 @@
 				stroke-width="4" 
 				stroke-dasharray="0 16" 
 				stroke-linecap="round" 
+				mask="url(#mask-right)"
 			/>
 		</svg>
 
@@ -68,7 +129,6 @@
 		<span class="text" class:gradient={rightState !== 'default'}>fisico</span>
 	</button>
 
-	<!-- Bottone -->
 	{#if showBottone}
 		<div class="bottone">
 			<div class="bottone-bg"></div>
@@ -93,7 +153,7 @@
 		width: 407px;
 		height: 407px;
 		border-radius: 203.5px;
-		border: none; 
+		border: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -104,15 +164,6 @@
 		padding: 0;
 	}
 
-	.border-svg {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 1;
-	}
-
 	.circle.left {
 		z-index: 1;
 	}
@@ -120,6 +171,19 @@
 	.circle.right {
 		margin-left: 160px;
 		z-index: 0;
+	}
+
+	.circle.hover .text {
+		color: var(--color-primary);
+	}
+
+	.border-svg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 1;
 	}
 
 	.text {
