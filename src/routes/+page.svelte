@@ -1,9 +1,21 @@
 <script>
-	// Importa qui in sequenza le macro-sezioni dalla cartella components/sections/
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
+	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 </script>
 
 <main>
-	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
 	<HeroSection />
+	<section class="cerchi-quiz-section">
+		<CerchiQuiz property1="Default" />
+	</section>
 </main>
+
+<style>
+	.cerchi-quiz-section {
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: var(--color-background-primary);
+	}
+</style>

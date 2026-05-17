@@ -1,0 +1,10 @@
+:root {
+	/* Base */
+	--color-background-primary: #f1fafd;
+	--color-content-primary: #071e45;
+
+	/* Archetipi */
+	--color-archetipo-favorito: #6a96df;
+	--color-archetipo-insoddisfatto: #8035d2;
+	--color-archetipo-infortunato: #d86146;
+}
