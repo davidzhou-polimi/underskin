@@ -7,16 +7,15 @@
 
 	let blobContainer1;
 	let blobContainer2;
+	let blobText;
 
 	const pathData = 'M481.115 405.442C181.913 138.178 -223.629 419.158 -389 593.056L-338.761 931.321C-203.859 847.161 126 304.237 323 931.321C350.247 1018.05 421.997 1054.57 517.5 1059.7C754.61 1072.42 1138.14 891.593 1350.53 805.082C1648.48 683.725 1770.59 557.486 1740.58 284.085C1710.58 10.6835 1370.77 228.986 1133.53 521.916C896.286 814.846 855.118 739.521 481.115 405.442Z';
 
 	onMount(() => {
-		// 初始设为透明
-		gsap.set([blobContainer1, blobContainer2], { opacity: 0 });
+		gsap.set([blobContainer1, blobContainer2, blobText], { opacity: 0 });
 
 		const ctx = gsap.context(() => {
-			// 滚动触发：进入视口时渐显
-			gsap.to([blobContainer1, blobContainer2], {
+			gsap.to([blobContainer1, blobContainer2, blobText], {
 				opacity: 1,
 				duration: 2,
 				ease: 'power1.out',
@@ -24,7 +23,7 @@
 				scrollTrigger: {
 					trigger: '.blob-section',
 					start: 'top 80%',
-					end: 'bottom 40%',
+					end: 'bottom 100%',
 					scrub: 1.5
 				}
 			});
@@ -56,6 +55,9 @@
 </script>
 
 <section class="blob-section">
+	<div bind:this={blobText} class="blob-text">
+		FAVORITO
+	</div>
 	<svg
 		class="blob-svg"
 		xmlns="http://www.w3.org/2000/svg"
@@ -113,6 +115,25 @@
 		top: 0;
 		width: 100%;
 		height: 100vh;
+		pointer-events: none;
+	}
+
+	.blob-text {
+		position: sticky;
+		top: 50vh;
+		left: 50%;
+		margin-left: 50%;
+		z-index: 10;
+		text-align: center;
+		font-family: "Rethink Sans";
+		font-size: 128px;
+		font-style: normal;
+		font-weight: 800;
+		line-height: normal;
+		background: linear-gradient(90deg, rgba(255, 255, 255, 0.40) 0.01%, #FFF 13.17%, rgba(255, 255, 255, 0.92) 46.38%, rgba(255, 255, 255, 0.40) 63.95%, #FFF 101.54%);
+		background-clip: text;
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
 		pointer-events: none;
 	}
 
