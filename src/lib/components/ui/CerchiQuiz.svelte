@@ -4,6 +4,7 @@
 
 	let leftState = $state('default');
 	let rightState = $state('default');
+	let bottoneState = $state('default');
 
 	// Visibilità del pulsante di conferma inferiore
 	let showBottone = $derived(leftState === 'click' || rightState === 'click');
@@ -166,10 +167,20 @@
 
 	<!-- Pulsante di conferma inferiore -->
 	{#if showBottone}
-		<div class="bottone">
+		<button
+			class="bottone"
+			class:hover={bottoneState === 'hover'}
+			class:clicked={bottoneState === 'click'}
+			onmouseenter={() => { if (bottoneState === 'default') bottoneState = 'hover' }}
+			onmouseleave={() => { if (bottoneState === 'hover') bottoneState = 'default' }}
+			onclick={() => { bottoneState = 'click' }}
+		>
 			<div class="bottone-bg"></div>
-			<div class="bottone-text">testo</div>
-		</div>
+			{#if bottoneState === 'click'}
+				<div class="bottone-inner"></div>
+			{/if}
+			<span class="bottone-text">testo</span>
+		</button>
 	{/if}
 </div>
 
@@ -276,14 +287,36 @@
 		left: 390px;
 		width: 194px;
 		height: 66px;
+		border: none;
+		background: transparent;
+		cursor: pointer;
+		appearance: none;
+		padding: 0;
 	}
 
 	.bottone-bg {
 		position: absolute;
 		inset: 0;
-		background: rgba(241, 250, 253, 0.65);
 		border-radius: var(--radius-m);
 		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.23);
+		transition: background 0.2s ease;
+		background: rgba(241, 250, 253, 0.65);
+	}
+
+	.bottone.hover .bottone-bg {
+		background: rgba(223, 244, 250, 0.65);
+	}
+
+	.bottone.clicked .bottone-bg {
+		pointer-events: none;
+	}
+
+	.bottone-inner {
+		position: absolute;
+		inset: 0;
+		border-radius: var(--radius-m);
+		background: rgba(241, 250, 253, 0.65);
+		box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.23);
 	}
 
 	.bottone-text {
@@ -297,6 +330,7 @@
 		font-size: 16px;
 		line-height: 20px;
 		color: black;
+		z-index: 1;
 	}
 
 	/* Animazione rotazione e scala dello sfondo */
