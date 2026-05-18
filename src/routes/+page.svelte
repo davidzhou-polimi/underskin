@@ -1,11 +1,9 @@
 <script>
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 	import CerchiConRisultati from '$lib/components/ui/CerchiConRisultati.svelte';
 </script>
 
 <main>
-	<HeroSection />
 	<section class="cerchi-quiz-section">
 		<CerchiQuiz property1="Default" />
 	</section>

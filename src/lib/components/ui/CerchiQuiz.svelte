@@ -172,13 +172,13 @@
 
 	<!-- Pulsante di conferma inferiore -->
 	{#if showBottone}
+		<!-- Cliccando il pulsante -->
 		<button
 			class="bottone"
 			class:hover={bottoneState === 'hover'}
 			class:clicked={bottoneState === 'click'}
 			onmouseenter={() => { if (bottoneState === 'default') bottoneState = 'hover' }}
 			onmouseleave={() => { if (bottoneState === 'hover') bottoneState = 'default' }}
-	<!-- Cliccando il pulsante -->			
 			onclick={() => { scrollToRisultati() }}
 		>
 			<div class="bottone-bg"></div>
