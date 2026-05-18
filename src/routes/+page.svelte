@@ -9,7 +9,7 @@
 	<section class="cerchi-quiz-section">
 		<CerchiQuiz property1="Default" />
 	</section>
-	<section class="cerchi-risultati-section">
+	<section class="cerchi-risultati-section" id="cerchi-risultati">
 		<CerchiConRisultati />
 	</section>
 </main>

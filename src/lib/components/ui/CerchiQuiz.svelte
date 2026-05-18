@@ -1,6 +1,11 @@
 <script>
 	// Azione GSAP per animazione bordo puntinato
 	import { drawBorder } from '$lib/actions/drawBorder.js';
+	import { goto } from '$app/navigation';
+
+	function scrollToRisultati() {
+		document.getElementById('cerchi-risultati')?.scrollIntoView({ behavior: 'smooth' });
+	}
 
 	let leftState = $state('default');
 	let rightState = $state('default');
@@ -173,7 +178,8 @@
 			class:clicked={bottoneState === 'click'}
 			onmouseenter={() => { if (bottoneState === 'default') bottoneState = 'hover' }}
 			onmouseleave={() => { if (bottoneState === 'hover') bottoneState = 'default' }}
-			onclick={() => { bottoneState = 'click' }}
+	<!-- Cliccando il pulsante -->			
+			onclick={() => { scrollToRisultati() }}
 		>
 			<div class="bottone-bg"></div>
 			{#if bottoneState === 'click'}
