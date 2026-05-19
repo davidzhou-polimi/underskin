@@ -4,6 +4,7 @@
 	import GradientBackgroundBlue from '$lib/components/ui/GradientBackgroundBlue.svelte';
 	import Grainient from '$lib/components/ui/Grainient.svelte';
 	import GradientTrailBlue from '$lib/components/ui/GradientTrailBlue.svelte';
+	import GradientBackgroundBlue2 from '$lib/components/ui/GradientBackgroundBlue2.svelte';
 </script>
 
 <main class="stacked">
@@ -37,6 +38,7 @@
 		/>
 	</div>
 	<GradientTrailBlue />
+	<GradientBackgroundBlue2 />
 </main>
 
 <style>

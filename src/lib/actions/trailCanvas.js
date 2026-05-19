@@ -1,11 +1,16 @@
 import { gsap } from 'gsap';
 
+/**
+ * @param {HTMLCanvasElement} node
+ */
 export function trailCanvas(node) {
 	const ctx = node.getContext('2d');
 	if (!ctx) return;
 
 	// Grain noise canvas
+	/** @type {HTMLCanvasElement | undefined} */
 	let noiseCanvas;
+	/** @type {CanvasRenderingContext2D | null | undefined} */
 	let noiseCtx;
 	const GRAIN_OPACITY = 0.12;
 
@@ -26,13 +31,13 @@ export function trailCanvas(node) {
 	}
 
 	function generateNoise() {
+		if (!noiseCanvas || !noiseCtx) return;
 		const w = noiseCanvas.width;
 		const h = noiseCanvas.height;
 		const imageData = noiseCtx.createImageData(w, h);
 		const data = imageData.data;
 
 		for (let i = 0; i < data.length; i += 4) {
-			const v = Math.random() * 255;
 			const alpha = Math.random() < 0.15 ? GRAIN_OPACITY * 255 : 0;
 			data[i] = 0;
 			data[i + 1] = 0;
@@ -45,7 +50,8 @@ export function trailCanvas(node) {
 
 	// Regenerate noise every frame for animated grain
 	function drawNoise() {
-		if (noiseCanvas && Math.random() < 0.3) {
+		if (!noiseCanvas || !ctx) return;
+		if (Math.random() < 0.3) {
 			generateNoise();
 		}
 		ctx.drawImage(noiseCanvas, 0, 0);
@@ -53,6 +59,7 @@ export function trailCanvas(node) {
 
 	const START_ANGLE = Math.PI * 0.75;
 	const state = { angle: START_ANGLE, globalAlpha: 1 };
+	/** @type {{ x: number, y: number }[]} */
 	let points = [];
 	const MAX_POINTS = 130;
 	const CIRCLE_RADIUS = 600;
@@ -68,6 +75,7 @@ export function trailCanvas(node) {
 	tl.to(state, { angle: START_ANGLE + Math.PI * 1.5, globalAlpha: 0, duration: 0.7, ease: 'power1.out' });
 
 	function draw() {
+		if (!ctx) return;
 		ctx.clearRect(0, 0, node.width, node.height);
 
 		const centerX = node.width / 2;
@@ -137,6 +145,9 @@ export function trailCanvas(node) {
 		requestAnimationFrame(draw);
 	}
 
+	/**
+	 * @param {string} hex
+	 */
 	function hexToRgb(hex) {
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		return result

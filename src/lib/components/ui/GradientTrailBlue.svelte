@@ -1,10 +1,13 @@
 <script>
+	/** @type {HTMLElement | undefined} */
 	let stage;
 	let x = $state(0);
 	let y = $state(0);
+	/** @type {{ id: number, x: number, y: number }[]} */
 	let blobs = $state([]);
 	let idCounter = 0;
 	let isInside = $state(false);
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let spawnTimer;
 	let lastSpawnX = 0;
 	let lastSpawnY = 0;
@@ -12,6 +15,9 @@
 	const MAX_BLOBS = 16;
 	const MIN_DIST = 5; // px — 只在移动超过此距离时生成 blob
 
+	/**
+	 * @param {MouseEvent} e
+	 */
 	function onEnter(e) {
 		isInside = true;
 		x = e.clientX; y = e.clientY;
@@ -19,6 +25,9 @@
 		spawnBlobs();
 	}
 
+	/**
+	 * @param {MouseEvent} e
+	 */
 	function onMove(e) {
 		if (!isInside) return;
 		x = e.clientX; y = e.clientY;

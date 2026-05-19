@@ -28,7 +28,9 @@
 		className = ''
 	} = $props();
 
+	/** @type {HTMLDivElement | null} */
 	let containerEl = $state(null);
+	/** @type {WeakMap<HTMLElement, {renderer: any, gl: any, canvas: any, geometry: any, program: any, mesh: any}>} */
 	let ctxMap = new WeakMap();
 
 	const vertex = `#version 300 es
@@ -122,7 +124,7 @@ void main(){
 }
 `;
 
-	const hexToRgb = (hex) => {
+	const hexToRgb = (/** @type {string} */ hex) => {
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		if (!result) return [1, 1, 1];
 		return [
@@ -135,17 +137,32 @@ void main(){
 	$effect(() => {
 		if (!containerEl) return;
 
-		let renderer, gl, canvas, geometry, program, mesh;
+		/** @type {HTMLElement} */
+		const el = containerEl;
+
+		/** @type {any} */
+		let renderer;
+		/** @type {any} */
+		let gl;
+		/** @type {any} */
+		let canvas;
+		/** @type {any} */
+		let geometry;
+		/** @type {any} */
+		let program;
+		/** @type {any} */
+		let mesh;
 		let raf = 0;
 		let isVisible = true;
 		let isPageVisible = !document.hidden;
 		let ro, io;
-		let ctx = { renderer, program, mesh };
-		ctxMap.set(containerEl, ctx);
+		/** @type {{renderer: any, gl: any, canvas: any, geometry: any, program: any, mesh: any}} */
+		let ctx = { renderer, gl, canvas, geometry, program, mesh };
+		ctxMap.set(el, ctx);
 
 		const setSize = () => {
 			if (!renderer || !program) return;
-			const rect = containerEl.getBoundingClientRect();
+			const rect = el.getBoundingClientRect();
 			const w = Math.max(1, Math.floor(rect.width));
 			const h = Math.max(1, Math.floor(rect.height));
 			renderer.setSize(w, h);
@@ -168,7 +185,7 @@ void main(){
 			}
 		};
 
-		const loop = (t) => {
+		const loop = (/** @type {number} */ t) => {
 			program.uniforms.iTime.value = t * 0.001;
 			renderer.render({ scene: mesh });
 			raf = requestAnimationFrame(loop);
@@ -187,7 +204,7 @@ void main(){
 		canvas.style.width = '100%';
 		canvas.style.height = '100%';
 		canvas.style.display = 'block';
-		containerEl.appendChild(canvas);
+		el.appendChild(canvas);
 
 		geometry = new Triangle(gl);
 		program = new Program(gl, {
@@ -221,11 +238,10 @@ void main(){
 		});
 
 		mesh = new Mesh(gl, { geometry, program });
-		ctx = { renderer, gl, canvas, geometry, program, mesh };
-		ctxMap.set(containerEl, ctx);
+		ctxMap.set(el, ctx);
 
 		ro = new ResizeObserver(setSize);
-		ro.observe(containerEl);
+		ro.observe(el);
 		setSize();
 
 		io = new IntersectionObserver(
@@ -250,9 +266,9 @@ void main(){
 			ro?.disconnect();
 			io?.disconnect();
 			document.removeEventListener('visibilitychange', onVisibility);
-			ctxMap.delete(containerEl);
+			ctxMap.delete(el);
 			try {
-				containerEl.removeChild(canvas);
+				el.removeChild(canvas);
 			} catch {
 				// ignore
 			}

@@ -1,10 +1,15 @@
 import { gsap } from 'gsap';
 
+/**
+ * @param {HTMLCanvasElement} node
+ */
 export function trailCanvasBlue(node) {
 	const ctx = node.getContext('2d');
 	if (!ctx) return;
 
+	/** @type {HTMLCanvasElement | undefined} */
 	let noiseCanvas;
+	/** @type {CanvasRenderingContext2D | null | undefined} */
 	let noiseCtx;
 	let noiseRendered = false;
 	const GRAIN_OPACITY = 0.08;
@@ -27,6 +32,7 @@ export function trailCanvasBlue(node) {
 	}
 
 	function generateNoise() {
+		if (!noiseCanvas || !noiseCtx) return;
 		const w = noiseCanvas.width;
 		const h = noiseCanvas.height;
 		const imageData = noiseCtx.createImageData(w, h);
@@ -44,7 +50,8 @@ export function trailCanvasBlue(node) {
 	}
 
 	function drawNoise() {
-		if (!noiseRendered && noiseCanvas) {
+		if (!noiseCanvas || !ctx) return;
+		if (!noiseRendered) {
 			ctx.drawImage(noiseCanvas, 0, 0);
 			noiseRendered = true;
 		}
@@ -52,10 +59,12 @@ export function trailCanvasBlue(node) {
 
 	const START_ANGLE = Math.PI; // 左中位置开始
 	const state = { angle: START_ANGLE, globalAlpha: 1 };
+	/** @type {{ x: number, y: number }[]} */
 	let points = [];
 	const MAX_POINTS = 90;
 	const CIRCLE_RADIUS = 600;
 	let hasTriggered = false;
+	/** @type {() => void} */
 	let scrollHandler;
 
 	// 蓝色渐变配置
@@ -86,13 +95,14 @@ export function trailCanvasBlue(node) {
 	window.addEventListener('scroll', scrollHandler, { passive: true });
 
 	function draw() {
+		if (!ctx) return;
 		// 动画时才清空画布，停留时保留拖影
 		if (isAnimating) {
 			ctx.clearRect(0, 0, node.width, node.height);
 		}
 
 		// 绘制噪点背景
-		if (noiseCanvas && !noiseRendered) {
+		if (!noiseRendered && noiseCanvas && ctx) {
 			ctx.drawImage(noiseCanvas, 0, 0);
 			noiseRendered = true;
 		}
@@ -155,6 +165,9 @@ export function trailCanvasBlue(node) {
 		requestAnimationFrame(draw);
 	}
 
+	/**
+	 * @param {string} hex
+	 */
 	function hexToRgb(hex) {
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		return result

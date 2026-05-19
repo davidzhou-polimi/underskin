@@ -35,6 +35,7 @@ export function fadeUp(node, options = {}) {
 	return {
 		/**
 		 * Metodo chiamato se le opzioni cambiano (opzionale in questo caso semplice)
+		 * @param {Object} newOptions
 		 */
 		update(newOptions) {
 			// Potresti aggiornare l'animazione se necessario
