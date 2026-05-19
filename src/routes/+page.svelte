@@ -3,6 +3,7 @@
 	import ScrollBlob from '$lib/components/ui/ScrollBlob.svelte';
 	import GradientBackgroundBlue from '$lib/components/ui/GradientBackgroundBlue.svelte';
 	import Grainient from '$lib/components/ui/Grainient.svelte';
+	import GradientTrailBlue from '$lib/components/ui/GradientTrailBlue.svelte';
 </script>
 
 <main class="stacked">
@@ -35,6 +36,7 @@
 			zoom={0.9}
 		/>
 	</div>
+	<GradientTrailBlue />
 </main>
 
 <style>
