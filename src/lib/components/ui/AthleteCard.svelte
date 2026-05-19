@@ -8,8 +8,7 @@
 	 *   quote?: string,
 	 *   axis?: 'X' | 'Y',
 	 *   imageSrc?: string,
-	 *   colorBrand?: string,
-	 *   colorBrandBack?: string,
+	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
 	 *   duration?: number
 	 * }}
 	 */
@@ -19,10 +18,29 @@
 		quote = "testo citazione",
 		axis = 'Y', 
 		imageSrc = "",
-		colorBrand = "var(--archetipi-favorito)",
-		colorBrandBack = "var(--azzurro-300)",
+		type = 'favorito',
 		duration = 0.8
 	} = $props();
+
+	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
+	const ARCHETYPE_COLORS = {
+		favorito: {
+			brand: 'var(--archetipi-favorito)',
+			brandBack: 'var(--azzurro-300)'
+		},
+		infortunato: {
+			brand: 'var(--archetipi-infortunato)',
+			brandBack: 'var(--arancione-400)'
+		},
+		insoddisfatto: {
+			brand: 'var(--archetipi-insoddisfatto)',
+			brandBack: 'var(--viola-300)'
+		}
+	};
+
+	let colors = $derived(ARCHETYPE_COLORS[type] ?? ARCHETYPE_COLORS.favorito);
+	let colorBrand = $derived(colors.brand);
+	let colorBrandBack = $derived(colors.brandBack);
 
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
 
