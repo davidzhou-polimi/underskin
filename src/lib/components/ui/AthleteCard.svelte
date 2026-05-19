@@ -47,22 +47,22 @@
 			
 			<!-- Upper gradient (Sfumatura superiore) -->
 			<svg class="decal-top" xmlns="http://www.w3.org/2000/svg" width="329" height="111" viewBox="0 0 329 111" fill="none">
-				<path d="M0 16C0 7.16344 7.16344 0 16 0H313C321.837 0 329 7.16344 329 16V111H0V16Z" fill="url(#paint0_linear_646_288)"/>
+				<path d="M0 16C0 7.16344 7.16344 0 16 0H313C321.837 0 329 7.16344 329 16V111H0V16Z" fill="url(#paintTop)"/>
 				<defs>
-					<linearGradient id="paint0_linear_646_288" x1="166" y1="0" x2="166" y2="111" gradientUnits="userSpaceOnUse">
-						<stop stop-color="#A8CBF5"/>
-						<stop offset="1" stop-color="#6A96DF" stop-opacity="0"/>
+					<linearGradient id="paintTop" x1="166" y1="0" x2="166" y2="111" gradientUnits="userSpaceOnUse">
+						<stop stop-color={colorBrandBack}/>
+						<stop offset="1" stop-color={colorBrand} stop-opacity="0"/>
 					</linearGradient>
 				</defs>
 			</svg>
 			
 			<!-- Lower gradient (Sfumatura inferiore) -->
 			<svg class="decal-bottom" xmlns="http://www.w3.org/2000/svg" width="329" height="72" viewBox="0 0 329 72" fill="none">
-				<path d="M329 56C329 64.8366 321.837 72 313 72L16 72C7.16345 72 6.26248e-07 64.8365 1.39876e-06 56L6.29444e-06 1.75548e-06L329 3.05176e-05L329 56Z" fill="url(#paint0_linear_725_2820)"/>
+				<path d="M329 56C329 64.8366 321.837 72 313 72L16 72C7.16345 72 6.26248e-07 64.8365 1.39876e-06 56L6.29444e-06 1.75548e-06L329 3.05176e-05L329 56Z" fill="url(#paintBottom)"/>
 				<defs>
-					<linearGradient id="paint0_linear_725_2820" x1="163" y1="72" x2="163" y2="1.60054e-05" gradientUnits="userSpaceOnUse">
-						<stop stop-color="#A8CBF5"/>
-						<stop offset="1" stop-color="#6A96DF" stop-opacity="0"/>
+					<linearGradient id="paintBottom" x1="163" y1="72" x2="163" y2="1.60054e-05" gradientUnits="userSpaceOnUse">
+						<stop stop-color={colorBrandBack}/>
+						<stop offset="1" stop-color={colorBrand} stop-opacity="0"/>
 					</linearGradient>
 				</defs>
 			</svg>
