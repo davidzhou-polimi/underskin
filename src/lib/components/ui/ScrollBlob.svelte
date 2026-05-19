@@ -106,7 +106,7 @@
 <style>
 	.blob-section {
 		position: relative;
-		min-height: 150vh;
+		min-height: 100vh;
 		overflow: hidden;
 	}
 
@@ -122,7 +122,6 @@
 		position: sticky;
 		top: 50vh;
 		left: 50%;
-		margin-left: 50%;
 		z-index: 10;
 		text-align: center;
 		font-family: "Rethink Sans";
@@ -140,7 +139,8 @@
 	.blob-back {
 		position: absolute;
 		top: 10%;
-		left: -15%;
+		left: 0;
+		transform: translateX(-30%);
 		opacity: 0.8;
 	}
 </style>
