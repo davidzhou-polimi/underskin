@@ -34,6 +34,7 @@ export function flipCard(node, params = {}) {
 	const onMouseEnter = () => {
 		gsap.to(innerCard, {
 			[getRotationProp()]: 180,
+			boxShadow: axis === 'X' ? '2px -2px 4px 0px rgba(0,0,0,0.23)' : '-2px 2px 4px 0px rgba(0,0,0,0.23)',
 			duration: duration,
 			ease: 'back.out(1.2)',
 			overwrite: 'auto'
@@ -55,6 +56,7 @@ export function flipCard(node, params = {}) {
 	const onMouseLeave = () => {
 		gsap.to(innerCard, {
 			[getRotationProp()]: 0,
+			boxShadow: '2px 2px 4px 0px rgba(0,0,0,0.23)',
 			duration: duration,
 			ease: 'power2.out',
 			overwrite: 'auto'

@@ -144,6 +144,8 @@
 		height: 100%;
 		position: relative;
 		transform-style: preserve-3d;
+		box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.23);
+		border-radius: var(--radius-m);
 	}
 
 	.card-face {
@@ -167,7 +169,6 @@
 		inset: 0;
 		background-color: var(--background-primary);
 		opacity: 0.5;
-		box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.23);
 		backdrop-filter: blur(13px);
 	}
 
