@@ -1,7 +1,24 @@
 import gsap from 'gsap';
 
+/**
+ * @typedef {Object} FlipCardParams
+ * @property {'X' | 'Y'} [axis]
+ * @property {string} [innerSelector]
+ * @property {string} [textSelector]
+ * @property {number} [duration]
+ */
+
+/**
+ * @param {HTMLElement} node
+ * @param {FlipCardParams} [params]
+ */
 export function flipCard(node, params = {}) {
-	const { axis = 'Y', innerSelector = '.card-inner', textSelector = '.back-text' } = params;
+	let { 
+		axis = 'Y', 
+		innerSelector = '.card-inner', 
+		textSelector = '.back-text',
+		duration = 0.8
+	} = params;
 
 	const innerCard = node.querySelector(innerSelector);
 	const backTexts = node.querySelectorAll(textSelector);
@@ -12,12 +29,12 @@ export function flipCard(node, params = {}) {
 	gsap.set(innerCard, { transformStyle: 'preserve-3d' });
 	if (backTexts.length) gsap.set(backTexts, { opacity: 0, y: 10 });
 
-	const rotationProp = axis === 'X' ? 'rotateX' : 'rotateY';
+	const getRotationProp = () => axis === 'X' ? 'rotateX' : 'rotateY';
 
 	const onMouseEnter = () => {
 		gsap.to(innerCard, {
-			[rotationProp]: 180,
-			duration: 0.6,
+			[getRotationProp()]: 180,
+			duration: duration,
 			ease: 'back.out(1.2)',
 			overwrite: 'auto'
 		});
@@ -26,9 +43,9 @@ export function flipCard(node, params = {}) {
 			gsap.to(backTexts, {
 				opacity: 1,
 				y: 0,
-				duration: 0.4,
-				delay: 0.2,
-				stagger: 0.1,
+				duration: duration * 0.66, // Scale text entry with flip duration
+				delay: duration * 0.33,     // Delay scaling with flip duration
+				stagger: duration * 0.16,
 				ease: 'power2.out',
 				overwrite: 'auto'
 			});
@@ -37,8 +54,8 @@ export function flipCard(node, params = {}) {
 
 	const onMouseLeave = () => {
 		gsap.to(innerCard, {
-			[rotationProp]: 0,
-			duration: 0.6,
+			[getRotationProp()]: 0,
+			duration: duration,
 			ease: 'power2.out',
 			overwrite: 'auto'
 		});
@@ -47,7 +64,7 @@ export function flipCard(node, params = {}) {
 			gsap.to(backTexts, {
 				opacity: 0,
 				y: 10,
-				duration: 0.2,
+				duration: duration * 0.33,
 				ease: 'power2.in',
 				overwrite: 'auto'
 			});
@@ -58,6 +75,13 @@ export function flipCard(node, params = {}) {
 	node.addEventListener('mouseleave', onMouseLeave);
 
 	return {
+		/**
+		 * @param {FlipCardParams} newParams
+		 */
+		update(newParams) {
+			axis = newParams.axis ?? 'Y';
+			duration = newParams.duration ?? 0.8;
+		},
 		destroy() {
 			node.removeEventListener('mouseenter', onMouseEnter);
 			node.removeEventListener('mouseleave', onMouseLeave);

@@ -1,6 +1,18 @@
 <script>
 	import { flipCard } from '$lib/actions/flipCard.js';
 
+	/**
+	 * @type {{
+	 *   name?: string,
+	 *   number?: string,
+	 *   quote?: string,
+	 *   axis?: 'X' | 'Y',
+	 *   imageSrc?: string,
+	 *   colorBrand?: string,
+	 *   colorBrandBack?: string,
+	 *   duration?: number
+	 * }}
+	 */
 	let { 
 		name = "nome e cognome", 
 		number = "0N",
@@ -8,13 +20,14 @@
 		axis = 'Y', 
 		imageSrc = "",
 		colorBrand = "var(--archetipi-favorito)",
-		colorBrandBack = "var(--azzurro-300)"
+		colorBrandBack = "var(--azzurro-300)",
+		duration = 0.8
 	} = $props();
 
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
 </script>
 
-<div class="athlete-card-container" use:flipCard={{ axis }}>
+<div class="athlete-card-container" use:flipCard={{ axis, duration }}>
 	<div class="card-inner">
 		
 		<!-- FRONT -->
