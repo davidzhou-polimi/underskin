@@ -1,15 +1,13 @@
 <script>
-    import HeroSection from '$lib/components/sections/HeroSection.svelte';
     import GlassEffect from '$lib/components/sections/GlassEffect.svelte';
     import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
 </script>
 
 <main>
-    <HeroSection />
 
     <section class="test-figma-bg">
         <div class="background-huge-text">
-            <span>C</span><span class="orange-text">tale</span> smettendo di
+            <span>Quindi</span><span class="orange-text">tale</span> smettendo di
         </div>
 
         <GlassEffect class="figma-glass-card">

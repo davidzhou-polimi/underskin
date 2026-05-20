@@ -1,54 +1,50 @@
 <script>
-  import { onMount, tick } from 'svelte';
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-  import { Delaunay } from 'd3-delaunay';
+  import { onMount, tick } from "svelte";
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { Delaunay } from "d3-delaunay";
+  import GlassEffect from "$lib/components/sections/GlassEffect.svelte";
 
   /** @type {HTMLElement} */
   let scrollWrapper;
-  /** @type {HTMLCanvasElement} */
-  let canvas;
-  /** @type {CanvasRenderingContext2D} */
-  let ctx;
 
-  const NUM_SHARDS = 35; 
+  const NUM_SHARDS = 30; // Ridotto leggermente per diminuire il carico sul DOM mantenendo l'effetto denso
   let windowWidth = 0;
   let windowHeight = 0;
-  
-  const textureSrc = '/textures/ice_texture.png'; 
-  /** @type {HTMLImageElement} */
-  let textureImage;
-  let imageLoaded = false; 
 
   /** @type {Array<any>} */
-  let fragments = [];
+  let fragments = $state([]);
 
   function generateVoronoiShards() {
     const width = windowWidth;
     const height = windowHeight;
     const points = [];
-    
+
     for (let i = 0; i < NUM_SHARDS; i++) {
-      const x = (Math.random() * 0.9 + 0.05) * width; 
+      const x = (Math.random() * 0.9 + 0.05) * width;
       const y = (Math.random() * 0.9 + 0.05) * height;
       points.push([x, y]);
     }
-    
+
+    // Assicura la copertura completa degli angoli e dei bordi dello schermo
     points.push([0, 0], [width, 0], [width, height], [0, height]);
-    points.push([width/2, 0], [width/2, height], [0, height/2], [width, height/2]);
+    points.push(
+      [width / 2, 0],
+      [width / 2, height],
+      [0, height / 2],
+      [width, height / 2],
+    );
 
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([0, 0, width, height]);
-    
+
     const tempFragments = [];
 
     for (let i = 0; i < points.length; i++) {
       const polygon = voronoi.cellPolygon(i);
       if (polygon) {
         tempFragments.push({
-          path: polygon,       
-          y: 0,                 
-          opacity: 1
+          clipPath: `polygon(${polygon.map((p) => `${p[0]}px ${p[1]}px`).join(", ")})`,
         });
       }
     }
@@ -58,129 +54,123 @@
   onMount(async () => {
     await tick();
 
-    if (!canvas) return;
-
     gsap.registerPlugin(ScrollTrigger);
 
     windowWidth = window.innerWidth;
     windowHeight = window.innerHeight;
 
-    canvas.width = windowWidth;
-    canvas.height = windowHeight;
-    ctx = canvas.getContext('2d');
-
     fragments = generateVoronoiShards();
 
-    // Effetto congelamento in entrata (Mantenuto, è fluido)
-    gsap.fromTo(canvas, 
-      { opacity: 0 }, 
-      { 
+    await tick();
+
+    // Svanisce gradualmente in entrata la lastra di vetro iniziale
+    gsap.fromTo(
+      ".whole-glass-plate",
+      { opacity: 0 },
+      {
         opacity: 1,
         scrollTrigger: {
           trigger: scrollWrapper,
-          start: 'top 80%', 
-          end: 'top top',   
-          scrub: true
-        }
-      }
+          start: "top 80%",
+          end: "top top",
+          scrub: true,
+        },
+      },
     );
 
     initAnimation();
-
-    textureImage = new Image();
-    textureImage.onload = () => {
-      imageLoaded = true;
-      drawCanvas(); 
-    };
-    textureImage.src = textureSrc;
   });
-
-  function drawCanvas() {
-    if (!ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    fragments.forEach(frag => {
-      ctx.save(); 
-      ctx.translate(0, frag.y); 
-
-      ctx.beginPath();
-      const startPoint = frag.path[0];
-      ctx.moveTo(startPoint[0], startPoint[1]);
-      for (let i = 1; i < frag.path.length; i++) {
-        ctx.lineTo(frag.path[i][0], frag.path[i][1]);
-      }
-      ctx.closePath();
-      
-      ctx.globalAlpha = frag.opacity; 
-      ctx.clip(); 
-
-      if (imageLoaded && textureImage.complete) {
-        ctx.drawImage(textureImage, 0, 0, canvas.width, canvas.height);
-      } else {
-        ctx.fillStyle = "rgba(223, 244, 250, 0.95)";
-        ctx.fill();
-      }
-      
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; 
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.restore(); 
-    });
-  }
 
   function initAnimation() {
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: scrollWrapper,
-        start: 'top top',
-        end: '+=200%', 
+        start: "top top",
+        end: "+=200%",
         scrub: 1,
         pin: true,
-      }
+      },
     });
 
     tl.addLabel("shatter");
 
-    // 1. Caduta del ghiaccio (Manteniamo la caduta lenta e caotica per 2s)
-    tl.to(fragments, {
-      y: windowHeight * 1.5,
-      opacity: 0,
-      duration: 2, 
-      stagger: {
-        each: 0.04,
-        from: "random"
+    // Nasconde all'istante la lastra intera pesante all'inizio dello scroll di rottura
+    tl.to(
+      ".whole-glass-plate",
+      {
+        opacity: 0,
+        duration: 0.15,
+        ease: "power1.out",
       },
-      ease: 'power3.in',
-      onUpdate: drawCanvas 
-    }, "shatter");
+      "shatter",
+    );
 
-    // 2. CALIBRAZIONE TEMPORALE TESTO: Messa a fuoco rapidissima!
-    tl.to('.content-behind', {
-      filter: 'blur(0px)',
-      opacity: 1,
-      // Accorciamo drasticamente da 2s a 0.6s. 
-      // Il testo va a fuoco quasi subito mentre i primi pezzi cadono.
-      duration: 0.6, 
-      ease: 'power2.inOut'
-    }, "shatter"); 
+    // Mostra all'istante i frammenti leggeri pronti a cadere
+    tl.fromTo(
+      ".shards-container",
+      {
+        opacity: 0,
+      },
+      {
+        opacity: 1,
+        duration: 0.15,
+        ease: "power1.out",
+      },
+      "shatter",
+    );
 
-    drawCanvas();
+    // Anima la caduta caotica e fluida dei frammenti vettoriali leggeri a 60 FPS
+    tl.to(
+      ".glass-shard",
+      {
+        y: windowHeight * 1.5,
+        x: () => (Math.random() - 0.5) * 160,
+        rotation: () => (Math.random() - 0.5) * 45,
+        opacity: 0,
+        duration: 1.5,
+        stagger: {
+          each: 0.04,
+          from: "random",
+        },
+        ease: "power3.in",
+      },
+      "shatter",
+    );
+
+    // Ripristina la nitidezza del testo in coincidenza con la rottura dei primi pezzi
+    tl.to(
+      ".content-behind",
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        duration: 2,
+        ease: "power2.inOut",
+      },
+      "shatter",
+    );
   }
 </script>
 
 <div class="scroll-wrapper" bind:this={scrollWrapper}>
   <div class="sticky-container">
-    
     <div class="content-behind">
       <p>
-        Un infortunio non interrompe solo una carriera,<br>
+        Un infortunio non interrompe solo una carriera,<br />
         ma anche il rapporto con il proprio corpo.
       </p>
     </div>
-    
-    <canvas bind:this={canvas} class="puzzle-canvas"></canvas>
+
+    <!-- Lastra intera e unita per avere un unico backdrop-filter super performante -->
+    <div class="whole-glass-plate">
+      <GlassEffect class="full-plate" />
+    </div>
+
+    <!-- Contenitore dei frammenti ottimizzati (senza filtri pesanti in movimento) -->
+    <div class="shards-container">
+      {#each fragments as frag}
+        <div class="glass-shard" style="clip-path: {frag.clipPath};"></div>
+      {/each}
+    </div>
   </div>
 </div>
 
@@ -188,7 +178,18 @@
   .scroll-wrapper {
     height: 100vh;
     width: 100%;
-    background-color: #f4f8fb;
+    /* Luce soffusa rossa per evocare lo stato emotivo dell'infortunio mantenendo la leggibilità */
+    background: radial-gradient(
+        circle at 80% 20%,
+        color-mix(in srgb, var(--archetipi-infortunato) 15%, transparent) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 15% 85%,
+        color-mix(in srgb, var(--archetipi-infortunato) 8%, transparent) 0%,
+        transparent 60%
+      ),
+      var(--background-primary);
     overflow: hidden;
   }
 
@@ -208,18 +209,33 @@
     text-align: center;
     font-family: system-ui, sans-serif;
     color: #0c2137;
-    font-size: 1.8rem; 
+    font-size: 1.8rem;
     font-weight: 500;
     line-height: 1.5;
     max-width: 80%;
-    
-    /* CALIBRAZIONE VISIVA INIZIALE: Meno sfocato, più visibile */
-    filter: blur(3px); /* Ridotto da 15px */
-    opacity: 0.5;      /* Aumentato da 0.3 */
+
+    /* Calibrazione visiva iniziale sfocata */
+    filter: blur(5px);
+    opacity: 0.5;
     will-change: filter, opacity;
   }
 
-  .puzzle-canvas {
+  .whole-glass-plate {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9;
+    will-change: opacity;
+  }
+
+  :global(.full-plate) {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .shards-container {
     position: absolute;
     top: 0;
     left: 0;
@@ -227,5 +243,25 @@
     height: 100vh;
     z-index: 10;
     pointer-events: none;
+    opacity: 0;
+  }
+
+  /* Frammenti ottimizzati: colore e bordi vetrosi puri senza pesanti backdrop-filter e box-shadow */
+  .glass-shard {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(241, 250, 253, 0.45);
+    border: 1px solid rgba(223, 244, 250, 0.4);
+    background-image: linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(255, 255, 255, 0) 70%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+    will-change: transform, opacity;
   }
 </style>
