@@ -15,7 +15,7 @@ import gsap from 'gsap';
  */
 export function hoverLift(node, params = {}) {
 	const {
-		y = -8,
+		y = -15,
 		duration = 0.3,
 		ease = 'power2.out'
 	} = params;

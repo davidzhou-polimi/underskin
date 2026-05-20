@@ -6,6 +6,7 @@
 	 * @type {{
 	 *   name?: string,
 	 *   number?: string,
+	 *   context?: string,
 	 *   quote?: string,
 	 *   axis?: 'X' | 'Y',
 	 *   imageSrc?: string,
@@ -16,6 +17,7 @@
 	let { 
 		name = "nome e cognome", 
 		number = "0N",
+		context = "",
 		quote = "testo citazione",
 		axis = 'Y', 
 		imageSrc = "",
@@ -123,9 +125,18 @@
 				<div class="back-text name-back">
 					<p>{name}</p>
 				</div>
-				<p class="back-text quote-text">
-					{quote}
-				</p>
+				<div class="back-details">
+					{#if context}
+						<p class="back-text context-text">
+							{context}
+						</p>
+					{/if}
+					{#if quote}
+						<p class="back-text quote-text">
+							“{quote}”
+						</p>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -318,13 +329,25 @@
 		justify-content: center;
 	}
 
+	.back-details {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2, 16px);
+		width: 100%;
+		height: 310px;
+		margin-top: 12px;
+	}
+
+	.context-text {
+		font-size: var(--text-service-size);
+		line-height: 20px;
+		margin: 0;
+	}
+
 	.quote-text {
 		font-size: var(--text-service-size);
 		line-height: 20px;
-		text-align: justify;
-		width: 100%;
-		height: 338px;
+		font-style: italic;
 		margin: 0;
-		/* Easing premium / delay handled by GSAP action */
 	}
 </style>

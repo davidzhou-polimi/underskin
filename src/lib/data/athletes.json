@@ -1,0 +1,65 @@
+[
+	{
+		"name": "Amber Glenn",
+		"type": "favorito",
+		"imageSrc": "/images/athletes/amber-gleen.png",
+		"context": "Pattinatrice artistica su ghiaccio statunitense, acclamata per la sua forza espressiva e i suoi straordinari salti. Amber Glenn incarna la determinazione di chi supera ogni ostacolo per trovare la propria autentica voce sul ghiaccio, diventando un modello di resilienza e audacia nello sport mondiale.",
+		"quote": "Ogni volta che scendo in pista porto con me tutta la mia storia: le cadute, le vittorie, ma soprattutto la libertà di essere me herself."
+	},
+	{
+		"name": "Marco Bianchi",
+		"type": "favorito",
+		"imageSrc": "https://picsum.photos/id/1012/329/432",
+		"context": "Contesto per Marco Bianchi. Atleta di spicco nella sua disciplina, focalizzato sulla performance e sull'innovazione.",
+		"quote": "Nessun limite."
+	},
+	{
+		"name": "Luca Verdi",
+		"type": "favorito",
+		"imageSrc": "https://picsum.photos/id/1013/329/432",
+		"context": "Contesto per Luca Verdi. Conosciuto per la sua determinazione e la costanza negli allenamenti.",
+		"quote": "Sempre avanti."
+	},
+	{
+		"name": "Luigi Neri",
+		"type": "insoddisfatto",
+		"imageSrc": "https://picsum.photos/id/1027/329/432",
+		"context": "Contesto per Luigi Neri. Alla costante ricerca del perfezionamento tecnico e dei dettagli.",
+		"quote": "I risultati non bastano."
+	},
+	{
+		"name": "Andrea Gialli",
+		"type": "insoddisfatto",
+		"imageSrc": "https://picsum.photos/id/1028/329/432",
+		"context": "Contesto per Andrea Gialli. Spinto dalla passione e dal desiderio di superare i propri standard personali.",
+		"quote": "Dobbiamo fare di più."
+	},
+	{
+		"name": "Simone Viola",
+		"type": "insoddisfatto",
+		"imageSrc": "https://picsum.photos/id/1029/329/432",
+		"context": "Contesto per Simone Viola. Concentrato sul miglioramento continuo giorno dopo giorno.",
+		"quote": "Senza sosta."
+	},
+	{
+		"name": "Mario Rossi",
+		"type": "infortunato",
+		"imageSrc": "https://picsum.photos/id/1025/329/432",
+		"context": "Contesto per Mario Rossi. Attualmente in fase di riabilitazione con un programma di recupero personalizzato.",
+		"quote": "Tornerò più forte di prima."
+	},
+	{
+		"name": "Giovanni Blu",
+		"type": "infortunato",
+		"imageSrc": "https://picsum.photos/id/1024/329/432",
+		"context": "Contesto per Giovanni Blu. Affronta il recupero con positività e tenacia mentale.",
+		"quote": "Il dolore insegna."
+	},
+	{
+		"name": "Paolo Neri",
+		"type": "infortunato",
+		"imageSrc": "https://picsum.photos/id/1026/329/432",
+		"context": "Contesto per Paolo Neri. Concentrato sulla riabilitazione passo dopo passo per un ritorno sicuro.",
+		"quote": "Un passo alla volta."
+	}
+]
