@@ -11,7 +11,7 @@
 		<p class="reveal-line">4 anni di preparazione</p>
 		<div class="reveal-line final-phrase">
 			<span>Tutto per soli</span>
-			<span class="break-line">120 secondi di performance</span>
+			<span class="break-line gradient-text animate-gradient-text my-archetypes-color">120 secondi di performance</span>
 		</div>
 	</div>
 </section>
@@ -61,4 +61,11 @@
 		display: block;
 		margin-top: var(--spacing-1);
 	}
+
+    .my-archetypes-color {
+		--gradient-c1: var(--archetipi-favorito);
+		--gradient-c2: var(--archetipi-insoddisfatto);
+		--gradient-c3: var(--archetipi-infortunato);
+    }
+
 </style>
