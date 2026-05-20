@@ -159,8 +159,13 @@
 		height: 100%;
 		position: relative;
 		transform-style: preserve-3d;
-		box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.23);
+		box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.23);
 		border-radius: var(--radius-m);
+		transition: box-shadow 0.3s ease-out;
+	}
+
+	.athlete-card-container:hover .card-inner {
+		box-shadow: 0px 16px 32px 0px rgba(0, 0, 0, 0.28);
 	}
 
 	.card-face {
