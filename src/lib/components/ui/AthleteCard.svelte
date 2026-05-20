@@ -1,5 +1,6 @@
 <script>
 	import { flipCard } from '$lib/actions/flipCard.js';
+	import { hoverLift } from '$lib/actions/hoverLift.js';
 
 	/**
 	 * @type {{
@@ -50,7 +51,7 @@
 	const paintBottomId = `paintBottom-${instanceId}`;
 </script>
 
-<div class="athlete-card-container" use:flipCard={{ axis, duration }}>
+<div class="athlete-card-container" use:flipCard={{ axis, duration }} use:hoverLift>
 	<div class="card-inner">
 		
 		<!-- FRONT -->
