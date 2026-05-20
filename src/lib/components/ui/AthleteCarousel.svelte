@@ -149,7 +149,7 @@
 				<!-- Dotted curve path -->
 				<path 
 					d="M 100,80 Q 500,10 900,80" 
-					stroke="var(--background-primary)" 
+					stroke="var(--content-primary)" 
 					stroke-width="2" 
 					stroke-linecap="round" 
 					stroke-dasharray="0.1 8" 
@@ -163,7 +163,7 @@
 						cx={pt.x} 
 						cy={pt.y} 
 						r="6" 
-						fill="var(--background-primary)" 
+						fill="var(--content-primary)" 
 						opacity={i === activeIndex ? 1 : 0.4} 
 						class="track-dot"
 						role="button"
@@ -177,7 +177,7 @@
 				<circle 
 					class="active-dot" 
 					r="8" 
-					fill="var(--background-primary)" 
+					fill="var(--content-primary)" 
 				/>
 			</svg>
 		</div>
@@ -273,21 +273,21 @@
 	}
 
 	.nav-btn {
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		background: rgba(0, 0, 0, 0.04);
+		border: 1px solid rgba(0, 0, 0, 0.08);
 		border-radius: 50%;
 		width: 48px;
 		height: 48px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--background-primary);
+		color: var(--content-primary);
 		cursor: pointer;
 		transition: background 0.3s ease, transform 0.2s ease;
 	}
 
 	.nav-btn:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.25);
+		background: rgba(0, 0, 0, 0.08);
 		transform: scale(1.1);
 	}
 
