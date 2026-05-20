@@ -1,51 +1,35 @@
 <script>
-  import { onMount, tick } from 'svelte';
-  import { gsap } from 'gsap';
-  import { Draggable } from 'gsap/dist/Draggable';
+  import GlassEffect from '$lib/components/sections/GlassEffect.svelte';
+  import { draggableThought } from '$lib/actions/draggableThought.js';
 
-  if (typeof window !== 'undefined') {
-    gsap.registerPlugin(Draggable);
-  }
-
-  let container;
+  let container = $state();
   
-  let thoughts = [
-    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '25%', sLeft: '35%', isScattered: false, tailDir: 'left' },
-    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '15%', sLeft: '55%', isScattered: false, tailDir: 'right' },
-    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '38%', sLeft: '15%', isScattered: false, tailDir: 'left' },
+  // Runa $state per tracciare la lista dei pensieri reattivamente in Svelte 5
+  let thoughts = $state([
+    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left' },
+    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right' },
+    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left' },
     { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '75%', isScattered: false, tailDir: 'right' },
-    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '75%', sLeft: '50%', isScattered: false, tailDir: 'right' },
-    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '72%', sLeft: '72%', isScattered: false, tailDir: 'right' },
-    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '65%', sLeft: '28%', isScattered: false, tailDir: 'left' }
-  ];
+    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '82%', sLeft: '32%', isScattered: false, tailDir: 'right' },
+    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right' },
+    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left' }
+  ]);
 
-  $: activeCount = thoughts.filter(t => !t.isScattered).length;
-  $: blurAmount = activeCount * 1.5; 
-  $: opacityAmount = activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08);
+  // Rune $derived per ricalcolare dinamicamente lo stato della frase sfocata in base ai pensieri attivi
+  let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
+  let blurAmount = $derived(activeCount * 1.5); 
+  let opacityAmount = $derived(activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08));
 
+  /**
+   * Marca il pensiero come disperso, modificando lo stato per innescare gli effetti reattivi
+   * @param {number} id - L'ID del pensiero da marcare
+   */
   function markAsScattered(id) {
     const index = thoughts.findIndex(t => t.id === id);
-    if (!thoughts[index].isScattered) {
+    if (index !== -1 && !thoughts[index].isScattered) {
       thoughts[index].isScattered = true;
-      thoughts = [...thoughts]; 
     }
   }
-
-  onMount(async () => {
-    await tick();
-    const items = document.querySelectorAll('.thought-box');
-    items.forEach((item) => {
-      Draggable.create(item, {
-        type: "x,y",
-        edgeResistance: 0.8,
-        bounds: container,
-        onDragEnd: function() {
-          const id = parseInt(this.target.getAttribute('data-id'));
-          markAsScattered(id); // Una volta spostato, rimane dov'è
-        }
-      });
-    });
-  });
 </script>
 
 <section class="favorite-section" bind:this={container}>
@@ -59,7 +43,23 @@
   </div>
 
   {#each thoughts as t (t.id)}
-    <div class="thought-box tail-{t.tailDir}" data-id={t.id} style="top: {t.cTop}; left: {t.cLeft};" role="button" tabindex="0">
+    <div 
+      use:draggableThought={{ 
+        id: t.id, 
+        container, 
+        sTop: t.sTop, 
+        sLeft: t.sLeft, 
+        cTop: t.cTop, 
+        cLeft: t.cLeft, 
+        onScatter: markAsScattered 
+      }}
+      class="thought-box tail-{t.tailDir}" 
+      data-id={t.id} 
+      style="top: {t.cTop}; left: {t.cLeft};" 
+      role="button" 
+      tabindex="0"
+    >
+      <GlassEffect class="thought-background" />
       {t.text}
     </div>
   {/each}
@@ -88,7 +88,13 @@
     text-align: center;
   }
 
-.thought-box {
+  .sentence-container {
+    /* Rende la transizione tra un livello di sfocatura e l'altro estremamente morbida e progressiva */
+    transition: filter 1.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: filter, opacity;
+  }
+
+  .thought-box {
     position: absolute;
     padding: var(--spacing-3) var(--spacing-7); 
     
@@ -101,30 +107,21 @@
     user-select: none;
     z-index: 10;
     white-space: nowrap;
-
-    /* 1. Sfondo e Bordo esatti */
-    background-color: rgba(241, 250, 253, 0.55);
-    border: 1px solid rgba(223, 244, 250, 0.5);
     
-    /* 2. RIFRAZIONE E PROFONDITÀ (Dal tuo GlassEffect.svelte) */
-    box-shadow: 
-      2px 2px 4px rgba(0, 0, 0, 0.23),            /* A. Ombra ESTERNA */
-      inset 0 0 10px rgba(255, 255, 255, 0.3),    /* B. Luce spessa (Depth) */
-      inset 2px 2px 3px rgba(255, 255, 255, 0.9), /* C. Riflesso Top-Left */
-      inset -1px -1px 3px rgba(223, 244, 250, 0.4);/* D. Profondità Bottom-Right */
+    /* Assicura la disposizione del testo sopra lo sfondo in assoluto */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    /* 3. Frost + Refraction */
-    backdrop-filter: blur(13px) saturate(120%);
-    -webkit-backdrop-filter: blur(13px) saturate(120%);
-    
-    /* 4. Gradiente di luce */
-    background-image: linear-gradient(
-      -45deg, 
-      rgba(255, 255, 255, 0.4) 0%, 
-      rgba(255, 255, 255, 0) 30%, 
-      rgba(255, 255, 255, 0) 70%, 
-      rgba(255, 255, 255, 0.1) 100%
-    );
+  /* Forza il componente GlassEffect a coprire l'intera superficie del fumetto fungendo da riempimento */
+  :global(.thought-background) {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: -1;
   }
   
   /* Poligoni con angoli stondati simulati */
