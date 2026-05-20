@@ -114,8 +114,8 @@
 			<div class="background-inset-back" style="background-color: {colorBrandBack};"></div>
 			
 			<!-- Separator line (Stato hover SVG) -->
-			<svg class="back-separator" xmlns="http://www.w3.org/2000/svg" width="290" height="2" viewBox="0 0 290 2" fill="none">
-				<path d="M0 1H290" stroke="var(--content-primary)" stroke-width="2" stroke-dasharray="0.1 5"/>
+			<svg class="back-text back-separator" xmlns="http://www.w3.org/2000/svg" width="290" height="2" viewBox="0 0 290 2" fill="none">
+				<path d="M0 1H290" stroke="var(--content-primary)" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.1 5"/>
 			</svg>
 
 			<!-- Back content container -->
