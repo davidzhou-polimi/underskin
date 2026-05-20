@@ -25,50 +25,56 @@ export function flipCard(node, params = {}) {
 
 	if (!innerCard) return;
 
-	// Set initial states
-	gsap.set(innerCard, { transformStyle: 'preserve-3d' });
-	if (backTexts.length) gsap.set(backTexts, { opacity: 0, y: 10 });
+	// Gestiamo il ciclo di vita dei tween all'interno del contesto per prevenire memory leak in Svelte 5.
+	const ctx = gsap.context(() => {
+		gsap.set(innerCard, { transformStyle: 'preserve-3d' });
+		if (backTexts.length) gsap.set(backTexts, { opacity: 0, y: 10 });
+	}, node);
 
 	const getRotationProp = () => axis === 'X' ? 'rotateX' : 'rotateY';
 
 	const flipToBack = () => {
-		gsap.to(innerCard, {
-			[getRotationProp()]: 180,
-			duration: duration,
-			ease: 'back.out(1.2)',
-			overwrite: 'auto'
-		});
-
-		if (backTexts.length) {
-			gsap.to(backTexts, {
-				opacity: 1,
-				y: 0,
-				duration: duration * 0.66,
-				delay: duration * 0.33,
-				stagger: duration * 0.16,
-				ease: 'power2.out',
+		ctx.add(() => {
+			gsap.to(innerCard, {
+				[getRotationProp()]: 180,
+				duration: duration,
+				ease: 'back.out(1.2)',
 				overwrite: 'auto'
 			});
-		}
+
+			if (backTexts.length) {
+				gsap.to(backTexts, {
+					opacity: 1,
+					y: 0,
+					duration: duration * 0.66,
+					delay: duration * 0.33,
+					stagger: duration * 0.16,
+					ease: 'power2.out',
+					overwrite: 'auto'
+				});
+			}
+		});
 	};
 
 	const flipToFront = () => {
-		gsap.to(innerCard, {
-			[getRotationProp()]: 0,
-			duration: duration,
-			ease: 'power2.out',
-			overwrite: 'auto'
-		});
-
-		if (backTexts.length) {
-			gsap.to(backTexts, {
-				opacity: 0,
-				y: 10,
-				duration: duration * 0.33,
-				ease: 'power2.in',
+		ctx.add(() => {
+			gsap.to(innerCard, {
+				[getRotationProp()]: 0,
+				duration: duration,
+				ease: 'power2.out',
 				overwrite: 'auto'
 			});
-		}
+
+			if (backTexts.length) {
+				gsap.to(backTexts, {
+					opacity: 0,
+					y: 10,
+					duration: duration * 0.33,
+					ease: 'power2.in',
+					overwrite: 'auto'
+				});
+			}
+		});
 	};
 
 	let isFlipped = false;
@@ -93,8 +99,7 @@ export function flipCard(node, params = {}) {
 		},
 		destroy() {
 			node.removeEventListener('click', onClick);
-			gsap.killTweensOf(innerCard);
-			if (backTexts.length) gsap.killTweensOf(backTexts);
+			ctx.revert();
 		}
 	};
 }

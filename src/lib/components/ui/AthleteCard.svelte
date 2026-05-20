@@ -46,11 +46,6 @@
 	let colorBrandBack = $derived(colors.brandBack);
 
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
-
-	// Genera ID unici per i gradienti SVG in modo da evitare collisioni nel DOM
-	const instanceId = Math.random().toString(36).substring(2, 9);
-	const paintTopId = `paintTop-${instanceId}`;
-	const paintBottomId = `paintBottom-${instanceId}`;
 </script>
 
 <div class="athlete-card-container" use:flipCard={{ axis, duration }} use:hoverLift>
@@ -64,7 +59,7 @@
 			<!-- Video/Image container -->
 			<div class="media-container">
 				{#if imageSrc}
-					<img src={imageSrc} alt={name} class="athlete-image" />
+					<img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
 				{/if}
 			</div>
 			
@@ -72,26 +67,10 @@
 			<div class="overlay-brand" style="background-color: {colorBrand};"></div>
 			
 			<!-- Upper gradient (Sfumatura superiore) -->
-			<svg class="decal-top" xmlns="http://www.w3.org/2000/svg" width="329" height="111" viewBox="0 0 329 111" fill="none">
-				<path d="M0 16C0 7.16344 7.16344 0 16 0H313C321.837 0 329 7.16344 329 16V111H0V16Z" fill="url(#{paintTopId})"/>
-				<defs>
-					<linearGradient id={paintTopId} x1="166" y1="0" x2="166" y2="111" gradientUnits="userSpaceOnUse">
-						<stop stop-color={colorBrandBack}/>
-						<stop offset="1" stop-color={colorBrand} stop-opacity="0"/>
-					</linearGradient>
-				</defs>
-			</svg>
+			<div class="decal-top" style="--gradient-start: {colorBrandBack};"></div>
 			
 			<!-- Lower gradient (Sfumatura inferiore) -->
-			<svg class="decal-bottom" xmlns="http://www.w3.org/2000/svg" width="329" height="72" viewBox="0 0 329 72" fill="none">
-				<path d="M329 56C329 64.8366 321.837 72 313 72L16 72C7.16345 72 6.26248e-07 64.8365 1.39876e-06 56L6.29444e-06 1.75548e-06L329 3.05176e-05L329 56Z" fill="url(#{paintBottomId})"/>
-				<defs>
-					<linearGradient id={paintBottomId} x1="163" y1="72" x2="163" y2="1.60054e-05" gradientUnits="userSpaceOnUse">
-						<stop stop-color={colorBrandBack}/>
-						<stop offset="1" stop-color={colorBrand} stop-opacity="0"/>
-					</linearGradient>
-				</defs>
-			</svg>
+			<div class="decal-bottom" style="--gradient-start: {colorBrandBack};"></div>
 
 			<!-- Name -->
 			<div class="name-front">
@@ -162,6 +141,7 @@
 		box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.23);
 		border-radius: var(--radius-m);
 		transition: box-shadow 0.3s ease-out;
+		will-change: transform;
 	}
 
 	.athlete-card-container:hover .card-inner {
@@ -172,6 +152,7 @@
 		position: absolute;
 		inset: 0;
 		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
 		-webkit-font-smoothing: subpixel-antialiased;
@@ -197,6 +178,8 @@
 		opacity: 0.5;
 		backdrop-filter: blur(13px);
 	}
+
+
 
 	/* FRONT STYLES */
 	.media-container {
@@ -235,6 +218,8 @@
 		width: 329px;
 		height: 111px;
 		pointer-events: none;
+		background: linear-gradient(to bottom, var(--gradient-start) 0%, transparent 100%);
+		border-radius: var(--radius-s) var(--radius-s) 0 0;
 	}
 
 	.decal-bottom {
@@ -244,6 +229,8 @@
 		width: 329px;
 		height: 72px;
 		pointer-events: none;
+		background: linear-gradient(to top, var(--gradient-start) 0%, transparent 100%);
+		border-radius: 0 0 var(--radius-s) var(--radius-s);
 	}
 
 	.name-front {

@@ -20,23 +20,30 @@ export function hoverLift(node, params = {}) {
 		ease = 'power2.out'
 	} = params;
 
+	// Gestiamo il ciclo di vita dei tween tramite un contesto dedicato per garantire il cleanup corretto.
+	const ctx = gsap.context(() => {}, node);
+
 	// Avvia l'animazione di sollevamento all'ingresso del cursore
 	const onMouseEnter = () => {
-		gsap.to(node, {
-			y: y,
-			duration: duration,
-			ease: ease,
-			overwrite: 'auto'
+		ctx.add(() => {
+			gsap.to(node, {
+				y: y,
+				duration: duration,
+				ease: ease,
+				overwrite: 'auto'
+			});
 		});
 	};
 
 	// Ripristina lo stato originale all'uscita del cursore
 	const onMouseLeave = () => {
-		gsap.to(node, {
-			y: 0,
-			duration: duration,
-			ease: ease,
-			overwrite: 'auto'
+		ctx.add(() => {
+			gsap.to(node, {
+				y: 0,
+				duration: duration,
+				ease: ease,
+				overwrite: 'auto'
+			});
 		});
 	};
 
@@ -47,7 +54,7 @@ export function hoverLift(node, params = {}) {
 		destroy() {
 			node.removeEventListener('mouseenter', onMouseEnter);
 			node.removeEventListener('mouseleave', onMouseLeave);
-			gsap.killTweensOf(node);
+			ctx.revert();
 		}
 	};
 }
