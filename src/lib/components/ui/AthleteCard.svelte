@@ -339,15 +339,17 @@
 	}
 
 	.context-text {
-		font-size: var(--text-service-size);
+		font-size: var(--text-card-back-context-size);
 		line-height: 20px;
 		margin: 0;
+        font-weight: var(--text-card-back-context-weight);
 	}
 
 	.quote-text {
-		font-size: var(--text-service-size);
+		font-size: var(--text-card-back-quote-size);
 		line-height: 20px;
 		font-style: italic;
 		margin: 0;
+        font-weight: var(--text-card-back-quote-weight);
 	}
 </style>

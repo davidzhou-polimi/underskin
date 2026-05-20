@@ -55,6 +55,12 @@
 	--text-card-front-size:   var(--text-m);
 	--text-card-front-weight: 700;
 
+    --text-card-back-context-size:   var(--text-xs);
+    --text-card-back-context-weight: 550;
+
+    --text-card-back-quote-size:   var(--text-xs);
+    --text-card-back-quote-weight: 400;
+
 	--text-footer-size:       var(--text-3xl);
 	--text-footer-weight:     700;
 
