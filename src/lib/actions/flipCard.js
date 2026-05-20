@@ -31,7 +31,7 @@ export function flipCard(node, params = {}) {
 
 	const getRotationProp = () => axis === 'X' ? 'rotateX' : 'rotateY';
 
-	const onMouseEnter = () => {
+	const flipToBack = () => {
 		gsap.to(innerCard, {
 			[getRotationProp()]: 180,
 			boxShadow: axis === 'X' ? '2px -2px 4px 0px rgba(0,0,0,0.23)' : '-2px 2px 4px 0px rgba(0,0,0,0.23)',
@@ -44,8 +44,8 @@ export function flipCard(node, params = {}) {
 			gsap.to(backTexts, {
 				opacity: 1,
 				y: 0,
-				duration: duration * 0.66, // Scale text entry with flip duration
-				delay: duration * 0.33,     // Delay scaling with flip duration
+				duration: duration * 0.66,
+				delay: duration * 0.33,
 				stagger: duration * 0.16,
 				ease: 'power2.out',
 				overwrite: 'auto'
@@ -53,7 +53,7 @@ export function flipCard(node, params = {}) {
 		}
 	};
 
-	const onMouseLeave = () => {
+	const flipToFront = () => {
 		gsap.to(innerCard, {
 			[getRotationProp()]: 0,
 			boxShadow: '2px 2px 4px 0px rgba(0,0,0,0.23)',
@@ -73,8 +73,17 @@ export function flipCard(node, params = {}) {
 		}
 	};
 
-	node.addEventListener('mouseenter', onMouseEnter);
-	node.addEventListener('mouseleave', onMouseLeave);
+	let isFlipped = false;
+	const onClick = () => {
+		isFlipped = !isFlipped;
+		if (isFlipped) {
+			flipToBack();
+		} else {
+			flipToFront();
+		}
+	};
+
+	node.addEventListener('click', onClick);
 
 	return {
 		/**
@@ -85,8 +94,7 @@ export function flipCard(node, params = {}) {
 			duration = newParams.duration ?? 0.8;
 		},
 		destroy() {
-			node.removeEventListener('mouseenter', onMouseEnter);
-			node.removeEventListener('mouseleave', onMouseLeave);
+			node.removeEventListener('click', onClick);
 			gsap.killTweensOf(innerCard);
 			if (backTexts.length) gsap.killTweensOf(backTexts);
 		}
