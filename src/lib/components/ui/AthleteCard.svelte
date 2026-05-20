@@ -321,7 +321,7 @@
 	.quote-text {
 		font-size: var(--text-service-size);
 		line-height: 20px;
-		text-align: center;
+		text-align: justify;
 		width: 100%;
 		height: 338px;
 		margin: 0;
