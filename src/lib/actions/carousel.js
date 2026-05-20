@@ -103,23 +103,23 @@ export function carousel(node, params = {}) {
 				zIndex = 5;
 				pointerEvents = 'auto';
 			} else if (currentDiff === -2) {
-				// Far left neighbor (visible in circular mode)
+				// Far left neighbor (hidden/fade-out target for circular transitions)
 				x = isMobile ? -320 : -780;
 				y = isMobile ? 90 : 180;
 				rotation = -24;
 				scale = isMobile ? 0.6 : 0.7;
-				opacity = 0.4;
+				opacity = 0;
 				zIndex = 3;
-				pointerEvents = 'auto';
+				pointerEvents = 'none';
 			} else if (currentDiff === 2) {
-				// Far right neighbor (visible in circular mode)
+				// Far right neighbor (hidden/fade-in start for circular transitions)
 				x = isMobile ? 320 : 780;
 				y = isMobile ? 90 : 180;
 				rotation = 24;
 				scale = isMobile ? 0.6 : 0.7;
-				opacity = 0.4;
+				opacity = 0;
 				zIndex = 3;
-				pointerEvents = 'auto';
+				pointerEvents = 'none';
 			} else {
 				// Off-screen
 				x = currentDiff < 0 ? (isMobile ? -450 : -1000) : (isMobile ? 450 : 1000);
@@ -145,10 +145,11 @@ export function carousel(node, params = {}) {
 						zIndex,
 						pointerEvents,
 						duration: 0.6,
-						ease: 'power2.out',
 						overwrite: 'auto'
 					});
 				} else {
+					// Stop active transitions on this card to prevent fighting/sliding back
+					gsap.killTweensOf(card);
 					gsap.set(card, {
 						x,
 						y,
