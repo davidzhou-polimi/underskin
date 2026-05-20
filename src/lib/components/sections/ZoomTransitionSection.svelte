@@ -10,9 +10,7 @@
 		
 		<h1 class="zoom-text">
 			Milano Cortina
-			<span class="break-line">
-				2<span class="target-digit">0</span>26
-			</span>
+			<span class="break-line">2026</span>
 		</h1>
 	</div>
 
@@ -25,6 +23,7 @@
 </section>
 
 <style>
+	/* Definiamo un colore temporaneo a tinta unita (es. un grigio scuro o blu profondo del brand) */
 	.zoom-section {
 		--placeholder-color: var(--content-primary, #111111);
 		
@@ -51,6 +50,7 @@
 		padding: var(--spacing-4);
 	}
 
+	/* Stile primo testo richiesto: --text-caption-size + --text-caption-weight + --content-primary */
 	.first-text {
 		font-size: var(--text-caption-size);
 		font-weight: var(--text-caption-weight);
@@ -60,6 +60,7 @@
 		letter-spacing: 0.05em;
 	}
 
+	/* Stile secondo testo richiesto: --text-footer-size + --text-footer-weight */
 	.zoom-text {
 		font-size: var(--text-footer-size);
 		font-weight: var(--text-footer-weight);
@@ -67,17 +68,16 @@
 		margin: var(--spacing-0);
 		line-height: 1.1;
 		text-align: center;
+		
+		/* Suggerisce al browser di ottimizzare il rendering dello zoom hardware */
+		will-change: transform; 
 	}
 
 	.break-line {
 		display: block;
 	}
 
-	/* Rendiamo lo span un blocco in linea per permettere il calcolo geometrico corretto */
-	.target-digit {
-		display: inline-block;
-	}
-
+	/* Schermata successiva rivelata dallo zoom */
 	.next-section-content {
 		position: absolute;
 		top: 0;
@@ -88,11 +88,13 @@
 		align-items: center;
 		justify-content: center;
 		z-index: 2;
+		/* Lo sfondo ha lo stesso identico colore del testo per dare l'effetto di continuità */
 		background-color: var(--azzurro-600);
 	}
 
 	.content-wrapper {
 		text-align: center;
+		/* Colore di contrasto per i testi interni alla nuova sezione */
 		color: var(--background-primary);
 		padding: var(--spacing-4);
 	}
