@@ -16,65 +16,56 @@
 	const dots = Array.from({ length: dotCount }, (_, i) => {
 		const angle = (i / dotCount) * 2 * Math.PI - Math.PI / 2;
 		return {
-			x: 550 + radius * Math.cos(angle),
-			y: 550 + radius * Math.sin(angle),
-			delay: (i / dotCount) * 1.5
+			x: 650 + radius * Math.cos(angle),
+			y: 650 + radius * Math.sin(angle)
 		};
 	});
 
 	onMount(() => {
 		const ctx = gsap.context(() => {
-			const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.1 });
-
 			gsap.set('.dot, .dot-right', { scale: 0, opacity: 0, transformOrigin: 'center' });
-
-			tl.to('.dot', {
-				scale: 1,
-				opacity: 1,
-				duration: 0.15,
-				ease: 'back.out(2)',
-				stagger: {
-					each: 0.03,
-					from: 'start'
-				}
-			})
-				.to(
-					'.dot-right',
-					{
-						scale: 1,
-						opacity: 1,
-						duration: 0.15,
-						ease: 'back.out(2)',
-						stagger: {
-							each: 0.03,
-							from: 'end'
-						}
-					},
-					'<'
-				)
-				.to('.dot, .dot-right', {
-					scale: 0,
-					opacity: 0,
-					duration: 0.04,
-					ease: 'power2.in',
-					stagger: {
-						each: 0.03,
-						from: 'end'
-					}
-				});
 
 			gsap.to(circleContainer, {
 				rotation: 360,
-				duration: 2,
+				duration: 3,
 				ease: 'none',
-				transformOrigin: '550px 550px'
+				transformOrigin: '50% 50%'
 			});
 
 			gsap.to(circleContainerRight, {
 				rotation: -360,
-				duration: 2,
+				duration: 3,
 				ease: 'none',
-				transformOrigin: '550px 550px'
+				transformOrigin: '50% 50%'
+			});
+
+			gsap.to('.dot', {
+				scale: 1,
+				opacity: 1,
+				duration: 0.5,
+				ease: 'power2.out',
+				stagger: {
+					each: 0.015,
+					from: 'start'
+				}
+			});
+
+			gsap.to('.dot-right', {
+				scale: 1,
+				opacity: 1,
+				duration: 0.5,
+				ease: 'power2.out',
+				stagger: {
+					each: 0.015,
+					from: 'end'
+				},
+				delay: 0.3,
+				onComplete: () => {
+					gsap.killTweensOf(circleContainer);
+					gsap.killTweensOf(circleContainerRight);
+					gsap.set(circleContainer, { rotation: 0 });
+					gsap.set(circleContainerRight, { rotation: 0 });
+				}
 			});
 
 		}, circleWrapper);
@@ -88,7 +79,7 @@
 		<svg
 			bind:this={circleContainer}
 			class="circle-svg"
-			viewBox="0 0 1100 1100"
+			viewBox="0 0 1300 1300"
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			{#each dots as dot, i}
@@ -147,9 +138,9 @@
 	}
 
 	.decorative-circle.right {
-		top: 400px;
+		top: 300px;
 		left: auto;
-		right: -500px;
+		right: -400px;
 	}
 
 	.circle-svg {
