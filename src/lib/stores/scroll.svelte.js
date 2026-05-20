@@ -3,6 +3,7 @@
  */
 class ScrollState {
 	// Variabile reattiva globale che traccia l'id della sezione attiva
+	/** @type {string | null} */
 	activeSection = $state(null);
 	// Altre variabili utili per lo scrollytelling
 	progress = $state(0);
