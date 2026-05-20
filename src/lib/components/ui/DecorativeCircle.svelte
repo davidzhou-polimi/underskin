@@ -65,17 +65,15 @@
 
 			gsap.to(circleContainer, {
 				rotation: 360,
-				duration: 5,
+				duration: 2,
 				ease: 'none',
-				repeat: -1,
 				transformOrigin: '50% 50%'
 			});
 
 			gsap.to(circleContainerRight, {
 				rotation: -360,
-				duration: 5,
+				duration: 2,
 				ease: 'none',
-				repeat: -1,
 				transformOrigin: '50% 50%'
 			});
 
