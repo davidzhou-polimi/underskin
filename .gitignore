@@ -23,8 +23,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Local Sandboxes
-/src/routes/cards
-/src/routes/carousel
+/src/routes/sandbox
 
 # TODO
 TODO.md
