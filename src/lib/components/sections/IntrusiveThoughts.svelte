@@ -85,6 +85,7 @@
     font-weight: 400;
     color: var(--neutral-900);
     line-height: 1.5;
+    text-align: center;
   }
 
 .thought-box {
@@ -93,7 +94,7 @@
     
     font-family: var(--font-family-base);
     font-size: var(--text-caption-size);
-    font-weight: var(--text-card-front-weight);
+    font-weight: 400;
     color: var(--neutral-900);
     
     cursor: grab;
