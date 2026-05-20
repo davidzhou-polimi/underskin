@@ -53,7 +53,20 @@ export function carousel(node, params = {}) {
 		const activeDot = node.querySelector('.active-dot');
 
 		cards.forEach((card, i) => {
-			const diff = i - index;
+			let currentDiff = i - index;
+			if (currentDiff > itemsCount / 2) {
+				currentDiff -= itemsCount;
+			} else if (currentDiff < -itemsCount / 2) {
+				currentDiff += itemsCount;
+			}
+
+			let prevDiff = i - activeIndex;
+			if (prevDiff > itemsCount / 2) {
+				prevDiff -= itemsCount;
+			} else if (prevDiff < -itemsCount / 2) {
+				prevDiff += itemsCount;
+			}
+
 			let x = 0;
 			let y = 0;
 			let rotation = 0;
@@ -62,7 +75,7 @@ export function carousel(node, params = {}) {
 			let zIndex = 10;
 			let pointerEvents = 'auto';
 
-			if (diff === 0) {
+			if (currentDiff === 0) {
 				// Center active card
 				x = 0;
 				y = 0;
@@ -71,47 +84,58 @@ export function carousel(node, params = {}) {
 				opacity = 1;
 				zIndex = 10;
 				pointerEvents = 'auto';
-			} else if (diff === -1) {
+			} else if (currentDiff === -1) {
 				// Left neighbor
-				x = isMobile ? -165 : -370;
-				y = isMobile ? 35 : 75;
+				x = isMobile ? -180 : -420;
+				y = isMobile ? 40 : 90;
 				rotation = -12;
 				scale = isMobile ? 0.78 : 0.85;
 				opacity = 0.85;
 				zIndex = 5;
 				pointerEvents = 'auto';
-			} else if (diff === 1) {
+			} else if (currentDiff === 1) {
 				// Right neighbor
-				x = isMobile ? 165 : 370;
-				y = isMobile ? 35 : 75;
+				x = isMobile ? 180 : 420;
+				y = isMobile ? 40 : 90;
 				rotation = 12;
 				scale = isMobile ? 0.78 : 0.85;
 				opacity = 0.85;
 				zIndex = 5;
 				pointerEvents = 'auto';
-			} else if (diff < -1) {
-				// Off-screen left
-				x = isMobile ? -300 : -650;
-				y = isMobile ? 80 : 150;
+			} else if (currentDiff === -2) {
+				// Far left neighbor (visible in circular mode)
+				x = isMobile ? -320 : -780;
+				y = isMobile ? 90 : 180;
 				rotation = -24;
-				scale = 0.7;
-				opacity = 0;
-				zIndex = 1;
-				pointerEvents = 'none';
-			} else { // diff > 1
-				// Off-screen right
-				x = isMobile ? 300 : 650;
-				y = isMobile ? 80 : 150;
+				scale = isMobile ? 0.6 : 0.7;
+				opacity = 0.4;
+				zIndex = 3;
+				pointerEvents = 'auto';
+			} else if (currentDiff === 2) {
+				// Far right neighbor (visible in circular mode)
+				x = isMobile ? 320 : 780;
+				y = isMobile ? 90 : 180;
 				rotation = 24;
-				scale = 0.7;
+				scale = isMobile ? 0.6 : 0.7;
+				opacity = 0.4;
+				zIndex = 3;
+				pointerEvents = 'auto';
+			} else {
+				// Off-screen
+				x = currentDiff < 0 ? (isMobile ? -450 : -1000) : (isMobile ? 450 : 1000);
+				y = isMobile ? 150 : 280;
+				rotation = currentDiff < 0 ? -36 : 36;
+				scale = 0.5;
 				opacity = 0;
 				zIndex = 1;
 				pointerEvents = 'none';
 			}
 
+			const isWrap = animate && Math.abs(currentDiff - prevDiff) > 1.5;
+
 			// Apply card transformations
 			ctx.add(() => {
-				if (animate) {
+				if (animate && !isWrap) {
 					gsap.to(card, {
 						x,
 						y,
@@ -130,10 +154,17 @@ export function carousel(node, params = {}) {
 						y,
 						rotation,
 						scale,
-						opacity,
 						zIndex,
 						pointerEvents
 					});
+					if (isWrap) {
+						gsap.fromTo(card,
+							{ opacity: 0 },
+							{ opacity, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+						);
+					} else {
+						gsap.set(card, { opacity });
+					}
 				}
 			});
 		});
@@ -163,6 +194,9 @@ export function carousel(node, params = {}) {
 				}
 			}
 		});
+
+		// Update activeIndex to match current layout index
+		activeIndex = index;
 	}
 
 	// Position items immediately without animation on startup

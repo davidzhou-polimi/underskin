@@ -21,6 +21,20 @@
 		"quote": "Sempre avanti."
 	},
 	{
+		"name": "Sofia Rossi",
+		"type": "favorito",
+		"imageSrc": "https://picsum.photos/id/1062/329/432",
+		"context": "Campionessa europea di scherma, detentrice del record di vittorie consecutive.",
+		"quote": "La mente controlla il corpo."
+	},
+	{
+		"name": "Davide Bianchi",
+		"type": "favorito",
+		"imageSrc": "https://picsum.photos/id/1069/329/432",
+		"context": "Primatista dei 100m stile libero, vincitore di due ori mondiali.",
+		"quote": "L'acqua è il mio elemento."
+	},
+	{
 		"name": "Luigi Neri",
 		"type": "insoddisfatto",
 		"imageSrc": "https://picsum.photos/id/1027/329/432",
@@ -42,6 +56,20 @@
 		"quote": "Senza sosta."
 	},
 	{
+		"name": "Fabio Marrone",
+		"type": "insoddisfatto",
+		"imageSrc": "https://picsum.photos/id/1074/329/432",
+		"context": "Medaglia d'argento olimpica, sente di non aver espresso il massimo potenziale.",
+		"quote": "L'argento non brilla abbastanza."
+	},
+	{
+		"name": "Elisa Russo",
+		"type": "insoddisfatto",
+		"imageSrc": "https://picsum.photos/id/1084/329/432",
+		"context": "Pluripremiata ginnasta, sempre alla ricerca della perfezione millimetrica.",
+		"quote": "Anche la perfezione ha margini di miglioramento."
+	},
+	{
 		"name": "Mario Rossi",
 		"type": "infortunato",
 		"imageSrc": "https://picsum.photos/id/1025/329/432",
@@ -61,5 +89,19 @@
 		"imageSrc": "https://picsum.photos/id/1026/329/432",
 		"context": "Contesto per Paolo Neri. Concentrato sulla riabilitazione passo dopo passo per un ritorno sicuro.",
 		"quote": "Un passo alla volta."
+	},
+	{
+		"name": "Roberto Gallo",
+		"type": "infortunato",
+		"imageSrc": "https://picsum.photos/id/1000/329/432",
+		"context": "Rottura del legamento crociato anteriore a poche settimane dai campionati nazionali.",
+		"quote": "La pazienza è la chiave del rientro."
+	},
+	{
+		"name": "Elena Costa",
+		"type": "infortunato",
+		"imageSrc": "https://picsum.photos/id/1001/329/432",
+		"context": "Frattura da stress al piede sinistro durante la preparazione per la maratona.",
+		"quote": "Il corpo parla, ora tocca a me ascoltare."
 	}
 ]

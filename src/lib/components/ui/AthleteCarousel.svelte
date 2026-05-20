@@ -36,15 +36,11 @@
 	}
 
 	function next() {
-		if (activeIndex < filteredAthletes.length - 1) {
-			activeIndex += 1;
-		}
+		activeIndex = (activeIndex + 1) % filteredAthletes.length;
 	}
 
 	function prev() {
-		if (activeIndex > 0) {
-			activeIndex -= 1;
-		}
+		activeIndex = (activeIndex - 1 + filteredAthletes.length) % filteredAthletes.length;
 	}
 
 	/**
@@ -137,7 +133,6 @@
 			class="nav-btn prev-btn" 
 			onclick={prev} 
 			aria-label="Previous athlete" 
-			disabled={activeIndex === 0}
 		>
 			<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
 				<path d="M15 18l-6-6 6-6" />
@@ -186,7 +181,6 @@
 			class="nav-btn next-btn" 
 			onclick={next} 
 			aria-label="Next athlete" 
-			disabled={activeIndex === filteredAthletes.length - 1}
 		>
 			<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
 				<path d="M9 5l6 6-6 6" />
