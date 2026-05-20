@@ -1,0 +1,65 @@
+:root {
+	/* ============================================================
+	   SEMANTIC TOKENS – colori funzionali
+	   ============================================================ */
+	--background-primary: #f1fafd;
+	--background-secondary: #dff4fa;
+	--content-primary: #071e45;
+	--content-secondary: #0f2d54;
+	--archetipi-favorito: #6a96df;
+	--archetipi-infortunato: #d86146;
+	--archetipi-insoddisfatto: #8035d2;
+
+	/* ============================================================
+	   BRAND – azzurro (scala 100→900)
+	   ============================================================ */
+	--azzurro-100: #e2f0fd;
+	--azzurro-200: #c6e0fb;
+	--azzurro-300: #a8cbf5;
+	--azzurro-400: #8fb5eb;
+	--azzurro-500: #6a96df;
+	--azzurro-600: #4d74bf;
+	--azzurro-700: #3555a0;
+	--azzurro-800: #213a81;
+	--azzurro-900: #14276b;
+
+	/* ============================================================
+	   BRAND – viola (scala 100→900)
+	   ============================================================ */
+	--viola-100: #f0d6fc;
+	--viola-200: #deaffa;
+	--viola-300: #c385f1;
+	--viola-400: #a764e3;
+	--viola-500: #8035d2;
+	--viola-600: #6326b4;
+	--viola-700: #4a1a97;
+	--viola-800: #331079;
+	--viola-900: #240a64;
+
+	/* ============================================================
+	   BRAND – arancione (scala 100→900)
+	   ============================================================ */
+	--arancione-100: #fdebda;
+	--arancione-200: #fbd3b7;
+	--arancione-300: #f3b190;
+	--arancione-400: #e79072;
+	--arancione-500: #d86146;
+	--arancione-600: #b94133;
+	--arancione-700: #9b2723;
+	--arancione-800: #7d161a;
+	--arancione-900: #670d17;
+
+	/* ============================================================
+	   NEUTRAL (scala 50→900)
+	   ============================================================ */
+	--neutral-50: #f1fafd;
+	--neutral-100: #dff4fa;
+	--neutral-200: #c1e4f5;
+	--neutral-300: #9bc4df;
+	--neutral-400: #759dbc;
+	--neutral-500: #456c8d;
+	--neutral-600: #315579;
+	--neutral-700: #1f4066;
+	--neutral-800: #0f2d54;
+	--neutral-900: #071e45;
+}

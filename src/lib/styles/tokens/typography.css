@@ -1,3 +1,69 @@
-:root {
-	--font-primary: 'Satoshi', sans-serif;
+@font-face {
+	font-family: "Rethink Sans";
+	src: url("/fonts/RethinkSans-VariableFont_wght.ttf") format("truetype-variations"),
+	     url("/fonts/RethinkSans-VariableFont_wght.ttf") format("truetype");
+	font-weight: 400 800;
+	font-style: normal;
+	font-display: swap;
 }
+
+@font-face {
+	font-family: "Rethink Sans";
+	src: url("/fonts/RethinkSans-Italic-VariableFont_wght.ttf") format("truetype-variations"),
+	     url("/fonts/RethinkSans-Italic-VariableFont_wght.ttf") format("truetype");
+	font-weight: 400 800;
+	font-style: italic;
+	font-display: swap;
+}
+
+:root {
+	/* ============================================================
+	   FONT FAMILY
+	   ============================================================ */
+	--font-family-base: "Rethink Sans", "Arial Nova", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+	/* ============================================================
+	   TYPE SCALE
+	   ============================================================ */
+	--text-xs:  1rem;      /*  16px */
+	--text-s:   1.5rem;    /*  24px */
+	--text-m:   2rem;      /*  32px */
+	--text-l:   2.5rem;    /*  40px */
+	--text-xl:  3.5rem;    /*  56px */
+	--text-2xl: 8rem;      /* 128px */
+	--text-3xl: 12.5rem;   /* 200px */
+
+	/* ============================================================
+	   TEXT STYLES
+	   La variante mobile sovrascrive gli stessi token in @media
+	   ============================================================ */
+	--text-caption-size:      var(--text-s);
+	--text-caption-weight:    400;
+
+	--text-body-size:         var(--text-l);
+	--text-body-weight:       400;
+
+	--text-title-size:        var(--text-2xl);
+	--text-title-weight:      800;
+
+	--text-important-size:    var(--text-xl);
+	--text-important-weight:  700;
+
+	--text-service-size:      var(--text-xs);
+	--text-service-weight:    400;
+
+	--text-card-front-size:   var(--text-m);
+	--text-card-front-weight: 700;
+
+	--text-footer-size:       var(--text-3xl);
+	--text-footer-weight:     700;
+
+	--text-intro-card-size:   var(--text-xs);
+	--text-intro-card-weight: 700;
+}
+
+html,
+body {
+	font-family: var(--font-family-base);
+}
+

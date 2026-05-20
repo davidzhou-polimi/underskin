@@ -1,2 +1,4 @@
-@import 'tokens/typography.css';
-/* Qui importare colors.css, spacing.css, ecc. */
+@import "./tokens/colors.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/typography.css";
