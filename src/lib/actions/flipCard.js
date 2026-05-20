@@ -17,7 +17,7 @@ export function flipCard(node, params = {}) {
 		axis = 'Y', 
 		innerSelector = '.card-inner', 
 		textSelector = '.back-text',
-		duration = 0.8
+		duration = 1.0
 	} = params;
 
 	const innerCard = node.querySelector(innerSelector);
@@ -91,7 +91,7 @@ export function flipCard(node, params = {}) {
 		 */
 		update(newParams) {
 			axis = newParams.axis ?? 'Y';
-			duration = newParams.duration ?? 0.8;
+			duration = newParams.duration ?? 1.0;
 		},
 		destroy() {
 			node.removeEventListener('click', onClick);

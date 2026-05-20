@@ -19,7 +19,7 @@
 		axis = 'Y', 
 		imageSrc = "",
 		type = 'favorito',
-		duration = 0.8
+		duration = 1.0
 	} = $props();
 
 	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
@@ -154,6 +154,11 @@
 		backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
+	}
+
+	.card-front {
+		user-select: none;
+		-webkit-user-select: none;
 	}
 
 	.card-back.rotate-y {
