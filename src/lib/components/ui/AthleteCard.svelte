@@ -99,7 +99,7 @@
 			<!-- Number Badge (bottom right) -->
 			<div class="number-badge">
 				<svg class="badge-circle" xmlns="http://www.w3.org/2000/svg" width="39" height="39" viewBox="0 0 39 39" fill="none">
-					<circle cx="19.5" cy="19.5" r="18.5" stroke="#071E45" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.1 5"/>
+					<circle cx="19.5" cy="19.5" r="18.5" stroke="var(--content-primary)" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.1 5"/>
 				</svg>
 				<p class="badge-number">{number}</p>
 			</div>
@@ -115,7 +115,7 @@
 			
 			<!-- Separator line (Stato hover SVG) -->
 			<svg class="back-separator" xmlns="http://www.w3.org/2000/svg" width="290" height="2" viewBox="0 0 290 2" fill="none">
-				<path d="M0 1H290" stroke="#071E45" stroke-width="2" stroke-dasharray="0.1 5"/>
+				<path d="M0 1H290" stroke="var(--content-primary)" stroke-width="2" stroke-dasharray="0.1 5"/>
 			</svg>
 
 			<!-- Back content container -->
