@@ -117,7 +117,7 @@
 
 	.blob-svg {
 		position: sticky;
-		top: 0;
+		top: 20vh;
 		width: 100%;
 		height: 100vh;
 		pointer-events: none;

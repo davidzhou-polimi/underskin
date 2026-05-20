@@ -55,7 +55,7 @@
 				.to('.dot, .dot-right', {
 					scale: 0,
 					opacity: 0,
-					duration: 0.15,
+					duration: 0.04,
 					ease: 'power2.in',
 					stagger: {
 						each: 0.03,
@@ -67,14 +67,14 @@
 				rotation: 360,
 				duration: 2,
 				ease: 'none',
-				transformOrigin: '50% 50%'
+				transformOrigin: '550px 550px'
 			});
 
 			gsap.to(circleContainerRight, {
 				rotation: -360,
 				duration: 2,
 				ease: 'none',
-				transformOrigin: '50% 50%'
+				transformOrigin: '550px 550px'
 			});
 
 		}, circleWrapper);
@@ -97,7 +97,7 @@
 					cx={dot.x}
 					cy={dot.y}
 					r={dotRadius}
-					fill="rgba(255, 255, 255, 0.2)"
+					fill="rgba(255, 255, 255, 0.1)"
 				/>
 			{/each}
 		</svg>
@@ -107,7 +107,7 @@
 		<svg
 			bind:this={circleContainerRight}
 			class="circle-svg"
-			viewBox="0 0 1100 1100"
+			viewBox="0 0 1300 1300"
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			{#each dots as dot, i}
@@ -125,34 +125,39 @@
 
 <style>
 	.circle-wrapper {
-		position: fixed;
+		position: absolute;
 		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		pointer-events: none;
-		z-index: 100;
+		min-height: 300px;
+		overflow: hidden;
+		z-index: 1;
 	}
 
 	.decorative-circle {
 		position: absolute;
-		width: 1000px;
-		height: 1000px;
+		width: 1300px;
+		height: 1300px;
 	}
 
 	.decorative-circle.left {
-		top: -400px;
-		left: -400px;
+		top: -500px;
+		left: -600px;
 	}
 
 	.decorative-circle.right {
-		top: 200px;
+		top: 400px;
 		left: auto;
-		right: -400px;
+		right: -500px;
 	}
 
 	.circle-svg {
 		width: 100%;
 		height: 100%;
+	}
+
+	:global(.dot), :global(.dot-right) {
+		fill: rgba(255, 255, 255, 0.2) !important;
 	}
 </style>
