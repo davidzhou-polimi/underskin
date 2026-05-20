@@ -16,7 +16,6 @@ import gsap from 'gsap';
 export function hoverLift(node, params = {}) {
 	const {
 		y = -8,
-		scale = 1.02,
 		duration = 0.3,
 		ease = 'power2.out'
 	} = params;
@@ -25,7 +24,6 @@ export function hoverLift(node, params = {}) {
 	const onMouseEnter = () => {
 		gsap.to(node, {
 			y: y,
-			scale: scale,
 			duration: duration,
 			ease: ease,
 			overwrite: 'auto'
@@ -36,7 +34,6 @@ export function hoverLift(node, params = {}) {
 	const onMouseLeave = () => {
 		gsap.to(node, {
 			y: 0,
-			scale: 1,
 			duration: duration,
 			ease: ease,
 			overwrite: 'auto'

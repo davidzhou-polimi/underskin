@@ -138,6 +138,9 @@
 		position: relative;
 		cursor: pointer;
 		perspective: 1200px;
+		will-change: transform;
+		-webkit-font-smoothing: subpixel-antialiased;
+		backface-visibility: hidden;
 	}
 
 	.card-inner {
@@ -155,6 +158,7 @@
 		backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
+		-webkit-font-smoothing: subpixel-antialiased;
 	}
 
 	.card-front {
