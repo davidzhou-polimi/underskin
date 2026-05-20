@@ -9,18 +9,16 @@
 
   let container;
   
-  // Coordinate calibrate sul mockup (Screenshot 2026-05-20 alle 07.41.23.jpg)
   let thoughts = [
-    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '35%', cLeft: '30%', sTop: '28%', sLeft: '42%', isScattered: false },
-    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '42%', cLeft: '48%', sTop: '15%', sLeft: '55%', isScattered: false },
-    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '48%', cLeft: '20%', sTop: '38%', sLeft: '25%', isScattered: false },
-    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '48%', cLeft: '58%', sTop: '28%', sLeft: '75%', isScattered: false },
-    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '56%', cLeft: '38%', sTop: '75%', sLeft: '55%', isScattered: false },
-    { id: 6, text: "\"DEVE VINCERE\"", cTop: '65%', cLeft: '28%', sTop: '68%', sLeft: '32%', isScattered: false },
-    { id: 7, text: "\"È IL MIGLIORE\"", cTop: '64%', cLeft: '55%', sTop: '65%', sLeft: '78%', isScattered: false }
+    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '25%', sLeft: '35%', isScattered: false, tailDir: 'left' },
+    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '15%', sLeft: '55%', isScattered: false, tailDir: 'right' },
+    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '38%', sLeft: '15%', isScattered: false, tailDir: 'left' },
+    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '75%', isScattered: false, tailDir: 'right' },
+    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '75%', sLeft: '50%', isScattered: false, tailDir: 'right' },
+    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '72%', sLeft: '72%', isScattered: false, tailDir: 'right' },
+    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '65%', sLeft: '28%', isScattered: false, tailDir: 'left' }
   ];
 
-  // Sfocatura e opacità
   $: activeCount = thoughts.filter(t => !t.isScattered).length;
   $: blurAmount = activeCount * 1.5; 
   $: opacityAmount = activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08);
@@ -33,42 +31,17 @@
     }
   }
 
-  function moveThought(id, element) {
-    const index = thoughts.findIndex(t => t.id === id);
-    
-    if (thoughts[index].isScattered) return;
-
-    markAsScattered(id);
-
-    gsap.to(element, {
-      top: thoughts[index].sTop,
-      left: thoughts[index].sLeft,
-      duration: 0.8,
-      ease: "power2.out",
-      onUpdate: () => {
-          Draggable.get(element)?.update();
-      }
-    });
-  }
-
   onMount(async () => {
     await tick();
-
     const items = document.querySelectorAll('.thought-box');
     items.forEach((item) => {
       Draggable.create(item, {
         type: "x,y",
         edgeResistance: 0.8,
-        bounds: container, 
-        
-        onDragStart: function() {
+        bounds: container,
+        onDragEnd: function() {
           const id = parseInt(this.target.getAttribute('data-id'));
-          markAsScattered(id);
-        },
-        
-        onClick: function() {
-          const id = parseInt(this.target.getAttribute('data-id'));
-          moveThought(id, this.target);
+          markAsScattered(id); // Una volta spostato, rimane dov'è
         }
       });
     });
@@ -77,10 +50,7 @@
 
 <section class="favorite-section" bind:this={container}>
   
-  <div 
-    class="sentence-container" 
-    style="filter: blur({blurAmount}px); opacity: {opacityAmount};"
-  >
+  <div class="sentence-container" style="filter: blur({blurAmount}px); opacity: {opacityAmount};">
     <p class="main-sentence">
         Quando vincere diventa l'unico risultato<br>
         accettabile, l'atleta smette di essere<br>
@@ -89,81 +59,81 @@
   </div>
 
   {#each thoughts as t (t.id)}
-    <div 
-      class="thought-box" 
-      data-id={t.id}
-      style="top: {t.cTop}; left: {t.cLeft};"
-      role="button"
-      tabindex="0"
-    >
+    <div class="thought-box tail-{t.tailDir}" data-id={t.id} style="top: {t.cTop}; left: {t.cLeft};" role="button" tabindex="0">
       {t.text}
     </div>
   {/each}
-
 </section>
 
 <style>
+  @import '$lib/styles/tokens/typography.css';
+
   .favorite-section {
     position: relative;
     width: 100%;
     height: 100vh;
-    background: linear-gradient(135deg, #e8f0f6 0%, #c4dbe8 100%);
+    background: linear-gradient(135deg, var(--azzurro-100) 0%, var(--neutral-100) 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    cursor: default;
-  }
-
-  .sentence-container {
-    text-align: center;
-    transition: filter 0.6s ease, opacity 0.6s ease;
-    max-width: 85%;
-    z-index: 1;
-    pointer-events: none; 
   }
 
   .main-sentence {
-    font-family: 'Urbanist', system-ui, -apple-system, sans-serif; 
-    font-size: 2.2rem;
-    font-weight: 400; 
-    color: #1a2b3c;
+    font-family: var(--font-family-base);
+    font-size: var(--text-body-size);
+    font-weight: 400;
+    color: var(--neutral-900);
     line-height: 1.5;
-    margin: 0;
   }
 
-  /* Stile base dei pensieri pronti per il tuo effetto ghiaccio */
-  .thought-box {
+.thought-box {
     position: absolute;
-    background: white; 
-    padding: 12px 28px; 
-    border-radius: 4px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08); 
-    font-family: 'Lato', system-ui, sans-serif; 
-    font-weight: 400; 
-    color: #0c2137;
-    font-size: 0.95rem;
+    padding: var(--spacing-3) var(--spacing-7); 
+    
+    font-family: var(--font-family-base);
+    font-size: var(--text-caption-size);
+    font-weight: var(--text-card-front-weight);
+    color: var(--neutral-900);
+    
     cursor: grab;
     user-select: none;
     z-index: 10;
     white-space: nowrap;
-    will-change: transform, top, left;
+
+    /* 1. Sfondo e Bordo esatti */
+    background-color: rgba(241, 250, 253, 0.55);
+    border: 1px solid rgba(223, 244, 250, 0.5);
+    
+    /* 2. RIFRAZIONE E PROFONDITÀ (Dal tuo GlassEffect.svelte) */
+    box-shadow: 
+      2px 2px 4px rgba(0, 0, 0, 0.23),            /* A. Ombra ESTERNA */
+      inset 0 0 10px rgba(255, 255, 255, 0.3),    /* B. Luce spessa (Depth) */
+      inset 2px 2px 3px rgba(255, 255, 255, 0.9), /* C. Riflesso Top-Left */
+      inset -1px -1px 3px rgba(223, 244, 250, 0.4);/* D. Profondità Bottom-Right */
+
+    /* 3. Frost + Refraction */
+    backdrop-filter: blur(13px) saturate(120%);
+    -webkit-backdrop-filter: blur(13px) saturate(120%);
+    
+    /* 4. Gradiente di luce */
+    background-image: linear-gradient(
+      -45deg, 
+      rgba(255, 255, 255, 0.4) 0%, 
+      rgba(255, 255, 255, 0) 30%, 
+      rgba(255, 255, 255, 0) 70%, 
+      rgba(255, 255, 255, 0.1) 100%
+    );
+  }
+  
+  /* Poligoni con angoli stondati simulati */
+  .tail-left {
+    padding-left: var(--spacing-8);
+    clip-path: polygon(15px 0%, calc(100% - 16px) 0%, calc(100% - 10px) 1.5px, calc(100% - 5px) 5px, calc(100% - 1.5px) 10px, 100% 16px, 100% calc(100% - 16px), calc(100% - 1.5px) calc(100% - 10px), calc(100% - 5px) calc(100% - 5px), calc(100% - 10px) calc(100% - 1.5px), calc(100% - 16px) 100%, 31px 100%, 25px calc(100% - 1.5px), 20px calc(100% - 5px), 16.5px calc(100% - 10px), 15px calc(100% - 16px), 15px 15px, 0% 0%);
   }
 
-  /* La codina della nuvoletta sulla sinistra, come nel mockup */
-  .thought-box::after {
-    content: '';
-    position: absolute;
-    bottom: -10px; 
-    left: 20px; 
-    border-width: 15px 15px 0 0; 
-    border-style: solid;
-    border-color: white transparent transparent transparent; 
-    z-index: -1;
-  }
-
-  .thought-box:active {
-    cursor: grabbing;
-    transform: scale(1.02);
+  .tail-right {
+    padding-right: var(--spacing-8);
+    clip-path: polygon(0% 16px, 1.5px 10px, 5px 5px, 10px 1.5px, 16px 0%, calc(100% - 15px) 0%, 100% 0%, calc(100% - 15px) 15px, calc(100% - 15px) calc(100% - 16px), calc(100% - 16.5px) calc(100% - 10px), calc(100% - 20px) calc(100% - 5px), calc(100% - 25px) calc(100% - 1.5px), calc(100% - 31px) 100%, 16px 100%, 10px calc(100% - 1.5px), 5px calc(100% - 5px), 1.5px calc(100% - 10px), 0% calc(100% - 16px));
   }
 </style>
