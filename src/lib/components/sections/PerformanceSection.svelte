@@ -1,12 +1,12 @@
 <script>
-    // Questo è il tuo nuovo componente pulito
+    
 </script>
 
 <section class="performance-section">
     <div class="text-container">
         <p class="subtitle">La salute mentale non è separata dalla performance.</p>
         <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
-            è la performance
+         &egrave; la performance
         </h1>
     </div>
 </section>
@@ -23,15 +23,15 @@
         overflow: hidden;
     }
 
-    /* Contenitore verticale con lo spacing richiesto di 48px */
+    /* Contenitore verticale con lo spacing a 40px tramite token */
     .text-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 48px; /* Spacing esatto tra le due scritte */
+        gap: var(--spacing-2); /* Configurato a 2.5rem, cioè 40px esatti */
         width: 100%;
-        padding: var(--spacing-4, 16px);
+        padding: var(--spacing-2); /* 16px (1rem) presi dai token della repo */
     }
 
     /* Scritta sopra: Rethink Sans Regular 24 */
