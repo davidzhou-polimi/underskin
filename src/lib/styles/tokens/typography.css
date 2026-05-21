@@ -43,6 +43,7 @@
 	--text-body-size:         var(--text-l);
 	--text-body-weight:       400;
 
+    /* Per titoli o testi molto grandi */
 	--text-title-size:        var(--text-2xl);
 	--text-title-weight:      800;
 
@@ -61,8 +62,9 @@
     --text-card-back-quote-size:   var(--text-xs);
     --text-card-back-quote-weight: 400;
 
+    /* Solo per testo "UnderSkin" nel footer */
 	--text-footer-size:       var(--text-3xl);
-	--text-footer-weight:     700;
+	--text-footer-weight:     800;
 
 	--text-intro-card-size:   var(--text-xs);
 	--text-intro-card-weight: 700;
