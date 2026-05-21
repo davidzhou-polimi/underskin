@@ -106,7 +106,7 @@ export function carousel(node, params = {}) {
 				y = isMobile ? 90 : 180;
 				rotation = -24;
 				opacity = 0;
-				zIndex = 3;
+				zIndex = 1;
 				pointerEvents = 'none';
 			} else if (currentDiff === 2) {
 				// Far right neighbor (hidden/fade-in start for circular transitions)
@@ -114,7 +114,7 @@ export function carousel(node, params = {}) {
 				y = isMobile ? 90 : 180;
 				rotation = 24;
 				opacity = 0;
-				zIndex = 3;
+				zIndex = 1;
 				pointerEvents = 'none';
 			} else {
 				// Off-screen
@@ -130,6 +130,9 @@ export function carousel(node, params = {}) {
 
 			// Apply card transformations
 			ctx.add(() => {
+				// Impostiamo il zIndex istantaneamente per evitare sovrapposizioni errate durante le transizioni
+				gsap.set(card, { zIndex });
+
 				if (animate && !isWrap) {
 					gsap.to(card, {
 						x,
@@ -137,7 +140,6 @@ export function carousel(node, params = {}) {
 						rotation,
 						scale,
 						opacity,
-						zIndex,
 						pointerEvents,
 						duration: 0.6,
 						overwrite: 'auto'
@@ -150,7 +152,6 @@ export function carousel(node, params = {}) {
 						y,
 						rotation,
 						scale,
-						zIndex,
 						pointerEvents
 					});
 					if (isWrap) {
