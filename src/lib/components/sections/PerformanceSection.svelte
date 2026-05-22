@@ -1,13 +1,13 @@
 <script>
     import { onMount } from 'svelte';
+    import { fade } from 'svelte/transition';
 
     let sectionRef = null;
     
     // Tracciamento dello scroll reattivo (Svelte 5 Runes)
     let scrollProgress = $state(0);
     
-    // Ricalibrato il movimento: parte molto più a destra (140vw) e corre molto più a sinistra (-380vw)
-    // Questo garantisce che anche a 1230px di dimensione la parola "BURNOUT" passi tutta dall'inizio alla fine
+    // Calcolo del movimento della scritta BURNOUT gigante
     let translateXValue = $derived(`translateX(calc(140vw - (${scrollProgress} * 520vw)))`);
 
     function handleScroll() {
@@ -41,10 +41,21 @@
     <div class="sticky-viewport">
         
         <div class="text-container">
-            <p class="subtitle">La salute mentale non è separata dalla performance.</p>
-            <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
-                è la performance
-            </h1>
+            {#if scrollProgress < 0.5}
+                <div class="text-wrapper" out:fade={{ duration: 250 }} in:fade={{ duration: 250 }}>
+                    <p class="subtitle">La salute mentale non è separata dalla performance.</p>
+                    <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
+                        è la performance
+                    </h1>
+                </div>
+            {:else}
+                <div class="text-wrapper new-spacing" in:fade={{ duration: 250, delay: 250 }} out:fade={{ duration: 250 }}>
+                    <h2 class="new-title">Il burnout nasce in silenzio.</h2>
+                    <p class="new-subtitle">
+                        Cresce ogni volta che un atleta viene ridotto <br /> a un tempo, una medaglia, un risultato.
+                    </p>
+                </div>
+            {/if}
         </div>
 
         <div class="marquee-container" style:transform={translateXValue}>
@@ -55,7 +66,6 @@
 </section>
 
 <style>
-    /* 500vh assicura lo spazio di manovra per far sfilare una parola da 1230px */
     .performance-outer-container {
         height: 500vh; 
         position: relative;
@@ -74,17 +84,34 @@
         overflow: hidden; 
     }
 
+    /* Mantiene i blocchi perfettamente allineati al centro esatto della viewport */
     .text-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: var(--spacing-2); 
+        z-index: 1; 
+    }
+
+    /* Struttura base dei blocchi di testo */
+    .text-wrapper {
+        position: absolute; /* Evita scatti e sovrapposizioni verticali durante il fade */
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: var(--spacing-5); /* 40px */
+        gap: var(--spacing-5); /* Spacing 5 (40px) per il primo blocco */
         width: 100%;
-        padding: var(--spacing-2); 
-        z-index: 1; /* Sotto la scritta BURNOUT */
     }
 
+    /* Configurazione per il secondo blocco di testo */
+    .text-wrapper.new-spacing {
+        gap: var(--spacing-2); /* Spacing 2 (16px) esatto richiesto */
+    }
+
+    /* Stili Primo Blocco */
     .subtitle {
         margin: 0;
         font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
@@ -102,7 +129,26 @@
         line-height: 1.2;
     }
 
-    /* SISTEMATO: Ora si allinea perfettamente al centro esatto dello schermo senza scendere */
+    /* Stili Secondo Blocco */
+    .new-title {
+        margin: 0;
+        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
+        font-size: 56px;
+        font-weight: 800; /* ExtraBold */
+        color: var(--content-primary, #ffffff);
+        line-height: 1.2;
+    }
+
+    .new-subtitle {
+        margin: 0;
+        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
+        font-size: 24px;
+        font-weight: 400; /* Regular */
+        color: var(--content-primary, #ffffff);
+        line-height: 30px; /* Interlinea a 30px */
+    }
+
+    /* Animazione e stile BURNOUT */
     .marquee-container {
         position: absolute;
         left: 0;
@@ -111,9 +157,9 @@
         white-space: nowrap;
         will-change: transform;
         pointer-events: none; 
-        z-index: 3; /* Sopra a tutto */
+        z-index: 3; 
         display: flex;
-        align-items: center; /* Centra verticalmente il testo gigante */
+        align-items: center; 
     }
 
     .giant-text {
@@ -123,7 +169,7 @@
         color: var(--content-primary, #ffffff); 
         text-transform: uppercase;
         letter-spacing: -0.04em; 
-        line-height: 0.8; /* Abbassata per stringere la bounding box ed evitare spostamenti verticali */
+        line-height: 0.8; 
     }
 
     .my-archetypes-color {
