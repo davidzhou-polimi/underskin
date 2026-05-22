@@ -11,14 +11,14 @@
 
 <style>
     /* Forza il main a gestire correttamente il flusso verticale delle macro-sezioni */
+    
     .page-layout {
         display: flex;
         flex-direction: column;
         width: 100%;
         min-height: 100vh;
         background-color: var(--background-primary, #000000);
-        /* Evita che i margini dei figli collassino sballando i calcoli di offsetTop */
-        overflow-x: hidden;
+        /* Rimuovi overflow-x o hidden se lo sticky fa i capricci */
     }
 
     /* Assicurati che non ci siano padding globali nel main che falsano i posizionamenti */
