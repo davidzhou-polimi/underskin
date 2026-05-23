@@ -11,12 +11,10 @@
     <meta name="description" content="Descrizione" />
 
     <link rel="icon" href={favicon} />
-    
 
-    <!-- Font Rethink sans-->
-<link rel="preconnect" href="https://fonts.bunny.net/">
-<link rel="preconnect" href="https://fonts.bunny.net/" crossorigin="">
-<link href="https://fonts.bunny.net//css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Manrope:wght@200..800&family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+    <!-- Font Satoshi -->
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
 </svelte:head>
 
 {@render children()}
