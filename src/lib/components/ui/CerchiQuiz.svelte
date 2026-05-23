@@ -393,9 +393,9 @@
 	.expanded-text.gradient {
 		background: linear-gradient(
 			107deg,
-			var(--color-archetipo-favorito) 18.14%,
-			var(--color-archetipo-insoddisfatto) 50%,
-			var(--color-archetipo-infortunato) 92.63%
+			var(--archetipi-favorito) 18.14%,
+			var(--archetipi-insoddisfatto) 50%,
+			var(--archetipi-infortunato) 92.63%
 		);
 		-webkit-background-clip: text;
 		background-clip: text;
