@@ -2,8 +2,20 @@ import { gsap } from 'gsap';
 
 export function drawBorder(/** @type {HTMLElement} */ node, /** @type {{ clicked?: boolean }} */ params = {}) {
 	const maskCircle = node.querySelector('.mask-circle');
-	
+
 	if (!maskCircle) return;
+
+	if (params.clicked) {
+		gsap.set(maskCircle, { strokeDashoffset: 0 });
+		return {
+			update(/** @type {{ clicked?: boolean }} */ newParams) {
+				if (newParams.clicked) {
+					gsap.set(maskCircle, { strokeDashoffset: 0 });
+				}
+			},
+			destroy() {}
+		};
+	}
 
 	const tl = gsap.timeline();
 
@@ -15,7 +27,10 @@ export function drawBorder(/** @type {HTMLElement} */ node, /** @type {{ clicked
 
 	return {
 		update(/** @type {{ clicked?: boolean }} */ newParams) {
-			params = newParams;
+			if (newParams.clicked) {
+				tl.kill();
+				gsap.set(maskCircle, { strokeDashoffset: 0 });
+			}
 		},
 		destroy() {
 			tl.kill();
