@@ -13,7 +13,7 @@
 		position: relative;
 		z-index: 0;
 		overflow: hidden;
-		background: var(--color-stage-background-blue, #E0F2F9);
+			background: var(--stage-background-blue, #E0F2F9);
 	}
 
 	canvas {

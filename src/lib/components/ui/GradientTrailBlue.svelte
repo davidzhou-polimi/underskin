@@ -75,7 +75,7 @@
 	.stage {
 		width: 100vw;
 		height: 100vh;
-		background: var(--color-stage-background, #ffffff);
+			background: var(--stage-background, #ffffff);
 		overflow: hidden;
 		position: relative;
 	}

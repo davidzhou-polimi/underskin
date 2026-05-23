@@ -118,11 +118,11 @@ export function trailCanvas(node) {
 				);
 
 				const trailStart = getComputedStyle(document.documentElement)
-					.getPropertyValue('--color-trail-start').trim() || '#6a96df';
+					.getPropertyValue('--trail-start').trim() || '#6a96df';
 				const trailMid = getComputedStyle(document.documentElement)
-					.getPropertyValue('--color-trail-mid').trim() || '#9b59b6';
+					.getPropertyValue('--trail-mid').trim() || '#9b59b6';
 				const trailEnd = getComputedStyle(document.documentElement)
-					.getPropertyValue('--color-trail-end').trim() || '#ff7556';
+					.getPropertyValue('--trail-end').trim() || '#ff7556';
 
 				grad.addColorStop(0, `rgba(${hexToRgb(trailStart)}, 0)`);
 				grad.addColorStop(0.3, `rgba(${hexToRgb(trailStart)}, ${finalAlpha})`);
