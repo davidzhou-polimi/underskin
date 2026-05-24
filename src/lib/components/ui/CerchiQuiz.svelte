@@ -1,6 +1,7 @@
 <script>
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { fly } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	let quizState = $state('choosing'); // 'choosing' | 'selected' | 'expanded'
 	let selectedSide = $state('');     // 'mentale' | 'fisico'
@@ -9,6 +10,28 @@
 	let bottoneText = $state('vedere oltre');
 
 	let showBottone = $derived(quizState === 'selected');
+
+	let hasScrolledDown = $state(false);
+	let showQuote = $derived(quizState === 'expanded' && hasScrolledDown);
+
+	function handleScroll() {
+		if (window.scrollY > 30) {
+			hasScrolledDown = true;
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+		};
+	});
+
+	$effect(() => {
+		if (quizState !== 'expanded') {
+			hasScrolledDown = false;
+		}
+	});
 
 	// click circle → selected，appare bottone
 	function selectMentale() {
@@ -77,7 +100,7 @@
 						cy="203.5"
 						r="201.5"
 						fill="none"
-						stroke="var(--Color-Content-Primary, #071E45)"
+						stroke="var(--content-primary)"
 						stroke-width="4"
 						stroke-dasharray="0 16"
 						stroke-linecap="round"
@@ -138,7 +161,7 @@
 						cy="285"
 						r="283"
 						fill="none"
-						stroke="var(--Color-Content-Primary, #071E45)"
+						stroke="var(--content-primary)"
 						stroke-width="4"
 						stroke-dasharray="0 16"
 						stroke-linecap="round"
@@ -171,7 +194,7 @@
 					</svg>
 				</div>
 
-				<span class="expanded-text gradient">70%<br />mentale</span>
+				<span class="expanded-text gradient">70% mentale</span>
 			</div>
 		{/if}
 	</div>
@@ -206,7 +229,7 @@
 						cy="203.5"
 						r="201.5"
 						fill="none"
-						stroke="var(--Color-Content-Primary, #071E45)"
+						stroke="var(--content-primary)"
 						stroke-width="4"
 						stroke-dasharray="0 16"
 						stroke-linecap="round"
@@ -249,10 +272,17 @@
 	<!-- ======== TESTO A DESTRA (EXPANDED) ======== -->
 	{#if quizState === 'expanded'}
 		<div class="right-text" in:fly={{ x: 20, duration: 600, delay: 300 }}>
-			<p>
-				Il fisico porta l'atleta al partenza.<br />
-				La mente decide cosa succede dopo.
-			</p>
+			{#if showQuote}
+				<p class="quote-text">
+					"At this level, it's probably 70% mental and 30% physical. I've had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge."
+				</p>
+				<p class="quote-author">— Adrian Yung, sci alpino</p>
+			{:else}
+				<p>
+					Il fisico porta l'atleta al partenza.<br />
+					La mente decide cosa succede dopo.
+				</p>
+			{/if}
 		</div>
 	{/if}
 
@@ -445,6 +475,19 @@
 		margin: 0;
 	}
 
+	.right-text .quote-text {
+		font-style: italic;
+		font-size: 18px;
+		line-height: 28px;
+		color: var(--content-secondary);
+	}
+
+	.right-text .quote-author {
+		font-size: 14px;
+		color: var(--content-secondary);
+		margin-top: var(--space-4, 16px);
+	}
+
 	/* ======== BOTTONE ======== */
 	.bottone {
 		position: absolute;
@@ -466,11 +509,11 @@
 		border-radius: var(--radius-m);
 		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.23);
 		transition: background 0.2s ease;
-		background: rgba(241, 250, 253, 0.65);
+		background: color-mix(in srgb, var(--neutral-100) 65%, transparent);
 	}
 
 	.bottone.hover .bottone-bg {
-		background: rgba(223, 244, 250, 0.65);
+		background: color-mix(in srgb, var(--neutral-200) 65%, transparent);
 	}
 
 	.bottone-text {
