@@ -1,16 +1,10 @@
 <script>
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import ScrollBlob from '$lib/components/ui/ScrollBlob.svelte';
-	import GradientBackgroundBlue from '$lib/components/ui/GradientBackgroundBlue.svelte';
 	import Grainient from '$lib/components/ui/Grainient.svelte';
-	import GradientTrailBlue from '$lib/components/ui/GradientTrailBlue.svelte';
-	import GradientBackgroundBlue2 from '$lib/components/ui/GradientBackgroundBlue2.svelte';
 </script>
 
 <main class="stacked">
-	<HeroSection />
 	<ScrollBlob />
-	<GradientBackgroundBlue />
 	<div style="width: 100%; height: 100vh; position: relative;">
 		<Grainient
 			color1="#ffffff"
@@ -37,8 +31,6 @@
 			zoom={0.9}
 		/>
 	</div>
-	<GradientTrailBlue />
-	<GradientBackgroundBlue2 />
 </main>
 
 <style>
