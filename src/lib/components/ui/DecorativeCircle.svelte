@@ -22,6 +22,7 @@
 	});
 
 	onMount(() => {
+		if (!circleWrapper) return;
 		const ctx = gsap.context(() => {
 			gsap.set('.dot, .dot-right', { scale: 0, opacity: 0, transformOrigin: 'center' });
 

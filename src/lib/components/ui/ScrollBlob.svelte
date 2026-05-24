@@ -109,6 +109,12 @@
 </section>
 
 <style>
+
+	:global(body, html) {
+		margin: 0;
+		padding: 0;
+	}
+
 	.blob-section {
 		position: relative;
 		min-height: 100vh;
@@ -117,17 +123,20 @@
 
 	.blob-svg {
 		position: sticky;
-		top: 20vh;
+		top: 0;
 		width: 100%;
 		height: 100vh;
+		display: block;
 		pointer-events: none;
 	}
 
 	.blob-text {
-		position: sticky;
-		top: 50vh;
+		position: absolute;
+		top: 50%;
 		left: 50%;
+		transform: translate(-50%, -50%);
 		z-index: 10;
+		margin: 0;
 		text-align: center;
 		font-family: "Rethink Sans";
 		font-size: 128px;
@@ -142,10 +151,8 @@
 	}
 
 	.blob-back {
-		position: absolute;
-		top: 10%;
-		left: 0;
-		transform: translateX(-30%);
+		transform: translateX(-250px);
+		
 		opacity: 0.8;
 	}
 </style>
