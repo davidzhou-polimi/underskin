@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import DecorativeCircle from '$lib/components/ui/DecorativeCircle.svelte';
 
 	gsap.registerPlugin(ScrollTrigger);
 
@@ -58,6 +59,7 @@
 </script>
 
 <section class="blob-section">
+	<DecorativeCircle />
 	<div bind:this={blobText} class="blob-text">
 		FAVORITO
 	</div>
@@ -115,7 +117,7 @@
 
 	.blob-svg {
 		position: sticky;
-		top: 0;
+		top: 20vh;
 		width: 100%;
 		height: 100vh;
 		pointer-events: none;
