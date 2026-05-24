@@ -10,7 +10,7 @@
 
 	let showBottone = $derived(quizState === 'selected');
 
-	// 点击圆圈 → selected，底部按钮出现
+	// click circle → selected，appare bottone
 	function selectMentale() {
 		if (quizState === 'expanded') return;
 		selectedSide = 'mentale';
@@ -22,10 +22,10 @@
 		if (quizState === 'expanded') return;
 		selectedSide = 'fisico';
 		quizState = 'selected';
-		bottoneText = 'passare oltre';
+		bottoneText = 'vedere oltre';
 	}
 
-	// 点击底部按钮 → expanded
+	// click bottom button → expanded
 	function confirmSelection() {
 		quizState = 'expanded';
 	}
@@ -390,7 +390,8 @@
 	}
 
 	.text.gradient,
-	.expanded-text.gradient {
+	.expanded-text.gradient,
+	.circle:hover .text{
 		background: linear-gradient(
 			107deg,
 			var(--archetipi-favorito) 18.14%,
