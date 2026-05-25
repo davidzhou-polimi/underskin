@@ -1,6 +1,7 @@
 <script>
 	import ScrollBlob from '$lib/components/ui/ScrollBlob.svelte';
 	import Grainient from '$lib/components/ui/Grainient.svelte';
+	import TrailCanvasCCW from '$lib/components/ui/TrailCanvasCCW.svelte';
 </script>
 
 <main class="stacked">
@@ -31,6 +32,9 @@
 			zoom={0.9}
 		/>
 	</div>
+	<section class="trail-section">
+		<TrailCanvasCCW />
+	</section>
 </main>
 
 <style>
@@ -40,5 +44,11 @@
 		margin: 0;
 		padding: 0;
 		gap: 0;
+	}
+
+	.trail-section {
+		width: 100%;
+		height: 100vh;
+		position: relative;
 	}
 </style>
