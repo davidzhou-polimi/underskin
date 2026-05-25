@@ -174,7 +174,9 @@ export function trailCanvasCCW(node) {
 
                 const maxWidth = 400;
                 const widthWobble = isRunComplete() ? Math.sin(wobbleTime * 3.1 + ratio * Math.PI) * 5 : 0;
-                const currentWidth = 60 + (maxWidth - 60) * Math.pow(ratio, 1.3) + widthWobble;
+                // Tail tapers from baseWidth (thin at tip) to maxWidth (thick at head)
+                const baseWidth = 12;
+                const currentWidth = baseWidth + (maxWidth - baseWidth) * Math.pow(ratio, 0.7) + widthWobble;
 
                 let baseAlpha;
                 if (ratio < 0.3188) {

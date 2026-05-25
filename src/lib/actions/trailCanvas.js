@@ -101,10 +101,6 @@ export function trailCanvas(node) {
         tl.pause();
     }, TARGET_DURATION_CW);
 
-    // 冗余淡出后半段
-    tl.to(stateCCW, { angle: START_ANGLE_BOTTOM + Math.PI * 3.5, globalAlpha: 0, duration: 1.4, ease: 'power1.out' }, '>');
-    tl.to(stateCW,  { angle: START_ANGLE_BOTTOM - Math.PI * 2.25, globalAlpha: 0, duration: 1.4, ease: 'power1.out' }, '<');
-
     // 绘制通用的单条流体线段
     function drawSingleTrail(points, state, startAngle, isClockwise, maxPoints, targetDuration) {
         const isSelfPaused = tl.time() >= targetDuration;
