@@ -8,8 +8,6 @@ class ScrollState {
 	// Altre variabili utili per lo scrollytelling
 	progress = $state(0);
 	direction = $state(1); // 1 = giù, -1 = su
-	// Traccia se l'utente ha superato la citazione nel CerchiQuiz
-	quotePassed = $state(false);
 }
 
 export const scroll = new ScrollState();
