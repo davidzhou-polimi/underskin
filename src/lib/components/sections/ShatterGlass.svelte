@@ -41,7 +41,7 @@
       const polygon = voronoi.cellPolygon(i);
       if (polygon) {
         tempFragments.push({
-          clipPath: `polygon(${polygon.map((p) => `${p[0]}px ${p[1]}px`).join(", ")})`,
+          clipPath: `polygon(${polygon.map(/** @param {[number, number]} p */ (p) => `${p[0]}px ${p[1]}px`).join(", ")})`,
         });
       }
     }

@@ -8,10 +8,16 @@ if (typeof window !== 'undefined') {
 /**
  * Azione Svelte per coordinare la timeline di rottura del vetro con GSAP.
  * Gestisce l'effetto di parallax e caduta dei frammenti.
+ * @param {HTMLElement} node L'elemento del DOM a cui è applicata l'azione
+ * @param {{ fragments?: Array<any> }} [params] Parametri dell'azione
  */
-export function shatterGlass(node, params = {}) {
+export function shatterGlass(node, params = { fragments: [] }) {
+	/** @type {any} */
 	let ctx;
 
+	/**
+	 * @param {Array<any> | undefined} fragments
+	 */
 	function init(fragments) {
 		if (!fragments || fragments.length === 0) return;
 
@@ -109,6 +115,9 @@ export function shatterGlass(node, params = {}) {
 	init(params.fragments);
 
 	return {
+		/**
+		 * @param {{ fragments?: Array<any> }} newParams
+		 */
 		update(newParams) {
 			init(newParams.fragments);
 		},
