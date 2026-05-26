@@ -57,7 +57,12 @@
   });
 </script>
 
-<div id="shatter" class="scroll-wrapper" use:trackSection use:shatterGlass={{ fragments }}>
+<div
+  id="shatter"
+  class="scroll-wrapper"
+  use:trackSection
+  use:shatterGlass={{ fragments }}
+>
   <div class="sticky-container">
     <div class="content-behind">
       <p>
@@ -104,8 +109,12 @@
     text-align: center;
     font-family: var(--font-family-base);
     color: var(--content-primary);
-    font-size: var(--text-body-size); /* Equivale a var(--text-l) (40px), migliorando la leggibilità del testo narrativo */
-    font-weight: var(--text-body-weight); /* Assicura il peso Regular (400) del brand font */
+    font-size: var(
+      --text-body-size
+    ); /* Equivale a var(--text-l) (40px), migliorando la leggibilità del testo narrativo */
+    font-weight: var(
+      --text-body-weight
+    ); /* Assicura il peso Regular (400) del brand font */
     line-height: 1.5; /* Interlinea proporzionale e dinamica per garantire un adattamento automatico alle dimensioni del testo */
     max-width: 80%;
 
