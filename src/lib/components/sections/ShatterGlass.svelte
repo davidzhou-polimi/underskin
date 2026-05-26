@@ -114,10 +114,10 @@
     z-index: 1;
     text-align: center;
     font-family: var(--font-family-base);
-    color: var(--content-secondary);
-    font-size: var(--text-m);
-    font-weight: 500;
-    line-height: 1.5;
+    color: var(--content-primary);
+    font-size: var(--text-body-size); /* Equivale a var(--text-l) (40px), migliorando la leggibilità del testo narrativo */
+    font-weight: var(--text-body-weight); /* Assicura il peso Regular (400) del brand font */
+    line-height: 1.5; /* Interlinea proporzionale e dinamica per garantire un adattamento automatico alle dimensioni del testo */
     max-width: 80%;
 
     /* Calibrazione visiva iniziale sfocata per stimolare l'effetto svelamento */
