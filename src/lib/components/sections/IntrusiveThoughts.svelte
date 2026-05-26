@@ -153,6 +153,8 @@
         sLeft: t.sLeft, 
         cTop: t.cTop, 
         cLeft: t.cLeft, 
+        isScattered: t.isScattered,
+        thoughts,
         onScatter: markAsScattered 
       }}
       class="thought-box" 
