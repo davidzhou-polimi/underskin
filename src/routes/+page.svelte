@@ -1,13 +1,15 @@
 <script>
-    import GlassEffect from '$lib/components/sections/GlassEffect.svelte';
+
+    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
     import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
+
 </script>
 
 <main>
 
     <section class="test-figma-bg">
         <div class="background-huge-text">
-            <span>Quindi</span><span class="orange-text">tale</span> smettendo di
+            <span>Quindi</span><span class="orange-text">tale</span>smettendo di
         </div>
 
         <GlassEffect class="figma-glass-card">
