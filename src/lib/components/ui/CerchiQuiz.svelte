@@ -1,15 +1,24 @@
 <script>
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { fade } from 'svelte/transition';
+	import { trackSection } from '$lib/actions/trackSection.js';
+	import { layers } from '$lib/stores/layers.svelte.js';
 
-	let quizState = $state('choosing'); // 'choosing' | 'selected' | 'expanding' | 'expanded'
-	let selectedSide = $state('');     // 'mentale' | 'fisico'
+	// 强制 reattività con un proxy
+	let opacity = $derived.by(() => {
+		return layers.getLayerOpacity(1);
+	});
+
+	// 只有当 layer 可见时才触发动画
+	let isVisible = $derived(opacity > 0.01);
+
+	let quizState = $state('choosing');
+	let selectedSide = $state('');
 	let bottoneHover = $state(false);
 
-	// 📜 Stati per la gestione dello scroll virtuale
-	let hasScrolledDown = $state(false); 
-	let accumulatedScrollPastQuote = 0;   
-	let quotePassed = $state(false);     
+	let hasScrolledDown = $state(false);
+	let accumulatedScrollPastQuote = 0;
+	let quotePassed = $state(false);
 
 	let showBottone = $derived(quizState === 'selected');
 
@@ -28,7 +37,7 @@
 	function confirmSelection() {
 		if (quizState !== 'selected') return;
 		quizState = 'expanding';
-		
+
 		setTimeout(() => {
 			quizState = 'expanded';
 		}, 800);
@@ -42,7 +51,7 @@
 			if (!hasScrolledDown) {
 				if (e.cancelable) e.preventDefault();
 				hasScrolledDown = true;
-				return; 
+				return;
 			}
 			if (hasScrolledDown && !quotePassed) {
 				if (e.cancelable) e.preventDefault();
@@ -57,14 +66,20 @@
 				hasScrolledDown = false;
 				accumulatedScrollPastQuote = 0;
 				quotePassed = false;
-				return; 
+				return;
 			}
 		}
 	}
 </script>
 
-<div class="quiz-wrapper" onwheel={handleVirtualScroll}>
-
+<section
+	id="cerchi-quiz"
+	class="quiz-wrapper"
+	style:opacity={opacity}
+	style:pointer-events={opacity > 0.2 ? 'auto' : 'none'} 
+	onwheel={handleVirtualScroll}
+	use:trackSection
+>
 	<div class="quiz-title-wrap" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<h1 class="quiz-title">
 			Quando tutto si decide in pochi istanti,<br />
@@ -86,7 +101,7 @@
 					class:is-expanding={quizState === 'expanding'}
 					class:is-expanded={quizState === 'expanded'}
 					onclick={selectMentale}
-					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: true }}
+					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: isVisible }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
@@ -128,13 +143,12 @@
 		</div>
 
 		<div class="quiz-column right-column">
-			
 			<div class="circle-wrap right-wrap" class:fly-out={quizState === 'expanding' || quizState === 'expanded'}>
 				<button
 					class="circle right"
 					class:clicked={selectedSide === 'fisico'}
 					onclick={selectFisico}
-					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: true }}
+					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: isVisible }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
@@ -179,7 +193,7 @@
 
 					<div class="text-block long-quote" class:blur-in={hasScrolledDown}>
 						<p class="quote-content">
-							“At this level, it’s probably 70% mental and 30% physical. [...] I’ve had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge.”
+							"At this level, it's probably 70% mental and 30% physical. [...] I've had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge."
 						</p>
 						<p class="quote-author">— Adrian Yung, sci alpino</p>
 					</div>
@@ -200,24 +214,30 @@
 			</button>
 		{/if}
 	</div>
-</div>
+</section>
 
 <style>
-	/* ======== WRAPPER ======== */
 	.quiz-wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		position: relative;
+		
+		/* 关键修改：改成 fixed，防止流式布局导致它沉底无法交互 */
+		position: fixed; 
+		inset: 0;
 		height: 100vh;
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
 		padding: 20px 0;
+		will-change: opacity;
+		transition: opacity 0.3s ease;
+		
+		/* 关键修改：用强力的 z-index 确保它浮在 IntroSection 的上方 */
+		z-index: 10; 
 	}
 
-	/* ======== TITOLO ======== */
 	.quiz-title-wrap {
 		flex-shrink: 0;
 		margin-bottom: var(--space-8, 48px);
@@ -238,13 +258,12 @@
 		margin: 0;
 	}
 
-	/* ======== CONTENITORE PRINCIPALE (GRID A DISTANZA RIGIDA) ======== */
 	.quiz-body {
 		display: grid;
-		grid-template-columns: 1fr 1fr; 
-		gap: 80px; /* Distanza iniziale tra i due cerchi */
+		grid-template-columns: 1fr 1fr;
+		gap: 80px;
 		width: 100%;
-		max-width: 1200px; 
+		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
 		height: auto;
@@ -252,12 +271,10 @@
 		transition: gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
-	/* CORREZIONE: Impostato esattamente a 82px durante lo stato finale per distanziare cerchio e testo */
 	.quiz-body.expanded {
-		gap: 82px; 
+		gap: 82px;
 	}
 
-	/* COLONNE DELLA GRIGLIA */
 	.quiz-column {
 		display: flex;
 		align-items: center;
@@ -274,7 +291,6 @@
 		justify-content: flex-start;
 	}
 
-	/* ======== WRAPPER CIRCLE ======== */
 	.circle-wrap {
 		display: flex;
 		align-items: center;
@@ -299,7 +315,6 @@
 		pointer-events: none;
 	}
 
-	/* ======== BASE CIRCLE ======== */
 	.circle {
 		width: 407px;
 		height: 407px;
@@ -314,7 +329,7 @@
 		appearance: none;
 		padding: 0;
 		will-change: width, height;
-		transition: 
+		transition:
 			width 0.8s cubic-bezier(0.25, 1, 0.5, 1),
 			height 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
@@ -330,7 +345,6 @@
 		border-radius: 287px;
 	}
 
-	/* ======== SVG BORDER & TEXT ======== */
 	.border-svg {
 		position: absolute;
 		inset: 0;
@@ -377,7 +391,6 @@
 		z-index: 1;
 	}
 
-	/* ======== SFUMATURA BACKGROUND ======== */
 	.sfumatura-bg {
 		position: absolute;
 		inset: 0;
@@ -405,12 +418,11 @@
 		transform-origin: center center;
 	}
 
-	/* ======== PANNELLO TESTO DESTRO ======== */
 	.right-text-panel {
-		width: 540px; 
-		height: 220px; 
+		width: 540px;
+		height: 220px;
 		position: absolute;
-		left: 0; /* Allineato perfettamente all'inizio della colonna destra */
+		left: 0;
 		z-index: 5;
 		transition: opacity 0.6s ease;
 		opacity: 0;
@@ -461,7 +473,7 @@
 		line-height: 30px;
 		color: var(--content-primary, #071E45);
 		margin: 0 0 12px 0;
-		white-space: normal; 
+		white-space: normal;
 	}
 	.long-quote .quote-author {
 		font-family: 'Rethink Sans', sans-serif;
@@ -476,10 +488,9 @@
 		pointer-events: auto;
 	}
 
-	/* ======== BOTTONE ======== */
 	.bottone {
 		position: absolute;
-		bottom: -85px; 
+		bottom: -85px;
 		left: 50%;
 		transform: translateX(-50%);
 		width: 194px;
@@ -519,7 +530,6 @@
 		z-index: 1;
 	}
 
-	/* ======== ANIMATIONS ======== */
 	@keyframes fluid-flow {
 		0% { transform: scale(1) rotate(0deg) translate(0px, 0px); }
 		33% { transform: scale(1.15) rotate(120deg) translate(-10px, 15px); }

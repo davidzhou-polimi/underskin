@@ -1,14 +1,13 @@
 <script>
-	import { blurScrollReveal } from '$lib/actions/blurScrollReveal.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import { scroll } from '$lib/stores/scroll.svelte.js';
-	import { fade } from 'svelte/transition';
+	import { layers } from '$lib/stores/layers.svelte.js';
 
-	let visible = $derived(scroll.quotePassed);
+	let opacity = $derived.by(() => {
+		return layers.getLayerOpacity(2);
+	});
 </script>
 
-{#if visible}
-<section id="performance" class="performance-section" use:trackSection use:blurScrollReveal in:fade={{ duration: 500 }}>
+<section id="performance" class="performance-section" style:opacity={opacity} use:trackSection>
 	<div class="content-wrapper">
 		<blockquote class="quote-text">
 			La performance non consuma solo il corpo: modella
@@ -17,17 +16,17 @@
 		</blockquote>
 	</div>
 </section>
-{/if}
 
 <style>
 	.performance-section {
-		position: relative;
-		min-height: 100vh;
+		position: absolute;
+		inset: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0 80px;
 		background-color: var(--background-primary);
+		will-change: opacity;
 	}
 
 	.content-wrapper {

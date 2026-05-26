@@ -1,55 +1,42 @@
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
+/**
+ * Animazione di ingress per le frasi con stagger.
+ * @param {HTMLElement[]} lines
+ */
+export function animateTextReveal(lines) {
+	gsap.set(lines, { opacity: 0, filter: 'blur(15px)', y: 20 });
+	gsap.to(lines, {
+		opacity: 1,
+		filter: 'blur(0px)',
+		y: 0,
+		duration: 0.6,
+		stagger: 0.12,
+		ease: 'power2.out'
+	});
 }
 
 /**
- * Azione Svelte per gestire lo scambio sequenziale di frasi con effetto Blur e opacity.
- * @param {HTMLElement} node - L'elemento del DOM a cui è applicata l'azione
+ * Transizione tra due frasi.
+ * @param {HTMLElement} fromLine
+ * @param {HTMLElement} toLine
+ * @param {() => void} onComplete
  */
-export function scrollTextReveal(node) {
-	const lines = node.querySelectorAll('.reveal-line');
-	if (!lines.length) return;
+export function transitionToLine(fromLine, toLine, onComplete) {
+	gsap.to(fromLine, {
+		opacity: 0,
+		filter: 'blur(15px)',
+		y: -20,
+		duration: 0.5,
+		ease: 'power2.inOut'
+	});
 
-	const ctx = gsap.context(() => {
-		const tl = gsap.timeline({
-			scrollTrigger: {
-				trigger: node,
-				start: 'top top',
-				// Ridotto da 100% a 50% per riga: lo scroll totale sarà molto più corto e rapido
-				end: `+=${lines.length * 50}%`,
-				pin: true,
-				scrub: 1,
-				anticipatePin: 1
-			}
-		});
-
-		// Stato iniziale: tutto invisibile e sfocato tranne la prima riga
-		gsap.set(lines, { opacity: 0, filter: 'blur(15px)', y: 20 });
-		gsap.set(lines[0], { opacity: 1, filter: 'blur(0px)', y: 0 });
-
-		// Sequenza di scambio delle frasi
-		for (let i = 0; i < lines.length - 1; i++) {
-			tl.to(lines[i], {
-				opacity: 0,
-				filter: 'blur(15px)',
-				y: -20,
-				duration: 1
-			})
-			.to(lines[i + 1], {
-				opacity: 1,
-				filter: 'blur(0px)',
-				y: 0,
-				duration: 1
-			}, '-=0.5');
-		}
-	}, node);
-
-	return {
-		destroy() {
-			ctx.revert();
-		}
-	};
+	gsap.to(toLine, {
+		opacity: 1,
+		filter: 'blur(0px)',
+		y: 0,
+		duration: 0.5,
+		ease: 'power2.inOut',
+		onComplete
+	});
 }
