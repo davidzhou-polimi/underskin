@@ -1,14 +1,31 @@
 :root {
 	/* ============================================================
-	   SEMANTIC TOKENS – colori funzionali
+	   BASE
 	   ============================================================ */
 	--background-primary: #f1fafd;
-	--background-secondary: #dff4fa;
 	--content-primary: #071e45;
-	--content-secondary: #0f2d54;
+
+	/* ============================================================
+	   ARCHETIPI
+	   ============================================================ */
 	--archetipi-favorito: #6a96df;
-	--archetipi-infortunato: #d86146;
 	--archetipi-insoddisfatto: #8035d2;
+	--archetipi-infortunato: #d86146;
+
+	/* ============================================================
+	   TRAIL GRADIENT
+	   ============================================================ */
+	--trail-start: #6a96df;
+	--trail-mid: #9b59b6;
+	--trail-end: #ff7556;
+	--stage-background: #ffffff;
+	--stage-background-blue: #E0F2F9;
+
+	/* ============================================================
+	   SEMANTIC TOKENS – colori funzionali
+	   ============================================================ */
+	--background-secondary: #dff4fa;
+	--content-secondary: #0f2d54;
 
 	/* ============================================================
 	   BRAND – azzurro (scala 100→900)
