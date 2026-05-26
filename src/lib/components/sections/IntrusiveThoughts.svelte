@@ -1,10 +1,9 @@
 <script>
-  import GlassEffect from '$lib/components/sections/GlassEffect.svelte';
+  import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
   import { draggableThought } from '$lib/actions/draggableThought.js';
 
   let container = $state();
   
-  // Runa $state per tracciare la lista dei pensieri reattivamente in Svelte 5
   let thoughts = $state([
     { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left' },
     { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right' },
@@ -15,14 +14,13 @@
     { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left' }
   ]);
 
-  // Rune $derived per ricalcolare dinamicamente lo stato della frase sfocata in base ai pensieri attivi
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
   let blurAmount = $derived(activeCount * 1.5); 
   let opacityAmount = $derived(activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08));
 
   /**
-   * Marca il pensiero come disperso, modificando lo stato per innescare gli effetti reattivi
-   * @param {number} id - L'ID del pensiero da marcare
+   * Modifica lo stato per innescare gli effetti reattivi di rimozione del pensiero
+   * @param {number} id - L'ID del pensiero da rimuovere dal calcolo
    */
   function markAsScattered(id) {
     const index = thoughts.findIndex(t => t.id === id);
@@ -34,7 +32,7 @@
 
 <section class="favorite-section" bind:this={container}>
   
-  <div class="sentence-container" style="filter: blur({blurAmount}px); opacity: {opacityAmount};">
+  <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
     <p class="main-sentence">
         Quando vincere diventa l'unico risultato<br>
         accettabile, l'atleta smette di essere<br>
@@ -55,7 +53,8 @@
       }}
       class="thought-box tail-{t.tailDir}" 
       data-id={t.id} 
-      style="top: {t.cTop}; left: {t.cLeft};" 
+      style:--c-top={t.cTop}
+      style:--c-left={t.cLeft}
       role="button" 
       tabindex="0"
     >
@@ -66,8 +65,6 @@
 </section>
 
 <style>
-  @import '$lib/styles/tokens/typography.css';
-
   .favorite-section {
     position: relative;
     width: 100%;
@@ -89,13 +86,17 @@
   }
 
   .sentence-container {
-    /* Rende la transizione tra un livello di sfocatura e l'altro estremamente morbida e progressiva */
+    filter: blur(var(--blur-amount));
+    opacity: var(--opacity-amount);
+    /* Transizione fluida della sfocatura per evitare scatti visivi durante il drag */
     transition: filter 1.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.4s cubic-bezier(0.25, 1, 0.5, 1);
     will-change: filter, opacity;
   }
 
   .thought-box {
     position: absolute;
+    top: var(--c-top);
+    left: var(--c-left);
     padding: var(--spacing-3) var(--spacing-7); 
     
     font-family: var(--font-family-base);
@@ -108,13 +109,13 @@
     z-index: 10;
     white-space: nowrap;
     
-    /* Assicura la disposizione del testo sopra lo sfondo in assoluto */
+    /* Permette di sovrapporre il testo sopra allo sfondo GlassEffect */
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
-  /* Forza il componente GlassEffect a coprire l'intera superficie del fumetto fungendo da riempimento */
+  /* Forza GlassEffect ad agire come sfondo a copertura totale del fumetto */
   :global(.thought-background) {
     position: absolute !important;
     top: 0;
@@ -124,7 +125,6 @@
     z-index: -1;
   }
   
-  /* Poligoni con angoli stondati simulati */
   .tail-left {
     padding-left: var(--spacing-8);
     clip-path: polygon(15px 0%, calc(100% - 16px) 0%, calc(100% - 10px) 1.5px, calc(100% - 5px) 5px, calc(100% - 1.5px) 10px, 100% 16px, 100% calc(100% - 16px), calc(100% - 1.5px) calc(100% - 10px), calc(100% - 5px) calc(100% - 5px), calc(100% - 10px) calc(100% - 1.5px), calc(100% - 16px) 100%, 31px 100%, 25px calc(100% - 1.5px), 20px calc(100% - 5px), 16.5px calc(100% - 10px), 15px calc(100% - 16px), 15px 15px, 0% 0%);
