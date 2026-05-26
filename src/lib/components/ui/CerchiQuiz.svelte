@@ -74,60 +74,62 @@
 
 	<div class="quiz-body" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 
-		<div
-			class="circle-wrap left-wrap"
-			class:is-expanding={quizState === 'expanding'}
-			class:is-expanded={quizState === 'expanded'}
-		>
-			<button
-				class="circle left"
-				class:clicked={selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
+		<div class="quiz-column left-column">
+			<div
+				class="circle-wrap left-wrap"
 				class:is-expanding={quizState === 'expanding'}
 				class:is-expanded={quizState === 'expanded'}
-				onclick={selectMentale}
-				use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded' }}
-				disabled={quizState === 'expanding' || quizState === 'expanded'}
 			>
-				<svg class="border-svg" viewBox="0 0 407 407">
-					<defs>
-						<mask id="mask-left-exp">
-							<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="0" />
-						</mask>
-					</defs>
-					<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-left-exp)" />
-				</svg>
+				<button
+					class="circle left"
+					class:clicked={selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
+					class:is-expanding={quizState === 'expanding'}
+					class:is-expanded={quizState === 'expanded'}
+					onclick={selectMentale}
+					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded' }}
+					disabled={quizState === 'expanding' || quizState === 'expanded'}
+				>
+					<svg class="border-svg" viewBox="0 0 407 407">
+						<defs>
+							<mask id="mask-left-exp">
+								<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="0" />
+							</mask>
+						</defs>
+						<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-left-exp)" />
+					</svg>
 
-				{#if selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
-					<div class="sfumatura-bg" in:fade={{ duration: 300 }}>
-						<svg class="fluid-svg" viewBox="0 0 429 395" fill="none">
-							<g opacity="0.6" filter="url(#filter-fluid-left)">
-								<path class="fluid-path" d="M85.7444 262.525C109.493 381.643 195.551 260.968 233.296 257.621C271.042 254.273 290.53 318.678 346.535 267.575C363.24 252.333 271.838 243.131 267.715 206.589C263.911 172.873 349.38 111.847 317.989 94.2074C252.577 57.4495 247.224 101.347 201.718 121.102C156.212 140.858 54.8945 107.791 85.7444 262.525Z" fill="url(#paint-fluid-left)"/>
-							</g>
-							<defs>
-								<filter id="filter-fluid-left" x="0" y="0" width="428.572" height="394.946" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-									<feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="40" result="effect1_foregroundBlur"/><feTurbulence type="fractalNoise" baseFrequency="0.33" numOctaves="3" seed="1910"/><feDisplacementMap in="effect1_foregroundBlur" scale="40" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%"/><feMerge result="effect2_texture"><feMergeNode in="displacedImage"/></feMerge>
-								</filter>
-								<linearGradient id="paint-fluid-left" x1="125.672" y1="178.687" x2="346.218" y2="304.117" gradientUnits="userSpaceOnUse">
-									<stop stop-color="#6A96DF"/><stop offset="0.508478" stop-color="#8035D2"/><stop offset="0.706731" stop-color="#D86146"/>
-								</linearGradient>
-							</defs>
-						</svg>
-					</div>
-				{/if}
-
-				<div class="expanded-text-container">
-					{#if quizState === 'expanding' || quizState === 'expanded'}
-						<span class="expanded-text gradient" in:fade={{ duration: 300, delay: 200 }}>70% mentale</span>
-					{:else}
-						<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
+					{#if selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
+						<div class="sfumatura-bg" in:fade={{ duration: 300 }}>
+							<svg class="fluid-svg" viewBox="0 0 429 395" fill="none">
+								<g opacity="0.6" filter="url(#filter-fluid-left)">
+									<path class="fluid-path" d="M85.7444 262.525C109.493 381.643 195.551 260.968 233.296 257.621C271.042 254.273 290.53 318.678 346.535 267.575C363.24 252.333 271.838 243.131 267.715 206.589C263.911 172.873 349.38 111.847 317.989 94.2074C252.577 57.4495 247.224 101.347 201.718 121.102C156.212 140.858 54.8945 107.791 85.7444 262.525Z" fill="url(#paint-fluid-left)"/>
+								</g>
+								<defs>
+									<filter id="filter-fluid-left" x="0" y="0" width="428.572" height="394.946" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+										<feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="40" result="effect1_foregroundBlur"/><feTurbulence type="fractalNoise" baseFrequency="0.33" numOctaves="3" seed="1910"/><feDisplacementMap in="effect1_foregroundBlur" scale="40" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%"/><feMerge result="effect2_texture"><feMergeNode in="displacedImage"/></feMerge>
+									</filter>
+									<linearGradient id="paint-fluid-left" x1="125.672" y1="178.687" x2="346.218" y2="304.117" gradientUnits="userSpaceOnUse">
+										<stop stop-color="#6A96DF"/><stop offset="0.508478" stop-color="#8035D2"/><stop offset="0.706731" stop-color="#D86146"/>
+									</linearGradient>
+								</defs>
+							</svg>
+						</div>
 					{/if}
-				</div>
-			</button>
+
+					<div class="expanded-text-container">
+						{#if quizState === 'expanding' || quizState === 'expanded'}
+							<span class="expanded-text gradient" in:fade={{ duration: 300, delay: 200 }}>70% mentale</span>
+						{:else}
+							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
+						{/if}
+					</div>
+				</button>
+			</div>
 		</div>
 
-		<div class="right-layout-slot">
+		<div class="quiz-column right-column">
 			
-			<div class="absolute-circle-container" class:fly-out={quizState === 'expanding' || quizState === 'expanded'}>
+			<div class="circle-wrap right-wrap" class:fly-out={quizState === 'expanding' || quizState === 'expanded'}>
 				<button
 					class="circle right"
 					class:clicked={selectedSide === 'fisico'}
@@ -212,12 +214,13 @@
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
+		padding: 20px 0;
 	}
 
 	/* ======== TITOLO ======== */
 	.quiz-title-wrap {
 		flex-shrink: 0;
-		margin-bottom: var(--space-8, 64px);
+		margin-bottom: var(--space-8, 48px);
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
@@ -235,31 +238,40 @@
 		margin: 0;
 	}
 
-	/* ======== CONTENITORE PRINCIPALE ======== */
+	/* ======== CONTENITORE PRINCIPALE (GRID A DISTANZA RIGIDA) ======== */
 	.quiz-body {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 80px;
+		display: grid;
+		grid-template-columns: 1fr 1fr; 
+		gap: 80px; /* Distanza iniziale tra i due cerchi */
+		width: 100%;
+		max-width: 1200px; 
 		position: relative;
-		flex-shrink: 0;
 		box-sizing: border-box;
+		height: auto;
+		align-items: center;
 		transition: gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
+	/* CORREZIONE: Impostato esattamente a 82px durante lo stato finale per distanziare cerchio e testo */
 	.quiz-body.expanded {
-		gap: 82px;
+		gap: 82px; 
 	}
 
-	/* SLOT LATERALE DESTRO (La chiave della stabilità: fissa le dimensioni a 540px ed evita movimenti nel flusso Flex) */
-	.right-layout-slot {
-		position: relative;
-		width: 540px;
-		height: 407px; /* Uguale all'altezza iniziale del cerchio */
+	/* COLONNE DELLA GRIGLIA */
+	.quiz-column {
 		display: flex;
 		align-items: center;
+		position: relative;
+		height: 100%;
+		min-height: 407px;
+	}
+
+	.left-column {
+		justify-content: flex-end;
+	}
+
+	.right-column {
 		justify-content: flex-start;
-		flex-shrink: 0;
 	}
 
 	/* ======== WRAPPER CIRCLE ======== */
@@ -274,19 +286,15 @@
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
-	/* Contenitore assoluto per sganciare il movimento del cerchio destro dal flusso layout */
-	.absolute-circle-container {
+	.right-wrap {
 		position: absolute;
 		left: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		z-index: 4;
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+		z-index: 4;
 	}
 
-	/* Il cerchio fisico vola via verso destra partendo dallo slot fisso */
-	.absolute-circle-container.fly-out {
-		transform: translate(300px, -50%) scale(0.5);
+	.right-wrap.fly-out {
+		transform: translateX(350px) scale(0.5);
 		opacity: 0;
 		pointer-events: none;
 	}
@@ -397,12 +405,12 @@
 		transform-origin: center center;
 	}
 
-	/* ======== PANNELLO TESTO DESTRO (Fissato immutabile a larghezza 540px) ======== */
+	/* ======== PANNELLO TESTO DESTRO ======== */
 	.right-text-panel {
 		width: 540px; 
 		height: 220px; 
-		position: relative; 
-		flex-shrink: 0;
+		position: absolute;
+		left: 0; /* Allineato perfettamente all'inizio della colonna destra */
 		z-index: 5;
 		transition: opacity 0.6s ease;
 		opacity: 0;
@@ -471,7 +479,7 @@
 	/* ======== BOTTONE ======== */
 	.bottone {
 		position: absolute;
-		bottom: -60px;
+		bottom: -85px; 
 		left: 50%;
 		transform: translateX(-50%);
 		width: 194px;
