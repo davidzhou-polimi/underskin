@@ -1,33 +1,94 @@
 <script>
 	import { perfectionGameAction } from '$lib/actions/perfectionGame.js';
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+	import { onMount, onDestroy } from 'svelte';
 
-	// Svelte 5 Runes per la gestione dello stato locale reattivo
-	let isPlaying = $state(false);
+	if (typeof window !== 'undefined') {
+		gsap.registerPlugin(ScrollTrigger);
+	}
+
+	// Svelte 5 Runes: la pallina parte già attiva e in movimento per default
+	let isPlaying = $state(true);
 	let attempts = $state(0);
+	let isScrollLocked = $state(false);
 	
 	/** @type {number | null} */
 	let accuracy = $state(null);
 
-	// Riferimento al container nel DOM per agganciare in modo sicuro lo ScrollTrigger
+	// Riferimento al container nel DOM per agganciare ScrollTrigger e gestire l'allineamento
 	/** @type {HTMLElement | undefined} */
 	let container = $state();
 
 	const MAX_ATTEMPTS = 3;
+
+	// Gestione del testo dinamico basata sulla runa $derived di Svelte 5
+	const subtitleText = $derived(
+		attempts === 0
+			? "Cattura il centro perfetto. Clicca o premi Spazio."
+			: attempts === 1
+				? "Hai ancora due tentativi!"
+				: attempts === 2
+					? "Dai, l'ultima chance!"
+					: "La perfezione è un'illusione."
+	);
+
+	/** @type {ScrollTrigger | null} */
+	let scrollTriggerInstance = null;
+
+	onMount(() => {
+		if (container) {
+			// Rileva quando la sezione raggiunge la sommità dello schermo per agganciare il blocco
+			scrollTriggerInstance = ScrollTrigger.create({
+				trigger: container,
+				start: 'top top',
+				onEnter: () => {
+					if (attempts === 0) {
+						// Centra a schermo intero in modo morbido e attiva il lock
+						container?.scrollIntoView({ behavior: 'smooth' });
+						isScrollLocked = true;
+					}
+				}
+			});
+		}
+	});
+
+	onDestroy(() => {
+		if (scrollTriggerInstance) {
+			scrollTriggerInstance.kill();
+		}
+	});
+
+	// Rimuove o applica i listener di blocco dello scroll in base allo stato del gioco
+	$effect(() => {
+		if (isScrollLocked && attempts === 0) {
+			/** @param {Event} e */
+			const preventDefault = (e) => {
+				e.preventDefault();
+			};
+
+			window.addEventListener('wheel', preventDefault, { passive: false });
+			window.addEventListener('touchmove', preventDefault, { passive: false });
+
+			return () => {
+				window.removeEventListener('wheel', preventDefault);
+				window.removeEventListener('touchmove', preventDefault);
+			};
+		}
+	});
 
 	/**
 	 * Gestisce l'avvio e l'arresto del gioco, aggiornando lo stato
 	 * per innescare i comportamenti dell'azione Svelte GSAP.
 	 */
 	function toggleGame() {
-		// Impedisce interazioni se si è raggiunto il numero massimo di tentativi
 		if (attempts >= MAX_ATTEMPTS) return;
 
 		if (isPlaying) {
-			// Cambiare lo stato in false interrompe l'oscillazione nell'action GSAP,
-			// la quale restituirà la coordinata X finale tramite la callback handleStop.
 			isPlaying = false;
+			// Il primo tentativo sblocca istantaneamente lo scroll consentendo all'utente di proseguire
+			isScrollLocked = false;
 		} else {
-			// Resetta la precisione precedente e fa ripartire l'oscillazione
 			accuracy = null;
 			isPlaying = true;
 		}
@@ -51,10 +112,16 @@
 	}
 
 	/**
-	 * Permette l'interazione tramite la barra spaziatrice per massima accessibilità
+	 * Permette l'interazione tramite la barra spaziatrice e previene lo scroll da tastiera se bloccato
 	 * @param {KeyboardEvent} event
 	 */
 	function handleKeydown(event) {
+		const keysToBlock = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'];
+		if (isScrollLocked && attempts === 0 && keysToBlock.includes(event.code)) {
+			event.preventDefault();
+			return;
+		}
+
 		if (event.code === 'Space') {
 			event.preventDefault();
 			toggleGame();
@@ -68,6 +135,7 @@
 	
 	<div class="header-text">
 		<h2 class="title">Quanto è difficile la perfezione?</h2>
+		<p class="subtitle" class:game-over-text={attempts >= MAX_ATTEMPTS}>{subtitleText}</p>
 	</div>
 
 	<!-- L'area di gioco si comporta come area interattiva principale -->
@@ -113,7 +181,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		min-height: 50rem; /* Equivale a 800px (16px base) per garantire ampio spazio di gioco */
+		min-height: 100vh; /* Schermo intero immersivo per lo scrollytelling locking */
 		background-color: var(--background-primary);
 		user-select: none;
 	}
@@ -125,10 +193,25 @@
 
 	.title {
 		font-family: var(--font-family-base);
-		font-size: var(--text-l); /* Utilizza il token di testo grande da 2.5rem / 40px */
-		font-weight: 600;
+		font-size: var(--text-xl); /* Utilizza il token di testo grande da 3.5rem / 56px */
+		font-weight: 700;
 		color: var(--content-primary);
 		margin: var(--spacing-0);
+	}
+
+	.subtitle {
+		font-family: var(--font-family-base);
+		font-size: var(--text-s);
+        font-weight: 400;
+		color: var(--neutral-500);
+		margin-top: var(--spacing-2);
+		margin-bottom: var(--spacing-0);
+		transition: color 0.3s ease;
+	}
+
+	.subtitle.game-over-text {
+		color: var(--archetipi-insoddisfatto); /* Colore viola per marcare lo stato finale */
+        font-weight: 500;
 	}
 
 	.game-area {
@@ -189,7 +272,7 @@
 		position: relative;
 		z-index: 2;
 		font-family: var(--font-family-base);
-		font-size: var(--text-xl); /* Utilizza il token tipografico --text-xl (3.5rem / 56px) */
+		font-size: 5.5rem; /* Utilizza il token tipografico --text-xl (3.5rem / 56px) */
 		font-weight: 800;
 		color: var(--background-primary);
 		animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
