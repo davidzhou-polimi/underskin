@@ -1,5 +1,4 @@
 <script>
-    // Se cliccato, riporta alla home di default
     let { href = "/" } = $props();
 </script>
 
@@ -9,19 +8,20 @@
 
 <style>
     .nav-logo {
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 42.952px;
+        font-family: 'Rethink Sans', sans-serif;
+        font-size: 43px;
         font-style: normal;
-        font-weight: 800; /* Bold / ExtraBold */
+        font-weight: 800; /* ExtraBold */
         line-height: normal;
-        color: var(--content-primary, #ffffff);
+        color: var(--content-primary);
         text-decoration: none;
         cursor: pointer;
         user-select: none;
         transition: color 0.2s ease-in-out;
     }
 
-    .nav-logo:hover {
-        color: var(--content-secondary, #cccccc);
+    .nav-logo:hover,
+    .nav-logo:focus-visible {
+        color: var(--content-secondary);
     }
 </style>
