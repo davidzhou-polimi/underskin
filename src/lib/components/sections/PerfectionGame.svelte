@@ -1,223 +1,202 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
+	import { perfectionGameAction } from '$lib/actions/perfectionGame.js';
 
-    let blobX = -320; // Inizializzata a sinistra (-320px) per far partire l'oscillazione dall'estremo sinistro
-    let blobY = 0;
-    let blobScale = 0.55; // Scala minima (55%) corrispondente alla posizione iniziale all'estremo sinistro
-    let isPlaying = false; // Modificato a false per far partire l'oscillazione solo una volta visibile a schermo
-    let attempts = 0;
-    const MAX_ATTEMPTS = 3; 
+	// Svelte 5 Runes per la gestione dello stato locale reattivo
+	let isPlaying = $state(false);
+	let attempts = $state(0);
+	
+	/** @type {number | null} */
+	let accuracy = $state(null);
 
-    /** @type {number | null} */
-    let accuracy = null;
-    
-    /** @type {number} */
-    let animationFrame;
-    
-    /** @type {number | null} */
-    let startTime = null;
-    
-    /**
-     * @param {number} time
-     */
-    function animate(time) {
-        if (!isPlaying) return;
-        if (!startTime) startTime = time;
-        const elapsed = time - startTime;
+	// Riferimento al container nel DOM per agganciare in modo sicuro lo ScrollTrigger
+	/** @type {HTMLElement | undefined} */
+	let container = $state();
 
-        const speed = 0.0007; 
-        const radiusX = 320; // Raggio aumentato a 320px per consentire un'oscillazione molto più ampia
+	const MAX_ATTEMPTS = 3;
 
-        // Usiamo -Math.cos per far iniziare l'oscillazione orizzontale dall'estremo sinistro (-320px) anziché dal centro
-        blobX = -Math.cos(elapsed * speed) * radiusX;
-        // La pallina deve oscillare unicamente sull'asse X per rimanere vincolata in orizzontale
-        blobY = 0; 
+	/**
+	 * Gestisce l'avvio e l'arresto del gioco, aggiornando lo stato
+	 * per innescare i comportamenti dell'azione Svelte GSAP.
+	 */
+	function toggleGame() {
+		// Impedisce interazioni se si è raggiunto il numero massimo di tentativi
+		if (attempts >= MAX_ATTEMPTS) return;
 
-        // Calcola la scala dinamica: 1.0 (100% dimensione) al centro, fino a 0.55 (55% dimensione) agli estremi dell'oscillazione
-        blobScale = 1.0 - (Math.abs(blobX) / radiusX) * 0.45;
+		if (isPlaying) {
+			// Cambiare lo stato in false interrompe l'oscillazione nell'action GSAP,
+			// la quale restituirà la coordinata X finale tramite la callback handleStop.
+			isPlaying = false;
+		} else {
+			// Resetta la precisione precedente e fa ripartire l'oscillazione
+			accuracy = null;
+			isPlaying = true;
+		}
+	}
 
-        animationFrame = requestAnimationFrame(animate);
-    }
+	/**
+	 * Riceve la X finale registrata nel momento in cui il gioco si è interrotto.
+	 * Calcola e normalizza la precisione del tentativo.
+	 * 
+	 * @param {number} finalX La coordinata X registrata dall'azione GSAP
+	 */
+	function handleStop(finalX) {
+		attempts++;
+		const distance = Math.abs(finalX);
+		
+		// Calcola la percentuale normalizzata sul raggio massimo di oscillazione (320px)
+		let calcPerc = 100 - (distance / 320) * 100;
 
-    let hasStarted = false; // Impedisce il riavvio o il reset se la sezione viene visualizzata più volte nello scorrimento
-    /** @type {IntersectionObserver | null} */
-    let observer = null;
+		// Il 100% di perfezione rimane volutamente inarrivabile, il tetto massimo è 99%
+		accuracy = Math.max(1, Math.min(99, Math.round(calcPerc)));
+	}
 
-    onMount(() => {
-        // Rileva l'intersezione con il viewport in modo che la pallina parta dall'estremo sinistro solo quando effettivamente visibile
-        observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !hasStarted) {
-                    hasStarted = true;
-                    startTime = null; // Forza l'inizio esatto dall'estremo sinistro riducendo a 0 la differenza di tempo sul primo frame
-                    isPlaying = true;
-                    animationFrame = requestAnimationFrame(animate);
-                }
-            });
-        }, { threshold: 0.1 });
-
-        const section = document.querySelector('.perfection-container');
-        if (section) observer.observe(section);
-    });
-
-    onDestroy(() => {
-        if (observer) observer.disconnect(); // Rilascio delle risorse dell'observer per evitare accumulo in memoria
-        if (animationFrame) cancelAnimationFrame(animationFrame); // Interruzione del loop di disegno per prevenire memory leak
-    });
-
-    function toggleGame() {
-        // Se abbiamo esaurito i tentativi, blocchiamo tutto
-        if (attempts >= MAX_ATTEMPTS) return;
-
-        if (isPlaying) {
-            // Ferma il gioco
-            isPlaying = false;
-            if (animationFrame) cancelAnimationFrame(animationFrame);
-            attempts++;
-
-            const distance = Math.sqrt(blobX * blobX + blobY * blobY);
-            // Calcolo percentuale normalizzato sul raggio massimo di 320px
-            let calcPerc = 100 - (distance / 320) * 100;
-
-            // Il gioco è volutamente infido ed esasperante: il 100% è inarrivabile, il limite è 99%
-            accuracy = Math.max(1, Math.min(99, Math.round(calcPerc)));
-        } else {
-            // Riavvia il gioco (solo se non abbiamo raggiunto il limite)
-            accuracy = null;
-            isPlaying = true;
-            startTime = null; 
-            animationFrame = requestAnimationFrame(animate);
-        }
-    }
-
-    /**
-     * @param {KeyboardEvent} event
-     */
-    function handleKeydown(event) {
-        if (event.code === 'Space') {
-            event.preventDefault(); 
-            toggleGame();
-        }
-    }
+	/**
+	 * Permette l'interazione tramite la barra spaziatrice per massima accessibilità
+	 * @param {KeyboardEvent} event
+	 */
+	function handleKeydown(event) {
+		if (event.code === 'Space') {
+			event.preventDefault();
+			toggleGame();
+		}
+	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
-<section class="perfection-container">
-    
-    <div class="header-text">
-        <h2 class="title">Quanto è difficile la perfezione?</h2>
-    </div>
+<section class="perfection-container" bind:this={container}>
+	
+	<div class="header-text">
+		<h2 class="title">Quanto è difficile la perfezione?</h2>
+	</div>
 
-    <div class="game-area" on:click={toggleGame} role="presentation">
-        <div class="target-circle"></div>
+	<!-- L'area di gioco si comporta come area interattiva principale -->
+	<div 
+		class="game-area" 
+		onclick={toggleGame} 
+		role="button" 
+		tabindex="0" 
+		aria-label="Avvia o ferma il gioco per misurare la precisione"
+		onkeydown={(e) => e.key === 'Enter' && toggleGame()}
+	>
+		<div class="target-circle"></div>
 
-        <div 
-            class="blob-wrapper"
-            style="transform: translate({blobX}px, {blobY}px) scale({blobScale});"
-        >
-            <div 
-                class="purple-blob" 
-                class:stopped={!isPlaying}
-                class:game-over={attempts >= MAX_ATTEMPTS}
-            ></div>
-            {#if accuracy !== null}
-                <span class="percentage">{accuracy}%</span>
-            {/if}
-        </div>
-    </div>
+		<!-- 
+			Delega l'animazione traslazionale e di scale all'azione GSAP.
+			Lo stile inline è rimosso; viene manipolato direttamente dal motore GSAP
+			con accelerazione hardware, evitando ricalcoli superflui in Svelte.
+		-->
+		<div 
+			class="blob-wrapper"
+			use:perfectionGameAction={{
+				isPlaying: isPlaying,
+				triggerElement: container,
+				onStop: handleStop
+			}}
+		>
+			<div 
+				class="purple-blob" 
+				class:stopped={!isPlaying}
+				class:game-over={attempts >= MAX_ATTEMPTS}
+			></div>
+			{#if accuracy !== null}
+				<span class="percentage">{accuracy}%</span>
+			{/if}
+		</div>
+	</div>
 
 </section>
 
 <style>
-    .perfection-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 800px;
-        background-color: #f4f8fb;
-        user-select: none;
-    }
+	.perfection-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 50rem; /* Equivale a 800px (16px base) per garantire ampio spazio di gioco */
+		background-color: var(--background-primary);
+		user-select: none;
+	}
 
-    .header-text {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
+	.header-text {
+		text-align: center;
+		margin-bottom: var(--spacing-4); /* Utilizza il token di spacing da 2rem / 32px */
+	}
 
-    .title {
-        font-family: system-ui, sans-serif;
-        font-size: 2.5rem;
-        font-weight: 600;
-        color: #0c2137;
-        margin: 0;
-    }
+	.title {
+		font-family: var(--font-family-base);
+		font-size: var(--text-l); /* Utilizza il token di testo grande da 2.5rem / 40px */
+		font-weight: 600;
+		color: var(--content-primary);
+		margin: var(--spacing-0);
+	}
 
-    .game-area {
-        position: relative;
-        width: 400px;
-        height: 400px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        /* Cambia cursore solo se non abbiamo finito i tentativi */
-        cursor: crosshair; 
-    }
+	.game-area {
+		position: relative;
+		width: var(--spacing-14); /* Utilizza il token da 25rem / 400px per l'area di gioco */
+		height: var(--spacing-14);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: crosshair; 
+		outline: none;
+	}
 
-    .game-area:has(.game-over) {
-        cursor: default;
-    }
+	/* Rimuove il cursore di mira se i tentativi sono esauriti */
+	.game-area:has(.game-over) {
+		cursor: default;
+	}
 
-    .target-circle {
-        position: absolute;
-        width: 320px; /* Ingrandito a 320px di diametro */
-        height: 320px;
-        border: 2px dashed #0c2137;
-        border-radius: 50%;
-        opacity: 0.5;
-        z-index: 1;
-    }
+	.target-circle {
+		position: absolute;
+		/* 320px è l'80% di 400px (var(--spacing-14)) */
+		width: calc(var(--spacing-14) * 0.8);
+		height: calc(var(--spacing-14) * 0.8);
+		border: 2px dashed var(--content-primary);
+		border-radius: 50%;
+		opacity: 0.5;
+		z-index: 1;
+	}
 
-    .blob-wrapper {
-        position: absolute;
-        width: 290px; /* Ingrandito a 290px per essere quasi grande quanto il cerchio di target (320px) con un piccolo margine di 15px */
-        height: 290px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 2;
-        will-change: transform;
-    }
+	.blob-wrapper {
+		position: absolute;
+		/* 290px è il 72.5% di 400px per mantenere un margine elegante dal cerchio di target */
+		width: calc(var(--spacing-14) * 0.725);
+		height: calc(var(--spacing-14) * 0.725);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 2;
+		will-change: transform;
+	}
 
-    .purple-blob {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, #8a2be2 0%, #4b0082 100%);
-        border-radius: 50%;
-        filter: blur(24px); /* Sfocatura uniforme e profonda mantenuta identica sia in movimento che da ferma per preservare il glow sfumato */
-        opacity: 0.9;
-        z-index: 1; /* Il blob sfocato rimane sul fondo */
-    }
+	.purple-blob {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background: radial-gradient(circle, var(--viola-500) 0%, var(--viola-800) 100%);
+		border-radius: 50%;
+		filter: blur(var(--spacing-3)); /* Utilizza il token --spacing-3 (1.5rem / 24px) per la sfocatura */
+		opacity: 0.9;
+		z-index: 1;
+	}
 
-    /* Se il gioco è finito, la pallina rimane spenta/fissa */
-    .purple-blob.game-over {
-        opacity: 0.7;
-    }
+	.purple-blob.game-over {
+		opacity: 0.7;
+	}
 
-    .percentage {
-        position: relative;
-        z-index: 2; /* Sovrapposto allo sfondo sfocato ma mantenuto al 100% nitido ed esente da filtri */
-        font-family: system-ui, sans-serif;
-        font-size: 3.8rem;
-        font-weight: 800;
-        color: var(--background-primary);
-        /* Ombra rimossa per un aspetto grafico pulito ed elegante */
-        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
+	.percentage {
+		position: relative;
+		z-index: 2;
+		font-family: var(--font-family-base);
+		font-size: var(--text-xl); /* Utilizza il token tipografico --text-xl (3.5rem / 56px) */
+		font-weight: 800;
+		color: var(--background-primary);
+		animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	}
 
-    @keyframes popIn {
-        0% { transform: scale(0.5); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
-    }
+	@keyframes popIn {
+		0% { transform: scale(0.5); opacity: 0; }
+		100% { transform: scale(1); opacity: 1; }
+	}
 </style>
