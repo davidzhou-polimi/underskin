@@ -23,6 +23,21 @@
     </section>
 
 	<IntrusiveThoughts />
+
+     <section class="test-figma-bg">
+        
+        <div class="background-huge-text">
+            <span>Quindi</span><span class="orange-text">tale</span>smettendo di
+        </div>
+
+        <GlassEffect class="figma-glass-card">
+            <p class="glass-text">
+                Improvviso calo delle prestazioni in situazioni ad alta pressione.<br>
+                L’ansia interferisce con l’esecuzione automatica di competenze consolidate.
+            </p>
+        </GlassEffect>
+
+    </section>
     
 </main>
 

@@ -41,6 +41,58 @@
     isIntroDone = val;
   }
 
+  let hasLocked = $state(false);
+  let touchStart = 0;
+
+  /**
+   * Blocca gli eventi wheel che spingono lo scroll verso il basso (deltaY > 0)
+   * @param {WheelEvent} event
+   */
+  function preventScrollDown(event) {
+    if (event.deltaY > 0) {
+      event.preventDefault();
+    }
+  }
+
+  /**
+   * Traccia l'inizio del tocco su dispositivi mobile
+   * @param {TouchEvent} event
+   */
+  function handleTouchStart(event) {
+    if (event.touches.length > 0) {
+      touchStart = event.touches[0].clientY;
+    }
+  }
+
+  /**
+   * Blocca i gesti touch verticali che causano uno scroll verso il basso (swipe verso l'alto)
+   * @param {TouchEvent} event
+   */
+  function handleTouchMove(event) {
+    if (event.touches.length > 0) {
+      const touchCurrent = event.touches[0].clientY;
+      const diffY = touchStart - touchCurrent;
+      if (diffY > 0) {
+        event.preventDefault();
+      }
+    }
+  }
+
+  /**
+   * Blocca la pressione di tasti di navigazione orientati verso il basso
+   * @param {KeyboardEvent} event
+   */
+  function preventKeysDown(event) {
+    const keysToBlock = ['ArrowDown', 'PageDown', ' '];
+    if (keysToBlock.includes(event.key)) {
+      // Consente lo scroll-up tramite Shift + Barra Spaziatrice
+      if (event.key === ' ' && event.shiftKey) {
+        return;
+      }
+      event.preventDefault();
+    }
+  }
+
   /**
    * Ripristina tutti i pensieri allo stato iniziale coperto/interattivo per consentire la riesecuzione dello scroll
    */
@@ -48,6 +100,38 @@
     thoughts.forEach(t => t.isScattered = false);
     isIntroDone = false;
   }
+
+  // Gestione reattiva dello scroll-lock monodirezionale e posizionamento della sezione
+  $effect(() => {
+    const shouldLock = isIntroDone && activeCount > 0;
+    
+    if (shouldLock) {
+      window.addEventListener('wheel', preventScrollDown, { passive: false });
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('keydown', preventKeysDown, { passive: false });
+      
+      // Allinea la sezione una sola volta all'avvio del blocco
+      if (!hasLocked) {
+        hasLocked = true;
+        container.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      window.removeEventListener('wheel', preventScrollDown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', preventKeysDown);
+      hasLocked = false;
+    }
+
+    return () => {
+      // Rimozione completa dei listener in fase di distruzione del componente
+      window.removeEventListener('wheel', preventScrollDown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', preventKeysDown);
+    };
+  });
 </script>
 
 <section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts }}>
@@ -71,15 +155,17 @@
         cLeft: t.cLeft, 
         onScatter: markAsScattered 
       }}
-      class="thought-box tail-{t.tailDir}" 
+      class="thought-box" 
       data-id={t.id} 
       style:--c-top={t.cTop}
       style:--c-left={t.cLeft}
       role="button" 
       tabindex="0"
     >
-      <GlassEffect class="thought-background" />
-      {t.text}
+      <div class="thought-bubble tail-{t.tailDir}">
+        <GlassEffect class="thought-background" />
+        {t.text}
+      </div>
     </div>
   {/each}
 </section>
@@ -89,7 +175,7 @@
     position: relative;
     width: 100%;
     height: 100vh;
-    background: linear-gradient(135deg, var(--azzurro-100) 0%, var(--neutral-100) 100%);
+    background: var(--background-primary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -117,6 +203,23 @@
     position: absolute;
     top: var(--c-top);
     left: var(--c-left);
+    z-index: 10;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    
+    /* Permette di sovrapporre il testo sopra allo sfondo GlassEffect */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Proietta una splendida ombra tridimensionale ad alta definizione che ricalca 
+       la forma esatta del clip-path del fumetto (compresa la codina) */
+    filter: drop-shadow(0px 8px 24px rgba(12, 33, 55, 0.12)) drop-shadow(0px 2px 6px rgba(12, 33, 55, 0.06));
+  }
+
+  .thought-bubble {
+    position: relative;
     padding: var(--spacing-3) var(--spacing-7); 
     
     font-family: var(--font-family-base);
@@ -124,15 +227,11 @@
     font-weight: var(--text-caption-weight);
     color: var(--content-primary);
     
-    cursor: grab;
-    user-select: none;
-    z-index: 10;
-    white-space: nowrap;
-    
-    /* Permette di sovrapporre il testo sopra allo sfondo GlassEffect */
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
   }
 
   /* Forza GlassEffect ad agire come sfondo a copertura totale del fumetto */
