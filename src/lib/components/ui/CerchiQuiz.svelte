@@ -86,7 +86,7 @@
 					class:is-expanding={quizState === 'expanding'}
 					class:is-expanded={quizState === 'expanded'}
 					onclick={selectMentale}
-					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded' }}
+					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: true }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
@@ -134,7 +134,7 @@
 					class="circle right"
 					class:clicked={selectedSide === 'fisico'}
 					onclick={selectFisico}
-					use:drawBorder={{ clicked: selectedSide === 'fisico' }}
+					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: true }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
