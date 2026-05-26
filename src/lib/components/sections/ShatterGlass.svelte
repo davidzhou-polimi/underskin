@@ -84,18 +84,7 @@
   .scroll-wrapper {
     height: 100vh;
     width: 100%;
-    /* Luce soffusa rossa per evocare lo stato emotivo dell'infortunio mantenendo la leggibilità */
-    background: radial-gradient(
-        circle at 80% 20%,
-        color-mix(in srgb, var(--archetipi-infortunato) 15%, transparent) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 15% 85%,
-        color-mix(in srgb, var(--archetipi-infortunato) 8%, transparent) 0%,
-        transparent 60%
-      ),
-      var(--background-primary);
+    background: var(--background-primary);
     overflow: hidden;
   }
 
