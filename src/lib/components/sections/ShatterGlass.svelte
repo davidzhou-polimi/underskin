@@ -1,12 +1,9 @@
 <script>
-  import { onMount, tick } from "svelte";
-  import { gsap } from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { onMount } from "svelte";
   import { Delaunay } from "d3-delaunay";
-  import GlassEffect from "$lib/components/sections/GlassEffect.svelte";
-
-  /** @type {HTMLElement} */
-  let scrollWrapper;
+  import GlassEffect from "$lib/components/ui/GlassEffect.svelte";
+  import { shatterGlass } from "$lib/actions/shatterGlass.js";
+  import { trackSection } from "$lib/actions/trackSection.js";
 
   const NUM_SHARDS = 30; // Ridotto leggermente per diminuire il carico sul DOM mantenendo l'effetto denso
   let windowWidth = 0;
@@ -51,107 +48,16 @@
     return tempFragments;
   }
 
-  onMount(async () => {
-    await tick();
-
-    gsap.registerPlugin(ScrollTrigger);
-
+  onMount(() => {
     windowWidth = window.innerWidth;
     windowHeight = window.innerHeight;
 
+    // Calcolo reattivo sul client dopo il caricamento iniziale del layout
     fragments = generateVoronoiShards();
-
-    await tick();
-
-    // Svanisce gradualmente in entrata la lastra di vetro iniziale
-    gsap.fromTo(
-      ".whole-glass-plate",
-      { opacity: 0 },
-      {
-        opacity: 1,
-        scrollTrigger: {
-          trigger: scrollWrapper,
-          start: "top 80%",
-          end: "top top",
-          scrub: true,
-        },
-      },
-    );
-
-    initAnimation();
   });
-
-  function initAnimation() {
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: scrollWrapper,
-        start: "top top",
-        end: "+=200%",
-        scrub: 1,
-        pin: true,
-      },
-    });
-
-    tl.addLabel("shatter");
-
-    // Nasconde all'istante la lastra intera pesante all'inizio dello scroll di rottura
-    tl.to(
-      ".whole-glass-plate",
-      {
-        opacity: 0,
-        duration: 0.15,
-        ease: "power1.out",
-      },
-      "shatter",
-    );
-
-    // Mostra all'istante i frammenti leggeri pronti a cadere
-    tl.fromTo(
-      ".shards-container",
-      {
-        opacity: 0,
-      },
-      {
-        opacity: 1,
-        duration: 0.15,
-        ease: "power1.out",
-      },
-      "shatter",
-    );
-
-    // Anima la caduta caotica e fluida dei frammenti vettoriali leggeri a 60 FPS
-    tl.to(
-      ".glass-shard",
-      {
-        y: windowHeight * 1.5,
-        x: () => (Math.random() - 0.5) * 160,
-        rotation: () => (Math.random() - 0.5) * 45,
-        opacity: 0,
-        duration: 1.5,
-        stagger: {
-          each: 0.04,
-          from: "random",
-        },
-        ease: "power3.in",
-      },
-      "shatter",
-    );
-
-    // Ripristina la nitidezza del testo in coincidenza con la rottura dei primi pezzi
-    tl.to(
-      ".content-behind",
-      {
-        filter: "blur(0px)",
-        opacity: 1,
-        duration: 2,
-        ease: "power2.inOut",
-      },
-      "shatter",
-    );
-  }
 </script>
 
-<div class="scroll-wrapper" bind:this={scrollWrapper}>
+<div id="shatter" class="scroll-wrapper" use:trackSection use:shatterGlass={{ fragments }}>
   <div class="sticky-container">
     <div class="content-behind">
       <p>
@@ -207,14 +113,14 @@
     position: absolute;
     z-index: 1;
     text-align: center;
-    font-family: system-ui, sans-serif;
-    color: #0c2137;
-    font-size: 1.8rem;
+    font-family: var(--font-family-base);
+    color: var(--content-secondary);
+    font-size: var(--text-m);
     font-weight: 500;
     line-height: 1.5;
     max-width: 80%;
 
-    /* Calibrazione visiva iniziale sfocata */
+    /* Calibrazione visiva iniziale sfocata per stimolare l'effetto svelamento */
     filter: blur(5px);
     opacity: 0.5;
     will-change: filter, opacity;
@@ -253,8 +159,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(241, 250, 253, 0.45);
-    border: 1px solid rgba(223, 244, 250, 0.4);
+    background-color: color-mix(in srgb, var(--neutral-50) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--neutral-100) 40%, transparent);
     background-image: linear-gradient(
       -45deg,
       rgba(255, 255, 255, 0.3) 0%,
