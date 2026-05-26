@@ -1,5 +1,6 @@
 <script>
 	import { drawBorder } from '$lib/actions/drawBorder.js';
+	import { scroll } from '$lib/stores/scroll.svelte.js';
 	import { onMount } from 'svelte';
 
 	let quizState = $state('choosing'); // 'choosing' | 'selected' | 'expanded'
@@ -13,6 +14,9 @@
 	// Controllo di stato: se mostrare la citazione
 	let hasScrolledDown = $state(false);
 	let showQuote = $derived(quizState === 'expanded' && hasScrolledDown);
+
+	// Stato animazione: le animazioni partono solo quando la sezione è visibile
+	let animationsEnabled = $state(false);
 
 	// Per dispositivi mobili: registra la coordinata Y iniziale del tocco
 	let touchStartY = 0;
@@ -45,7 +49,8 @@
 				hasScrolledDown = true;
 			} else {
 				// Rilascio: la citazione è completamente visibile, l'utente continua a scrollare
-				console.log("Citazione visibile, consento lo scroll della pagina");
+				// Segnala che l'utente ha superato la citazione → mostra la PerformanceSection
+				scroll.quotePassed = true;
 			}
 		}
 		// 2. Quando deltaY < 0 significa che l'utente sta scrollando verso l'alto (vuole vedere il testo il fisico)
@@ -86,10 +91,24 @@
 		window.addEventListener('touchstart', handleTouchStart, { passive: true });
 		window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
+		// Osservatore per avviare le animazioni quando la sezione entra nel viewport
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					animationsEnabled = entry.isIntersecting;
+				});
+			},
+			{ threshold: 0.3 }
+		);
+
+		const wrapper = document.querySelector('.quiz-wrapper');
+		if (wrapper) observer.observe(wrapper);
+
 		return () => {
 			window.removeEventListener('wheel', handleWheel);
 			window.removeEventListener('touchstart', handleTouchStart);
 			window.removeEventListener('touchmove', handleTouchMove);
+			observer.disconnect();
 		};
 	});
 
@@ -119,7 +138,7 @@
 	}
 </script>
 
-<div class="quiz-wrapper">
+<div class="quiz-wrapper" class:animations-enabled={animationsEnabled}>
 
 	<div class="quiz-title-wrap">
 		<h1 class="quiz-title">
@@ -136,7 +155,7 @@
 				class="circle left"
 				class:clicked={selectedSide === 'mentale'}
 				onclick={selectMentale}
-				use:drawBorder={{ clicked: selectedSide === 'mentale' }}
+				use:drawBorder={{ clicked: selectedSide === 'mentale', enabled: animationsEnabled }}
 			>
 				<svg class="border-svg" viewBox="0 0 407 407">
 					<defs>
@@ -213,7 +232,7 @@
 				class="circle right"
 				class:clicked={selectedSide === 'fisico'}
 				onclick={selectFisico}
-				use:drawBorder={{ clicked: selectedSide === 'fisico' }}
+				use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationsEnabled }}
 			>
 				<svg class="border-svg" viewBox="0 0 407 407">
 					<defs>
@@ -424,15 +443,22 @@
 		width: 120%;
 		height: 120%;
 		object-fit: cover;
-		animation: fluid-flow 12s ease-in-out infinite;
 		transform-origin: center center;
 		will-change: transform;
 		transform: translateZ(0);
 	}
 
+	/* Animazioni attive solo quando la sezione è visibile */
+	.animations-enabled .fluid-svg {
+		animation: fluid-flow 12s ease-in-out infinite;
+	}
+
 	.fluid-path {
-		animation: path-morph 8s ease-in-out infinite alternate;
 		transform-origin: center center;
+	}
+
+	.animations-enabled .fluid-path {
+		animation: path-morph 8s ease-in-out infinite alternate;
 	}
 
 	/* ======== RIGHT TEXT PANEL ======== */

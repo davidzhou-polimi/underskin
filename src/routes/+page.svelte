@@ -1,6 +1,7 @@
 <script>
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
+	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 </script>
 
 <main>
@@ -8,6 +9,7 @@
 	<section class="cerchi-quiz-section">
 		<CerchiQuiz />
 	</section>
+	<PerformanceSection />
 </main>
 
 <style>
