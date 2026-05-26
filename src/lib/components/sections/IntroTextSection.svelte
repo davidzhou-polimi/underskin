@@ -1,9 +1,13 @@
 <script>
+	import { trailCanvas } from '$lib/actions/trailCanvas.js';
 	import { scrollTextReveal } from '$lib/actions/scrollTextReveal.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
 </script>
 
 <section id="intro-text" class="intro-section" use:trackSection use:scrollTextReveal>
+	<div class="canvas-layer">
+		<canvas use:trailCanvas></canvas>
+	</div>
 	<div class="text-container">
 		<p class="reveal-line">Milano-Cortina 2026</p>
 		<p class="reveal-line">2.900 atleti</p>
@@ -18,15 +22,31 @@
 
 <style>
 	.intro-section {
+		position: relative;
 		height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background-color: var(--background-primary);
 		overflow: hidden;
 	}
 
+	.canvas-layer {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+
+	canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+		filter: blur(60px) saturate(1);
+		will-change: filter;
+	}
+
 	.text-container {
+		position: relative;
+		z-index: 1;
 		display: grid;
 		grid-template-columns: 1fr;
 		grid-template-rows: 1fr;
@@ -37,16 +57,14 @@
 		padding: var(--spacing-4);
 	}
 
-	/* Impiliamo i testi al centro esatto usando CSS Grid */
 	.reveal-line {
 		grid-area: 1 / 1 / 2 / 2;
 		margin: var(--spacing-0);
-		
-		/* Stili espliciti richiesti con i tuoi token di design */
+
 		font-size: var(--text-important-size);
 		font-weight: var(--text-important-weight);
 		color: var(--content-primary);
-		
+
 		font-family: var(--font-family-base);
 		line-height: 1.4;
 	}
@@ -62,10 +80,9 @@
 		margin-top: var(--spacing-1);
 	}
 
-    .my-archetypes-color {
+	.my-archetypes-color {
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
-    }
-
+	}
 </style>

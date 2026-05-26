@@ -8,9 +8,9 @@
 
 <style>
 	.stage {
-		width: 100vw;
-		height: 100vh;
-			background: var(--stage-background, #ffffff);
+		width: 100%;
+		height: 100%;
+		background: var(--stage-background, #ffffff);
 		overflow: hidden;
 		position: relative;
 	}
