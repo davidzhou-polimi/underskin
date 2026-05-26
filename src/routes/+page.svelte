@@ -1,6 +1,6 @@
 <script>
     import HeroSection from '$lib/components/sections/HeroSection.svelte';
-    import GlassEffect from '$lib/components/sections/GlassEffect.svelte';
+    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 </script>
 
 <main>
