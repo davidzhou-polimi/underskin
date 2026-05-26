@@ -31,9 +31,9 @@
                     <NavLink href="#insoddisfatto" label="L'Insoddisfatto" />
                     <NavLink href="#infortunato" label="L'Infortunato" />
                 </div>
-            </div>
-            <div class="close-wrapper" transition:fade={{ duration: 150 }}>
-                <CloseIcon onclick={toggleMenu} />
+                <div class="close-inside">
+                    <CloseIcon onclick={toggleMenu} />
+                </div>
             </div>
         {/if}
     </div>
@@ -42,7 +42,7 @@
 <style>
     .navbar {
         position: fixed;
-        top: 0;
+        top: -10px;
         left: 0;
         width: 100%;
         display: flex;
@@ -82,16 +82,17 @@
     .menu-expanded-box {
         position: absolute;
         left: 50%;
-        transform: translateX(-683px);
+        /* posiziona il bordo destro in modo che la X (right:21px) coincida con il centro dell'area dell'hamburger */
+        transform: translateX(-520px); /* allarga il rettangolo di 11px per lato senza spostare i contenuti */
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 710px;
+        width: 557px;
         height: 68px;
         gap: 24px;
         background-color: rgba(241, 250, 253, 0.5);
         border-radius: 32px;
-        padding: 16px 19px;
+        padding: 8px 32px;
         box-shadow: 2px 2px 4px 0 rgba(0, 0, 0, 0.23);
         box-sizing: border-box;
     }
@@ -101,18 +102,18 @@
         display: flex;
         align-items: center;
         gap: 24px;
-        /* Margine interno verso destra per garantire 24px tra ultimo link e centro della X */
-        margin-right: 32px;
+        /* mantiene la distanza tra l'ultimo link e la X senza spostare i contenuti */
+        margin-right: 45px;
     }
 
-    .close-wrapper {
+    .close-inside {
+        position: absolute;
+        right: 32px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 5;
         display: flex;
         align-items: center;
         justify-content: center;
-        /* mantiene la X esattamente nella stessa posizione dell'hamburger (centrata in nav-right) */
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 5;
     }
 </style>

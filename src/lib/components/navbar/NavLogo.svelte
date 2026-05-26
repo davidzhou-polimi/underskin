@@ -9,7 +9,7 @@
 <style>
     .nav-logo {
         font-family: 'Rethink Sans', sans-serif;
-        font-size: 42.952px;
+        font-size: 35px;
         font-style: normal;
         font-weight: 800; /* ExtraBold */
         line-height: normal;

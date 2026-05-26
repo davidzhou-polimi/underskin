@@ -9,7 +9,7 @@
 <style>
     .nav-link {
         font-family: 'Rethink Sans', sans-serif;
-        font-size: 24px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600; /* SemiBold */
         line-height: 1.5;
