@@ -4,13 +4,21 @@
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
-	// 强制 reattività con un proxy
-	let opacity = $derived.by(() => {
-		return layers.getLayerOpacity(1);
-	});
+	// 追踪 layer 的 opacity
+	let opacity = $derived(layers.getLayerOpacity(1));
 
-	// 只有当 layer 可见时才触发动画
-	let isVisible = $derived(opacity > 0.01);
+	// 只有当 opacity 真正 > 0.5 时才触发动画（确保完全可见）
+	let isVisible = $derived(opacity > 0.5);
+
+	// 用一个状态来追踪是否已经播放过动画
+	let animationTriggered = $state(false);
+
+	// 当 isVisible 变为 true 且动画还没触发过时，触发一次动画
+	$effect(() => {
+		if (isVisible && !animationTriggered) {
+			animationTriggered = true;
+		}
+	});
 
 	let quizState = $state('choosing');
 	let selectedSide = $state('');
@@ -101,13 +109,13 @@
 					class:is-expanding={quizState === 'expanding'}
 					class:is-expanded={quizState === 'expanded'}
 					onclick={selectMentale}
-					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: isVisible }}
+					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
 						<defs>
 							<mask id="mask-left-exp">
-								<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="0" />
+								<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="1266" />
 							</mask>
 						</defs>
 						<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-left-exp)" />
@@ -148,7 +156,7 @@
 					class="circle right"
 					class:clicked={selectedSide === 'fisico'}
 					onclick={selectFisico}
-					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: isVisible }}
+					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
