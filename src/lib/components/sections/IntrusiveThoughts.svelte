@@ -1,6 +1,7 @@
 <script>
   import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
   import { draggableThought } from '$lib/actions/draggableThought.js';
+  import { thoughtsIntro } from '$lib/actions/thoughtsIntro.js';
 
   let container = $state();
   
@@ -14,9 +15,12 @@
     { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left' }
   ]);
 
+  let isIntroDone = $state(false);
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
-  let blurAmount = $derived(activeCount * 1.5); 
-  let opacityAmount = $derived(activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08));
+  
+  // Il testo rimane nitido finché l'animazione di copertura non è completata
+  let blurAmount = $derived(isIntroDone ? activeCount * 1.5 : 0); 
+  let opacityAmount = $derived(isIntroDone ? (activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08)) : 1);
 
   /**
    * Modifica lo stato per innescare gli effetti reattivi di rimozione del pensiero
@@ -28,9 +32,25 @@
       thoughts[index].isScattered = true;
     }
   }
+
+  /**
+   * Imposta lo stato di completamento dell'animazione d'ingresso
+   * @param {boolean} val - Il nuovo stato dell'intro
+   */
+  function handleIntroChange(val) {
+    isIntroDone = val;
+  }
+
+  /**
+   * Ripristina tutti i pensieri allo stato iniziale coperto/interattivo per consentire la riesecuzione dello scroll
+   */
+  function resetThoughts() {
+    thoughts.forEach(t => t.isScattered = false);
+    isIntroDone = false;
+  }
 </script>
 
-<section class="favorite-section" bind:this={container}>
+<section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts }}>
   
   <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
     <p class="main-sentence">
@@ -79,8 +99,8 @@
   .main-sentence {
     font-family: var(--font-family-base);
     font-size: var(--text-body-size);
-    font-weight: 400;
-    color: var(--neutral-900);
+    font-weight: var(--text-body-weight);
+    color: var(--content-primary);
     line-height: 1.5;
     text-align: center;
   }
@@ -101,8 +121,8 @@
     
     font-family: var(--font-family-base);
     font-size: var(--text-caption-size);
-    font-weight: 400;
-    color: var(--neutral-900);
+    font-weight: var(--text-caption-weight);
+    color: var(--content-primary);
     
     cursor: grab;
     user-select: none;
