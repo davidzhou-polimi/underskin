@@ -37,7 +37,7 @@ if (typeof window !== 'undefined') {
  * @param {string} targetLeftPct La percentuale di left target
  * @param {string} targetTopPct La percentuale di top target
  * @param {HTMLElement} container Il contenitore genitore
- * @param {HTMLElement} textContainer Il contenitore del testo centrale
+ * @param {HTMLElement | null} textContainer Il contenitore del testo centrale
  * @param {number} margin Margine di sicurezza dai bordi dello schermo in pixel
  */
 function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, container, textContainer, margin = 20) {
@@ -110,7 +110,7 @@ export function draggableThought(node, params) {
 
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
-    const textContainer = container.querySelector('.sentence-container');
+    const textContainer = /** @type {HTMLElement | null} */ (container.querySelector('.sentence-container'));
     
     // Trova le coordinate finali sicure calcolate
     const targetPos = getClampedAndAvoidedPosition(
@@ -197,6 +197,9 @@ export function draggableThought(node, params) {
   })[0];
 
   return {
+    /**
+     * @param {DraggableThoughtParams} newParams
+     */
     update(newParams) {
       if (draggableInstance && newParams.container) {
         draggableInstance.vars.bounds = newParams.container;

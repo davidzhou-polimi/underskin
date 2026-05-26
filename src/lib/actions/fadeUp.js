@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 /**
  * Svelte Action per un effetto Fade Up con GSAP.
  * @param {HTMLElement} node L'elemento del DOM a cui è applicata l'azione
- * @param {Object} options Opzioni per l'animazione (es. duration, delay, y)
+ * @param {any} [options] Opzioni per l'animazione (es. duration, delay, y)
  */
 export function fadeUp(node, options = {}) {
 	// Valori di default
@@ -35,6 +35,7 @@ export function fadeUp(node, options = {}) {
 	return {
 		/**
 		 * Metodo chiamato se le opzioni cambiano (opzionale in questo caso semplice)
+		 * @param {any} newOptions
 		 */
 		update(newOptions) {
 			// Potresti aggiornare l'animazione se necessario
