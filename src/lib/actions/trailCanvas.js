@@ -45,9 +45,9 @@ export function trailCanvas(node) {
 
         for (let i = 0; i < data.length; i += 4) {
             const alpha = Math.random() < 0.4 ? GRAIN_OPACITY * 255 : 0;
-            data[i] = 0;
-            data[i + 1] = 0;
-            data[i + 2] = 0;
+            data[i] = 255;
+            data[i + 1] = 255;
+            data[i + 2] = 255;
             data[i + 3] = alpha;
         }
 

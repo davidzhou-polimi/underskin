@@ -28,6 +28,7 @@
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
+		background-color: var(--background-primary);
 	}
 
 	.canvas-layer {

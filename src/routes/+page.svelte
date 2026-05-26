@@ -1,14 +1,10 @@
 <script>
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
-</script>
-
-<main>
-	<IntroTextSection />
-</main>
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 </script>
 
 <main>
+	<IntroTextSection />
 	<section class="cerchi-quiz-section">
 		<CerchiQuiz />
 	</section>
@@ -20,6 +16,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background-color: var(--color-background-primary);
+		background-color: var(--background-primary);
 	}
 </style>
