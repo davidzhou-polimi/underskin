@@ -1,6 +1,5 @@
 <script>
 	import { drawBorder } from '$lib/actions/drawBorder.js';
-	import { fly } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
 	let quizState = $state('choosing'); // 'choosing' | 'selected' | 'expanded'
@@ -11,19 +10,86 @@
 
 	let showBottone = $derived(quizState === 'selected');
 
+	// Controllo di stato: se mostrare la citazione
 	let hasScrolledDown = $state(false);
 	let showQuote = $derived(quizState === 'expanded' && hasScrolledDown);
 
-	function handleScroll() {
-		if (window.scrollY > 30) {
-			hasScrolledDown = true;
+	// Per dispositivi mobili: registra la coordinata Y iniziale del tocco
+	let touchStartY = 0;
+
+	// Animazione di transizione con effetto blur
+	function blurFade(node, { duration = 600, delay = 0, maxBlur = 15 }) {
+		return {
+			delay,
+			duration,
+			css: (t) => {
+				const opacity = t;
+				const blur = (1 - t) * maxBlur;
+				return `
+					opacity: ${opacity};
+					filter: blur(${blur}px);
+				`;
+			}
+		};
+	}
+
+	// Logica principale: gestisce i gesti e selettivamente disabilita lo scroll del browser
+	function handleVirtualScroll(deltaY, event) {
+		if (quizState !== 'expanded') return;
+
+		// 1. Quando deltaY > 0 significa che l'utente sta scrollando verso il basso (vuole vedere la citazione)
+		if (deltaY > 10) {
+			if (!hasScrolledDown) {
+				// Blocco pagina: la citazione non è ancora visibile, cambiamo solo il testo e disabilitiamo lo scroll del browser
+				if (event.cancelable) event.preventDefault();
+				hasScrolledDown = true;
+			} else {
+				// Rilascio: la citazione è completamente visibile, l'utente continua a scrollare
+				console.log("Citazione visibile, consento lo scroll della pagina");
+			}
+		}
+		// 2. Quando deltaY < 0 significa che l'utente sta scrollando verso l'alto (vuole vedere il testo il fisico)
+		else if (deltaY < -10) {
+			if (hasScrolledDown) {
+				// Blocco pagina: è visualizzata la citazione, l'utente torna indietro, disabilitiamo lo scroll
+				if (event.cancelable) event.preventDefault();
+				hasScrolledDown = false;
+			} else {
+				// Rilascio: siamo tornati al testo originale, l'utente continua a salire
+				console.log("Tornati al testo originale, consento lo scroll della pagina");
+			}
 		}
 	}
 
+	// 1. Scroll del mouse su PC
+	function handleWheel(event) {
+		handleVirtualScroll(event.deltaY, event);
+	}
+
+	// 2. Touch su mobile
+	function handleTouchStart(event) {
+		if (quizState !== 'expanded') return;
+		touchStartY = event.touches[0].clientY;
+	}
+
+	function handleTouchMove(event) {
+		if (quizState !== 'expanded') return;
+		const touchCurrentY = event.touches[0].clientY;
+		const diffY = touchStartY - touchCurrentY; // Numero positivo = dito verso l'alto (scroll giù)
+
+		handleVirtualScroll(diffY, event);
+	}
+
 	onMount(() => {
-		window.addEventListener('scroll', handleScroll, { passive: true });
+		// Nota: passive deve essere false per consentire preventDefault()
+		window.addEventListener('wheel', handleWheel, { passive: false });
+		window.addEventListener('touchstart', handleTouchStart, { passive: true });
+		window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
 		return () => {
-			window.removeEventListener('scroll', handleScroll);
+			window.removeEventListener('wheel', handleWheel);
+			window.removeEventListener('touchstart', handleTouchStart);
+			window.removeEventListener('touchmove', handleTouchMove);
 		};
 	});
 
@@ -33,7 +99,7 @@
 		}
 	});
 
-	// click circle → selected，appare bottone
+	// click circle → selected
 	function selectMentale() {
 		if (quizState === 'expanded') return;
 		selectedSide = 'mentale';
@@ -48,7 +114,6 @@
 		bottoneText = 'vedere oltre';
 	}
 
-	// click bottom button → expanded
 	function confirmSelection() {
 		quizState = 'expanded';
 	}
@@ -56,7 +121,6 @@
 
 <div class="quiz-wrapper">
 
-	<!-- ======== TITOLO ======== -->
 	<div class="quiz-title-wrap">
 		<h1 class="quiz-title">
 			Quando tutto si decide in pochi istanti,<br />
@@ -64,14 +128,9 @@
 		</h1>
 	</div>
 
-	<!-- ======== CONTENITORE PRINCIPALE ======== -->
 	<div class="quiz-body">
 
-	<!-- ======== CERCHIO MENTALE ======== -->
-	<div
-		class="circle-wrap"
-		class:is-expanded={quizState === 'expanded'}
-	>
+	<div class="circle-wrap">
 		{#if quizState !== 'expanded'}
 			<button
 				class="circle left"
@@ -82,30 +141,10 @@
 				<svg class="border-svg" viewBox="0 0 407 407">
 					<defs>
 						<mask id="mask-left">
-							<circle
-								class="mask-circle"
-								cx="203.5"
-								cy="203.5"
-								r="201.5"
-								fill="none"
-								stroke="white"
-								stroke-width="10"
-								stroke-dasharray="1266"
-								stroke-dashoffset="1266"
-							/>
+							<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="1266" />
 						</mask>
 					</defs>
-					<circle
-						cx="203.5"
-						cy="203.5"
-						r="201.5"
-						fill="none"
-						stroke="var(--content-primary)"
-						stroke-width="4"
-						stroke-dasharray="0 16"
-						stroke-linecap="round"
-						mask="url(#mask-left)"
-					/>
+					<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-left)" />
 				</svg>
 
 				{#if selectedSide === 'mentale'}
@@ -121,52 +160,26 @@
 									<feGaussianBlur stdDeviation="40" result="effect1_foregroundBlur"/>
 									<feTurbulence type="fractalNoise" baseFrequency="0.33" numOctaves="3" seed="1910"/>
 									<feDisplacementMap in="effect1_foregroundBlur" scale="40" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%"/>
-									<feMerge result="effect2_texture">
-										<feMergeNode in="displacedImage"/>
-									</feMerge>
+									<feMerge result="effect2_texture"><feMergeNode in="displacedImage"/></feMerge>
 								</filter>
 								<linearGradient id="paint-fluid-left" x1="125.672" y1="178.687" x2="346.218" y2="304.117" gradientUnits="userSpaceOnUse">
-									<stop stop-color="#6A96DF"/>
-									<stop offset="0.508478" stop-color="#8035D2"/>
-									<stop offset="0.706731" stop-color="#D86146"/>
+									<stop stop-color="#6A96DF"/><stop offset="0.508478" stop-color="#8035D2"/><stop offset="0.706731" stop-color="#D86146"/>
 								</linearGradient>
 							</defs>
 						</svg>
 					</div>
 				{/if}
-
 				<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
 			</button>
 		{:else}
-			<!-- Expanded: div non cliccabile -->
 			<div class="circle expanded-circle">
 				<svg class="border-svg" viewBox="0 0 570 570">
 					<defs>
 						<mask id="mask-exp">
-							<circle
-								class="mask-circle"
-								cx="285"
-								cy="285"
-								r="283"
-								fill="none"
-								stroke="white"
-								stroke-width="10"
-								stroke-dasharray="1778"
-								stroke-dashoffset="0"
-							/>
+							<circle class="mask-circle" cx="285" cy="285" r="283" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1778" stroke-dashoffset="0" />
 						</mask>
 					</defs>
-					<circle
-						cx="285"
-						cy="285"
-						r="283"
-						fill="none"
-						stroke="var(--content-primary)"
-						stroke-width="4"
-						stroke-dasharray="0 16"
-						stroke-linecap="round"
-						mask="url(#mask-exp)"
-					/>
+					<circle cx="285" cy="285" r="283" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-exp)" />
 				</svg>
 
 				<div class="sfumatura-bg">
@@ -181,25 +194,19 @@
 								<feGaussianBlur stdDeviation="40" result="effect1_foregroundBlur"/>
 								<feTurbulence type="fractalNoise" baseFrequency="0.33" numOctaves="3" seed="1910"/>
 								<feDisplacementMap in="effect1_foregroundBlur" scale="40" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%"/>
-								<feMerge result="effect2_texture">
-									<feMergeNode in="displacedImage"/>
-								</feMerge>
+								<feMerge result="effect2_texture"><feMergeNode in="displacedImage"/></feMerge>
 							</filter>
 							<linearGradient id="paint-fluid-exp" x1="125.672" y1="178.687" x2="346.218" y2="304.117" gradientUnits="userSpaceOnUse">
-								<stop stop-color="#6A96DF"/>
-								<stop offset="0.508478" stop-color="#8035D2"/>
-								<stop offset="0.706731" stop-color="#D86146"/>
+								<stop stop-color="#6A96DF"/><stop offset="0.508478" stop-color="#8035D2"/><stop offset="0.706731" stop-color="#D86146"/>
 							</linearGradient>
 						</defs>
 					</svg>
 				</div>
-
 				<span class="expanded-text gradient">70% mentale</span>
 			</div>
 		{/if}
 	</div>
 
-	<!-- ======== CERCHIO FISICO ======== -->
 	{#if quizState !== 'expanded'}
 		<div class="circle-wrap">
 			<button
@@ -211,30 +218,10 @@
 				<svg class="border-svg" viewBox="0 0 407 407">
 					<defs>
 						<mask id="mask-right">
-							<circle
-								class="mask-circle"
-								cx="203.5"
-								cy="203.5"
-								r="201.5"
-								fill="none"
-								stroke="white"
-								stroke-width="10"
-								stroke-dasharray="1266"
-								stroke-dashoffset="1266"
-							/>
+							<circle class="mask-circle" cx="203.5" cy="203.5" r="201.5" fill="none" stroke="white" stroke-width="10" stroke-dasharray="1266" stroke-dashoffset="1266" />
 						</mask>
 					</defs>
-					<circle
-						cx="203.5"
-						cy="203.5"
-						r="201.5"
-						fill="none"
-						stroke="var(--content-primary)"
-						stroke-width="4"
-						stroke-dasharray="0 16"
-						stroke-linecap="round"
-						mask="url(#mask-right)"
-					/>
+					<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-right)" />
 				</svg>
 
 				{#if selectedSide === 'fisico'}
@@ -250,43 +237,48 @@
 									<feGaussianBlur stdDeviation="40" result="effect1_foregroundBlur"/>
 									<feTurbulence type="fractalNoise" baseFrequency="0.33" numOctaves="3" seed="1910"/>
 									<feDisplacementMap in="effect1_foregroundBlur" scale="40" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%"/>
-									<feMerge result="effect2_texture">
-										<feMergeNode in="displacedImage"/>
-									</feMerge>
+									<feMerge result="effect2_texture"><feMergeNode in="displacedImage"/></feMerge>
 								</filter>
 								<linearGradient id="paint-fluid-right" x1="125.672" y1="178.687" x2="346.218" y2="304.117" gradientUnits="userSpaceOnUse">
-									<stop stop-color="#6A96DF"/>
-									<stop offset="0.508478" stop-color="#8035D2"/>
-									<stop offset="0.706731" stop-color="#D86146"/>
+									<stop stop-color="#6A96DF"/><stop offset="0.508478" stop-color="#8035D2"/><stop offset="0.706731" stop-color="#D86146"/>
 								</linearGradient>
 							</defs>
 						</svg>
 					</div>
 				{/if}
-
 				<span class="text" class:gradient={selectedSide === 'fisico'}>fisico</span>
 			</button>
 		</div>
 	{/if}
 
-	<!-- ======== TESTO A DESTRA (EXPANDED) ======== -->
 	{#if quizState === 'expanded'}
-		<div class="right-text" in:fly={{ x: 20, duration: 600, delay: 300 }}>
+		<div class="right-text">
 			{#if showQuote}
-				<p class="quote-text">
-					"At this level, it's probably 70% mental and 30% physical. I've had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge."
-				</p>
-				<p class="quote-author">— Adrian Yung, sci alpino</p>
+				<div 
+					class="quote-wrapper" 
+					in:blurFade={{ duration: 600, delay: 250, maxBlur: 15 }} 
+					out:blurFade={{ duration: 400, maxBlur: 15 }}
+				>
+					<p class="quote-text">
+						"At this level, it's probably 70% mental and 30% physical. I've had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge."
+					</p>
+					<p class="quote-author">— Adrian Yung, sci alpino</p>
+				</div>
 			{:else}
-				<p>
-					Il fisico porta l'atleta al partenza.<br />
-					La mente decide cosa succede dopo.
-				</p>
+				<div 
+					class="default-text" 
+					in:blurFade={{ duration: 600, delay: 250, maxBlur: 15 }} 
+					out:blurFade={{ duration: 400, maxBlur: 15 }}
+				>
+					<p>
+						Il fisico porta l'atleta al partenza.<br />
+						La mente decide cosa succede dopo.
+					</p>
+				</div>
 			{/if}
 		</div>
 	{/if}
 
-	<!-- ======== PULSANTE INFERIORE (choosing/selected) ======== -->
 	{#if showBottone}
 		<button
 			class="bottone"
@@ -299,11 +291,11 @@
 			<span class="bottone-text">{bottoneText}</span>
 		</button>
 	{/if}
-</div><!-- /.quiz-body -->
-</div><!-- /.quiz-wrapper -->
+</div>
+</div>
 
 <style>
-	/* ======== WRAPPER ======== */
+	/* 保持原样，高保真全屏视图 */
 	.quiz-wrapper {
 		display: flex;
 		flex-direction: column;
@@ -312,11 +304,10 @@
 		position: relative;
 		height: 100vh;
 		width: 100%;
-		overflow: hidden;
+		overflow: hidden; 
 		box-sizing: border-box;
 	}
 
-	/* ======== TITOLO ======== */
 	.quiz-title-wrap {
 		margin-bottom: var(--space-8, 64px);
 		flex-shrink: 0;
@@ -332,7 +323,6 @@
 		margin: 0;
 	}
 
-	/* ======== CONTENITORE PRINCIPALE ======== */
 	.quiz-body {
 		display: flex;
 		align-items: center;
@@ -342,7 +332,6 @@
 		flex-shrink: 0;
 	}
 
-	/* ======== WRAPPER CIRCLE ======== */
 	.circle-wrap {
 		display: flex;
 		align-items: center;
@@ -350,7 +339,6 @@
 		flex-shrink: 0;
 	}
 
-	/* ======== BASE CIRCLE (button) ======== */
 	.circle {
 		width: 407px;
 		height: 407px;
@@ -366,15 +354,9 @@
 		padding: 0;
 	}
 
-	.circle.left {
-		z-index: 1;
-	}
+	.circle.left { z-index: 1; }
+	.circle.right { z-index: 0; }
 
-	.circle.right {
-		z-index: 0;
-	}
-
-	/* ======== EXPANDED CIRCLE (div non cliccabile) ======== */
 	.expanded-circle {
 		width: 570px;
 		height: 570px;
@@ -385,7 +367,6 @@
 		justify-content: center;
 	}
 
-	/* ======== SVG BORDER ======== */
 	.border-svg {
 		position: absolute;
 		inset: 0;
@@ -395,7 +376,6 @@
 		z-index: 3;
 	}
 
-	/* ======== TEXT ======== */
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -421,19 +401,13 @@
 
 	.text.gradient,
 	.expanded-text.gradient,
-	.circle:hover .text{
-		background: linear-gradient(
-			107deg,
-			var(--archetipi-favorito) 18.14%,
-			var(--archetipi-insoddisfatto) 50%,
-			var(--archetipi-infortunato) 92.63%
-		);
+	.circle:hover .text {
+		background: linear-gradient(107deg, var(--archetipi-favorito) 18.14%, var(--archetipi-insoddisfatto) 50%, var(--archetipi-infortunato) 92.63%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		color: transparent;
 	}
 
-	/* ======== SFUMATURA BACKGROUND ======== */
 	.sfumatura-bg {
 		position: absolute;
 		inset: 0;
@@ -464,6 +438,15 @@
 	/* ======== RIGHT TEXT PANEL ======== */
 	.right-text {
 		width: 453px;
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr;
+		align-items: center;
+	}
+
+	.quote-wrapper, .default-text {
+		grid-area: 1 / 1 / 2 / 2;
+		will-change: filter, opacity;
 	}
 
 	.right-text p {
@@ -488,7 +471,6 @@
 		margin-top: var(--space-4, 16px);
 	}
 
-	/* ======== BOTTONE ======== */
 	.bottone {
 		position: absolute;
 		bottom: -60px;
@@ -530,31 +512,16 @@
 		z-index: 1;
 	}
 
-	/* ======== ANIMATIONS ======== */
 	@keyframes fluid-flow {
-		0% {
-			transform: scale(1) rotate(0deg) translate(0px, 0px);
-		}
-		33% {
-			transform: scale(1.15) rotate(120deg) translate(-10px, 15px);
-		}
-		66% {
-			transform: scale(0.95) rotate(240deg) translate(15px, -10px);
-		}
-		100% {
-			transform: scale(1) rotate(360deg) translate(0px, 0px);
-		}
+		0% { transform: scale(1) rotate(0deg) translate(0px, 0px); }
+		33% { transform: scale(1.15) rotate(120deg) translate(-10px, 15px); }
+		66% { transform: scale(0.95) rotate(240deg) translate(15px, -10px); }
+		100% { transform: scale(1) rotate(360deg) translate(0px, 0px); }
 	}
 
 	@keyframes path-morph {
-		0% {
-			transform: scale(1) skewX(0deg);
-		}
-		50% {
-			transform: scale(1.08) skewX(5deg) skewY(3deg);
-		}
-		100% {
-			transform: scale(0.95) skewX(-3deg) skewY(-2deg);
-		}
+		0% { transform: scale(1) skewX(0deg); }
+		50% { transform: scale(1.08) skewX(5deg) skewY(3deg); }
+		100% { transform: scale(0.95) skewX(-3deg) skewY(-2deg); }
 	}
 </style>
