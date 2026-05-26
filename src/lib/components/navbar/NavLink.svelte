@@ -12,7 +12,8 @@
         font-size: 24px;
         font-style: normal;
         font-weight: 600; /* SemiBold */
-        line-height: normal;
+        line-height: 1.5;
+        letter-spacing: -0.264px;
         color: var(--content-primary);
         text-decoration: none;
         cursor: pointer;

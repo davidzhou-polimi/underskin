@@ -1,8 +1,8 @@
 <script>
-    export let onclick = () => {};
+    let { onclick } = $props();
 </script>
 
-<button type="button" class="close-button" on:click={onclick} aria-label="Chiudi menu">
+<button type="button" class="close-button" {onclick} aria-label="Chiudi menu">
     <svg 
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 16.5 16.5" 

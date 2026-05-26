@@ -31,7 +31,8 @@
                     <NavLink href="#insoddisfatto" label="L'Insoddisfatto" />
                     <NavLink href="#infortunato" label="L'Infortunato" />
                 </div>
-                
+            </div>
+            <div class="close-wrapper" transition:fade={{ duration: 150 }}>
                 <CloseIcon onclick={toggleMenu} />
             </div>
         {/if}
@@ -45,7 +46,8 @@
         left: 0;
         width: 100%;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
+        gap: 880px;
         align-items: center;
         padding: var(--spacing-4, 32px) var(--spacing-5, 40px);
         z-index: 100;
@@ -59,10 +61,13 @@
 
     .nav-left {
         justify-content: flex-start;
+        width: 194px; /* fissa la larghezza del contenitore logo per evitare shift quando il menu cambia */
     }
 
     .nav-right {
-        justify-content: flex-end;
+        justify-content: center;
+        position: relative;
+        width: 22px; /* fissa l'area dell'hamburger/x per mantenere la posizione invariata */
         height: 68px; /* Allinea l'altezza massima con la box per evitare scatti */
     }
 
@@ -75,17 +80,19 @@
 
     /* LA BOX COMPLESSA DA FIGMA: Dimensioni 710px x 68px */
     .menu-expanded-box {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-683px);
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         width: 710px;
         height: 68px;
-        /* Internamente usa lo sfondo primario o una variante trasparente pulita */
-        background-color: var(--background-primary, #F1FAFD);
-        border: 1px solid rgba(7, 30, 69, 0.12); /* Tratto sottile usando il content-primary */
-        border-radius: var(--radius-md, 20px);
-        padding: 0 var(--spacing-4, 32px);
-        box-shadow: 0 10px 30px rgba(7, 30, 69, 0.08);
+        gap: 24px;
+        background-color: rgba(241, 250, 253, 0.5);
+        border-radius: 32px;
+        padding: 16px 19px;
+        box-shadow: 2px 2px 4px 0 rgba(0, 0, 0, 0.23);
         box-sizing: border-box;
     }
 
@@ -93,6 +100,19 @@
     .links-group {
         display: flex;
         align-items: center;
-        gap: var(--spacing-3, 24px); /* <--- Spacing a 24px tra un link e l'altro */
+        gap: 24px;
+        /* Margine interno verso destra per garantire 24px tra ultimo link e centro della X */
+        margin-right: 32px;
+    }
+
+    .close-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* mantiene la X esattamente nella stessa posizione dell'hamburger (centrata in nav-right) */
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
     }
 </style>

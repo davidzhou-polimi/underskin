@@ -7,10 +7,11 @@
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 22 17" 
         class="hamburger-svg"
+        fill="none"
     >
-        <line x1="0" y1="2" x2="22" y2="2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-        <line x1="0" y1="8.5" x2="22" y2="8.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-        <line x1="0" y1="15" x2="22" y2="15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="1.25" y1="2" x2="20.75" y2="2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="1.25" y1="8.5" x2="20.75" y2="8.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="1.25" y1="15" x2="20.75" y2="15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
     </svg>
 </button>
 
