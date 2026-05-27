@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
     // Testo strutturato per riga
     const stats = [
@@ -87,20 +88,21 @@
                 <h2 class="podium-title">Questo è ciò che non si vede sul podio:</h2>
             </div>
 
-            <div class="stats-content" class:revealed={showStats}>
-                {#each stats as line, lineIndex}
-                    {@const words = line.split(' ')}
-                    {@const offset = lineOffsets[lineIndex]}
-                    <div class="line">
-                        {#each words as w, wi}
-                            {@const globalIndex = offset + wi}
-                            {@const wordProgress = globalIndex / allWords.length}
-                            
-                            <span class="word" class:visible={globalIndex < revealedCount}>{w}{' '}</span>
-                        {/each}
-                    </div>
-                {/each}
-            </div>
+            <GlassEffect class="stats-glass" class:revealed={showStats}>
+                <div class="stats-content">
+                    {#each stats as line, lineIndex}
+                        {@const words = line.split(' ')}
+                        {@const offset = lineOffsets[lineIndex]}
+                        <div class="line">
+                            {#each words as w, wi}
+                                {@const globalIndex = offset + wi}
+                                
+                                <span class="word" class:visible={globalIndex < revealedCount}>{w}{' '}</span>
+                            {/each}
+                        </div>
+                    {/each}
+                </div>
+            </GlassEffect>
 
         </div>
 
@@ -162,14 +164,14 @@
         margin: 0;
     }
 
-    .stats-content {
+    :global(.stats-glass) {
         width: 100%;
         max-width: 800px;
-        text-align: center;
-        position: relative;
-        
-        /* Spazio esatto e immutabile richiesto tra i due blocchi di testo */
         margin-top: var(--spacing-13); 
+        border-radius: 24px;
+        padding: var(--spacing-5) var(--spacing-6);
+        box-sizing: border-box;
+        position: relative;
 
         /* Stato iniziale: dissolvenza pulita prima del breakpoint */
         opacity: 0;
@@ -179,10 +181,15 @@
     }
 
     /* Quando il titolo taglia la linea del 75% dello schermo, il blocco appare */
-    .stats-content.revealed {
+    :global(.stats-glass.revealed) {
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;
+    }
+
+    .stats-content {
+        width: 100%;
+        text-align: center;
     }
 
     .line {
