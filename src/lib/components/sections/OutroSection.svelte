@@ -88,7 +88,7 @@
                 <h2 class="podium-title">Questo è ciò che non si vede sul podio:</h2>
             </div>
 
-            <GlassEffect class="stats-glass" class:revealed={showStats}>
+            <GlassEffect class={"stats-glass " + (showStats ? 'revealed' : '')}>
                 <div class="stats-content">
                     {#each stats as line, lineIndex}
                         {@const words = line.split(' ')}
