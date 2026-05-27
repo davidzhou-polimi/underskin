@@ -10,6 +10,14 @@
 	let currentIndex = $state(0);
 	let animating = false;
 	let initialized = false;
+	let canvasStarted = false;
+	let shouldLoop = false;
+	
+	let canvasAction = null;
+	let rotationStarted = false;
+	
+	// 跟踪上一次显示的行索引
+	let lastTargetIndex = -1;
 
 	let opacity = $derived.by(() => {
 		return layers.getLayerOpacity(0);
@@ -18,6 +26,21 @@
 	function bindLine(node, index) {
 		lines[index] = node;
 		return {};
+	}
+	
+	// Bind canvas to get the action instance
+	function bindCanvas(node) {
+		canvasAction = trailCanvas(node);
+		// 页面加载时播放一次入场动画（不循环）
+		canvasAction.startLoop(false);
+		return {
+			destroy() {
+				if (canvasAction) {
+					canvasAction.destroy();
+					canvasAction = null;
+				}
+			}
+		};
 	}
 
 	$effect(() => {
@@ -67,16 +90,24 @@
 					ease: 'power2.inOut',
 					onComplete: () => {
 						animating = false;
+						// 当显示最后一行时，从暂停位置继续旋转
+						if (currentIndex === 4 && canvasAction && !rotationStarted) {
+							rotationStarted = true;
+							canvasAction.continueRotation();
+						}
 					}
 				});
 			}
 		}
+		
+		// 如果滚动到其他行又回来，不再触发 rotation
+		lastTargetIndex = targetIndex;
 	});
 </script>
 
 <section id="intro-text" class="intro-section" style:opacity={opacity} use:trackSection>
 	<div class="canvas-layer">
-		<canvas use:trailCanvas></canvas>
+		<canvas use:bindCanvas></canvas>
 	</div>
 	<div class="text-container" bind:this={textContainer}>
 		<p class="reveal-line" use:bindLine={0}>Milano-Cortina 2026</p>

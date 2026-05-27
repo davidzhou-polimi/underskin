@@ -3,7 +3,7 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
-	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
+	// import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
@@ -31,7 +31,6 @@
 <main class="layer-container">
 	<IntroTextSection />
 	<CerchiQuiz />
-	<PerformanceSection />
 </main>
 
 <style>

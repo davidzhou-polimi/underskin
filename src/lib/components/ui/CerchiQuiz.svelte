@@ -2,6 +2,7 @@
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { fade } from 'svelte/transition';
 	import { trackSection } from '$lib/actions/trackSection.js';
+	import { trailCanvas } from '$lib/actions/trailCanvas.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
 	// 追踪 layer 的 opacity
@@ -12,13 +13,33 @@
 
 	// 用一个状态来追踪是否已经播放过动画
 	let animationTriggered = $state(false);
+	
+	// Canvas action reference - 使用普通变量
+	let canvasAction = null;
 
 	// 当 isVisible 变为 true 且动画还没触发过时，触发一次动画
 	$effect(() => {
 		if (isVisible && !animationTriggered) {
 			animationTriggered = true;
+			// 触发缩小动画
+			if (canvasAction) {
+				canvasAction.startShrink(0.5, 2);
+			}
 		}
 	});
+	
+	// Bind canvas to get the action instance
+	function bindCanvas(node) {
+		canvasAction = trailCanvas(node);
+		return {
+			destroy() {
+				if (canvasAction) {
+					canvasAction.destroy();
+					canvasAction = null;
+				}
+			}
+		};
+	}
 
 	let quizState = $state('choosing');
 	let selectedSide = $state('');
@@ -88,6 +109,9 @@
 	onwheel={handleVirtualScroll}
 	use:trackSection
 >
+	<div class="canvas-layer">
+		<canvas use:bindCanvas></canvas>
+	</div>
 	<div class="quiz-title-wrap" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<h1 class="quiz-title">
 			Quando tutto si decide in pochi istanti,<br />
@@ -246,7 +270,23 @@
 		z-index: 10; 
 	}
 
+	.canvas-layer {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.canvas-layer canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+		filter: blur(60px) saturate(1);
+	}
+
 	.quiz-title-wrap {
+		position: relative;
+		z-index: 1;
 		flex-shrink: 0;
 		margin-bottom: var(--space-8, 48px);
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
@@ -277,6 +317,7 @@
 		height: auto;
 		align-items: center;
 		transition: gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		z-index: 1;
 	}
 
 	.quiz-body.expanded {
