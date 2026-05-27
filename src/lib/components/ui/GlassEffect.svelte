@@ -22,7 +22,7 @@
 <style>
   .glass-material {
     /* Estrazione del canale alpha dal token esistente per evitare color-mix e nuovi token */
-    background-color: rgb(from var(--neutral-100) r g b / 0.3);
+    background-color: rgb(from var(--neutral-200) r g b / 0.3);
     
     /* Bordo calibrato in trasparenza direttamente sul token esistente */
     border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
