@@ -7,3 +7,11 @@
 	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
 	<HeroSection />
 </main>
+
+
+<style>
+	main {
+		width: 100%;
+		background-color: var(--background-primary);
+	}
+</style>
