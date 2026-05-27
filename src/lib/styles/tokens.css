@@ -1,7 +1,4 @@
-:root {
-	--background-primary: #F1FAFD;
-	--content-primary: #071E45;
-	--content-secondary: #0F2D54;
-}
-
-@import './tokens/typography.css';
+@import "./tokens/colors.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/typography.css";

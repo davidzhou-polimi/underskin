@@ -35,7 +35,7 @@
   (es. `scrollProgress.svelte.js`, `activeSection.svelte.js`).
   Usa `$state` e `$derived` a livello di modulo; importa direttamente dove serve.
   Le Actions in `src/lib/actions/` possono scrivere su questi store per propagare eventi scroll/GSAP al resto dell'interfaccia.
-- `styles/tokens/` → design tokens come variabili CSS (`--color-*`, `--space-*`, `--radius-*`)
+- `styles/tokens/` → design tokens come variabili CSS (`--text-*`, `--spacing-*`, `--radius-*`)
 - `styles/tokens.css` → entry point che importa tutti i file in `tokens/`; è l'unico file da importare nei componenti o nel layout globale
 
 ---
