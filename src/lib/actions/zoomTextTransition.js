@@ -7,60 +7,71 @@ if (typeof window !== 'undefined') {
 
 /**
  * Azione Svelte per la transizione cinematografica dentro al testo tramite ScrollTrigger.
+ * Ritmo e sovrapposizioni ottimizzate per eliminare i tempi morti e lo spazio vuoto.
  * @param {HTMLElement} node - Il container principale della sezione
  */
 export function zoomTextTransition(node) {
 	const firstText = node.querySelector('.first-text');
 	const zoomText = node.querySelector('.zoom-text');
 	const nextContent = node.querySelector('.next-section-content');
-	const targetDigit = node.querySelector('.target-digit');
 
-	if (!zoomText || !firstText || !nextContent || !targetDigit) return;
+	if (!zoomText || !firstText || !nextContent) return;
 
 	const ctx = gsap.context(() => {
-		// 1. Calcolo geometrico esatto per centrare lo zero
-		const parentRect = zoomText.getBoundingClientRect();
-		const digitRect = targetDigit.getBoundingClientRect();
-
-		const originX = (digitRect.left + digitRect.width / 2) - parentRect.left;
-		const originY = (digitRect.top + digitRect.height / 2) - parentRect.top;
-		const computedOrigin = `${originX}px ${originY}px`;
-
 		const tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: node,
-				start: 'top top',
-				end: '+=300%', // Allunghiamo leggermente lo scroll per dare più spazio allo zoom finale
-				pin: true,
-				scrub: 1,
+				start: 'top top',    
+				end: '+=180%',       // Ridotto da +=300% a +=180% per rendere lo scroll molto più reattivo e veloce!
+				pin: true,           
+				scrub: 1,            // Sincronizzazione millimetrica dello scroll
 				anticipatePin: 1
 			}
 		});
 
-		// Configurazione iniziale: la sezione successiva è nascosta
-		gsap.set([firstText, zoomText], { opacity: 0, filter: 'blur(15px)', y: 20 });
+		// Configurazione iniziale di partenza (ripristinato il testo standard)
+		gsap.set(zoomText, { 
+			transformOrigin: '48.5% 76.5%', // Il tuo asse perfetto!
+			scale: 1, 
+			opacity: 0, 
+			filter: 'blur(15px)',
+			y: 20
+		});
+		
+		gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 20 });
 		gsap.set(nextContent, { opacity: 0 });
 
-		// Sequenza temporale dello scrollytelling senza sovrapposizioni sgradevoli
+		// ==========================================================================
+		// TIMELINE CORE: RITMO, SPAZI E VELOCITÀ RIDEFINITI
+		// ==========================================================================
+		
+		// 1. Entrano INSIEME sia "Alcuni casi a" che "Milano Cortina 2026"
 		tl.to(firstText, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 })
-		  .to(zoomText, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 }, '-=0.3')
-		  .to(firstText, { opacity: 0, filter: 'blur(10px)', y: -30, duration: 0.5 }, '+=0.3')
+		  // Il parametro "<" dice a GSAP di partire ESATTAMENTE insieme all'animazione precedente
+		  .to(zoomText, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 }, '<')
 		  
-		  // Portiamo lo zoom a 250! In questo modo lo spessore dello zero cresce così tanto 
-		  // da colorare l'intero schermo di azzurro in modo matematico.
+		  // 2. Lo zoom parte IMMEDIATAMENTE dopo la comparsa (ridotto il tempo di attesa a zero)
+		  // E contemporaneamente facciamo il FADE OUT di "Alcuni casi a"
 		  .to(zoomText, { 
 				scale: 250, 
-				transformOrigin: computedOrigin,
-				duration: 2.5,
-				ease: 'power2.in'
-		  })
+				duration: 2, // Velocizzato il movimento dello zoom per nascondere la sgranatura
+				ease: 'power2.in' 
+		  }, '+=0.1') // Piccolo stacco quasi impercettibile di 0.1s giusto per far leggere i testi
 		  
-		  // Solo ORA che lo zoom ha occupato tutto lo schermo facciamo comparire la nuova sezione.
-		  // Togliamo il segno "-=" in modo che questa azione aspetti la fine dello zoom.
+		  // Questo fade out parte ESATTAMENTE insieme allo zoom in (grazie al puntatore "<")
+		  .to(firstText, { 
+				opacity: 0, 
+				filter: 'blur(10px)', 
+				y: -40, 
+				duration: 0.8,
+				ease: 'power2.out'
+		  }, '<')
+		  
+		  // 3. Rivelazione finale fluida della nuova sezione azzurra
 		  .to(nextContent, { 
 				opacity: 1, 
-				duration: 0.5 
-		  });
+				duration: 0.4 
+		  }, '-=0.2'); // Inizia a comparire leggermente prima che lo zoom sia finito per dare continuità
 	}, node);
 
 	return {
