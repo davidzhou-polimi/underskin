@@ -101,14 +101,16 @@ export function thoughtsIntro(node, params) {
         });
 
         // 1. Inizia immediatamente l'effetto di sfocatura/ghiaccio sulla frase centrale
+        // Modificato per garantire una transizione iniziale più morbida e meno repentina
         tl.to(sentenceContainer, {
           '--blur-amount': `${targetBlur}px`,
           '--opacity-amount': targetOpacity,
-          duration: 0.7,
+          duration: 1.5,
           ease: 'power2.out'
         }, 0);
 
-        // 2. Subito dopo (a 0.2s), i box partono all'impazzata e coprono la frase ormai sfocata
+        // 2. Subito dopo (a 0.3s), i box partono all'impazzata e coprono la frase ormai sfocata
+        // Incrementata la durata del volo di ciascun box e lo stagger tra di essi per rendere il movimento meno frenetico e più leggibile
         boxes.forEach((box, index) => {
           const idAttr = box.getAttribute('data-id');
           const id = parseInt(idAttr || '0', 10);
@@ -125,9 +127,9 @@ export function thoughtsIntro(node, params) {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 0.35,
-            ease: 'expo.out'
-          }, 0.2 + index * 0.03); // Sciame fulmineo con stagger leggero a partire da 0.2s
+            duration: 1,
+            ease: 'power3.out'
+          }, 0.5 + index * 0.1); // Sciame ammorbidito con stagger e delay aumentati
         });
       },
       onLeaveBack: () => {
@@ -145,8 +147,14 @@ export function thoughtsIntro(node, params) {
           const thought = thoughts.find(t => t.id === id);
           if (!thought) return;
 
+          // Pulisce immediatamente gli stili inline ereditati da drag/GSAP per ricalcolare l'offset sul posizionamento centrale corretto
+          const htmlBox = /** @type {HTMLElement} */ (box);
+          htmlBox.style.left = '';
+          htmlBox.style.top = '';
+          gsap.set(htmlBox, { clearProps: 'transform' });
+
           const { dx, dy } = getOffsets(thought);
-          gsap.set(box, { x: dx, y: dy, opacity: 0, scale: 0.8 });
+          gsap.set(box, { x: dx, y: dy, opacity: 0, scale: 0.8, rotation: 0 });
         });
 
         // Ripristina la nitidezza del testo

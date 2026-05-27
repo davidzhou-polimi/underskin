@@ -15,8 +15,16 @@
   ]);
 
   let isIntroDone = $state(false);
+  let hasCompletedOnce = $state(false);
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
   
+  // Evita di bloccare nuovamente l'utente se ha già completato l'interazione almeno una volta
+  $effect(() => {
+    if (isIntroDone && activeCount === 0) {
+      hasCompletedOnce = true;
+    }
+  });
+
   // Il testo rimane nitido finché l'animazione di copertura non è completata
   let blurAmount = $derived(isIntroDone ? activeCount * 1.5 : 0); 
   let opacityAmount = $derived(isIntroDone ? (activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08)) : 1);
@@ -102,7 +110,7 @@
 
   // Gestione reattiva dello scroll-lock monodirezionale e posizionamento della sezione
   $effect(() => {
-    const shouldLock = isIntroDone && activeCount > 0;
+    const shouldLock = isIntroDone && activeCount > 0 && !hasCompletedOnce;
     
     if (shouldLock) {
       window.addEventListener('wheel', preventScrollDown, { passive: false });
@@ -233,6 +241,7 @@
     /* Glass Effect integrato direttamente: permette a backdrop-filter di operare 
        sul reale sfondo della pagina poiché nessun antenato ha proprietà 'filter' isolate */
     background-color: rgb(from var(--neutral-200) r g b / 0.3);
+    border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -247,12 +256,6 @@
     height: 100%;
     pointer-events: none;
     
-    filter: 
-      /* Proietta il bordo vetrato di 1px lungo la forma esatta del fumetto (compresa la codina) */
-      drop-shadow(1px 9999px 0px rgb(from var(--neutral-50) r g b / 0.3))
-      drop-shadow(-1px 9999px 0px rgb(from var(--neutral-50) r g b / 0.3))
-      drop-shadow(0px 10000px 0px rgb(from var(--neutral-50) r g b / 0.3))
-      drop-shadow(0px 9998px 0px rgb(from var(--neutral-50) r g b / 0.3));
   }
 
   

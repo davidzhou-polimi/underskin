@@ -223,6 +223,10 @@ export function draggableThought(node, params) {
         // Se viene ripristinato l'intro (es. scroll-up), si azzera lo stato locale dell'azione
         isScattered = false;
         hasFlown = false;
+
+        // Ripristina gli stili di posizionamento relativi, lasciando il transform sotto il controllo coordinato di thoughtsIntro
+        node.style.left = '';
+        node.style.top = '';
       }
     },
     
