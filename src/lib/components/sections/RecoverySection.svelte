@@ -93,11 +93,6 @@
 		display: inline;
 		font-weight: 700;
 		padding-bottom: 6px;
-
-		text-decoration: dotted underline;
-		text-decoration-thickness: 4px;
-		text-underline-offset: 4px;
-		text-decoration-color: currentColor;
 	}
 
 	.infortunato-color {
