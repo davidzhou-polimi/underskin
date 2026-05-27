@@ -9,6 +9,7 @@
 	// Importa le sezioni della pagina in sequenza
 	import InfortunatoHero from '$lib/components/sections/InfortunatoHero.svelte';
 	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
+	import RecoverySection from '$lib/components/sections/RecoverySection.svelte';
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta description unici per questa pagina -->
@@ -26,6 +27,9 @@
 
 	<!-- 2. Sezione interattiva di scorrimento Voronoi con sfondo azzurro-ghiaccio -->
 	<ShatterGlass />
+
+	<!-- 3. Sezione narrativa di superamento e reset psicofisico post-recupero -->
+	<RecoverySection />
 </main>
 
 <style>
