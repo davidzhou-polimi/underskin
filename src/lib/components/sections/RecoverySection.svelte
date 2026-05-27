@@ -21,10 +21,10 @@
 	<div class="content-container" use:scrollReveal>
 		<p class="narrative-text">
 			Dopo il recupero, molti atleti convivono<br />
-			con la <span class="highlight-infortunato">kinesiophobia</span> e perdita di fiducia.
+			con la <span class="highlighted-keyword gradient-text animate-gradient-text infortunato-color">kinesiophobia</span> e perdita di fiducia.
 			<br /><br />
 			Tornare davvero in campo significa affrontare<br />
-			un processo di <span class="highlight-infortunato">reset mentale:</span> smettendo di <br />
+			un processo di <span class="highlighted-keyword gradient-text animate-gradient-text infortunato-color">reset mentale:</span> smettendo di <br />
 			competere con il ricordo del dolore.
 		</p>
 	</div>
@@ -65,11 +65,28 @@
 		text-align: left;
 	}
 
-	/* Evidenziazione cromatiche pulite con il colore del brand Infortunato e sottolineatura tratteggiata */
-	.highlight-infortunato {
-		color: var(--archetipi-infortunato);
-		font-weight: var(--text-important-weight);
-		border-bottom: 4px dotted var(--archetipi-infortunato);
-		padding-bottom: 0px;
+	.highlighted-keyword {
+		position: relative;
+		display: inline;
+		font-weight: 700;
+		padding-bottom: 6px;
+
+		text-decoration: dotted underline;
+		text-decoration-thickness: 6px;
+		text-underline-offset: 12px;
+		text-decoration-color: currentColor;
+	}
+
+	.infortunato-color {
+		--gradient-c1: var(--arancione-800);
+		--gradient-c2: var(--arancione-300);
+		--gradient-c3: var(--arancione-600);
+
+		/* Permette di ritagliare lo sfondo seguendo precisamente il contorno delle lettere */
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+
+		background-size: 300% 100%;
 	}
 </style>

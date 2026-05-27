@@ -68,11 +68,9 @@
         position: relative;
 		display: inline;
 		font-weight: 700; /* Spessore marcato per evidenziare i termini */
-        padding-bottom: 6px;
-
         text-decoration: dotted underline;
-        text-decoration-thickness: 6px;
-        text-underline-offset: 12px;
+        text-decoration-thickness: 4px;
+        text-underline-offset: 0px;
         text-decoration-color: currentColor;
 	}
 
