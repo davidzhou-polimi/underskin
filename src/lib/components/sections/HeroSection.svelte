@@ -6,7 +6,7 @@
 <!-- 2. Applica trackSection al wrapper principale per aggiornare lo store globale -->
 <section id="hero" class="hero-section" use:trackSection>
 	<div class="content">
-		<!-- Inserisci qui il contenuto della sezione -->
+		<!-- Hero left intentionally empty; headline resides in OutroSection -->
 	</div>
 </section>
 
@@ -18,9 +18,13 @@
 		align-items: center;
 		justify-content: center;
 		background-color: var(--color-bg-primary, transparent);
+		padding: var(--spacing-4);
+		box-sizing: border-box;
 	}
 
 	.content {
-		/* Esempio: max-width: var(--container-width); */
+		text-align: center;
 	}
+
+	/* Hero has no direct headline; headline is rendered inside OutroSection */
 </style>
