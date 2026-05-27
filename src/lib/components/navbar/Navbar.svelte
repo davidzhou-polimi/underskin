@@ -46,10 +46,9 @@
         left: 0;
         width: 100%;
         display: flex;
-        justify-content: center;
-        gap: 880px;
+        justify-content: space-between;
         align-items: center;
-        padding: var(--spacing-4, 32px) var(--spacing-5, 40px);
+        padding: var(--spacing-4, 32px) 80px;
         z-index: 100;
         background-color: var(--background-primary, #F1FAFD); /* Sfondo primario del brand */
     }
@@ -61,13 +60,11 @@
 
     .nav-left {
         justify-content: flex-start;
-        width: 194px; /* fissa la larghezza del contenitore logo per evitare shift quando il menu cambia */
     }
 
     .nav-right {
         justify-content: center;
         position: relative;
-        width: 22px; /* fissa l'area dell'hamburger/x per mantenere la posizione invariata */
         height: 68px; /* Allinea l'altezza massima con la box per evitare scatti */
     }
 
@@ -81,9 +78,9 @@
     /* LA BOX COMPLESSA DA FIGMA: Dimensioni 710px x 68px */
     .menu-expanded-box {
         position: absolute;
-        left: 50%;
-        /* posiziona il bordo destro in modo che la X (right:21px) coincida con il centro dell'area dell'hamburger */
-        transform: translateX(-520px); /* allarga il rettangolo di 11px per lato senza spostare i contenuti */
+        right: 0;
+        top: 50%;
+        transform: translate(21px, -50%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -103,12 +100,12 @@
         align-items: center;
         gap: 24px;
         /* mantiene la distanza tra l'ultimo link e la X senza spostare i contenuti */
-        margin-right: 45px;
+        margin-right: 24px;
     }
 
     .close-inside {
         position: absolute;
-        right: 32px;
+        right: 21px;
         top: 50%;
         transform: translateY(-50%);
         z-index: 5;
