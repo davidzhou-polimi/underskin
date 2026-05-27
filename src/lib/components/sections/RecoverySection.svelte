@@ -53,15 +53,16 @@
 		margin: 0 auto;
 	}
 
-	/* Testo principale con forte carattere editoriale e leggibilità ottimizzata e centrata */
+	/* Allineamento a sinistra (bandiera) ma blocco centrato orizzontalmente nello schermo */
 	.narrative-text {
 		font-family: var(--font-family-base);
-		font-size: var(--text-body-size);
+		font-size: var(--text-m);
 		font-weight: var(--text-body-weight);
 		line-height: 1.5;
 		color: var(--content-primary);
-		margin: 0;
-		text-align: center;
+		margin: 0 auto;
+		width: fit-content;
+		text-align: left;
 	}
 
 	/* Evidenziazione cromatiche pulite con il colore del brand Infortunato e sottolineatura tratteggiata */
