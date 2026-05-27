@@ -66,7 +66,7 @@
 	    <div class="viewport-sticky">
 			<!-- Titolo principale: rimane qui ma deve essere visibile subito -->
 			<div class="top-header">
-				<h2 class="podium-title">Questo è ciò che non si vede sul podio.</h2>
+				<h2 class="podium-title">Questo è ciò che non si vede sul podio:</h2>
 			</div>
 
 			<!-- Spacing esatto di 80px sotto al titolo -->
@@ -110,9 +110,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center; /* center the title in the viewport */
+		/* keep normal flow; we'll position title and stats absolutely inside */
+		justify-content: flex-start;
 		padding: var(--spacing-4);
 		box-sizing: border-box;
+		position: relative;
 	}
 
 	.stats-content {
@@ -120,6 +122,11 @@
 		max-width: 800px;
 		text-align: center;
 		padding-left: 0;
+		/* position the stats block below the centered title using the spacing token (480px) */
+		position: absolute;
+		top: calc(50% + var(--spacing-15));
+		left: 50%;
+		transform: translateX(-50%);
 	}
 
 
@@ -127,6 +134,11 @@
 	.top-header {
 		text-align: center;
 		width: 100%;
+		/* center the title exactly in the viewport */
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 	}
 
 	.podium-title {
@@ -138,20 +150,21 @@
 	}
 
 	.section-spacer {
-		height: var(--spacing-13); /* 272px */
+		height: var(--spacing-14); /* 272px */
 		width: 100%;
+		display: none; /* spacer kept for semantic order but hidden */
 	}
 
 	.line {
 		font-family: var(--font-family-base);
-		font-size: var(--text-l);
+		font-size: var(--text-s);
 		font-weight: 700;
-		line-height: 1.8;
+		line-height: 1.25;
 		margin: 0;
 		display: block;
 		white-space: nowrap; /* keep whole line on one row */
-		/* spacing between lines: reduced to ~16px */
-		margin-bottom: var(--spacing-2);
+		/* spacing between lines: tightened for stats block */
+		margin-bottom: var(--spacing-1);
 	}
 
 	.word {

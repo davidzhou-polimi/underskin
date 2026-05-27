@@ -1,6 +1,6 @@
 <script>
     import 'modern-normalize/modern-normalize.css';
-	import '$lib/styles/tokens.css';
+    import '$lib/styles/tokens.css';
 	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
