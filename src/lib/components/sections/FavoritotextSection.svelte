@@ -60,7 +60,7 @@
 		
 		/* Applicazione rigorosa dei token tipografici d'ambiente richiesti */
 		font-family: var(--font-family-base);
-		font-size: var(--text-body-size);
+		font-size: var(--text-m);
 		font-weight: var(--text-body-weight);
 	}
 

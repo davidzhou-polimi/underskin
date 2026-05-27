@@ -2,7 +2,7 @@
 	// Importa qui in sequenza le macro-sezioni dalla cartella components/sections/
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import IntrusiveThoughts from '$lib/components/sections/IntrusiveThoughts.svelte';
-	import FavoritotextSection from '$lib/components/sections/FavoritotextSection.svelte';
+	import FavoritoTextSection from '$lib/components/sections/FavoritoTextSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
 
@@ -10,7 +10,7 @@
 	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
 	<HeroSection />
 	<IntrusiveThoughts />
-	<FavoritotextSection />
+	<FavoritoTextSection />
 	<ZoomTransitionSection />
 </main>
 
