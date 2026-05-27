@@ -69,23 +69,11 @@
 		display: inline;
 		font-weight: 700; /* Spessore marcato per evidenziare i termini */
         padding-bottom: 6px;
-
-        text-decoration: dotted underline;
-        text-decoration-thickness: 6px;
-        text-underline-offset: 12px;
-        text-decoration-color: currentColor;
 	}
 
 	.favorito-color {
 		--gradient-c1: var(--azzurro-800);
 		--gradient-c2: var(--azzurro-300);
 		--gradient-c3: var(--azzurro-600);
-
-        /* Applica il ritaglio e imposta l'effetto trasparenza ereditabile anche dalla sottolineatura */
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-size: 300% 100%;
 	}
 </style>
