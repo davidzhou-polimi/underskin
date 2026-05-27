@@ -98,6 +98,7 @@ export function shatterGlass(node, params = { fragments: [] }) {
 				'shatter'
 			);
 
+
 			// Rivela progressivamente il testo emotivo retrostante rimuovendo la sfocatura in sincrono con lo shatter
 			tl.to(
 				'.content-behind',

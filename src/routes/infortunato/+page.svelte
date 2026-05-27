@@ -1,12 +1,14 @@
 <script>
 	/**
 	 * Assunzioni per questa pagina rotta:
-	 * 1. Questa pagina funge da orchestratore principale per il profilo "L'infortunato", caricando il relativo componente dedicato.
-	 * 2. Utilizziamo <svelte:head> per definire metadati SEO verticalizzati sul profilo archetipico.
+	 * 1. Questa pagina funge da puro orchestratore sequenziale delle sezioni del profilo "L'infortunato".
+	 * 2. Ciascun componente gestisce autonomamente la propria veste grafica e i propri sfondi.
+	 * 3. Utilizziamo <svelte:head> per impostare i metadati SEO del profilo archetipico.
 	 */
 
-	// Importa il componente di sezione specifico per l'infortunato
+	// Importa le sezioni della pagina in sequenza
 	import InfortunatoHero from '$lib/components/sections/InfortunatoHero.svelte';
+	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta description unici per questa pagina -->
@@ -19,15 +21,19 @@
 </svelte:head>
 
 <main id="infortunato-profile-page">
-	<!-- Renderizziamo la HeroSection specifica d'ingresso -->
+	<!-- 1. Sezione di benvenuto con sfondo arancione caldo -->
 	<InfortunatoHero />
+
+	<!-- 2. Sezione interattiva di scorrimento Voronoi con sfondo azzurro-ghiaccio -->
+	<ShatterGlass />
 </main>
 
 <style>
-	/* Stili strutturali puliti per la pagina del profilo */
+	/* Stili del contenitore principale che ospita gli elementi della pagina del profilo */
 	#infortunato-profile-page {
+		position: relative;
 		width: 100%;
 		min-height: 100vh;
-		background-color: var(--arancione-900);
+		background-color: var(--background-primary);
 	}
 </style>

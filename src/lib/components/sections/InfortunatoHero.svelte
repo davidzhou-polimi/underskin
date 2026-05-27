@@ -1,21 +1,21 @@
 <script>
 	/**
 	 * Assunzioni per questa sezione dedicata:
-	 * 1. Questo componente è specifico ed esclusivo per la HeroSection del profilo "L'infortunato".
-	 * 2. Il titolo e la palette di colori (arancione) sono fissati in base all'archetipo descritto.
-	 * 3. Applica l'azione Svelte 'heroEntrance' per l'animazione d'ingresso dello sfondo e della grana.
+	 * 1. Questa sezione ospita autonomamente il proprio gradiente radiale arancione di sfondo.
+	 * 2. Il titolo statico "L'INFORTUNATO" si posiziona al centro della viewport tracciando lo scroll con 'trackSection'.
+	 * 3. L'animazione d'ingresso degli elementi interni dello sfondo (grana e spotlight) è controllata dall'azione 'heroEntrance'.
 	 */
 
-	// Importazione delle azioni per la tracciabilità dello scroll e l'animazione d'ingresso del profilo
+	// Importazione delle azioni per la tracciabilità dello scroll e l'animazione d'ingresso
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { heroEntrance } from '$lib/actions/heroEntrance.js';
 </script>
 
 <section id="infortunato-hero" class="infortunato-hero-section" use:trackSection={{ id: 'infortunato-hero' }} use:heroEntrance>
-	<!-- Overlay granuloso con distorsione frattale per simulare la porosità e texture premium della carta/pelle -->
+	<!-- Overlay granuloso con distorsione frattale per la texture -->
 	<div class="noise-overlay" aria-hidden="true"></div>
 
-	<!-- Spotlight luminoso radiale animato da GSAP per un ingresso morbido dell'illuminazione centrale -->
+	<!-- Spotlight di luce naturale centrale sfocata per creare profondità -->
 	<div class="glow-spotlight" aria-hidden="true"></div>
 
 	<!-- Contenitore centrale del titolo della pagina del profilo (visualizzato in blocco statico, senza split) -->
@@ -27,7 +27,7 @@
 </section>
 
 <style>
-	/* Sezione principale a schermo intero con setup 3D */
+	/* Sezione principale a schermo intero con il gradiente arancione caldo */
 	.infortunato-hero-section {
 		position: relative;
 		height: 100vh;
@@ -37,7 +37,7 @@
 		justify-content: center;
 		overflow: hidden;
 		
-		/* Gradiente radiale ultra-fluido: spostato più in alto e con intervalli ampi per eliminare stacchi netti */
+		/* Gradiente radiale ultra-fluido specifico per l'infortunato */
 		background: radial-gradient(
 			circle at 50% 15%, 
 			var(--arancione-200) 0%, 
@@ -60,7 +60,7 @@
 		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 	}
 
-	/* Spotlight di luce naturale sfocata per rendere lo sfondo ancora più tridimensionale e morbido */
+	/* Spotlight di luce naturale sfocata per rendere lo sfondo tridimensionale */
 	.glow-spotlight {
 		position: absolute;
 		top: 10%;
@@ -94,10 +94,11 @@
 	/* Titolo massivo statico con stili premium ed effetto tridimensionale */
 	.hero-title {
 		font-family: var(--font-family-base);
-		font-size: var(--text-2xl);
+		font-size: clamp(3rem, 10vw, var(--text-3xl));
 		font-weight: 800;
-		color: var(--background-primary);
+		color: var(--neutral-50);
 		margin: 0;
+		letter-spacing: -0.03em;
 		text-transform: uppercase;
 		text-align: center;
 		user-select: none;
