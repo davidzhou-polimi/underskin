@@ -3,6 +3,7 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { onMount, onDestroy } from 'svelte';
+	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
 
 	if (typeof window !== 'undefined') {
 		gsap.registerPlugin(ScrollTrigger);
@@ -22,16 +23,30 @@
 
 	const MAX_ATTEMPTS = 3;
 
+	let mouseX = $state(0);
+	let mouseY = $state(0);
+	let isHovering = $state(false);
+
 	// Gestione del testo dinamico basata sulla runa $derived di Svelte 5
 	const subtitleText = $derived(
 		attempts === 0
-			? "Cattura il centro perfetto. Clicca o premi Spazio."
+			? "Cattura il centro perfetto."
 			: attempts === 1
 				? "Hai ancora due tentativi!"
 				: attempts === 2
 					? "Dai, l'ultima chance!"
 					: "La perfezione è un'illusione."
 	);
+
+	/**
+	 * Traccia la posizione del cursore rispetto alla viewport
+	 * per allineare il tooltip personalizzato
+	 * @param {MouseEvent} event
+	 */
+	function handleMouseMove(event) {
+		mouseX = event.clientX;
+		mouseY = event.clientY;
+	}
 
 	/** @type {ScrollTrigger | null} */
 	let scrollTriggerInstance = null;
@@ -146,6 +161,9 @@
 		tabindex="0" 
 		aria-label="Avvia o ferma il gioco per misurare la precisione"
 		onkeydown={(e) => e.key === 'Enter' && toggleGame()}
+		onmousemove={handleMouseMove}
+		onmouseenter={() => isHovering = true}
+		onmouseleave={() => isHovering = false}
 	>
 		<div class="target-circle"></div>
 
@@ -172,6 +190,14 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if isHovering && attempts === 0}
+		<CursorTooltip 
+			visible={true} 
+			x={mouseX} 
+			y={mouseY} 
+		/>
+	{/if}
 
 </section>
 

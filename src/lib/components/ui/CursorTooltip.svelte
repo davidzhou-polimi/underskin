@@ -4,7 +4,7 @@
     // Riceve le proprietà reattive dallo store globale di Lucrezia
     let { 
         visible = false, 
-        text = '', 
+        text = '[Clic] o [Spazio]', 
         type = 'semplice', 
         x = 0, 
         y = 0 
