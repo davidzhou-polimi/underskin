@@ -2,3 +2,43 @@
 @import "./tokens/spacing.css";
 @import "./tokens/radius.css";
 @import "./tokens/typography.css";
+
+/* ==========================================================================
+   Utility Globali: Testo con Gradiente (Statico o Animato)
+   ========================================================================== */
+
+/* 1. Versione STATICA: Il testo ha la sfumatura ma NON si muove */
+.gradient-text {
+	/* Colori di fallback se non sovrascritti */
+	--gradient-c1: var(--content-primary, #ffffff);
+	--gradient-c2: var(--content-secondary, #cccccc);
+	--gradient-c3: var(--content-primary, #ffffff);
+
+	background: linear-gradient(
+		120deg,
+		var(--gradient-c1),
+		var(--gradient-c2),
+		var(--gradient-c3)
+	);
+	
+	/* Maschera di testo per mostrare il gradiente sotto */
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* 2. Versione ANIMATA: Estende la versione statica e aggiunge il movimento */
+.animate-gradient-text {
+	/* Ingrandiamo lo sfondo per permettere il movimento */
+	background-size: 300% 100%;
+	
+	/* Applichiamo l'animazione infinita */
+	animation: global-shift-gradient 8s linear infinite;
+}
+
+/* Animazione unica riutilizzabile */
+@keyframes global-shift-gradient {
+	0% { background-position: 0% 50%; }
+	50% { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
