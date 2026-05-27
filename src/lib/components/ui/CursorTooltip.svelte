@@ -52,7 +52,9 @@
         height: auto !important;
         padding: var(--spacing-2) var(--spacing-3) !important;
         border-radius: var(--radius-s) !important;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+        
+        /* Ombra morbida a doppia diffusione che simula una luce naturale e premium */
+        box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
     }
 
     .tooltip-text-content {

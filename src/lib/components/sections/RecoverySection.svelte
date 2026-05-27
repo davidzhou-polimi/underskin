@@ -1,30 +1,53 @@
 <script>
 	/**
 	 * Assunzioni per questa sezione:
-	 * 1. La sezione presenta il testo narrativo senza sfumature di sfondo aggiuntive per il momento.
-	 * 2. Le uniche parole evidenziate sono "kinesiophobia" e "reset mentale:".
-	 * 3. L'evidenziazione di queste due parole si limita al colore del brand dell'Infortunato (--arancione-500) senza sottolineature.
-	 * 4. Utilizza l'azione 'scrollReveal' per rivelare il testo con una transizione fluida all'ingresso della schermata.
+	 * 1. La sezione presenta il testo narrativo in un layout pulito centrandolo orizzontalmente.
+	 * 2. Le parole chiave kinesiophobia e reset mentale integrano spiegazioni contestuali tramite tooltip.
+	 * 3. L'animazione all'ingresso è delegata a scrollReveal.
 	 */
 
-	// Importazione delle azioni Svelte per tracciamento dello scroll ed animazione d'ingresso
-	import { trackSection } from "$lib/actions/trackSection.js";
-	import { scrollReveal } from "$lib/actions/scrollReveal.js";
+	import { trackSection } from '$lib/actions/trackSection.js';
+	import { scrollReveal } from '$lib/actions/scrollReveal.js';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+
+	// Definizioni testuali esatte richieste per descrivere i concetti clinico-atletici dell'Infortunato
+	const textKinesiophobia = "Ansia della prestazione legata al timore di non riuscire a raggiungere un determinato obiettivo.";
+	const textResetMentale = "Improvviso calo delle prestazioni in situazioni ad alta pressione. L’ansia interferisce con l’esecuzione automatica di competenze consolidate.";
 </script>
 
 <section
 	id="recovery"
 	class="recovery-section"
-	use:trackSection={{ id: "recovery" }}
+	use:trackSection={{ id: 'recovery' }}
 >
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container" use:scrollReveal>
 		<p class="narrative-text">
 			Dopo il recupero, molti atleti convivono<br />
-			con la <span class="highlighted-keyword gradient-text animate-gradient-text infortunato-color">kinesiophobia</span> e perdita di fiducia.
+			con la 
+			<span 
+				class="highlighted-keyword gradient-text animate-gradient-text infortunato-color"
+				role="tooltip"
+				tabindex="-1"
+				onmouseenter={() => tooltip.show(textKinesiophobia, 'paragrafo')}
+				onmouseleave={() => tooltip.hide()}
+			>
+				kinesiophobia
+			</span> 
+			e perdita di fiducia.
 			<br /><br />
 			Tornare davvero in campo significa affrontare<br />
-			un processo di <span class="highlighted-keyword gradient-text animate-gradient-text infortunato-color">reset mentale:</span> smettendo di <br />
+			un processo di 
+			<span 
+				class="highlighted-keyword gradient-text animate-gradient-text infortunato-color"
+				role="tooltip"
+				tabindex="-1"
+				onmouseenter={() => tooltip.show(textResetMentale, 'paragrafo')}
+				onmouseleave={() => tooltip.hide()}
+			>
+				reset mentale:
+			</span> 
+			smettendo di <br />
 			competere con il ricordo del dolore.
 		</p>
 	</div>
@@ -72,8 +95,8 @@
 		padding-bottom: 6px;
 
 		text-decoration: dotted underline;
-		text-decoration-thickness: 6px;
-		text-underline-offset: 12px;
+		text-decoration-thickness: 4px;
+		text-underline-offset: 4px;
 		text-decoration-color: currentColor;
 	}
 
