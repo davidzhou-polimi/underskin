@@ -33,6 +33,12 @@
         overflow: hidden;
         background-color: var(--background-primary);
         font-family: var(--font-family-base);
+        
+        /* MODIFICA: Sposta la sezione verso l'alto di un terzo del viewport */
+        margin-top: -30vh; 
+        
+        /* Garantisce che lo sfondo della sezione zoom copra lo spazio vuoto della precedente */
+        z-index: 5;
     }
 
     .intro-container {
