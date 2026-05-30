@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
 
-	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 5000 } = $props();
+	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 3000 } = $props();
 
 	let hidden = $state(false);
 	let lastScrollY = 0;
@@ -36,12 +36,22 @@
 
 	/**
 	 * Gestione dello scorrimento programmatico senza alterare l'URL
-	 * @param {MouseEvent} e
 	 * @param {string} sectionId
 	 */
-	const handleNavClick = (e, sectionId) => {
-		e.preventDefault();
+	const handleNavClick = (sectionId) => {
 		const target = document.getElementById(sectionId);
+		if (target) {
+			target.scrollIntoView({ behavior: 'smooth' });
+		}
+	};
+
+	/**
+	 * Gestione dello scorrimento programmatico per il logo (torna a inizio pagina)
+	 * @param {MouseEvent} e
+	 */
+	const handleLogoClick = (e) => {
+		e.preventDefault();
+		const target = document.getElementById('hero');
 		if (target) {
 			target.scrollIntoView({ behavior: 'smooth' });
 		}
@@ -51,6 +61,9 @@
 		lastScrollY = window.scrollY;
 		/** @type {ReturnType<typeof setTimeout> | undefined} */
 		let scrollTimeout;
+		let isMouseNearTop = false;
+		/** @type {ReturnType<typeof setTimeout> | undefined} */
+		let mouseRevealTimeout;
 
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
@@ -86,19 +99,48 @@
 			}, 150);
 		};
 
+		/** @param {MouseEvent} e */
+		const handleMouseMove = (e) => {
+			const nearTop = e.clientY <= 30;
+			if (nearTop) {
+				if (!isMouseNearTop) {
+					isMouseNearTop = true;
+					clearTimeout(mouseRevealTimeout);
+					if (hidden) {
+						/* Richiede che il mouse stazioni vicino al bordo superiore prima di mostrare la navbar */
+						mouseRevealTimeout = setTimeout(() => {
+							hidden = false;
+						}, 300);
+					}
+				}
+			} else {
+				if (isMouseNearTop) {
+					isMouseNearTop = false;
+					clearTimeout(mouseRevealTimeout);
+					/* Nasconde immediatamente se il mouse si allontana dal bordo superiore e non si è sulla navbar */
+					if (!isHovered && !isFocused && window.scrollY > 10) {
+						hidden = true;
+					}
+				}
+			}
+		};
+
 		startAutoHideTimer();
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
+		window.addEventListener('mousemove', handleMouseMove, { passive: true });
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
+			window.removeEventListener('mousemove', handleMouseMove);
 			clearTimeout(scrollTimeout);
+			clearTimeout(mouseRevealTimeout);
 			clearTimeout(autoHideTimeout);
 		};
 	});
 </script>
 
 {#snippet logo()}
-	<a class="logo-nav" href="/" aria-label="UnderSkin home">
+	<a class="logo-nav" href="/" onclick={handleLogoClick} aria-label="UnderSkin home">
 		{logoLabel}
 	</a>
 {/snippet}
@@ -107,14 +149,14 @@
 	<div class="link-nav">
 		{#each links as link}
 			{@const isActive = scroll.activeSection === link.sectionId}
-			<a 
+			<button 
+				type="button"
 				class="link-nav__item" 
 				class:link-nav__item--active={isActive}
-				href={`#${link.sectionId}`}
-				onclick={(e) => handleNavClick(e, link.sectionId)}
+				onclick={() => handleNavClick(link.sectionId)}
 			>
 				{link.label}
-			</a>
+			</button>
 		{/each}
 	</div>
 {/snippet}
@@ -130,8 +172,9 @@
 	}}
 	onmouseleave={() => {
 		isHovered = false;
-		if (!hidden) {
-			startAutoHideTimer();
+		/* Nasconde immediatamente quando il mouse si allontana, ignorando il ritardo di 5 secondi */
+		if (!isFocused && window.scrollY > 10) {
+			hidden = true;
 		}
 	}}
 	onfocusin={() => {
@@ -213,6 +256,11 @@
 	.link-nav__item {
 		display: inline-flex;
 		align-items: center;
+		background: transparent;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: inherit;
 		font-size: var(--text-nav-size);
 		font-weight: var(--text-nav-weight);
 		color: var(--content-primary);
