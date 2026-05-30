@@ -1,9 +1,59 @@
 <script>
+	import { onMount } from 'svelte';
 	import LogoNav from './LogoNav.svelte';
 	import LinkNav from './LinkNav.svelte';
+
+	let hidden = false;
+	let lastScrollY = 0;
+	let hideThreshold = 8;
+	/** @type {number | undefined} */
+	let idleRevealTimeout;
+	let revealDelay = 5000;
+
+	onMount(() => {
+		lastScrollY = window.scrollY;
+
+		const scheduleReveal = () => {
+			clearTimeout(idleRevealTimeout);
+			idleRevealTimeout = window.setTimeout(() => {
+				hidden = false;
+			}, revealDelay);
+		};
+
+		const handleScroll = () => {
+			const currentScrollY = window.scrollY;
+			const delta = currentScrollY - lastScrollY;
+
+			scheduleReveal();
+
+			if (currentScrollY <= 0) {
+				hidden = false;
+				lastScrollY = 0;
+				return;
+			}
+
+			if (delta < 0) {
+				hidden = false;
+				lastScrollY = currentScrollY;
+				return;
+			}
+
+			if (delta > hideThreshold) {
+				hidden = true;
+				lastScrollY = currentScrollY;
+			}
+		};
+
+		scheduleReveal();
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+			clearTimeout(idleRevealTimeout);
+		};
+	});
 </script>
 
-<header class="navbar">
+<header class:hidden class="navbar">
 	<nav class="navbar__inner" aria-label="Primary">
 		<LogoNav />
 		<LinkNav />
@@ -12,10 +62,20 @@
 
 <style>
 	.navbar {
-		position: absolute;
-		inset: 0 0 auto 0;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
 		z-index: 10;
 		pointer-events: none;
+		background: transparent;
+		transform: translateY(0);
+		transition: transform 220ms ease;
+		will-change: transform;
+	}
+
+	.navbar.hidden {
+		transform: translateY(-100%);
 	}
 
 	.navbar__inner {
