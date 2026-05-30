@@ -4,5 +4,10 @@
 	   ============================================================ */
 	--transition-duration-fast:   150ms;
 	--transition-duration-normal: 300ms;
-	--transition-easing-default:  ease;
+	--transition-duration-slow:   500ms;
+
+	/* Curve di Easing Standardizzate (Motion Identity) */
+	--easing-standard: ease;   /* Per Hover, cambi colore, dissolvenze */
+	--easing-out:      ease-out;      /* Per Reveal (ingresso a schermo) */
+	--easing-in:       ease-in;     /* Per Hide (uscita dallo schermo) */
 }

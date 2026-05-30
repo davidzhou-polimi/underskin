@@ -2,10 +2,25 @@
 	import { onMount } from 'svelte';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
 
-	let { hideThreshold = 15, showThreshold = 15 } = $props();
+	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 5000 } = $props();
 
 	let hidden = $state(false);
 	let lastScrollY = 0;
+	let isHovered = $state(false);
+
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let autoHideTimeout;
+
+	/**
+	 * Avvia il timer per nascondere automaticamente la navbar dopo un periodo di inattività
+	 */
+	const startAutoHideTimer = () => {
+		clearTimeout(autoHideTimeout);
+		if (autoHideDelay <= 0 || window.scrollY <= 10 || isHovered) return;
+		autoHideTimeout = setTimeout(() => {
+			hidden = true;
+		}, autoHideDelay);
+	};
 
 	const logoLabel = 'UnderSkin';
 	const links = [
@@ -31,6 +46,8 @@
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
+		/** @type {ReturnType<typeof setTimeout> | undefined} */
+		let scrollTimeout;
 
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
@@ -39,6 +56,7 @@
 			if (currentScrollY <= 10) {
 				hidden = false;
 				lastScrollY = currentScrollY;
+				clearTimeout(autoHideTimeout);
 				return;
 			}
 
@@ -51,11 +69,27 @@
 				hidden = false;
 				lastScrollY = currentScrollY;
 			}
+
+			if (!hidden) {
+				startAutoHideTimer();
+			} else {
+				clearTimeout(autoHideTimeout);
+			}
+
+			clearTimeout(scrollTimeout);
+			/* Evita l'accumulo di scroll parziali quando l'utente interrompe il movimento senza superare la soglia */
+			scrollTimeout = setTimeout(() => {
+				lastScrollY = window.scrollY;
+			}, 150);
 		};
+
+		startAutoHideTimer();
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
+			clearTimeout(scrollTimeout);
+			clearTimeout(autoHideTimeout);
 		};
 	});
 </script>
@@ -82,7 +116,21 @@
 	</div>
 {/snippet}
 
-<header class:hidden class="navbar">
+<header 
+	class:hidden 
+	class="navbar"
+	role="none"
+	onmouseenter={() => {
+		isHovered = true;
+		clearTimeout(autoHideTimeout);
+	}}
+	onmouseleave={() => {
+		isHovered = false;
+		if (!hidden) {
+			startAutoHideTimer();
+		}
+	}}
+>
 	<nav class="navbar__inner" aria-label="Primary">
 		{@render logo()}
 		{@render menu()}
@@ -99,36 +147,39 @@
 		pointer-events: none;
 		background: transparent;
 		transform: translateY(0);
-		transition: transform var(--transition-duration-normal) var(--transition-easing-default);
+		/* Transizione per l'ingresso (veloce) */
+		transition: transform var(--transition-duration-normal) var(--easing-out);
 		will-change: transform;
 	}
 
 	.navbar.hidden {
+		/* Transizione per l'uscita (lenta) */
+		transition-duration: var(--transition-duration-slow);
+		transition-timing-function: var(--easing-in);
 		transform: translateY(-100%);
 	}
 
 	.navbar__inner {
 		display: flex;
-		align-items: flex-end;
+		align-items: center;
 		width: 100%;
 		min-height: var(--spacing-7);
-		padding-block-start: var(--spacing-3);
-		padding-inline-start: var(--spacing-10);
-		padding-inline-end: var(--spacing-10);
+		padding-block: var(--spacing-3);
+		padding-inline: var(--spacing-6);
 		pointer-events: auto;
 	}
 
 	/* Logo */
 	.logo-nav {
 		display: inline-flex;
-		align-items: flex-end;
+		align-items: center;
 		justify-content: flex-start;
 		height: var(--spacing-7);
 		font-size: var(--text-logo-size);
 		font-weight: var(--text-logo-weight);
 		color: var(--content-primary);
 		text-decoration: none;
-		transition: color var(--transition-duration-fast) var(--transition-easing-default);
+		transition: color var(--transition-duration-fast) var(--easing-standard);
 	}
 
 	.logo-nav:hover,
@@ -139,19 +190,19 @@
 	/* Menu Links */
 	.link-nav {
 		display: flex;
-		align-items: flex-end;
-		gap: var(--spacing-3);
+		align-items: center;
+		gap: var(--spacing-4);
 		margin-inline-start: auto;
 	}
 
 	.link-nav__item {
 		display: inline-flex;
-		align-items: flex-end;
+		align-items: center;
 		font-size: var(--text-nav-size);
 		font-weight: var(--text-nav-weight);
 		color: var(--content-primary);
 		text-decoration: none;
-		transition: color var(--transition-duration-fast) var(--transition-easing-default);
+		transition: color var(--transition-duration-fast) var(--easing-standard);
 	}
 
 	.link-nav__item:hover,
