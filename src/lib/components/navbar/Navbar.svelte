@@ -9,12 +9,25 @@
 
 	const logoLabel = 'UnderSkin';
 	const links = [
-		{ label: 'home', href: '/#home' },
-		{ label: 'about', href: '/#about' },
-		{ label: "l'insoddisfatto", href: '/#l-insoddisfatto' },
-		{ label: 'il favorito', href: '/#il-favorito' },
-		{ label: "l'infortunato", href: '/#l-infortunato' }
+		{ label: 'Home', sectionId: 'hero' },
+		{ label: 'About', sectionId: 'about' },
+		{ label: "L'insoddisfatto", sectionId: 'insoddisfatto' },
+		{ label: 'Il favorito', sectionId: 'favorito' },
+		{ label: "L'infortunato", sectionId: 'infortunato' }
 	];
+
+	/**
+	 * Gestione dello scorrimento programmatico senza alterare l'URL
+	 * @param {MouseEvent} e
+	 * @param {string} sectionId
+	 */
+	const handleNavClick = (e, sectionId) => {
+		e.preventDefault();
+		const target = document.getElementById(sectionId);
+		if (target) {
+			target.scrollIntoView({ behavior: 'smooth' });
+		}
+	};
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
@@ -56,11 +69,12 @@
 {#snippet menu()}
 	<div class="link-nav">
 		{#each links as link}
-			{@const isActive = link.href.includes('#') ? scroll.activeSection === link.href.split('#')[1] : false}
+			{@const isActive = scroll.activeSection === link.sectionId}
 			<a 
 				class="link-nav__item" 
 				class:link-nav__item--active={isActive}
-				href={link.href}
+				href={`#${link.sectionId}`}
+				onclick={(e) => handleNavClick(e, link.sectionId)}
 			>
 				{link.label}
 			</a>
