@@ -1,4 +1,6 @@
 <script>
+	import { scroll } from '$lib/stores/scroll.svelte.js';
+
 	const links = [
 		{ label: 'home', href: '/#home' },
 		{ label: 'about', href: '/#about' },
@@ -8,13 +10,18 @@
 	];
 </script>
 
-<nav class="link-nav" aria-label="Section links">
+<div class="link-nav">
 	{#each links as link}
-		<a class="link-nav__item" href={link.href}>
+		{@const isActive = link.href.includes('#') ? scroll.activeSection === link.href.split('#')[1] : false}
+		<a 
+			class="link-nav__item" 
+			class:link-nav__item--active={isActive}
+			href={link.href}
+		>
 			{link.label}
 		</a>
 	{/each}
-</nav>
+</div>
 
 <style>
 	.link-nav {
@@ -27,15 +34,19 @@
 	.link-nav__item {
 		display: inline-flex;
 		align-items: flex-end;
-		font-size: var(--text-xs);
-		font-weight: var(--text-intro-card-weight);
+		font-size: var(--text-nav-size);
+		font-weight: var(--text-nav-weight);
 		color: var(--content-primary);
 		text-decoration: none;
-		transition: color 160ms ease;
+		transition: color var(--transition-duration-fast) var(--transition-easing-default);
 	}
 
 	.link-nav__item:hover,
 	.link-nav__item:focus-visible {
 		color: var(--content-secondary);
+	}
+
+	.link-nav__item--active {
+		font-weight: var(--text-nav-active-weight);
 	}
 </style>

@@ -3,52 +3,38 @@
 	import LogoNav from '$lib/components/navbar/LogoNav.svelte';
 	import LinkNav from '$lib/components/navbar/LinkNav.svelte';
 
-	let { revealDelay = 5000, hideThreshold = 8 } = $props();
+	let { hideThreshold = 15, showThreshold = 15 } = $props();
 
 	let hidden = $state(false);
 	let lastScrollY = 0;
-	/** @type {number | undefined} */
-	let idleRevealTimeout;
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
 
-		const scheduleReveal = () => {
-			clearTimeout(idleRevealTimeout);
-			idleRevealTimeout = window.setTimeout(() => {
-				hidden = false;
-			}, revealDelay);
-		};
-
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
-			const delta = currentScrollY - lastScrollY;
 
-			scheduleReveal();
-
-			if (currentScrollY <= 0) {
-				hidden = false;
-				lastScrollY = 0;
-				return;
-			}
-
-			if (delta < 0) {
+			// Blocca visibile in prossimità del top della pagina
+			if (currentScrollY <= 10) {
 				hidden = false;
 				lastScrollY = currentScrollY;
 				return;
 			}
+
+			const delta = currentScrollY - lastScrollY;
 
 			if (delta > hideThreshold) {
 				hidden = true;
 				lastScrollY = currentScrollY;
+			} else if (delta < -showThreshold) {
+				hidden = false;
+				lastScrollY = currentScrollY;
 			}
 		};
 
-		scheduleReveal();
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
-			clearTimeout(idleRevealTimeout);
 		};
 	});
 </script>
@@ -70,7 +56,7 @@
 		pointer-events: none;
 		background: transparent;
 		transform: translateY(0);
-		transition: transform 220ms ease;
+		transition: transform var(--transition-duration-normal) var(--transition-easing-default);
 		will-change: transform;
 	}
 

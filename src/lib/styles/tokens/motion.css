@@ -1,0 +1,8 @@
+:root {
+	/* ============================================================
+	   MOTION TOKENS
+	   ============================================================ */
+	--transition-duration-fast:   150ms;
+	--transition-duration-normal: 300ms;
+	--transition-easing-default:  ease;
+}

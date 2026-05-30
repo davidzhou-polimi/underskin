@@ -12,11 +12,11 @@
 		align-items: flex-end;
 		justify-content: flex-start;
 		height: var(--spacing-7);
-		font-size: var(--text-l);
-		font-weight: var(--text-footer-weight);
+		font-size: var(--text-logo-size);
+		font-weight: var(--text-logo-weight);
 		color: var(--content-primary);
 		text-decoration: none;
-		transition: color 160ms ease;
+		transition: color var(--transition-duration-fast) var(--transition-easing-default);
 	}
 
 	.logo-nav:hover,
