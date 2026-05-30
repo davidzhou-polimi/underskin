@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
+    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
     let sectionRef = null;
     
@@ -59,7 +60,7 @@
         </div>
 
         <div class="marquee-container" style:transform={translateXValue}>
-            <span class="giant-text">BURNOUT</span>
+            <GlassEffect border={false} class="glass-text" />
         </div>
         
     </div>
@@ -163,14 +164,19 @@
         align-items: center; 
     }
 
-    .giant-text {
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 1230px; 
-        font-weight: 900; 
-        color: var(--content-primary, #ffffff); 
-        text-transform: uppercase;
-        letter-spacing: -0.04em; 
-        line-height: 0.8; 
+    :global(.glass-text) {
+        /* Dimensioni calcolate per mantenere perfettamente l'aspect ratio originale dell'SVG (5376x891) basandoci sul 105vh di altezza */
+        height: 105vh;
+        width: 633.535vh;
+        
+        /* Mascheramento per ritagliare l'effetto vetroso di GlassEffect esclusivamente sulla sagoma dell'SVG */
+        mask-image: url('../../assets/BURNOUT.svg');
+        -webkit-mask-image: url('../../assets/BURNOUT.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        
+        display: block;
     }
 
     .my-archetypes-color {
