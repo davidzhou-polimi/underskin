@@ -16,6 +16,13 @@ export function trailCanvas(node) {
     let noiseCtx;
     const GRAIN_OPACITY = 0.12;
 
+    // 动态模糊控制：旋转中从 60 过渡到 160，停留后保持 160
+    const BLUR_PAUSED = 120;
+    let animStarted = false;
+
+    // 初始化时模糊 60
+    node.style.filter = `blur(60px) saturate(1)`;
+
     const resizeCanvas = () => {
         node.width = window.innerWidth;
         node.height = window.innerHeight;
@@ -74,9 +81,6 @@ export function trailCanvas(node) {
     
     // 是否已初始化（用户触发后才开始绘制）
     let isInitialized = false;
-    
-    // 是否正在连续旋转
-    let isContinuousRotating = false;
 
     /** @type {{ x: number, y: number, origX?: number, origY?: number }[]} */
     let pointsCCW = [];
@@ -98,17 +102,6 @@ export function trailCanvas(node) {
     // 开场 0.8 秒丝滑淡入
     let tl = gsap.timeline({ paused: true });
 
-    // 💡 核心改动：逆时针恢复长跑（+2.5π），顺时针转动角度变小（-1.25π）
-    tl.to(stateCCW, { angle: START_ANGLE_BOTTOM + Math.PI * 2.7,  duration: TARGET_DURATION_CCW, ease: 'power3.inOut' }, 0);
-    tl.to(stateCW,  { angle: START_ANGLE_BOTTOM - Math.PI * 0.5, duration: TARGET_DURATION_CW,  ease: 'power3.inOut' }, 0);
-
-    // 精准拦截在最慢的顺时针轨道的终点（5.2秒）
-    tl.add(() => {
-        if (!scaleState.isShrinking) {
-            tl.pause();
-        }
-    }, TARGET_DURATION_CW);
-
     // 播放（带循环）
     let isPlaying = false;
     let loopId = null;
@@ -123,6 +116,7 @@ export function trailCanvas(node) {
         pointsCW = [];
         
         // 重置 timeline
+        tl.kill();
         tl = gsap.timeline({ paused: true });
         // 0.8 秒丝滑淡入
         tl.to(stateCCW, { globalAlpha: 1, duration: 0.8, ease: 'power2.out' }, 0);
@@ -130,6 +124,7 @@ export function trailCanvas(node) {
         // 角度动画
         tl.to(stateCCW, { angle: START_ANGLE_BOTTOM + Math.PI * 2.7,  duration: TARGET_DURATION_CCW, ease: 'power3.inOut' }, 0);
         tl.to(stateCW,  { angle: START_ANGLE_BOTTOM - Math.PI * 0.5, duration: TARGET_DURATION_CW,  ease: 'power3.inOut' }, 0);
+        
         // 精准拦截在最慢的顺时针轨道的终点（5.2秒）
         tl.add(() => {
             if (!scaleState.isShrinking) {
@@ -141,35 +136,15 @@ export function trailCanvas(node) {
         isPlaying = true;
     }
 
-    // 无限循环播放（用于 playIntro 播放完后的自动循环）
+    // 无限循环播放（用于 playIntro 播放完后的自动循环检测）
     function loopIntro() {
         if (!isPlaying) return;
-        
-        if (tl.progress() >= 1 || tl.paused()) {
-            // 重置并重新播放
-            stateCCW.angle = START_ANGLE_BOTTOM;
-            stateCW.angle = START_ANGLE_BOTTOM;
-            stateCCW.globalAlpha = 0;
-            stateCW.globalAlpha = 0;
-            pointsCCW = [];
-            pointsCW = [];
-            
-            tl = gsap.timeline({ paused: true });
-            // 0.8 秒丝滑淡入
-            tl.to(stateCCW, { globalAlpha: 1, duration: 0.8, ease: 'power2.out' }, 0);
-            tl.to(stateCW,  { globalAlpha: 1, duration: 0.8, ease: 'power2.out' }, 0);
-            // 角度动画
-            tl.to(stateCCW, { angle: START_ANGLE_BOTTOM + Math.PI * 2.7,  duration: TARGET_DURATION_CCW, ease: 'power3.inOut' }, 0);
-            tl.to(stateCW,  { angle: START_ANGLE_BOTTOM - Math.PI * 0.5, duration: TARGET_DURATION_CW,  ease: 'power3.inOut' }, 0);
-            tl.add(() => {
-                if (!scaleState.isShrinking) {
-                    tl.pause();
-                }
-            }, TARGET_DURATION_CW);
-            
-            tl.play();
+
+        if (tl.paused()) {
+            isPlaying = false;
+            return;
         }
-        
+
         loopId = requestAnimationFrame(loopIntro);
     }
 
@@ -192,141 +167,18 @@ export function trailCanvas(node) {
         } else {
             // 只播放一次模式
             playIntro();
-            // 不启动循环，动画播完后会暂停
         }
     }
     
-    // 继续旋转 - 从当前角度继续，无缝衔接
-    function continueRotation() {
-        // 防止重复调用
-        if (isContinuousRotating) return;
-        isContinuousRotating = true;
-        
-        isInitialized = true;
-        isPlaying = true;
-        
-        // 取消现有的 loop
-        if (loopId) {
-            cancelAnimationFrame(loopId);
-            loopId = null;
-        }
-        
-        // 清空轨迹点
-        pointsCCW = [];
-        pointsCW = [];
-        
-        // 销毁旧 timeline 和所有 tween
-        tl.kill();
-        gsap.killTweensOf(stateCCW);
-        gsap.killTweensOf(stateCW);
-        
-        // 获取当前角度（停留位置）
-        const currentCCW = stateCCW.angle;
-        const currentCW = stateCW.angle;
-        
-        // 确保透明度为 1（不淡出）
-        stateCCW.globalAlpha = 1;
-        stateCW.globalAlpha = 1;
-        
-        // 使用 tweens 实现无限旋转（单向，不往返）
-        gsap.to(stateCCW, {
-            angle: currentCCW + Math.PI * 2.7,
-            duration: TARGET_DURATION_CCW,
-            ease: 'none',
-            onComplete: () => {
-                // 循环：重置到起点再继续单向旋转
-                stateCCW.angle = START_ANGLE_BOTTOM;
-                gsap.to(stateCCW, {
-                    angle: START_ANGLE_BOTTOM + Math.PI * 2.7,
-                    duration: TARGET_DURATION_CCW,
-                    ease: 'none',
-                    repeat: -1,
-                    yoyo: false
-                });
-            }
-        });
-        
-        gsap.to(stateCW, {
-            angle: currentCW - Math.PI * 0.5,
-            duration: TARGET_DURATION_CW,
-            ease: 'none',
-            onComplete: () => {
-                // 循环：重置到起点再继续单向旋转
-                stateCW.angle = START_ANGLE_BOTTOM;
-                gsap.to(stateCW, {
-                    angle: START_ANGLE_BOTTOM - Math.PI * 0.5,
-                    duration: TARGET_DURATION_CW,
-                    ease: 'none',
-                    repeat: -1,
-                    yoyo: false
-                });
-            }
-        });
-    }
-
-    // 开始缩小动画（用于 CerchiQuiz 页面）
+    // 开始缩小动画（已禁用）
     function startShrink(targetScale = 0.5, duration = 2, onComplete) {
-        // 防止重复调用
-        if (scaleState.isShrinking) return;
-        
-        isInitialized = true;
-        scaleState.isShrinking = true;
-        isPlaying = true;
-        
-        // 取消现有的 loop
-        if (loopId) {
-            cancelAnimationFrame(loopId);
-            loopId = null;
-        }
-        
-        // 销毁所有现有的 tween
-        tl.kill();
-        gsap.killTweensOf(stateCCW);
-        gsap.killTweensOf(stateCW);
-        
-        // 缩放动画
-        gsap.to(scaleState, {
-            scale: targetScale,
-            duration: duration,
-            ease: 'power2.inOut',
-            onComplete: () => {
-                if (onComplete) onComplete();
-            }
-        });
-        
-        // 确保 timeline 继续播放（无限循环）
-        function continueLoop() {
-            if (tl.progress() >= 1 || tl.paused() || !tl.isActive()) {
-                stateCCW.angle = START_ANGLE_BOTTOM;
-                stateCW.angle = START_ANGLE_BOTTOM;
-                stateCCW.globalAlpha = 1;
-                stateCW.globalAlpha = 1;
-                pointsCCW = [];
-                pointsCW = [];
-                
-                tl.kill();
-                tl = gsap.timeline({ paused: true });
-                // 无淡入，直接旋转
-                tl.to(stateCCW, { angle: START_ANGLE_BOTTOM + Math.PI * 2.7, duration: TARGET_DURATION_CCW, ease: 'none' }, 0);
-                tl.to(stateCW, { angle: START_ANGLE_BOTTOM - Math.PI * 0.5, duration: TARGET_DURATION_CW, ease: 'none' }, 0);
-                tl.add(() => {
-                    if (scaleState.isShrinking) {
-                        tl.restart();
-                    }
-                });
-                tl.play();
-            }
-            if (scaleState.isShrinking) {
-                loopId = requestAnimationFrame(continueLoop);
-            }
-        }
-        
-        loopId = requestAnimationFrame(continueLoop);
+        // 缩小动画已移除，不做任何事
     }
 
     // 绘制通用的单条流体线段
     function drawSingleTrail(points, state, startAngle, isClockwise, maxPoints, targetDuration) {
-        const isSelfPaused = tl.time() >= targetDuration && !scaleState.isShrinking;
+        // 判断当前线条自己是否处于定格暂停阶段
+        const isSelfPaused = tl && tl.paused() && tl.time() >= targetDuration && !scaleState.isShrinking;
         
         // 停留后的轻微整体偏移蠕动
         const timeScale = isClockwise ? 1.3 : 1.0;
@@ -342,8 +194,9 @@ export function trailCanvas(node) {
         const currentX = centerX + Math.cos(state.angle) * currentRadius;
         const currentY = centerY + Math.sin(state.angle) * currentRadius;
 
-        // 运行期间持续录入点
-        if (tl.time() < targetDuration || points.length === 0) {
+        // 运行期间持续录入点，或者在调用 continueRotation 清空点后进行初次录入
+        const isTlActive = tl && tl.isActive() && tl.time() < targetDuration;
+        if (isTlActive || points.length === 0) {
             points.push({ x: currentX, y: currentY });
         } 
         
@@ -442,8 +295,26 @@ export function trailCanvas(node) {
 
         wobbleTime += 0.008; 
 
-        drawSingleTrail(pointsCCW, stateCCW, START_ANGLE_BOTTOM, false, MAX_POINTS_CCW, TARGET_DURATION_CCW); 
-        drawSingleTrail(pointsCW,  stateCW,  START_ANGLE_BOTTOM,  true,  MAX_POINTS_CW,  TARGET_DURATION_CW);  
+        drawSingleTrail(pointsCCW, stateCCW, START_ANGLE_BOTTOM, false, MAX_POINTS_CCW, TARGET_DURATION_CCW);
+        drawSingleTrail(pointsCW,  stateCW,  START_ANGLE_BOTTOM,  true,  MAX_POINTS_CW,  TARGET_DURATION_CW);
+
+        // 旋转过程中模糊从 60 过渡到 160，停留后保持 160
+        const isCurrentlyPaused = tl && tl.paused() && tl.time() >= TARGET_DURATION_CCW;
+
+        // 动画进度超过 80% 时开始过渡
+        const isNearEnd = tl && tl.progress() > 0.5;
+
+        if (!isCurrentlyPaused && isNearEnd && !animStarted) {
+            // 快到达终点 → 从 60 丝滑过渡到 160
+            gsap.killTweensOf(node);
+            gsap.to(node, {
+                filter: `blur(${BLUR_PAUSED}px) saturate(1)`,
+                duration: 1.5,
+                ease: 'power2.out'
+            });
+            animStarted = true;
+        }
+        // 暂停后保持 160，不做任何操作
 
         drawNoise();
 
@@ -469,9 +340,11 @@ export function trailCanvas(node) {
             }
             if (loopId) cancelAnimationFrame(loopId);
             tl.kill();
+            gsap.killTweensOf(stateCCW);
+            gsap.killTweensOf(stateCW);
+            gsap.killTweensOf(scaleState);
         },
         startLoop,
-        continueRotation,
         startShrink
     };
 }

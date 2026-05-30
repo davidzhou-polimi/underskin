@@ -23,20 +23,17 @@ class LayerState {
 	getLayerOpacity(layerIndex) {
 		const p = this._progress;
 
-		// Layer 0 (IntroTextSection): visibile, poi scompare
+		// Layer 0 (IntroTextSection): 完全可见，被 CerchiQuiz 从底部覆盖
 		if (layerIndex === 0) {
-			if (p < 0.3) return 1; // Visibile
-			if (p < 0.4) return 1 - (p - 0.3) / 0.1; // Fade out
-			return 0;
+			if (p < 0.45) return 1; // 完全可见，直到 CerchiQuiz 完全覆盖
+			return 1; // 保持 1，直到被完全覆盖
 		}
 
-		// Layer 1 (CerchiQuiz): entra dopo Layer 0, visibile, scompare
+		// Layer 1 (CerchiQuiz): 滑入覆盖
 		if (layerIndex === 1) {
-			if (p < 0.35) return 0; // Nascosto
-			if (p < 0.45) return (p - 0.35) / 0.1; // Fade in
-			if (p < 0.7) return 1; // Visibile
-			if (p < 0.8) return 1 - (p - 0.7) / 0.1; // Fade out
-			return 0;
+			if (p < 0.35) return 0; // 隐藏
+			if (p < 0.45) return (p - 0.35) / 0.1; // 滑入
+			return 1;
 		}
 
 		// Layer 2 (PerformanceSection): entra dopo Layer 1, resta

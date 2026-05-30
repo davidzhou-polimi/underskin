@@ -8,16 +8,9 @@
 	let textContainer;
 	let lines = [];
 	let currentIndex = $state(0);
-	let animating = false;
 	let initialized = false;
-	let canvasStarted = false;
-	let shouldLoop = false;
 	
 	let canvasAction = null;
-	let rotationStarted = false;
-	
-	// 跟踪上一次显示的行索引
-	let lastTargetIndex = -1;
 
 	let opacity = $derived.by(() => {
 		return layers.getLayerOpacity(0);
@@ -66,8 +59,7 @@
 			});
 		}
 
-		if (targetIndex !== currentIndex && !animating && lines.length === 5) {
-			animating = true;
+		if (targetIndex !== currentIndex && lines.length === 5) {
 			const oldIndex = currentIndex;
 			currentIndex = targetIndex;
 
@@ -87,21 +79,10 @@
 					filter: 'blur(0px)',
 					y: 0,
 					duration: 0.4,
-					ease: 'power2.inOut',
-					onComplete: () => {
-						animating = false;
-						// 当显示最后一行时，从暂停位置继续旋转
-						if (currentIndex === 4 && canvasAction && !rotationStarted) {
-							rotationStarted = true;
-							canvasAction.continueRotation();
-						}
-					}
+					ease: 'power2.inOut'
 				});
 			}
 		}
-		
-		// 如果滚动到其他行又回来，不再触发 rotation
-		lastTargetIndex = targetIndex;
 	});
 </script>
 
@@ -130,7 +111,6 @@
 		justify-content: center;
 		overflow: hidden;
 		background-color: var(--background-primary);
-		will-change: opacity;
 	}
 
 	.canvas-layer {
@@ -143,8 +123,6 @@
 		display: block;
 		width: 100%;
 		height: 100%;
-		filter: blur(60px) saturate(1);
-		will-change: filter;
 	}
 
 	.text-container {
