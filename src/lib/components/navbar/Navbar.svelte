@@ -29,9 +29,9 @@
 	const links = [
 		{ label: 'Home', sectionId: 'hero' },
 		{ label: 'About', sectionId: 'about' },
-		{ label: "L'insoddisfatto", sectionId: 'insoddisfatto' },
-		{ label: 'Il favorito', sectionId: 'favorito' },
-		{ label: "L'infortunato", sectionId: 'infortunato' }
+		{ label: "Insoddisfatto", sectionId: 'insoddisfatto' },
+		{ label: 'Favorito', sectionId: 'favorito' },
+		{ label: "Infortunato", sectionId: 'infortunato' }
 	];
 
 	/**
@@ -117,9 +117,8 @@
 				if (isMouseNearTop) {
 					isMouseNearTop = false;
 					clearTimeout(mouseRevealTimeout);
-					/* Nasconde immediatamente se il mouse si allontana dal bordo superiore e non si è sulla navbar */
-					if (!isHovered && !isFocused && window.scrollY > 10) {
-						hidden = true;
+					if (!hidden) {
+						startAutoHideTimer();
 					}
 				}
 			}
@@ -172,9 +171,8 @@
 	}}
 	onmouseleave={() => {
 		isHovered = false;
-		/* Nasconde immediatamente quando il mouse si allontana, ignorando il ritardo di 5 secondi */
-		if (!isFocused && window.scrollY > 10) {
-			hidden = true;
+		if (!hidden) {
+			startAutoHideTimer();
 		}
 	}}
 	onfocusin={() => {
