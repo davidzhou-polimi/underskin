@@ -9,11 +9,12 @@
   let { 
     children, 
     class: className = '', 
+    border = true,
     ...restProps 
   } = $props();
 </script>
 
-<div class="glass-material {className}" {...restProps}>
+<div class="glass-material {className}" class:has-border={border} {...restProps}>
   {#if children}
     {@render children()}
   {/if}
@@ -22,13 +23,15 @@
 <style>
   .glass-material {
     /* Estrazione del canale alpha dal token esistente per evitare color-mix e nuovi token */
-    background-color: rgb(from var(--neutral-200) r g b / 0.3);
-    
-    /* Bordo calibrato in trasparenza direttamente sul token esistente */
-    border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
+    background-color: rgb(from var(--neutral-100) r g b / 0.5);
 
     /* Sfocatura minimale dello sfondo per un effetto vetro pulito ed essenziale */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-material.has-border {
+    /* Il bordo viene renderizzato condizionatamente per consentire il mascheramento di forme complesse senza artefatti geometrici */
+    border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
   }
 </style>
