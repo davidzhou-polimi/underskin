@@ -7,6 +7,8 @@
 	let hidden = $state(false);
 	let lastScrollY = 0;
 	let isHovered = $state(false);
+	let isFocused = $state(false);
+
 
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let autoHideTimeout;
@@ -16,7 +18,8 @@
 	 */
 	const startAutoHideTimer = () => {
 		clearTimeout(autoHideTimeout);
-		if (autoHideDelay <= 0 || window.scrollY <= 10 || isHovered) return;
+		/* Evita di nascondere la barra se l'utente la sta sorvolando con il mouse o la sta navigando con la tastiera */
+		if (autoHideDelay <= 0 || window.scrollY <= 10 || isHovered || isFocused) return;
 		autoHideTimeout = setTimeout(() => {
 			hidden = true;
 		}, autoHideDelay);
@@ -116,16 +119,28 @@
 	</div>
 {/snippet}
 
+<!-- svelte-ignore a11y_no_redundant_roles -->
 <header 
 	class:hidden 
 	class="navbar"
-	role="none"
+	role="banner"
 	onmouseenter={() => {
 		isHovered = true;
 		clearTimeout(autoHideTimeout);
 	}}
 	onmouseleave={() => {
 		isHovered = false;
+		if (!hidden) {
+			startAutoHideTimer();
+		}
+	}}
+	onfocusin={() => {
+		isFocused = true;
+		hidden = false;
+		clearTimeout(autoHideTimeout);
+	}}
+	onfocusout={() => {
+		isFocused = false;
 		if (!hidden) {
 			startAutoHideTimer();
 		}
