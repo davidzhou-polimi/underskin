@@ -16,15 +16,18 @@
 		return layers.getLayerOpacity(0);
 	});
 
+	// Tiene traccia del progresso precedente per rilevare quando si torna all'inizio
+	let prevProgress = $state(1);
+
 	function bindLine(node, index) {
 		lines[index] = node;
 		return {};
 	}
 	
-	// Bind canvas to get the action instance
+	// Bind canvas per ottenere l'istanza dell'azione
 	function bindCanvas(node) {
 		canvasAction = trailCanvas(node);
-		// 页面加载时播放一次入场动画（不循环）
+		// Riproduce l'animazione di entrata una volta sola
 		canvasAction.startLoop(false);
 		return {
 			destroy() {
@@ -38,6 +41,16 @@
 
 	$effect(() => {
 		const globalProgress = layers.progress;
+
+		// Rileva quando si torna alla prima sezione
+		if (globalProgress < 0.05 && prevProgress >= 0.05) {
+			console.log('IntroText: Tornando all\'inizio, resumeLoop');
+			// Riattiva l'animazione del canvas
+			if (canvasAction?.resumeLoop) {
+				canvasAction.resumeLoop();
+			}
+		}
+		prevProgress = globalProgress;
 
 		const maxProgress = 0.35;
 		const layerProgress = Math.min(globalProgress / maxProgress, 1);

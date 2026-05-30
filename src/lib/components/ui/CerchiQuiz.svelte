@@ -7,57 +7,19 @@
 	import { trailCanvas } from '$lib/actions/trailCanvas.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
-	// 追踪 layer 的 opacity
-	let opacity = $derived(layers.getLayerOpacity(1));
+	// Props per il controllo dello scroll dal genitore
+	let { lockScroll = () => {}, unlockScroll = () => {} } = $props();
 
-	// 只有当 opacity 真正 > 0.5 时才触发动画（确保完全可见）
+	// Opacità del layer per determinare se la sezione è visibile
+	let opacity = $derived(layers.getLayerOpacity(1));
 	let isVisible = $derived(opacity > 0.5);
 
-	// 用一个状态来追踪是否已经播放过动画
 	let animationTriggered = $state(false);
-
-	// 引用 quiz wrapper 用于 GSAP 动画
 	let quizWrapper;
 
-	onMount(() => {
-		// 初始状态：藏在底部
-		gsap.set(quizWrapper, { y: '100%' });
-		// 文字初始状态：先隐藏
-		gsap.set('.title-line-1', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
-		gsap.set('.title-line-2', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
-		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
-	});
-
-	// 当 isVisible 变为 true 且动画还没触发过时，触发 slide up + 出场动画
-	$effect(() => {
-		if (isVisible && !animationTriggered) {
-			animationTriggered = true;
-
-			// slide up 同时开始文字出场动画
-			gsap.to(quizWrapper, {
-				y: '0%',
-				duration: 1.2,
-				ease: 'power3.out'
-			});
-
-			// 文字出场动画延迟一点再开始
-			setTimeout(() => {
-				gsap.to('.title-line-1', {
-					opacity: 1, scale: 1, y: 0, duration: 1.0, ease: 'power2.out'
-				});
-				gsap.to('.title-line-2', {
-					opacity: 1, scale: 1, y: 0, duration: 1.0, stagger: 0.2, ease: 'power2.out'
-				});
-				gsap.to('.circle .text', {
-					opacity: 1, scale: 1, y: 0, duration: 1.0, stagger: 0.2, ease: 'power2.out'
-				});
-			}, 200);
-		}
-	});
-	
+	// Gestione canvas trail
 	let canvasAction = null;
 
-	// Bind canvas to get the action instance
 	function bindCanvas(node) {
 		canvasAction = trailCanvas(node);
 		return {
@@ -70,87 +32,127 @@
 		};
 	}
 
-	let quizState = $state('choosing');
+	onMount(() => {
+		// Stato iniziale: completamente nascosto sotto il viewport
+		gsap.set(quizWrapper, { y: '100%' });
+		gsap.set('.title-line-1', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
+		gsap.set('.title-line-2', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
+		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
+	});
+
+	// Animazione di entrata/uscita basata sulla visibilità del layer
+	$effect(() => {
+		if (isVisible && !animationTriggered) {
+			animationTriggered = true;
+
+			// Slide-in fluido nella viewport
+			gsap.to(quizWrapper, {
+				y: '0%',
+				duration: 1.2,
+				ease: 'power3.out'
+			});
+
+			// Animazione ritardata per titolo e cerchi
+			setTimeout(() => {
+				gsap.to('.title-line-1', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, ease: 'power2.out'
+				});
+				gsap.to('.title-line-2', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, ease: 'power2.out'
+				});
+				gsap.to('.circle .text', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, ease: 'power2.out'
+				});
+			}, 200);
+
+		} else if (!isVisible && animationTriggered) {
+			animationTriggered = false;
+			
+			// Slide-out fluido verso il basso
+			gsap.to(quizWrapper, { 
+				y: '100%', 
+				duration: 1.0, 
+				ease: 'power3.inOut',
+				onComplete: () => {
+					resetQuiz();
+					gsap.set('.title-line-1, .title-line-2, .circle .text', { opacity: 0, scale: 0.85, y: 15 });
+				}
+			});
+		}
+	});
+	
+	// --- Stato del quiz ---
+	let quizState = $state('choosing'); // 'choosing' | 'expanding' | 'expanded'
 	let selectedSide = $state('');
 	let fisicoExpanding = $state(false);
 	let mentaleShowing = $state(false);
 	let fisicoFading = $state(false);
-	let bottoneHover = $state(false);
-
 	let hasScrolledDown = $state(false);
-	let accumulatedScrollPastQuote = 0;
-	let quotePassed = $state(false);
 
-	let showBottone = $derived(quizState === 'selected');
-
-	function selectMentale() {
-		if (quizState === 'expanded' || quizState === 'expanding') return;
-		selectedSide = 'mentale';
-		quizState = 'expanding';
-		
-		// 1. mentale 70% 圆圈先出现
-		mentaleShowing = true;
-		// 2. 停留一段时间后 fisico 开始消失
-		setTimeout(() => {
-			fisicoFading = true;
-		}, 300);
-		// 3. 完成
-		setTimeout(() => {
-			quizState = 'expanded';
-		}, 600);
+	// Reset completo dello stato
+	function resetQuiz() {
+		unlockScroll();
+		quizState = 'choosing';
+		selectedSide = '';
+		fisicoExpanding = false;
+		mentaleShowing = false;
+		fisicoFading = false;
+		hasScrolledDown = false;
 	}
 
+	// Selezione mentale: cerchio 70% appare, fisico scompare
+	function selectMentale() {
+		if (quizState === 'expanded' || quizState === 'expanding') return;
+		lockScroll();
+		
+		selectedSide = 'mentale';
+		quizState = 'expanding';
+		mentaleShowing = true;
+		setTimeout(() => { fisicoFading = true; }, 300);
+		setTimeout(() => { quizState = 'expanded'; }, 600);
+	}
+
+	// Selezione fisico: cerchio si espande, scompare e 70% mentale appare
 	function selectFisico() {
 		if (quizState === 'expanded' || quizState === 'expanding') return;
+		lockScroll();
+		
 		selectedSide = 'fisico';
 		quizState = 'expanding';
-		// 1. 先稍微展开（比 mentale 小）
 		fisicoExpanding = true;
-		// 2. fisico 开始滑出消失，mentale 70% 出现
 		setTimeout(() => {
 			fisicoExpanding = false;
 			fisicoFading = true;
 			mentaleShowing = true;
 		}, 300);
-		// 3. 完成
-		setTimeout(() => {
-			quizState = 'expanded';
-		}, 600);
+		setTimeout(() => { quizState = 'expanded'; }, 600);
 	}
 
-	function confirmSelection() {
-		if (quizState !== 'selected') return;
-		quizState = 'expanding';
-
-		setTimeout(() => {
-			quizState = 'expanded';
-		}, 800);
-	}
-
+	// Gestione scroll virtuale dopo la selezione
 	function handleVirtualScroll(e) {
 		if (quizState !== 'expanded') return;
+
 		const deltaY = e.deltaY;
 
 		if (deltaY > 10) {
+			// Scroll verso il basso
 			if (!hasScrolledDown) {
-				if (e.cancelable) e.preventDefault();
 				hasScrolledDown = true;
-				return;
-			}
-			if (hasScrolledDown && !quotePassed) {
-				if (e.cancelable) e.preventDefault();
-				accumulatedScrollPastQuote += deltaY;
-				if (accumulatedScrollPastQuote >= 300) {
-					quotePassed = true;
-				}
 			}
 		} else if (deltaY < -10) {
+			// Scroll verso l'alto
 			if (hasScrolledDown) {
-				if (e.cancelable) e.preventDefault();
 				hasScrolledDown = false;
-				accumulatedScrollPastQuote = 0;
-				quotePassed = false;
-				return;
+			} else {
+				// Reset completo con animazione
+				gsap.to(quizWrapper, {
+					y: '100%',
+					duration: 0.8,
+					ease: 'power3.out',
+					onComplete: () => {
+						resetQuiz();
+					}
+				});
 			}
 		}
 	}
@@ -177,6 +179,7 @@
 
 	<div class="quiz-body" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 
+		<!-- Cerchio Mentale -->
 		<div class="quiz-column left-column">
 			<div class="circle-wrap left-wrap">
 				<button
@@ -197,7 +200,7 @@
 					</svg>
 
 					{#if selectedSide === 'mentale' || mentaleShowing}
-						<div class="sfumatura-bg" in:fade={{ duration: 300 }}>
+						<div class="sfumatura-bg" in:fade={{ duration: 300 }} out:fade={{ duration: 250 }}>
 							<svg class="fluid-svg" viewBox="0 0 429 395" fill="none">
 								<g opacity="0.6" filter="url(#filter-fluid-left)">
 									<path class="fluid-path" d="M85.7444 262.525C109.493 381.643 195.551 260.968 233.296 257.621C271.042 254.273 290.53 318.678 346.535 267.575C363.24 252.333 271.838 243.131 267.715 206.589C263.911 172.873 349.38 111.847 317.989 94.2074C252.577 57.4495 247.224 101.347 201.718 121.102C156.212 140.858 54.8945 107.791 85.7444 262.525Z" fill="url(#paint-fluid-left)"/>
@@ -216,7 +219,7 @@
 
 					<div class="expanded-text-container">
 						{#if mentaleShowing}
-							<span class="expanded-text gradient">70% mentale</span>
+							<span class="expanded-text gradient" in:fade={{ duration: 250, delay: 100 }}>70% mentale</span>
 						{:else}
 							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
 							<span class="clicca-hint">clicca</span>
@@ -226,6 +229,7 @@
 			</div>
 		</div>
 
+		<!-- Cerchio Fisico -->
 		<div class="quiz-column right-column">
 			<div class="circle-wrap right-wrap" class:fly-out={fisicoFading}>
 				<button
@@ -246,7 +250,7 @@
 					</svg>
 
 					{#if selectedSide === 'fisico'}
-						<div class="sfumatura-bg">
+						<div class="sfumatura-bg" out:fade={{ duration: 200 }}>
 							<svg class="fluid-svg" viewBox="0 0 429 395" fill="none">
 								<g opacity="0.6" filter="url(#filter-fluid-right)">
 									<path class="fluid-path" d="M85.7444 262.525C109.493 381.643 195.551 260.968 233.296 257.621C271.042 254.273 290.53 318.678 346.535 267.575C363.24 252.333 271.838 243.131 267.715 206.589C263.911 172.873 349.38 111.847 317.989 94.2074C252.577 57.4495 247.224 101.347 201.718 121.102C156.212 140.858 54.8945 107.791 85.7444 262.525Z" fill="url(#paint-fluid-right)"/>
@@ -270,6 +274,7 @@
 				</button>
 			</div>
 
+			<!-- Pannello testo laterale -->
 			{#if quizState === 'expanding' || quizState === 'expanded'}
 				<div class="right-text-panel" class:visible={quizState === 'expanded'}>
 					<div class="text-block short-phrase" class:blur-out={hasScrolledDown}>
@@ -292,30 +297,33 @@
 </section>
 
 <style>
-	/* Contenitore principale del quiz */
+	/* Layout principale */
 	.quiz-wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start; 
-		position: fixed; 
-		inset: 0;
+		justify-content: flex-start;
+		position: absolute;
+		top: 0;
+		left: 0;
 		height: 100vh;
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		padding: var(--spacing-4) 0 var(--spacing-3) 0; 
+		padding: var(--spacing-4) 0 var(--spacing-3) 0;
 		background-color: #f1fafd;
-		z-index: 10; 
+		z-index: 10;
+		transition: transform 0.1s linear;
+		will-change: transform;
 	}
 
+	/* Canvas background */
 	.canvas-layer {
 		position: absolute;
 		inset: 0;
 		z-index: 0;
 		pointer-events: none;
 	}
-
 	.canvas-layer canvas {
 		display: block;
 		width: 100%;
@@ -323,7 +331,7 @@
 		filter: blur(60px) saturate(1);
 	}
 
-	/* Contenitore del titolo */
+	/* Titolo del quiz */
 	.quiz-title-wrap {
 		position: absolute;
 		top: var(--spacing-4);
@@ -339,8 +347,6 @@
 		box-sizing: border-box;
 		padding: 0 var(--spacing-3);
 	}
-
-	/* Titolo principale */
 	.quiz-title {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 700;
@@ -353,18 +359,14 @@
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		will-change: transform;
 	}
-
-	/* Titolo ridotto nella pagina dei risultati */
 	.quiz-title-wrap.expanded .quiz-title {
 		transform: scale(0.714);
 	}
-
-	.title-line-1,
-	.title-line-2 {
+	.title-line-1, .title-line-2 {
 		display: block;
 	}
 
-	/* Corpo del quiz con le colonne */
+	/* Corpo del quiz */
 	.quiz-body {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -380,7 +382,7 @@
 		z-index: 1;
 	}
 
-	/* Colonna singola */
+	/* Colonne */
 	.quiz-column {
 		display: flex;
 		align-items: center;
@@ -389,45 +391,37 @@
 		height: 574px;
 		min-height: 407px;
 	}
-
-	/* Colonna sinistra */
 	.left-column {
 		justify-content: center;
 	}
-
-	/* Colonna destra */
 	.right-column {
 		justify-content: center;
 	}
 
-	/* Contenitore del cerchio */
+	/* Wrapper cerchi */
 	.circle-wrap {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
 	}
-
-	/* Contenitore sinistro */
 	.left-wrap {
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
-
-	/* Contenitore destro */
 	.right-wrap {
 		position: absolute;
 		left: 0;
-		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 1s ease;
+		transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 4;
 	}
-
 	.right-wrap.fly-out {
 		transform: translateX(350px);
 		opacity: 0;
-		transition: transform 0.4s ease-in, opacity 0.4s ease-in;
+		pointer-events: none;
+		transition: transform 0.45s ease-in, opacity 0.45s ease-in;
 	}
 
-	/* Cerchio del quiz */
+	/* Cerchi */
 	.circle {
 		width: 407px;
 		height: 407px;
@@ -442,31 +436,26 @@
 		appearance: none;
 		padding: 0;
 		will-change: width, height;
-		transition:
-			width 0.8s cubic-bezier(0.25, 1, 0.5, 1),
-			height 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1), height 0.6s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+	}
+	.circle.left {
+		z-index: 2;
+	}
+	.circle.right {
+		z-index: 1;
+	}
+	.circle:disabled {
+		cursor: default;
 	}
 
-	.circle.left { z-index: 2; }
-	.circle.right { z-index: 1; }
-	.circle:disabled { cursor: default; }
-
-	/* Cerchio espanso nella pagina dei risultati */
-	.circle.is-expanding,
-	.circle.is-expanded {
-		width: 574px;
-		height: 574px;
-		border-radius: 287px;
-	}
-
-	/* Mentale: 70% 圆圈出现 */
+	/* Cerchio mentale 70% */
 	.left.mentale-show {
 		width: 574px;
 		height: 574px;
 		border-radius: 287px;
 	}
 
-	/* Fisico: 稍微展开 */
+	/* Cerchio fisico espanso */
 	.right.fisico-expand {
 		width: 480px;
 		height: 480px;
@@ -474,7 +463,7 @@
 		transition: width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
 	}
 
-	/* Bordo SVG del cerchio */
+	/* SVG bordo */
 	.border-svg {
 		position: absolute;
 		inset: 0;
@@ -484,7 +473,7 @@
 		z-index: 3;
 	}
 
-	/* Testo all'interno del cerchio */
+	/* Testo */
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -494,10 +483,7 @@
 		position: relative;
 		z-index: 1;
 	}
-
-	/* Effetto gradiente al hover */
-	.circle:hover .text,
-	.circle.clicked .text {
+	.circle:hover .text, .circle.clicked .text {
 		background: linear-gradient(120deg, var(--archetipi-favorito), var(--archetipi-insoddisfatto), var(--archetipi-infortunato));
 		background-size: 300% 100%;
 		-webkit-background-clip: text;
@@ -505,8 +491,6 @@
 		color: transparent;
 		animation: global-shift-gradient 6s linear infinite;
 	}
-
-	/* Testo espanso nella pagina dei risultati */
 	.expanded-text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -517,8 +501,6 @@
 		color: transparent;
 		white-space: nowrap;
 	}
-
-	/* Contenitore del testo espanso */
 	.expanded-text-container {
 		display: flex;
 		flex-direction: column;
@@ -529,7 +511,7 @@
 		height: var(--spacing-7);
 	}
 
-	/* Hint "clicca" */
+	/* Hint clicca */
 	.clicca-hint {
 		display: none;
 		font-size: var(--text-button);
@@ -540,11 +522,11 @@
 		position: absolute;
 		bottom: calc(var(--spacing-2) * -1 - var(--spacing-1));
 	}
-
 	.circle:hover .clicca-hint {
 		display: block;
 	}
 
+	/* Sfondo sfumato */
 	.sfumatura-bg {
 		position: absolute;
 		inset: 0;
@@ -556,7 +538,6 @@
 		z-index: 2;
 		pointer-events: none;
 	}
-
 	.fluid-svg {
 		width: 120%;
 		height: 120%;
@@ -566,12 +547,12 @@
 		will-change: transform;
 		transform: translateZ(0);
 	}
-
 	.fluid-path {
 		animation: path-morph 8s ease-in-out infinite alternate;
 		transform-origin: center center;
 	}
 
+	/* Pannello testo laterale */
 	.right-text-panel {
 		width: 540px;
 		height: 220px;
@@ -580,26 +561,25 @@
 		z-index: 5;
 		transform: translateX(-100px);
 		opacity: 0;
-		transition: transform 0.6s ease, opacity 0.6s ease;
+		filter: blur(10px);
+		transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, filter 0.6s ease;
 	}
-
 	.right-text-panel.visible {
 		opacity: 1;
 		transform: translateX(0);
-		transition: transform 0.4s ease, opacity 0.4s ease;
+		filter: blur(0px);
 	}
 
+	/* Blocchi di testo */
 	.text-block {
 		position: absolute;
 		top: 50%;
 		left: 0;
 		transform: translateY(-50%);
 		width: 100%;
-		transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		transition: filter 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 		will-change: filter, opacity;
 	}
-
-	/* Frase breve */
 	.short-phrase {
 		opacity: 1;
 		filter: blur(0px);
@@ -618,7 +598,6 @@
 		filter: blur(20px);
 		pointer-events: none;
 	}
-
 	.long-quote {
 		opacity: 0;
 		filter: blur(20px);
@@ -646,13 +625,13 @@
 		pointer-events: auto;
 	}
 
+	/* Animazioni */
 	@keyframes fluid-flow {
 		0% { transform: scale(1) rotate(0deg) translate(0px, 0px); }
 		33% { transform: scale(1.15) rotate(120deg) translate(-10px, 15px); }
 		66% { transform: scale(0.95) rotate(240deg) translate(15px, -10px); }
 		100% { transform: scale(1) rotate(360deg) translate(0px, 0px); }
 	}
-
 	@keyframes path-morph {
 		0% { transform: scale(1) skewX(0deg); }
 		50% { transform: scale(1.08) skewX(5deg) skewY(3deg); }

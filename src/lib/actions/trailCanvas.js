@@ -140,6 +140,7 @@ export function trailCanvas(node) {
     function loopIntro() {
         if (!isPlaying) return;
 
+        // 如果 timeline 已暂停，说明动画播放完成
         if (tl.paused()) {
             isPlaying = false;
             return;
@@ -152,7 +153,6 @@ export function trailCanvas(node) {
     // @param {boolean} loop - true = 无限循环, false = 只播放一次然后暂停
     function startLoop(loop = true) {
         isInitialized = true;
-        isPlaying = true;
         
         // 取消现有的 loop
         if (loopId) {
@@ -162,10 +162,12 @@ export function trailCanvas(node) {
         
         if (loop) {
             // 无限循环模式
+            isPlaying = true;
             playIntro();
             loopId = requestAnimationFrame(loopIntro);
         } else {
             // 只播放一次模式
+            isPlaying = false; // 重置，因为动画会暂停
             playIntro();
         }
     }
@@ -345,6 +347,20 @@ export function trailCanvas(node) {
             gsap.killTweensOf(scaleState);
         },
         startLoop,
-        startShrink
+        startShrink,
+        resumeLoop: () => {
+            if (!tl.paused()) {
+                // timeline 已在播放，只需重置样式
+                animStarted = false;
+                node.style.filter = `blur(60px) saturate(1)`;
+            } else {
+                // timeline 已暂停，重新播放
+                isPlaying = true;
+                animStarted = false;
+                node.style.filter = `blur(60px) saturate(1)`;
+                playIntro();
+                loopId = requestAnimationFrame(loopIntro);
+            }
+        }
     };
 }

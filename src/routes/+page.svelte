@@ -3,14 +3,17 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
-	// import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 	import { layers } from '$lib/stores/layers.svelte.js';
+
+	let st = null;
+	let isLocked = $state(false);
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
 
-		const st = ScrollTrigger.create({
+		// ScrollTrigger per il layer container
+		st = ScrollTrigger.create({
 			trigger: '.layer-container',
 			start: 'top top',
 			end: '+=300%',
@@ -19,25 +22,45 @@
 			scrub: 1,
 			onUpdate: (self) => {
 				layers.progress = self.progress;
+				
+				// Sblocca quando si torna all'inizio
+				if (self.progress < 0.05 && isLocked) {
+					isLocked = false;
+				}
 			}
 		});
 
 		return () => {
-			st.kill();
+			if (st) st.kill();
 		};
 	});
+
+	// Previene lo scroll quando il quiz è attivo
+	function handlePreventScroll(e) {
+		if (isLocked && e.cancelable) {
+			e.preventDefault();
+		}
+	}
 </script>
+
+<window 
+	onwheel={handlePreventScroll} 
+	ontouchmove={handlePreventScroll} 
+/>
 
 <main class="layer-container">
 	<IntroTextSection />
-	<CerchiQuiz />
+	<CerchiQuiz 
+		lockScroll={() => isLocked = true} 
+		unlockScroll={() => isLocked = false} 
+	/>
 </main>
 
 <style>
 	.layer-container {
 		position: relative;
 		width: 100%;
-		height: 100vh;
+		min-height: 100vh;
 		overflow: hidden;
 	}
 </style>
