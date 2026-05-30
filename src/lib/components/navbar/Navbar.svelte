@@ -175,10 +175,13 @@
 			startAutoHideTimer();
 		}
 	}}
-	onfocusin={() => {
-		isFocused = true;
-		hidden = false;
-		clearTimeout(autoHideTimeout);
+	onfocusin={(e) => {
+		const target = e.target;
+		if (target instanceof Element && target.matches(':focus-visible')) {
+			isFocused = true;
+			hidden = false;
+			clearTimeout(autoHideTimeout);
+		}
 	}}
 	onfocusout={() => {
 		isFocused = false;
