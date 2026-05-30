@@ -21,17 +21,36 @@
 	onMount(() => {
 		// 初始状态：藏在底部
 		gsap.set(quizWrapper, { y: '100%' });
+		// 文字初始状态：先隐藏
+		gsap.set('.title-line-1', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
+		gsap.set('.title-line-2', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
+		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
 	});
 
-	// 当 isVisible 变为 true 且动画还没触发过时，触发 slide up 动画
+	// 当 isVisible 变为 true 且动画还没触发过时，触发 slide up + 出场动画
 	$effect(() => {
 		if (isVisible && !animationTriggered) {
 			animationTriggered = true;
+
+			// slide up 同时开始文字出场动画
 			gsap.to(quizWrapper, {
 				y: '0%',
 				duration: 1.2,
 				ease: 'power3.out'
 			});
+
+			// 文字出场动画延迟一点再开始
+			setTimeout(() => {
+				gsap.to('.title-line-1', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, ease: 'power2.out'
+				});
+				gsap.to('.title-line-2', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, stagger: 0.2, ease: 'power2.out'
+				});
+				gsap.to('.circle .text', {
+					opacity: 1, scale: 1, y: 0, duration: 1.0, stagger: 0.2, ease: 'power2.out'
+				});
+			}, 200);
 		}
 	});
 	
@@ -124,8 +143,8 @@
 	</div>
 	<div class="quiz-title-wrap" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<h1 class="quiz-title">
-			Quando tutto si decide in pochi istanti,<br />
-			cosa pesa davvero di più?
+			<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
+			<span class="title-line-2">cosa pesa davvero di più?</span>
 		</h1>
 	</div>
 
@@ -173,13 +192,14 @@
 						</div>
 					{/if}
 
-					<div class="expanded-text-container">
-						{#if quizState === 'expanding' || quizState === 'expanded'}
-							<span class="expanded-text gradient" in:fade={{ duration: 300, delay: 200 }}>70% mentale</span>
-						{:else}
-							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
-						{/if}
-					</div>
+				<div class="expanded-text-container">
+					{#if quizState === 'expanding' || quizState === 'expanded'}
+						<span class="expanded-text gradient" in:fade={{ duration: 300, delay: 200 }}>70% mentale</span>
+					{:else}
+						<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
+						<span class="clicca-hint">clicca</span>
+					{/if}
+				</div>
 				</button>
 			</div>
 		</div>
@@ -220,8 +240,11 @@
 						</div>
 					{/if}
 
+				<div class="expanded-text-container">
 					<span class="text" class:gradient={selectedSide === 'fisico'}>fisico</span>
-				</button>
+					<span class="clicca-hint">clicca</span>
+				</div>
+			</button>
 			</div>
 
 			{#if quizState === 'expanding' || quizState === 'expanded'}
@@ -243,7 +266,7 @@
 			{/if}
 		</div>
 
-		{#if showBottone}
+		{#if false}
 			<button
 				class="bottone"
 				class:hover={bottoneHover}
@@ -313,6 +336,11 @@
 		color: var(--color-content-primary, #071E45);
 		text-align: center;
 		margin: 0;
+	}
+
+	.title-line-1,
+	.title-line-2 {
+		display: block;
 	}
 
 	.quiz-body {
@@ -424,10 +452,12 @@
 
 	.circle:hover .text,
 	.circle.clicked .text {
-		background: linear-gradient(107deg, var(--archetipi-favorito) 18.14%, var(--archetipi-insoddisfatto) 50%, var(--archetipi-infortunato) 92.63%);
+		background: linear-gradient(120deg, var(--archetipi-favorito), var(--archetipi-insoddisfatto), var(--archetipi-infortunato));
+		background-size: 300% 100%;
 		-webkit-background-clip: text;
 		background-clip: text;
 		color: transparent;
+		animation: global-shift-gradient 6s linear infinite;
 	}
 
 	.expanded-text {
@@ -443,10 +473,27 @@
 
 	.expanded-text-container {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		position: relative;
 		z-index: 1;
+		height: 60px;
+	}
+
+	.clicca-hint {
+		display: none;
+		font-size: 12px;
+		color: var(--color-content-secondary, #666);
+		margin-top: 8px;
+		text-transform: lowercase;
+		letter-spacing: 1px;
+		position: absolute;
+		bottom: -20px;
+	}
+
+	.circle:hover .clicca-hint {
+		display: block;
 	}
 
 	.sfumatura-bg {
