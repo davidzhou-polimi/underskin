@@ -38,8 +38,4 @@
 	.link-nav__item:focus-visible {
 		color: var(--content-secondary);
 	}
-
-	.link-nav__item:focus-visible {
-		outline: none;
-	}
 </style>

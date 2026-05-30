@@ -23,8 +23,4 @@
 	.logo-nav:focus-visible {
 		color: var(--content-secondary);
 	}
-
-	.logo-nav:focus-visible {
-		outline: none;
-	}
 </style>

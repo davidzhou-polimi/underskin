@@ -1,14 +1,14 @@
 <script>
 	import { onMount } from 'svelte';
-	import LogoNav from './LogoNav.svelte';
-	import LinkNav from './LinkNav.svelte';
+	import LogoNav from '$lib/components/navbar/LogoNav.svelte';
+	import LinkNav from '$lib/components/navbar/LinkNav.svelte';
 
-	let hidden = false;
+	let { revealDelay = 5000, hideThreshold = 8 } = $props();
+
+	let hidden = $state(false);
 	let lastScrollY = 0;
-	let hideThreshold = 8;
 	/** @type {number | undefined} */
 	let idleRevealTimeout;
-	let revealDelay = 5000;
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
