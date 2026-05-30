@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
+	import { fade } from 'svelte/transition';
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { trailCanvas } from '$lib/actions/trailCanvas.js';
@@ -22,8 +23,8 @@
 		// 初始状态：藏在底部
 		gsap.set(quizWrapper, { y: '100%' });
 		// 文字初始状态：先隐藏
-		gsap.set('.title-line-1', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
-		gsap.set('.title-line-2', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
+		gsap.set('.title-line-1', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
+		gsap.set('.title-line-2', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
 		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
 	});
 
@@ -54,7 +55,6 @@
 		}
 	});
 	
-	// Canvas action reference - 使用普通变量
 	let canvasAction = null;
 
 	// Bind canvas to get the action instance
@@ -72,6 +72,9 @@
 
 	let quizState = $state('choosing');
 	let selectedSide = $state('');
+	let fisicoExpanding = $state(false);
+	let mentaleShowing = $state(false);
+	let fisicoFading = $state(false);
 	let bottoneHover = $state(false);
 
 	let hasScrolledDown = $state(false);
@@ -83,13 +86,36 @@
 	function selectMentale() {
 		if (quizState === 'expanded' || quizState === 'expanding') return;
 		selectedSide = 'mentale';
-		quizState = 'selected';
+		quizState = 'expanding';
+		
+		// 1. mentale 70% 圆圈先出现
+		mentaleShowing = true;
+		// 2. 停留一段时间后 fisico 开始消失
+		setTimeout(() => {
+			fisicoFading = true;
+		}, 300);
+		// 3. 完成
+		setTimeout(() => {
+			quizState = 'expanded';
+		}, 600);
 	}
 
 	function selectFisico() {
 		if (quizState === 'expanded' || quizState === 'expanding') return;
 		selectedSide = 'fisico';
-		quizState = 'selected';
+		quizState = 'expanding';
+		// 1. 先稍微展开（比 mentale 小）
+		fisicoExpanding = true;
+		// 2. fisico 开始滑出消失，mentale 70% 出现
+		setTimeout(() => {
+			fisicoExpanding = false;
+			fisicoFading = true;
+			mentaleShowing = true;
+		}, 300);
+		// 3. 完成
+		setTimeout(() => {
+			quizState = 'expanded';
+		}, 600);
 	}
 
 	function confirmSelection() {
@@ -141,6 +167,7 @@
 	<div class="canvas-layer">
 		<canvas use:bindCanvas></canvas>
 	</div>
+	
 	<div class="quiz-title-wrap" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<h1 class="quiz-title">
 			<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
@@ -151,18 +178,13 @@
 	<div class="quiz-body" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 
 		<div class="quiz-column left-column">
-			<div
-				class="circle-wrap left-wrap"
-				class:is-expanding={quizState === 'expanding'}
-				class:is-expanded={quizState === 'expanded'}
-			>
+			<div class="circle-wrap left-wrap">
 				<button
 					class="circle left"
-					class:clicked={selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
-					class:is-expanding={quizState === 'expanding'}
-					class:is-expanded={quizState === 'expanded'}
+					class:clicked={selectedSide === 'mentale'}
+					class:mentale-show={mentaleShowing}
 					onclick={selectMentale}
-					use:drawBorder={{ clicked: selectedSide === 'mentale' || quizState === 'expanded', enabled: animationTriggered }}
+					use:drawBorder={{ clicked: selectedSide === 'mentale', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
 					<svg class="border-svg" viewBox="0 0 407 407">
@@ -174,7 +196,7 @@
 						<circle cx="203.5" cy="203.5" r="201.5" fill="none" stroke="var(--content-primary)" stroke-width="4" stroke-dasharray="0 16" stroke-linecap="round" mask="url(#mask-left-exp)" />
 					</svg>
 
-					{#if selectedSide === 'mentale' || quizState === 'expanding' || quizState === 'expanded'}
+					{#if selectedSide === 'mentale' || mentaleShowing}
 						<div class="sfumatura-bg" in:fade={{ duration: 300 }}>
 							<svg class="fluid-svg" viewBox="0 0 429 395" fill="none">
 								<g opacity="0.6" filter="url(#filter-fluid-left)">
@@ -192,23 +214,24 @@
 						</div>
 					{/if}
 
-				<div class="expanded-text-container">
-					{#if quizState === 'expanding' || quizState === 'expanded'}
-						<span class="expanded-text gradient" in:fade={{ duration: 300, delay: 200 }}>70% mentale</span>
-					{:else}
-						<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
-						<span class="clicca-hint">clicca</span>
-					{/if}
-				</div>
+					<div class="expanded-text-container">
+						{#if mentaleShowing}
+							<span class="expanded-text gradient">70% mentale</span>
+						{:else}
+							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
+							<span class="clicca-hint">clicca</span>
+						{/if}
+					</div>
 				</button>
 			</div>
 		</div>
 
 		<div class="quiz-column right-column">
-			<div class="circle-wrap right-wrap" class:fly-out={quizState === 'expanding' || quizState === 'expanded'}>
+			<div class="circle-wrap right-wrap" class:fly-out={fisicoFading}>
 				<button
 					class="circle right"
 					class:clicked={selectedSide === 'fisico'}
+					class:fisico-expand={fisicoExpanding}
 					onclick={selectFisico}
 					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
@@ -240,11 +263,11 @@
 						</div>
 					{/if}
 
-				<div class="expanded-text-container">
-					<span class="text" class:gradient={selectedSide === 'fisico'}>fisico</span>
-					<span class="clicca-hint">clicca</span>
-				</div>
-			</button>
+					<div class="expanded-text-container">
+						<span class="text" class:gradient={selectedSide === 'fisico'}>fisico</span>
+						<span class="clicca-hint">clicca</span>
+					</div>
+				</button>
 			</div>
 
 			{#if quizState === 'expanding' || quizState === 'expanded'}
@@ -265,40 +288,24 @@
 				</div>
 			{/if}
 		</div>
-
-		{#if false}
-			<button
-				class="bottone"
-				class:hover={bottoneHover}
-				onmouseenter={() => { bottoneHover = true; }}
-				onmouseleave={() => { bottoneHover = false; }}
-				onclick={confirmSelection}
-			>
-				<div class="bottone-bg"></div>
-				<span class="bottone-text">Scopri</span>
-			</button>
-		{/if}
 	</div>
 </section>
 
 <style>
+	/* Contenitore principale del quiz */
 	.quiz-wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		
-		/* 改成 fixed，防止流式布局导致它沉底无法交互 */
+		justify-content: flex-start; 
 		position: fixed; 
 		inset: 0;
 		height: 100vh;
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		padding: 20px 0;
+		padding: var(--spacing-4) 0 var(--spacing-3) 0; 
 		background-color: #f1fafd;
-		
-		/* 用强力的 z-index 确保它浮在 IntroSection 的上方 */
 		z-index: 10; 
 	}
 
@@ -316,26 +323,40 @@
 		filter: blur(60px) saturate(1);
 	}
 
+	/* Contenitore del titolo */
 	.quiz-title-wrap {
-		position: relative;
-		z-index: 1;
-		flex-shrink: 0;
-		margin-bottom: var(--space-8, 48px);
-		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		position: absolute;
+		top: var(--spacing-4);
+		left: 50%;
+		transform: translateX(-50%);
+		width: 100%;
+		max-width: 1200px;
+		height: 140px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 5;
+		box-sizing: border-box;
+		padding: 0 var(--spacing-3);
 	}
 
-	.quiz-title-wrap.expanded {
-		transform: translateY(-10px);
-	}
-
+	/* Titolo principale */
 	.quiz-title {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 700;
-		font-size: 56px;
-		line-height: 60px;
-		color: var(--color-content-primary, #071E45);
 		text-align: center;
 		margin: 0;
+		font-size: var(--text-title);
+		line-height: var(--spacing-7);
+		color: var(--color-content-primary, #071E45);
+		transform-origin: center top;
+		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		will-change: transform;
+	}
+
+	/* Titolo ridotto nella pagina dei risultati */
+	.quiz-title-wrap.expanded .quiz-title {
+		transform: scale(0.714);
 	}
 
 	.title-line-1,
@@ -343,40 +364,43 @@
 		display: block;
 	}
 
+	/* Corpo del quiz con le colonne */
 	.quiz-body {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 80px;
+		gap: var(--spacing-10);
 		width: 100%;
 		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
-		height: auto;
+		margin-top: var(--spacing-11);
+		height: 574px;
 		align-items: center;
 		transition: gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 1;
 	}
 
-	.quiz-body.expanded {
-		gap: 82px;
-	}
-
+	/* Colonna singola */
 	.quiz-column {
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		position: relative;
-		height: 100%;
+		height: 574px;
 		min-height: 407px;
 	}
 
+	/* Colonna sinistra */
 	.left-column {
-		justify-content: flex-end;
+		justify-content: center;
 	}
 
+	/* Colonna destra */
 	.right-column {
-		justify-content: flex-start;
+		justify-content: center;
 	}
 
+	/* Contenitore del cerchio */
 	.circle-wrap {
 		display: flex;
 		align-items: center;
@@ -384,23 +408,26 @@
 		flex-shrink: 0;
 	}
 
+	/* Contenitore sinistro */
 	.left-wrap {
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
+	/* Contenitore destro */
 	.right-wrap {
 		position: absolute;
 		left: 0;
-		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 1s ease;
 		z-index: 4;
 	}
 
 	.right-wrap.fly-out {
-		transform: translateX(350px) scale(0.5);
+		transform: translateX(350px);
 		opacity: 0;
-		pointer-events: none;
+		transition: transform 0.4s ease-in, opacity 0.4s ease-in;
 	}
 
+	/* Cerchio del quiz */
 	.circle {
 		width: 407px;
 		height: 407px;
@@ -424,6 +451,7 @@
 	.circle.right { z-index: 1; }
 	.circle:disabled { cursor: default; }
 
+	/* Cerchio espanso nella pagina dei risultati */
 	.circle.is-expanding,
 	.circle.is-expanded {
 		width: 574px;
@@ -431,6 +459,22 @@
 		border-radius: 287px;
 	}
 
+	/* Mentale: 70% 圆圈出现 */
+	.left.mentale-show {
+		width: 574px;
+		height: 574px;
+		border-radius: 287px;
+	}
+
+	/* Fisico: 稍微展开 */
+	.right.fisico-expand {
+		width: 480px;
+		height: 480px;
+		border-radius: 240px;
+		transition: width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
+	}
+
+	/* Bordo SVG del cerchio */
 	.border-svg {
 		position: absolute;
 		inset: 0;
@@ -440,6 +484,7 @@
 		z-index: 3;
 	}
 
+	/* Testo all'interno del cerchio */
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -450,6 +495,7 @@
 		z-index: 1;
 	}
 
+	/* Effetto gradiente al hover */
 	.circle:hover .text,
 	.circle.clicked .text {
 		background: linear-gradient(120deg, var(--archetipi-favorito), var(--archetipi-insoddisfatto), var(--archetipi-infortunato));
@@ -460,6 +506,7 @@
 		animation: global-shift-gradient 6s linear infinite;
 	}
 
+	/* Testo espanso nella pagina dei risultati */
 	.expanded-text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -471,6 +518,7 @@
 		white-space: nowrap;
 	}
 
+	/* Contenitore del testo espanso */
 	.expanded-text-container {
 		display: flex;
 		flex-direction: column;
@@ -478,18 +526,19 @@
 		justify-content: center;
 		position: relative;
 		z-index: 1;
-		height: 60px;
+		height: var(--spacing-7);
 	}
 
+	/* Hint "clicca" */
 	.clicca-hint {
 		display: none;
-		font-size: 12px;
+		font-size: var(--text-button);
 		color: var(--color-content-secondary, #666);
-		margin-top: 8px;
+		margin-top: var(--spacing-1);
 		text-transform: lowercase;
 		letter-spacing: 1px;
 		position: absolute;
-		bottom: -20px;
+		bottom: calc(var(--spacing-2) * -1 - var(--spacing-1));
 	}
 
 	.circle:hover .clicca-hint {
@@ -529,12 +578,15 @@
 		position: absolute;
 		left: 0;
 		z-index: 5;
-		transition: opacity 0.6s ease;
+		transform: translateX(-100px);
 		opacity: 0;
+		transition: transform 0.6s ease, opacity 0.6s ease;
 	}
 
 	.right-text-panel.visible {
 		opacity: 1;
+		transform: translateX(0);
+		transition: transform 0.4s ease, opacity 0.4s ease;
 	}
 
 	.text-block {
@@ -547,6 +599,7 @@
 		will-change: filter, opacity;
 	}
 
+	/* Frase breve */
 	.short-phrase {
 		opacity: 1;
 		filter: blur(0px);
@@ -555,7 +608,7 @@
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 400;
 		font-size: var(--text-body);
-		line-height: 34px;
+		line-height: var(--spacing-4);
 		color: var(--content-primary, #071E45);
 		margin: 0;
 		white-space: nowrap;
@@ -575,9 +628,9 @@
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 400;
 		font-size: var(--text-body);
-		line-height: 30px;
+		line-height: var(--spacing-4);
 		color: var(--content-primary, #071E45);
-		margin: 0 0 12px 0;
+		margin: 0 0 var(--spacing-1) 0;
 		white-space: normal;
 	}
 	.long-quote .quote-author {
@@ -591,48 +644,6 @@
 		opacity: 1;
 		filter: blur(0px);
 		pointer-events: auto;
-	}
-
-	.bottone {
-		position: absolute;
-		bottom: -85px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 194px;
-		height: 66px;
-		border: none;
-		background: transparent;
-		cursor: pointer;
-		appearance: none;
-		padding: 0;
-		z-index: 10;
-	}
-
-	.bottone-bg {
-		position: absolute;
-		inset: 0;
-		border-radius: var(--radius-m);
-		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.23);
-		transition: background 0.2s ease;
-		background: color-mix(in srgb, var(--neutral-100) 65%, transparent);
-	}
-
-	.bottone.hover .bottone-bg {
-		background: color-mix(in srgb, var(--neutral-200) 65%, transparent);
-	}
-
-	.bottone-text {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 400;
-		font-size: 16px;
-		line-height: 20px;
-		color: black;
-		z-index: 1;
 	}
 
 	@keyframes fluid-flow {
