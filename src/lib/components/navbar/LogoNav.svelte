@@ -9,12 +9,11 @@
 <style>
 	.logo-nav {
 		display: inline-flex;
-		align-items: center;
+		align-items: flex-end;
 		justify-content: flex-start;
 		height: var(--spacing-7);
 		font-size: var(--text-l);
-		font-weight: 800;
-		line-height: 1;
+		font-weight: var(--text-footer-weight);
 		color: var(--content-primary);
 		text-decoration: none;
 		transition: color 160ms ease;
