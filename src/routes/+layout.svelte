@@ -3,6 +3,7 @@
 	import '$lib/styles/tokens.css';
 	import favicon from '$lib/assets/favicon.svg';
     import Navbar from '$lib/components/navbar/Navbar.svelte';
+    import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 
 	let { children } = $props();
 </script>
@@ -13,6 +14,8 @@
 
     <link rel="icon" href={favicon} />
 </svelte:head>
+
+<InteractiveGradient />
 
 <Navbar />
 
