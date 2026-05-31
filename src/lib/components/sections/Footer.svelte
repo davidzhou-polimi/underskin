@@ -58,7 +58,7 @@
 		display: flex;
 		justify-content: space-between;
 		width: 100%;
-		margin-block-start: var(--spacing-3);
+		margin-block-start: var(--spacing-2);
 	}
 
 	/* Commento solo il PERCHÉ: Utilizza lo stile di testo secondario e di dimensioni ridotte
