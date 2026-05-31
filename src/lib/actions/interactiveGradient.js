@@ -45,13 +45,22 @@ export function interactiveGradient(canvas, params = {}) {
 	/** @type {gsap.core.Tween | null} */
 	let activeTween = null;
 
+	// Commento solo il PERCHÉ: Sincronizza la durata delle transizioni di GSAP con i design tokens definiti nel foglio di stile globale.
+	const getTransitionDuration = (tokenName = '--transition-duration-slow', fallback = 1.2) => {
+		if (typeof window === 'undefined') return fallback;
+		const durationStr = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim();
+		if (!durationStr) return fallback;
+		return parseFloat(durationStr) / (durationStr.endsWith('ms') ? 1000 : 1);
+	};
+
 	// Commento solo il PERCHÉ: GSAP interpola fluidamente sia i parametri scalari (coverage, speed) 
 	// sia i canali cromatici (R, G, B) delle uniform di Three.js per evitare cambi di stato netti.
 	/**
 	 * @param {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} newConfig
 	 * @param {number} [duration]
 	 */
-	function transitionConfig(newConfig, duration = 1.2) {
+	function transitionConfig(newConfig, duration) {
+		const resolvedDuration = duration ?? getTransitionDuration('--transition-duration-slow', 1.2);
 		if (activeTween) {
 			activeTween.kill();
 		}
@@ -136,7 +145,7 @@ export function interactiveGradient(canvas, params = {}) {
 
 		activeTween = gsap.to(proxy, {
 			...targetValues,
-			duration,
+			duration: resolvedDuration,
 			ease: 'power2.out',
 			onUpdate: () => {
 				u.u_speed.value = proxy.speed;

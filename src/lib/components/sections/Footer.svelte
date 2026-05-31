@@ -43,7 +43,7 @@
 	.footer-brand {
 		font-size: var(--text-footer-size);
 		font-weight: var(--text-footer-weight);
-		color: var(--content-dark-primary);
+		color: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
 		line-height: 0.85;
 		text-transform: uppercase;
 		letter-spacing: -0.02em;
