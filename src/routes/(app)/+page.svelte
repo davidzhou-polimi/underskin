@@ -7,6 +7,8 @@
 
 <main>
 
+    <section class="scroll-spacer" aria-hidden="true"></section>
+
     <section class="test-figma-bg">
         <div class="background-huge-text">
             <span>Quindi</span><span class="orange-text">tale</span>smettendo di
@@ -30,6 +32,14 @@
 
 <style>
     /* --- Stili esistenti per la prima sezione (immutati) --- */
+     main {
+        background: var(--background-primary);
+    }
+
+	.scroll-spacer {
+		min-height: 120vh;
+	}
+
     .test-figma-bg {
         position: relative;
         min-height: 800px;
@@ -97,3 +107,4 @@
     }
 
 </style>
+

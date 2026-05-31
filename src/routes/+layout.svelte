@@ -10,7 +10,8 @@
 
 <svelte:head>
 	<title>UnderSkin</title>
-	<meta name="description" content="UnderSkin Project" />
+	<meta name="description" content="Descrizione" />
+
 	<link rel="icon" href={favicon} />
 </svelte:head>
 

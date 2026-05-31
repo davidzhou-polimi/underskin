@@ -14,6 +14,21 @@
   - Cleanup: rimosso `src/lib/index.js` di default di SvelteKit
 ```
 
+## Design Tokens – regola di sola lettura
+
+I file in `src/lib/styles/tokens/` sono **read-only per default**.
+
+- Non modificare valori esistenti né aggiungere nuovi token a meno che l'utente
+  non lo richieda esplicitamente con riferimento ai token stessi
+  (es. "aggiorna il colore primario nel token", "aggiungi un token per il border-radius XL").
+- Le richieste visive generiche ("rendilo più grande", "usa un colore più scuro")
+  si soddisfano **nel componente**, trovando il token esistente più appropriato –
+  mai alterando i token per adattarli al caso.
+- Se non esiste un token adatto, segnalalo e proponi due opzioni:
+  1. Aggiungere un token nuovo (richiede approvazione esplicita).
+  2. Usare il token più vicino disponibile con un commento `/* token approssimativo */`.
+- Non creare mai variabili CSS locali che replicano o ridefiniscono token globali.
+
 ---
 
 ## Stack
