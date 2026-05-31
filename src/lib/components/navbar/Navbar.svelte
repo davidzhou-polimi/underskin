@@ -39,8 +39,8 @@
     const links = [
         { label: "Home", sectionId: "hero" },
         { label: "About", sectionId: "about" },
-        { label: "Insoddisfatto", sectionId: "insoddisfatto" },
         { label: "Favorito", sectionId: "favorito" },
+        { label: "Insoddisfatto", sectionId: "insoddisfatto" },
         { label: "Infortunato", sectionId: "infortunato" },
     ];
 

@@ -35,7 +35,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--content-dark-primary);
+        color: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
         font-size: var(--text-title-size);
         font-weight: var(--text-title-weight);
     }
