@@ -94,32 +94,13 @@ function getThemeColors(override = null) {
 		gradientColors = ['#6a96df', '#8035d2', '#d86146'];
 	}
 
-	// Resolve the color formats supporting arrays, configurations with bg, or legacy flat objects
+	// Supporta: array piatto di stringhe colore, oppure oggetto { bg?, colors[] }
 	if (override) {
 		if (Array.isArray(override)) {
 			gradientColors = override;
 		} else if (typeof override === 'object') {
-			if (override.bg !== undefined) {
-				bgVal = override.bg;
-			}
-			if (Array.isArray(override.colors)) {
-				gradientColors = override.colors;
-			} else {
-				const temp = [];
-				if (override.c1 !== undefined) temp.push(override.c1);
-				else if (override.colors?.[0] !== undefined) temp.push(override.colors[0]);
-				else temp.push(gradientColors[0]);
-
-				if (override.c2 !== undefined) temp.push(override.c2);
-				else if (override.colors?.[1] !== undefined) temp.push(override.colors[1]);
-				else temp.push(gradientColors[1]);
-
-				if (override.c3 !== undefined) temp.push(override.c3);
-				else if (override.colors?.[2] !== undefined) temp.push(override.colors[2]);
-				else temp.push(gradientColors[2]);
-
-				gradientColors = temp;
-			}
+			if (override.bg !== undefined) bgVal = override.bg;
+			if (Array.isArray(override.colors)) gradientColors = override.colors;
 		}
 	}
 
@@ -534,18 +515,102 @@ export class InteractiveGradientRenderer {
 		uniforms.u_color_count.value = this.themeColors.colors.length;
 	}
 
-	// Commento solo il PERCHÉ: Risolve la palette di colori configurata (anche con var CSS)
-	// e restituisce i colori formattati e allineati a 16 slot per le uniform di WebGL.
+	// Privato: converte una palette (anche con var CSS) nei 16 slot richiesti da WebGL.
 	/**
 	 * @param {any} colorsOverride
 	 */
-	resolvePalette(colorsOverride) {
+	_resolvePalette(colorsOverride) {
 		const resolved = getThemeColors(colorsOverride);
 		return {
 			bg: resolved.bg,
 			colors: getUniformColors(resolved.colors, 16),
 			count: resolved.colors.length
 		};
+	}
+
+	/**
+	 * Restituisce uno snapshot plain-object di tutti i valori uniform animabili.
+	 * Pensato per essere usato come proxy GSAP: contiene solo numeri, nessun oggetto THREE.
+	 * @returns {Record<string, number>}
+	 */
+	getAnimatableState() {
+		const u = /** @type {any} */ (this.material.uniforms);
+		const colors = u.u_colors.value;
+		/** @type {Record<string, number>} */
+		const state = {
+			speed: u.u_speed.value,
+			coverage: u.u_coverage.value,
+			grainIntensity: u.u_grain_intensity.value,
+			clampMin: u.u_mask_clamp.value.x,
+			clampMax: u.u_mask_clamp.value.y,
+			focusX: u.u_focus.value.x,
+			focusY: u.u_focus.value.y,
+			focusRx: u.u_focus.value.z,
+			focusRy: u.u_focus.value.w,
+			bgR: u.u_bg_color.value.r,
+			bgG: u.u_bg_color.value.g,
+			bgB: u.u_bg_color.value.b,
+		};
+		for (let i = 0; i < 16; i++) {
+			state[`c${i}R`] = colors[i].r;
+			state[`c${i}G`] = colors[i].g;
+			state[`c${i}B`] = colors[i].b;
+		}
+		return state;
+	}
+
+	/**
+	 * Risolve una GradientConfig nel corrispondente stato target compatibile con getAnimatableState().
+	 * Restituisce anche il colorCount per l'uniform non-animata u_color_count.
+	 * @param {GradientConfig} newConfig
+	 * @returns {{ state: Record<string, number>, colorCount: number }}
+	 */
+	getTargetState(newConfig) {
+		const c = this.config;
+		const focusRadius = newConfig.focusRadius ?? c.focusRadius;
+		const focusCenter = newConfig.focusCenter ?? c.focusCenter;
+		const palette = this._resolvePalette(newConfig.colors !== undefined ? newConfig.colors : c.colors);
+
+		/** @type {Record<string, number>} */
+		const state = {
+			speed: newConfig.speed ?? c.speed,
+			coverage: newConfig.coverage ?? c.coverage,
+			grainIntensity: newConfig.grainIntensity ?? c.grainIntensity,
+			clampMin: (newConfig.maskClamp ?? c.maskClamp)[0],
+			clampMax: (newConfig.maskClamp ?? c.maskClamp)[1],
+			focusX: focusCenter[0],
+			focusY: focusCenter[1],
+			focusRx: Array.isArray(focusRadius) ? focusRadius[0] : focusRadius,
+			focusRy: Array.isArray(focusRadius) ? focusRadius[1] : focusRadius,
+			bgR: palette.bg.r,
+			bgG: palette.bg.g,
+			bgB: palette.bg.b,
+		};
+		for (let i = 0; i < 16; i++) {
+			state[`c${i}R`] = palette.colors[i].r;
+			state[`c${i}G`] = palette.colors[i].g;
+			state[`c${i}B`] = palette.colors[i].b;
+		}
+		return { state, colorCount: palette.count };
+	}
+
+	/**
+	 * Applica uno stato plain-object (da getAnimatableState) agli uniform WebGL.
+	 * Chiamato a ogni tick GSAP onUpdate — deve rimanere allocation-free.
+	 * @param {Record<string, number>} state
+	 */
+	applyAnimatableState(state) {
+		const u = /** @type {any} */ (this.material.uniforms);
+		u.u_speed.value = state.speed;
+		u.u_coverage.value = state.coverage;
+		u.u_grain_intensity.value = state.grainIntensity;
+		u.u_mask_clamp.value.set(state.clampMin, state.clampMax);
+		u.u_focus.value.set(state.focusX, state.focusY, state.focusRx, state.focusRy);
+		u.u_bg_color.value.setRGB(state.bgR, state.bgG, state.bgB);
+		const colors = u.u_colors.value;
+		for (let i = 0; i < 16; i++) {
+			colors[i].setRGB(state[`c${i}R`], state[`c${i}G`], state[`c${i}B`]);
+		}
 	}
 
 
@@ -605,7 +670,7 @@ export class InteractiveGradientRenderer {
 		if (options.splatVorticity !== undefined) u.u_vorticity.value = this.config.splatVorticity;
 		if (options.splatRadius !== undefined)    u.u_splat_radius.value = this.config.splatRadius;
 		if (options.maskClamp !== undefined)      u.u_mask_clamp.value.set(...this.config.maskClamp);
-		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined) {
+		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined || options.scrollParallax !== undefined) {
 			u.u_scroll_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth;
 			u.u_scroll_parallax.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollParallax;
 		}

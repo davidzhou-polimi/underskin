@@ -61,104 +61,21 @@ export function interactiveGradient(canvas, params = {}) {
 	 */
 	function transitionConfig(newConfig, duration) {
 		const resolvedDuration = duration ?? getTransitionDuration('--transition-duration-slow', 1.2);
-		if (activeTween) {
-			activeTween.kill();
-		}
+		if (activeTween) activeTween.kill();
 
-		const u = renderer.material.uniforms;
-		const targetValues = /** @type {any} */ ({});
+		const proxy = renderer.getAnimatableState();
+		const { state: targetState, colorCount } = renderer.getTargetState(newConfig);
 
-		const startSpeed = u.u_speed.value;
-		const startCoverage = u.u_coverage.value;
-		const startGrain = u.u_grain_intensity.value;
-		const startClampMin = u.u_mask_clamp.value.x;
-		const startClampMax = u.u_mask_clamp.value.y;
-		const startFocusX = u.u_focus.value.x;
-		const startFocusY = u.u_focus.value.y;
-		const startFocusRx = u.u_focus.value.z;
-		const startFocusRy = u.u_focus.value.w;
-
-		const targetSpeed = newConfig.speed !== undefined ? newConfig.speed : renderer.config.speed;
-		const targetCoverage = newConfig.coverage !== undefined ? newConfig.coverage : renderer.config.coverage;
-		const targetGrain = newConfig.grainIntensity !== undefined ? newConfig.grainIntensity : renderer.config.grainIntensity;
-		const targetClampMin = newConfig.maskClamp !== undefined ? newConfig.maskClamp[0] : renderer.config.maskClamp[0];
-		const targetClampMax = newConfig.maskClamp !== undefined ? newConfig.maskClamp[1] : renderer.config.maskClamp[1];
-		
-		const targetFocusX = newConfig.focusCenter !== undefined ? newConfig.focusCenter[0] : (renderer.config.focusCenter !== undefined ? renderer.config.focusCenter[0] : 0.5);
-		const targetFocusY = newConfig.focusCenter !== undefined ? newConfig.focusCenter[1] : (renderer.config.focusCenter !== undefined ? renderer.config.focusCenter[1] : 0.5);
-		
-		const targetFocusRadius = newConfig.focusRadius !== undefined ? newConfig.focusRadius : renderer.config.focusRadius;
-		const targetFocusRx = Array.isArray(targetFocusRadius) ? targetFocusRadius[0] : (targetFocusRadius !== undefined ? targetFocusRadius : 2.0);
-		const targetFocusRy = Array.isArray(targetFocusRadius) ? targetFocusRadius[1] : (targetFocusRadius !== undefined ? targetFocusRadius : 2.0);
-
-		/** @type {any} */
-		const proxy = {
-			speed: startSpeed,
-			coverage: startCoverage,
-			grainIntensity: startGrain,
-			clampMin: startClampMin,
-			clampMax: startClampMax,
-			focusX: startFocusX,
-			focusY: startFocusY,
-			focusRx: startFocusRx,
-			focusRy: startFocusRy,
-		};
-
-		targetValues.speed = targetSpeed;
-		targetValues.coverage = targetCoverage;
-		targetValues.grainIntensity = targetGrain;
-		targetValues.clampMin = targetClampMin;
-		targetValues.clampMax = targetClampMax;
-		targetValues.focusX = targetFocusX;
-		targetValues.focusY = targetFocusY;
-		targetValues.focusRx = targetFocusRx;
-		targetValues.focusRy = targetFocusRy;
-
-
-		// Resolve target colors to THREE.Color format
-		const targetPalette = renderer.resolvePalette(newConfig.colors !== undefined ? newConfig.colors : renderer.config.colors);
-		const currentBg = u.u_bg_color.value;
-		const currentColors = u.u_colors.value;
-
-		proxy.bgR = currentBg.r;
-		proxy.bgG = currentBg.g;
-		proxy.bgB = currentBg.b;
-
-		targetValues.bgR = targetPalette.bg.r;
-		targetValues.bgG = targetPalette.bg.g;
-		targetValues.bgB = targetPalette.bg.b;
-
-		for (let i = 0; i < 16; i++) {
-			proxy[`c${i}R`] = currentColors[i].r;
-			proxy[`c${i}G`] = currentColors[i].g;
-			proxy[`c${i}B`] = currentColors[i].b;
-
-			targetValues[`c${i}R`] = targetPalette.colors[i].r;
-			targetValues[`c${i}G`] = targetPalette.colors[i].g;
-			targetValues[`c${i}B`] = targetPalette.colors[i].b;
-		}
-
-		u.u_color_count.value = targetPalette.count;
-
-		// Maintain internal config state in renderer
+		// colorCount non è animabile (è un int GLSL): applicato subito prima del tween
+		// per evitare glitch cromatici quando il numero di colori cambia tra sezioni.
+		/** @type {any} */ (renderer.material.uniforms).u_color_count.value = colorCount;
 		renderer.config = { ...renderer.config, ...newConfig };
 
 		activeTween = gsap.to(proxy, {
-			...targetValues,
+			...targetState,
 			duration: resolvedDuration,
 			ease: 'power2.out',
-			onUpdate: () => {
-				u.u_speed.value = proxy.speed;
-				u.u_coverage.value = proxy.coverage;
-				u.u_grain_intensity.value = proxy.grainIntensity;
-				u.u_mask_clamp.value.set(proxy.clampMin, proxy.clampMax);
-				u.u_focus.value.set(proxy.focusX, proxy.focusY, proxy.focusRx, proxy.focusRy);
-
-				currentBg.setRGB(proxy.bgR, proxy.bgG, proxy.bgB);
-				for (let i = 0; i < 16; i++) {
-					currentColors[i].setRGB(proxy[`c${i}R`], proxy[`c${i}G`], proxy[`c${i}B`]);
-				}
-			}
+			onUpdate: () => renderer.applyAnimatableState(proxy),
 		});
 	}
 
