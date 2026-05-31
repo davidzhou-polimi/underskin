@@ -17,6 +17,7 @@
                 "var(--archetipi-insoddisfatto)",
                 "var(--viola-600)",
             ],
+            grainIntensity: 0.025,
             coverage: 1.0,
             maskClamp: [0.0, 1.0],
         }}

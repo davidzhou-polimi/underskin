@@ -43,7 +43,7 @@ export const DEFAULT_CONFIG = {
 	splatRadius: 0.18,
 	splatDecay: 0.96,
 	splatVorticity: 0.4,
-	grainIntensity: 0.1,
+	grainIntensity: 0.05,
 	grainSpeed: 0,
 	colorBlending: 1.0,
 	shapeId: 0,
