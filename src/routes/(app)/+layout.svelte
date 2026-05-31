@@ -6,6 +6,6 @@
 </script>
 
 <Navbar />
-<InteractiveGradient config={{ maskClamp: [0.1, 0.7] }} />
+<InteractiveGradient config={{ coverage: 0.3, maskClamp: [0.0, 0.7] }} />
 
 {@render children()}

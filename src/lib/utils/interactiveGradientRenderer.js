@@ -17,6 +17,7 @@ import * as THREE from 'three';
  * @property {number} [splatDecay]       - Per-frame life decay (0.96 ≈ 2s lifetime at 60fps)
  * @property {number} [splatVorticity]   - Rotational wake intensity behind cursor (0–1)
  * @property {number} [grainIntensity]   - Film grain strength
+ * @property {number} [grainSpeed]       - Animation speed of the film grain in FPS (0 = static, default 0.0)
  * @property {number} [colorBlending]    - Color transition sharpness multiplier
  * @property {number} [shapeId]          - 0=fluid, 1=circle, 2=capsule
  * @property {number} [morphProgress]    - Shape morph 0.0–1.0
@@ -34,13 +35,14 @@ export const DEFAULT_CONFIG = {
 	focusCenter: [0.5, 0.5],
 	focusRadius: 2.0,
 	viscosity: 0.07,
-	mouseRadius: 0.40,
-	mouseStrength: 0.10,
+	mouseRadius: 1,
+	mouseStrength: 0,
 	splatCount: 16,
 	splatRadius: 0.18,
 	splatDecay: 0.96,
 	splatVorticity: 0.4,
-	grainIntensity: 0.07,
+	grainIntensity: 0.1,
+	grainSpeed: 0,
 	colorBlending: 1.0,
 	shapeId: 0,
 	morphProgress: 0.0,
@@ -106,6 +108,7 @@ const fsSource = `
 	uniform float u_mouse_radius;
 	uniform float u_mouse_strength;
 	uniform float u_grain_intensity;
+	uniform float u_grain_speed;
 	uniform float u_color_blending;
 	uniform float u_vorticity;
 	uniform vec2 u_mask_clamp;
@@ -193,8 +196,9 @@ const fsSource = `
 		return length(pa - ba * h) - r;
 	}
 
-	// Gaussian velocity field from all active splats — creates persistent fluid interaction
-	vec2 computeSplatField(vec2 uv, vec2 aspect) {
+	// Gaussian velocity field from all active splats — creates persistent fluid interaction.
+	// Operates in pure UV [0-1] space; caller converts to aspect-corrected space when applying.
+	vec2 computeSplatField(vec2 uv) {
 		vec2 force = vec2(0.0);
 		for (int i = 0; i < 16; i++) {
 			if (i >= u_splat_count) break;
@@ -204,7 +208,7 @@ const fsSource = `
 			float splatSpeed = length(splatVel);
 			if (splatSpeed < 0.0001) continue;
 
-			vec2 diff = (uv - splatPos) * aspect;
+			vec2 diff = uv - splatPos;
 			float d2 = dot(diff, diff);
 			float r2 = u_splat_radius * u_splat_radius;
 			float gaussian = exp(-d2 / r2);
@@ -212,11 +216,11 @@ const fsSource = `
 			// Push along velocity direction
 			force += splatVel * gaussian;
 
-			// Rotational wake perpendicular to motion — dipole vortex effect
+			// Stirring vortex: signed cross product gives opposite longitudinal forces
+			// on each side of the cursor path, creating a rotational wake
+			float cross_val = splatVel.x * diff.y - splatVel.y * diff.x;
 			vec2 splatDir = splatVel / splatSpeed;
-			vec2 perp = vec2(-splatDir.y, splatDir.x);
-			float along = dot(splatDir, diff);
-			force += perp * along * gaussian * u_vorticity;
+			force += splatDir * cross_val * gaussian * u_vorticity;
 		}
 		return force;
 	}
@@ -244,16 +248,13 @@ const fsSource = `
 		vec2 uv = v_uv;
 		float scaled_time = u_time * u_speed;
 
-		// 1. Splat field — persistent fluid displacement that decays over time
-		vec2 splat_force = computeSplatField(uv, aspect);
-
-		// 2. Mouse gravitational UV warp based on velocity and direction
+		// 1. Mouse gravitational UV warp based on velocity and direction
 		vec2 to_mouse = (u_mouse - uv) * aspect;
 		float mouse_dist = length(to_mouse);
 		float mouse_attraction = smoothstep(u_mouse_radius, 0.0, mouse_dist);
 
 		float speed = length(u_mouse_velocity);
-		vec2 warp_vector = splat_force * 0.25;
+		vec2 warp_vector = vec2(0.0);
 
 		if (speed > 0.01) {
 			vec2 move_dir = normalize(u_mouse_velocity);
@@ -281,10 +282,15 @@ const fsSource = `
 		// 4. Domain warping (deforms the coordinate grid recursively)
 		vec2 warped_uv = domainWarp(shifted_uv * aspect, scaled_time, mouse_attraction, u_scroll);
 
-		// 5. Base fluid noise — 0.75 factor maintains original shape/warp frequency ratio
+		// 5. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
+		// This moves the actual colors rather than just distorting the lookup space.
+		// aspect conversion keeps the displacement isotropic on screen.
+		warped_uv -= computeSplatField(uv) * aspect;
+
+		// 6. Base fluid noise — 0.75 factor maintains original shape/warp frequency ratio
 		float shape_noise = snoise(vec3(warped_uv * (u_wave_freq * 0.75), scaled_time * 0.08));
 
-		// 6. SDF shape morphing
+		// 7. SDF shape morphing
 		float circle_sdf = sdCircle(centered_uv_aspect, 0.35);
 		float capsule_sdf = sdCapsule(centered_uv_aspect, vec2(0.0, 0.25), vec2(0.0, -0.25), 0.25);
 		float circle_mask = smoothstep(0.2, -0.2, circle_sdf);
@@ -294,15 +300,20 @@ const fsSource = `
 		float is_shaped = step(0.5, u_target_shape);
 		float morphed_fluid = mix(shape_noise, shape_noise + target_bias * 1.5, u_shape_morph * is_shaped);
 
-		// 7. Coverage bias: shifts the noise threshold so more/less surface is covered
+		// 7. Coverage bias: shifts the noise threshold so more/less surface is covered.
+		// Wide range (-1.2, 1.2) spans the full snoise output — the transition is so gradual
+		// that hard edges between gradient regions and background become impossible.
 		float coverage_bias = (u_coverage - 0.5) * 2.5;
-		float shape_mask = smoothstep(-0.4, 0.6, morphed_fluid + coverage_bias);
+		float shape_mask = smoothstep(-1.2, 1.2, morphed_fluid + coverage_bias);
+
+		// Soft minimum density: even in "background" regions a subtle color field bleeds through,
+		// eliminating the hard boundary between gradient blobs and background entirely.
+		shape_mask = mix(0.05, 1.0, shape_mask);
 
 		// Focus area: attenuate gradient outside a configurable radial region
 		float focus_dist = length((uv - u_focus.xy) * aspect);
 		float focus_weight = 1.0 - smoothstep(u_focus.z * 0.5, u_focus.z, focus_dist);
-		shape_mask *= mix(0.05, 1.0, focus_weight);
-		// Clamping shape_mask to user-defined limits to adjust visual contrast or range
+		shape_mask *= mix(0.0, 1.0, focus_weight);
 		shape_mask = clamp(shape_mask, u_mask_clamp.x, u_mask_clamp.y);
 
 		// 8. Color blending inside shapes — wide smoothstep creates blurred gradients
@@ -311,8 +322,10 @@ const fsSource = `
 		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
 		shape_color = mix(shape_color, u_colors[2], smoothstep(-0.4, 0.8, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07))));
 
-		// 9. Film grain — uses raw u_time to avoid speed artifacts
-		float g = grain(v_uv * u_resolution, u_time) * u_grain_intensity;
+		// 9. Film grain — step-based animation to avoid high-frequency flickering.
+		// If u_grain_speed is 0.0, the grain pattern remains completely static.
+		float grain_time = u_grain_speed > 0.0 ? floor(u_time * u_grain_speed) : 0.0;
+		float g = grain(v_uv * u_resolution, grain_time) * u_grain_intensity;
 
 		vec3 final_color = mix(u_bg_color, shape_color + vec3(g), shape_mask);
 
@@ -393,6 +406,7 @@ export class InteractiveGradientRenderer {
 				u_mouse_radius:   { value: this.config.mouseRadius },
 				u_mouse_strength: { value: this.config.mouseStrength },
 				u_grain_intensity:{ value: this.config.grainIntensity },
+				u_grain_speed:    { value: this.config.grainSpeed },
 				u_color_blending: { value: this.config.colorBlending },
 				u_vorticity:      { value: this.config.splatVorticity },
 				u_mask_clamp:     { value: new THREE.Vector2(...this.config.maskClamp) },
@@ -474,6 +488,7 @@ export class InteractiveGradientRenderer {
 		if (options.mouseRadius !== undefined)    u.u_mouse_radius.value = this.config.mouseRadius;
 		if (options.mouseStrength !== undefined)  u.u_mouse_strength.value = this.config.mouseStrength;
 		if (options.grainIntensity !== undefined) u.u_grain_intensity.value = this.config.grainIntensity;
+		if (options.grainSpeed !== undefined)     u.u_grain_speed.value = this.config.grainSpeed;
 		if (options.colorBlending !== undefined)  u.u_color_blending.value = this.config.colorBlending;
 		if (options.splatVorticity !== undefined) u.u_vorticity.value = this.config.splatVorticity;
 		if (options.splatRadius !== undefined)    u.u_splat_radius.value = this.config.splatRadius;
@@ -525,13 +540,19 @@ export class InteractiveGradientRenderer {
 			this.mouse.velocity.y += (dirY * instSpeed - this.mouse.velocity.y) * 0.1;
 			this.mouse.speed += (instSpeed - this.mouse.speed) * 0.15;
 
-			// Plant a splat carrying the current momentum — scale 0.01 maps UV/s to UV warp magnitude
-			this.addSplat(
-				this.mouse.target.x,
-				this.mouse.target.y,
-				this.mouse.velocity.x * 0.01,
-				this.mouse.velocity.y * 0.01
-			);
+			// Plant a splat only when the cursor has moved enough to avoid dense overlap.
+			// Scale 0.025: UV/s velocity → UV color displacement (~8% of screen at max speed).
+			const lastSplat = this.splats[0];
+			const dsx = this.mouse.target.x - (lastSplat?.x ?? -1);
+			const dsy = this.mouse.target.y - (lastSplat?.y ?? -1);
+			if (!lastSplat || dsx * dsx + dsy * dsy > 0.015 * 0.015) {
+				this.addSplat(
+					this.mouse.target.x,
+					this.mouse.target.y,
+					this.mouse.velocity.x * 0.025,
+					this.mouse.velocity.y * 0.025
+				);
+			}
 		} else {
 			const decay = Math.exp(-dt / 0.35);
 			this.mouse.velocity.multiplyScalar(decay);
