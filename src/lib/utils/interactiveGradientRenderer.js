@@ -24,6 +24,7 @@ import * as THREE from 'three';
  * @property {[number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
  * @property {'depth' | 'none'} [scrollEffect] - Scroll interaction: 'depth' = NEAT-style infinite procedural scroll
  * @property {number} [scrollDepth]     - Depth units traversed over full scroll (higher = more dramatic morph)
+ * @property {number} [scrollParallax]  - Y parallax shift over full scroll in UV units (default 0.6 = 60% of screen height)
  */
 
 /** @type {Required<GradientConfig>} */
@@ -50,6 +51,7 @@ export const DEFAULT_CONFIG = {
 	maskClamp: [0.0, 1.0],
 	scrollEffect: 'depth',
 	scrollDepth: 0.75,
+	scrollParallax: 0.6,
 };
 
 const MAX_SPLATS = 16;
@@ -115,6 +117,7 @@ const fsSource = `
 	uniform float u_vorticity;
 	uniform vec2 u_mask_clamp;
 	uniform float u_scroll_depth;
+	uniform float u_scroll_parallax;
 
 	// Persistent fluid splat field
 	uniform vec4 u_splats[16];
@@ -278,8 +281,10 @@ const fsSource = `
 		vec2 warped_by_mouse_uv = uv - warp_vector;
 		vec2 centered_uv_aspect = (warped_by_mouse_uv - 0.5) * aspect;
 
-		// 3. Domain warping — scroll depth is now baked into domainWarp's Z axis
-		vec2 warped_uv = domainWarp(warped_by_mouse_uv * aspect, scaled_time, mouse_attraction);
+		// 3. Domain warping — scroll drives both Z depth (morph) and Y parallax (spatial drift)
+		// Y shift: as scroll increases the noise field drifts downward, creating natural parallax
+		vec2 scroll_uv_offset = vec2(0.0, -u_scroll * u_scroll_parallax);
+		vec2 warped_uv = domainWarp((warped_by_mouse_uv + scroll_uv_offset) * aspect, scaled_time, mouse_attraction);
 
 		// 4. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
 		// Cap force magnitude to avoid UV tearing at high splat densities.
@@ -318,11 +323,11 @@ const fsSource = `
 		shape_mask *= mix(0.0, 1.0, focus_weight);
 		shape_mask = clamp(shape_mask, u_mask_clamp.x, u_mask_clamp.y);
 
-		// 8. Color blending inside shapes — wide smoothstep creates blurred gradients
+		// 8. Color blending — scroll_z offsets the color noise too so colors morph with scroll
 		float blend_range = u_color_blending * 0.8;
-		float blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.7, scaled_time * 0.1)));
+		float blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.7, scaled_time * 0.1 + scroll_z * 0.5)));
 		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
-		shape_color = mix(shape_color, u_colors[2], smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07))));
+		shape_color = mix(shape_color, u_colors[2], smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07 + scroll_z * 0.35))));
 
 		// 9. Film grain — step-based animation to avoid high-frequency flickering.
 		// If u_grain_speed is 0.0, the grain pattern remains completely static.
@@ -412,7 +417,8 @@ export class InteractiveGradientRenderer {
 				u_color_blending: { value: this.config.colorBlending },
 				u_vorticity:      { value: this.config.splatVorticity },
 				u_mask_clamp:     { value: new THREE.Vector2(...this.config.maskClamp) },
-				u_scroll_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth },
+				u_scroll_depth:     { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth },
+				u_scroll_parallax:  { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollParallax },
 				// Splat system
 				u_splats:         { value: this.splatPool },
 				u_splat_count:    { value: 0 },
@@ -497,8 +503,10 @@ export class InteractiveGradientRenderer {
 		if (options.splatVorticity !== undefined) u.u_vorticity.value = this.config.splatVorticity;
 		if (options.splatRadius !== undefined)    u.u_splat_radius.value = this.config.splatRadius;
 		if (options.maskClamp !== undefined)      u.u_mask_clamp.value.set(...this.config.maskClamp);
-		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined)
+		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined) {
 			u.u_scroll_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth;
+			u.u_scroll_parallax.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollParallax;
+		}
 		if (options.colors !== undefined)         this.updateColors();
 		if (options.shapeId !== undefined)        this.updateShape(this.config.shapeId, this.config.morphProgress);
 	}
