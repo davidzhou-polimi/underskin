@@ -31,6 +31,9 @@ const fsSource = `
 	uniform vec2 u_mouse;
 	uniform float u_scroll;
 	
+	uniform float u_target_shape;
+	uniform float u_shape_morph;
+	
 	uniform vec3 u_bg_color;
 	uniform vec3 u_colors[3];
 	
@@ -102,6 +105,17 @@ const fsSource = `
 	float grain(vec2 uv, float time) {
 		return fract(sin(dot(uv + time * 0.01, vec2(12.9898, 78.233))) * 43758.5453) * 2.0 - 1.0;
 	}
+
+	// SDF Functions
+	float sdCircle(vec2 p, float r) {
+		return length(p) - r;
+	}
+	
+	float sdCapsule(vec2 p, vec2 a, vec2 b, float r) {
+		vec2 pa = p - a, ba = b - a;
+		float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+		return length(pa - ba * h) - r;
+	}
 	
 	// Domain Warping function to morph the coordinates recursively (creates paint blending)
 	vec2 domainWarp(vec2 uv, float time, float mouse_effect, float scroll_effect) {
@@ -114,7 +128,7 @@ const fsSource = `
 		);
 		
 		// Second warp layer (mixing mouse interaction and scroll coordinate displacement)
-		vec3 r_p = p + vec3(q * 1.4, time * 0.08) + vec3(mouse_effect * 0.6, scroll_effect * 0.6, 0.0);
+		vec3 r_p = p + vec3(q * 1.4, time * 0.08) + vec3(mouse_effect * 0.4, scroll_effect * 0.6, 0.0);
 		vec2 r = vec2(
 			snoise(r_p),
 			snoise(r_p + vec3(8.3, 2.8, 1.7))
@@ -126,47 +140,63 @@ const fsSource = `
 	void main() {
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
 		vec2 uv = v_uv;
+		vec2 centered_uv_aspect = (uv - 0.5) * aspect;
 		
-		// 1. Mouse coordinate local fluid displacement (elastic push/stretch away from cursor)
+		// 1. Mouse Soft Attraction (SDF-like field)
 		vec2 mouse_diff = (uv - u_mouse) * aspect;
 		float mouse_dist = length(mouse_diff);
-		float mouse_influence = smoothstep(0.8, 0.0, mouse_dist);
-		
-		// Procedural noise to make the push wavy/deformed (behaves like pushed liquid)
-		float deform_noise = snoise(vec3(uv * 3.5, u_time * 0.2));
-		
-		// Using mouse_diff directly instead of normalize(mouse_diff) removes the coordinate singularity.
-		// This ensures displacement goes to 0 at the cursor center, preventing tearing or seams.
-		vec2 push_vector = mouse_diff * mouse_influence * (0.8 + deform_noise * 0.2);
-		vec2 local_uv = uv - push_vector;
+		// Mouse adds softly to the density instead of harsh distortion
+		float mouse_attraction = smoothstep(0.8, 0.0, mouse_dist) * 0.6;
 		
 		// 2. Scroll vortex/spiral coordinate mapping
 		float scroll_angle = u_scroll * 3.14159 * 1.5;
 		mat2 scroll_rot = mat2(cos(scroll_angle), sin(scroll_angle), -sin(scroll_angle), cos(scroll_angle));
-		vec2 centered_uv = local_uv - 0.5;
+		vec2 centered_uv = uv - 0.5;
 		centered_uv = mix(centered_uv, scroll_rot * centered_uv, u_scroll * 0.7);
 		vec2 shifted_uv = centered_uv + 0.5;
 		
 		// 3. Domain warping (deforms the coordinate grid)
-		vec2 warped_uv = domainWarp(shifted_uv * aspect, u_time, mouse_influence, u_scroll);
+		vec2 warped_uv = domainWarp(shifted_uv * aspect, u_time, mouse_attraction, u_scroll);
 		
-		// 4. Distinct floating shapes/blobs (using noise threshold with wide smoothstep for blur)
+		// 4. Distinct floating shapes/blobs
 		float shape_noise = snoise(vec3(warped_uv * 1.2, u_time * 0.08));
-		float shape_mask = smoothstep(-0.4, 0.6, shape_noise + mouse_influence * 0.25);
+		
+		// 5. Calculate Target SDF Shapes
+		float circle_sdf = sdCircle(centered_uv_aspect, 0.35);
+		float capsule_sdf = sdCapsule(centered_uv_aspect, vec2(0.0, 0.25), vec2(0.0, -0.25), 0.25);
+		
+		// Convert SDFs to soft mask (generous smoothstep for fluid borders)
+		float circle_mask = smoothstep(0.2, -0.2, circle_sdf);
+		float capsule_mask = smoothstep(0.2, -0.2, capsule_sdf);
+		
+		// Pick target shape based on u_target_shape (0=fluid, 1=circle, 2=capsule)
+		float target_shape_mask = mix(circle_mask, capsule_mask, step(1.5, u_target_shape));
+		// Map mask from 0-1 to -1 to 1 to act as a bias for the noise
+		float target_bias = (target_shape_mask - 0.5) * 2.0;
+		
+		// 6. Combine everything
+		float base_fluid = shape_noise + mouse_attraction;
+		
+		// Only apply SDF morphing if u_target_shape > 0.5
+		float is_shaped = step(0.5, u_target_shape);
+		float morphed_fluid = mix(base_fluid, base_fluid + target_bias * 1.5, u_shape_morph * is_shaped);
+		
+		// Generous smoothstep for soft fluid edges blending into background
+		float shape_mask = smoothstep(-0.4, 0.6, morphed_fluid);
 		
 		// Blending colors ONLY inside the shapes (wide smoothstep creates a beautiful blurred gradient)
 		float blend = smoothstep(-0.8, 0.8, snoise(vec3(warped_uv * 0.7, u_time * 0.1)));
 		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
 		shape_color = mix(shape_color, u_colors[2], smoothstep(-0.4, 0.8, snoise(vec3(warped_uv * 0.9 + vec2(1.5), u_time * 0.07))));
 		
-		// 5. Apply grain/noise ONLY on the liquid shapes
+		// Apply grain/noise ONLY on the liquid shapes
 		float g = grain(v_uv * u_resolution, u_time) * 0.07;
 		vec3 shape_color_with_grain = shape_color + vec3(g);
 		
-		// 6. Blend shapes with grain over the flat, clean base background
+		// Blend shapes with grain over the flat, clean base background
 		vec3 final_color = mix(u_bg_color, shape_color_with_grain, shape_mask);
 		
-		// 7. Gamma correction to convert Linear colors to sRGB (fixes the dark colors issue)
+		// Gamma correction to convert Linear colors to sRGB (fixes the dark colors issue)
 		gl_FragColor = vec4(pow(final_color, vec3(1.0 / 2.2)), 1.0);
 	}
 `;
@@ -192,6 +222,11 @@ export class InteractiveGradientRenderer {
 			current: 0,
 			target: 0
 		};
+		this.shape = {
+			id: 0,           // 0=fluid, 1=circle, 2=capsule
+			morph: 0.0,      // 0.0 to 1.0
+			currentMorph: 0.0
+		};
 
 		// Retrieve initial theme colors from CSS
 		this.themeColors = getThemeColors();
@@ -216,6 +251,8 @@ export class InteractiveGradientRenderer {
 				u_time: { value: 0 },
 				u_mouse: { value: this.mouse.current },
 				u_scroll: { value: 0 },
+				u_target_shape: { value: 0 },
+				u_shape_morph: { value: 0 },
 				u_bg_color: { value: this.themeColors.bg },
 				u_colors: { value: [this.themeColors.c1, this.themeColors.c2, this.themeColors.c3] }
 			},
@@ -272,6 +309,18 @@ export class InteractiveGradientRenderer {
 		}
 	}
 
+	/**
+	 * Exposes public method to update target shape and morph progress
+	 * @param {number} shapeId - 0 for fluid, 1 for circle, 2 for capsule
+	 * @param {number} morphProgress - 0.0 to 1.0
+	 */
+	updateShape(shapeId, morphProgress = 1.0) {
+		this.shape.id = shapeId;
+		this.shape.morph = morphProgress;
+		const uniforms = /** @type {any} */ (this.material.uniforms);
+		uniforms.u_target_shape.value = this.shape.id;
+	}
+
 	resize() {
 		const width = window.innerWidth;
 		const height = window.innerHeight;
@@ -283,16 +332,18 @@ export class InteractiveGradientRenderer {
 	animate() {
 		const elapsedSeconds = (performance.now() - this.startTime) * 0.001;
 
-		// Viscous Easing (Linear Interpolation) with a factor of 0.05 (5%) for liquid flow inertia
-		this.mouse.current.x += (this.mouse.target.x - this.mouse.current.x) * 0.05;
-		this.mouse.current.y += (this.mouse.target.y - this.mouse.current.y) * 0.05;
+		// Viscous Easing (Linear Interpolation) with a factor of 0.07 for smooth follow
+		this.mouse.current.x += (this.mouse.target.x - this.mouse.current.x) * 0.07;
+		this.mouse.current.y += (this.mouse.target.y - this.mouse.current.y) * 0.07;
 
 		this.scroll.current += (this.scroll.target - this.scroll.current) * 0.05;
+		this.shape.currentMorph += (this.shape.morph - this.shape.currentMorph) * 0.05;
 
 		// Feed uniforms
 		const uniforms = /** @type {any} */ (this.material.uniforms);
 		uniforms.u_time.value = elapsedSeconds;
 		uniforms.u_scroll.value = this.scroll.current;
+		uniforms.u_shape_morph.value = this.shape.currentMorph;
 
 		this.renderer.render(this.scene, this.camera);
 		this.animationFrameId = requestAnimationFrame(() => this.animate());

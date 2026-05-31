@@ -1,13 +1,25 @@
 import { InteractiveGradientRenderer } from '$lib/utils/interactiveGradientRenderer.js';
 
 /**
+ * @typedef {Object} GradientParams
+ * @property {number} [shapeId] - 0: fluid, 1: circle, 2: capsule
+ * @property {number} [morphProgress] - 0.0 to 1.0 interpolation for the shape mask
+ */
+
+/**
  * Svelte Action to initialize and update a canvas using Three.js custom shader.
  * Binds DOM event listeners and exposes the renderer on the canvas element.
  * @param {HTMLCanvasElement} canvas
+ * @param {GradientParams} [params]
  */
-export function interactiveGradient(canvas) {
+export function interactiveGradient(canvas, params = {}) {
 	// Instantiate the Three.js scene manager
 	const renderer = new InteractiveGradientRenderer(canvas);
+
+	// Apply initial params if provided
+	if (params.shapeId !== undefined) {
+		renderer.updateShape(params.shapeId, params.morphProgress ?? 1.0);
+	}
 
 	// Attach the renderer instance to the canvas element so it can be accessed from the outside (e.g., canvas['__gradientRenderer'].updateScroll(val))
 	/** @type {any} */ (canvas)['__gradientRenderer'] = renderer;
@@ -37,6 +49,14 @@ export function interactiveGradient(canvas) {
 	window.addEventListener('colors-update', handleThemeUpdate);
 
 	return {
+		/**
+		 * @param {GradientParams} newParams
+		 */
+		update(newParams) {
+			if (newParams.shapeId !== undefined) {
+				renderer.updateShape(newParams.shapeId, newParams.morphProgress ?? 1.0);
+			}
+		},
 		destroy() {
 			// Clean up active event listeners to prevent memory leaks
 			window.removeEventListener('mousemove', handleMouseMove);
