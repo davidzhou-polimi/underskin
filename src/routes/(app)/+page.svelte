@@ -1,7 +1,8 @@
 <script>
     // Commento solo il PERCHÉ: Importa le sezioni e lo store di narrazione per orchestrare
     // la visualizzazione condizionale della sezione corrente attiva sulla pagina singola.
-    import HeroSection from "$lib/components/sections/HeroSection.svelte";
+    import HomeSection from "$lib/components/sections/HomeSection.svelte";
+    import Footer from "$lib/components/sections/Footer.svelte";
     import FavoritoSection from "$lib/components/sections/FavoritoSection.svelte";
     import InsoddisfattoSection from "$lib/components/sections/InsoddisfattoSection.svelte";
     import InfortunatoSection from "$lib/components/sections/InfortunatoSection.svelte";
@@ -20,7 +21,7 @@
             grainIntensity: 0.1,
             colors: null,
             focusCenter: [0.5, 0.5],
-            focusRadius: 2.0
+            focusRadius: 2.0,
         },
         favorito: {
             colors: [
@@ -59,11 +60,13 @@
 
     // Commento solo il PERCHÉ: Determina dinamicamente se l'utente ha scrollato oltre
     // l'altezza esatta del viewport corrente (100vh) per modificare i parametri del gradiente.
-    let isPastFirstViewport = $derived(scrollY > innerHeight/1.5);
+    let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
 
     // Commento solo il PERCHÉ: Determina se l'utente ha quasi completato lo scroll della sezione Hero
     // (es. progress > 80%) per concentrare i gradienti sul fondo.
-    let isNearHeroBottom = $derived(narrative.activeSection === "hero" && scroll.progress > 0.8);
+    let isNearHeroBottom = $derived(
+        narrative.activeSection === "hero" && scroll.progress > 0.99,
+    );
 
     // Commento solo il PERCHÉ: Calcola la configurazione del gradiente reagendo allo scroll reale
     // in pixel o alla vicinanza al fondo della Hero per evitare errori dovuti ad altezze dinamiche delle sezioni.
@@ -74,14 +77,18 @@
                   coverage: 1.0,
                   mouseStrength: 100.0,
                   focusCenter: [0.5, -0.2],
-                  focusRadius: [1.5, 1.0],
+                  focusRadius: [1.5, 0.95],
               }
-            : isPastFirstViewport && ["favorito", "insoddisfatto", "infortunato"].includes(narrative.activeSection)
-            ? {
-                  ...SECTION_CONFIGS[narrative.activeSection],
-                  coverage: 0.3,
-              }
-            : SECTION_CONFIGS[narrative.activeSection] || SECTION_CONFIGS.hero,
+            : isPastFirstViewport &&
+                ["favorito", "insoddisfatto", "infortunato"].includes(
+                    narrative.activeSection,
+                )
+              ? {
+                    ...SECTION_CONFIGS[narrative.activeSection],
+                    coverage: 0.3,
+                }
+              : SECTION_CONFIGS[narrative.activeSection] ||
+                SECTION_CONFIGS.hero,
     );
 </script>
 
@@ -91,8 +98,9 @@
 
 <main use:trackScrollProgress>
     {#if narrative.activeSection === "hero"}
-        <HeroSection />
+        <HomeSection />
         <section class="scroll-spacer" aria-hidden="true"></section>
+        <Footer />
     {:else if narrative.activeSection === "favorito"}
         <FavoritoSection />
         <section class="scroll-spacer" aria-hidden="true"></section>

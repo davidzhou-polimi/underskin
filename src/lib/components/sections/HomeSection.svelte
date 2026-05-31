@@ -1,16 +1,18 @@
 <script>
-	// 1. Importa le azioni necessarie
+	// Commento solo il PERCHÉ: Importa l'azione trackSection per notificare allo store
+	// globale dello scroll quando questa sezione diventa visibile a schermo.
 	import { trackSection } from '$lib/actions/trackSection.js';
 </script>
 
 <section id="hero" class="hero-section" use:trackSection>
 	<div class="content">
-		<!-- Inserisci qui il contenuto della sezione -->
+		<!-- Inserisci qui il contenuto principale della sezione -->
 	</div>
 </section>
 
 <style>
-	/* 3. Usa esclusivamente le variabili token per lo styling */
+	/* Commento solo il PERCHÉ: Imposta l'altezza a schermo intero del viewport e c'entra
+	   gli elementi di contenuto orizzontalmente e verticalmente. */
 	.hero-section {
 		position: relative;
 		overflow: hidden;
