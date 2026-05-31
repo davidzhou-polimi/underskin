@@ -48,7 +48,8 @@
     isIntroDone = val;
   }
 
-  let hasLocked = $state(false);
+  // Utilizzato un let semplice anziché $state per evitare l'auto-tracking di Svelte 5 all'interno del blocco $effect
+  let hasLocked = false;
   let touchStart = 0;
 
   /**

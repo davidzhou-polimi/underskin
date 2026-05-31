@@ -43,6 +43,12 @@ export function thoughtsIntro(node, params) {
 
     if (!boxes.length || !sentenceContainer) return;
 
+    // Traccia lo stato locale dell'intro per prevenire riattivazioni indesiderate dovute a oscillazioni dello scrolling
+    let introCompleted = false;
+    // Memorizza il riferimento alla timeline attiva per consentirne la distruzione immediata in fase di reset
+    /** @type {any} */
+    let activeTimeline = null;
+
     const containerWidth = node.offsetWidth;
     const containerHeight = node.offsetHeight;
 
@@ -79,38 +85,46 @@ export function thoughtsIntro(node, params) {
       '--opacity-amount': 1
     });
 
-    // ScrollTrigger per controllare in modo flessibile sia l'ingresso che il ripristino delle animazioni
+    // Utilizziamo due ScrollTrigger separati per implementare l'isteresi ed evitare rimbalzi accidentali (chattering) al confine della sezione.
+    // Il primo attiva l'entrata quando si scende e la sezione occupa il 75% della viewport.
     ScrollTrigger.create({
       trigger: node,
-      start: 'top 75%', // Si attiva non appena la sezione inizia a entrare significativamente nello schermo
-      end: 'bottom 25%',
+      start: 'top 75%',
       onEnter: () => {
+        // Se l'intro è già stata completata, si blocca l'esecuzione per evitare di scatenare un loop di snap
+        if (introCompleted) return;
+
+        // Se è già presente una timeline attiva da un tentativo parziale precedente, la distruggiamo subito
+        if (activeTimeline) {
+          activeTimeline.kill();
+        }
+
         onIntroChange(false);
 
         const activeCount = thoughts.filter(t => !t.isScattered).length;
         const targetBlur = activeCount * 1.5;
         const targetOpacity = activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08);
 
-        // Timeline sincronizzata per iniziare con il congelamento/sfocatura del testo, seguito dall'assalto dei box
-        const tl = gsap.timeline({
+        // La timeline coordinata garantisce che la sfocatura parta prima e i box la seguano in sequenza
+        activeTimeline = gsap.timeline({
           onComplete: () => {
+            introCompleted = true;
             onIntroChange(true);
-            // Pulisce i transform per consentire alla logica di drag nativa di funzionare
+            // I transform vengono resettati per lasciare il controllo alle Svelte Actions di drag
             gsap.set(boxes, { x: 0, y: 0 });
+            activeTimeline = null;
           }
         });
 
-        // 1. Inizia immediatamente l'effetto di sfocatura/ghiaccio sulla frase centrale
-        // Modificato per garantire una transizione iniziale più morbida e meno repentina
-        tl.to(sentenceContainer, {
+        // La sfocatura ammorbidisce visivamente l'impatto grafico prima dell'arrivo dei fumetti
+        activeTimeline.to(sentenceContainer, {
           '--blur-amount': `${targetBlur}px`,
           '--opacity-amount': targetOpacity,
           duration: 1.5,
           ease: 'power2.out'
         }, 0);
 
-        // 2. Subito dopo (a 0.3s), i box partono all'impazzata e coprono la frase ormai sfocata
-        // Incrementata la durata del volo di ciascun box e lo stagger tra di essi per rendere il movimento meno frenetico e più leggibile
+        // Lo stagger dilazionato previene un effetto visivo caotico o frammentato nel volo dei singoli pensieri
         boxes.forEach((box, index) => {
           const idAttr = box.getAttribute('data-id');
           const id = parseInt(idAttr || '0', 10);
@@ -119,35 +133,46 @@ export function thoughtsIntro(node, params) {
 
           const { dx, dy } = getOffsets(thought);
 
-          // Assicura che riparta dallo stato sparso prima di volare in avanti
           gsap.set(box, { x: dx, y: dy, opacity: 0, scale: 0.8 });
 
-          tl.to(box, {
+          activeTimeline.to(box, {
             x: 0,
             y: 0,
             opacity: 1,
             scale: 1,
             duration: 1,
             ease: 'power3.out'
-          }, 0.5 + index * 0.1); // Sciame ammorbidito con stagger e delay aumentati
+          }, 0.5 + index * 0.1);
         });
-      },
+      }
+    });
+
+    // Il secondo ScrollTrigger gestisce il reset e il rilascio dello scroll solo quando si risale quasi interamente (al 95%) verso la Hero.
+    // La distanza tra 75% e 95% crea un cuscinetto che immunizza il sistema dai micro-rimbalzi inerziali dello scrolling dei browser.
+    ScrollTrigger.create({
+      trigger: node,
+      start: 'top 95%',
       onLeaveBack: () => {
-        // Ripristina lo stato logico di Svelte (rimuove il drag e azzera gli scattered)
+        introCompleted = false;
+
+        // La timeline attiva viene interrotta istantaneamente per impedire la chiamata tardiva al callback di completezza
+        if (activeTimeline) {
+          activeTimeline.kill();
+          activeTimeline = null;
+        }
+
         onReset();
 
-        // Cancella qualsiasi tween in esecuzione sui nodi
         gsap.killTweensOf(boxes);
         gsap.killTweensOf(sentenceContainer);
 
-        // Riporta fisicamente i box allo stato iniziale (sparsi e invisibili)
+        // I posizionamenti inline residui vengono rimossi per consentire il ricalcolo dinamico degli offset corretti
         boxes.forEach(box => {
           const idAttr = box.getAttribute('data-id');
           const id = parseInt(idAttr || '0', 10);
           const thought = thoughts.find(t => t.id === id);
           if (!thought) return;
 
-          // Pulisce immediatamente gli stili inline ereditati da drag/GSAP per ricalcolare l'offset sul posizionamento centrale corretto
           const htmlBox = /** @type {HTMLElement} */ (box);
           htmlBox.style.left = '';
           htmlBox.style.top = '';
@@ -157,7 +182,6 @@ export function thoughtsIntro(node, params) {
           gsap.set(box, { x: dx, y: dy, opacity: 0, scale: 0.8, rotation: 0 });
         });
 
-        // Ripristina la nitidezza del testo
         gsap.set(sentenceContainer, {
           '--blur-amount': '0px',
           '--opacity-amount': 1
