@@ -51,7 +51,7 @@ export const DEFAULT_CONFIG = {
 	maskClamp: [0.0, 1.0],
 	scrollEffect: 'depth',
 	scrollDepth: 0.75,
-	scrollParallax: 0.6,
+	scrollParallax: 0.9,
 };
 
 const MAX_SPLATS = 16;
