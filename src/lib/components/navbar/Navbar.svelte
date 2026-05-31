@@ -42,7 +42,7 @@
 <style>
     .navbar {
         position: fixed;
-        top: -10px;
+        top: 0;
         left: 0;
         width: 100%;
         display: flex;
@@ -50,7 +50,8 @@
         align-items: center;
         padding: var(--spacing-4, 32px) 80px;
         z-index: 100;
-        background-color: var(--background-primary, #F1FAFD); /* Sfondo primario del brand */
+		background-color: var(--background-primary, #F1FAFD);
+        box-sizing: border-box;
     }
 
     .nav-left, .nav-right {

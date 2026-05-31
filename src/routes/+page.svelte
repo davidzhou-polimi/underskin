@@ -5,6 +5,7 @@
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
 	import CerchiQuiz from '$lib/components/ui/CerchiQuiz.svelte';
 	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
+	import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
 	let st = null;
@@ -16,31 +17,30 @@
 
 		// ScrollTrigger per il layer container
 		st = ScrollTrigger.create({
-		trigger: '.layer-container',
-		start: 'top top',
-		end: '+=100%',
-		pin: true,
-		pinSpacing: true,
-		scrub: 1,
-		onUpdate: (self) => {
-			// --- 核心拦截逻辑 ---
-			// 0.35 是选择页出现的进度，如果到了选择页，但 quiz 还没完成，且用户还在试着往下滚
-			if (self.progress > 0.85 && !layers.quizCompleted && self.direction > 0) {
-				self.scroll(st.start + (st.end - st.start) * 0.85); // 强行把滚动位置卡在 0.35 的地方
-				layers.progress = 0.35;
-				return; // 拦截后续执行
-			}
+			trigger: '.layer-container',
+			start: 'top top',
+			end: '+=100%',
+			pin: true,
+			pinSpacing: true,
+			scrub: 1,
+			onUpdate: (self) => {
+				// --- 核心拦截逻辑 ---
+				// 0.35 是选择页出现的进度，如果到了选择页，但 quiz 还没完成，且用户还在试着往下滚
+				if (self.progress > 0.85 && !layers.quizCompleted && self.direction > 0) {
+					self.scroll(st.start + (st.end - st.start) * 0.85); // 强行把滚动位置卡在 0.35 的地方
+					layers.progress = 0.35;
+					return; // 拦截后续执行
+				}
 
-			// 正常更新进度
-			layers.progress = self.progress;
-			
-			// Sblocca quando si torna all'inizio
-			if (self.progress < 0.05 && isLocked) {
-				isLocked = false;
+				// 正常更新进度
+				layers.progress = self.progress;
+
+				// Sblocca quando si torna all'inizio
+				if (self.progress < 0.05 && isLocked) {
+					isLocked = false;
+				}
 			}
-		}
-	});
-		
+		});
 
 		return () => {
 			if (st) st.kill();
@@ -51,16 +51,16 @@
 	function handlePreventScroll(e) {
 		// Se il quiz è espanso, lascia passare gli eventi (sarà il quiz a gestirli)
 		if (quizExpanded) return;
-		
+
 		if (isLocked && e.cancelable) {
 			e.preventDefault();
 		}
 	}
 </script>
 
-<window 
-	onwheel={handlePreventScroll} 
-	ontouchmove={handlePreventScroll} 
+<window
+	onwheel={handlePreventScroll}
+	ontouchmove={handlePreventScroll}
 />
 
 <main class="layer-container">
@@ -74,6 +74,19 @@
 	<PerformanceSection />
 </main>
 
+<section class="test-figma-bg">
+	<div class="background-huge-text">
+		<span>Quindi</span><span class="orange-text">tale</span>smettendo di
+	</div>
+
+	<GlassEffect class="figma-glass-card">
+		<p class="glass-text">
+			Improvviso calo delle prestazioni in situazioni ad alta pressione.<br>
+			L'ansia interferisce con l'esecuzione automatica di competenze consolidate.
+		</p>
+	</GlassEffect>
+</section>
+
 <style>
 	.layer-container {
 		position: relative;
@@ -81,78 +94,50 @@
 		min-height: 100vh;
 		overflow: hidden;
 	}
-</style>
-    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
-</script>
 
-<main>
+	.test-figma-bg {
+		position: relative;
+		min-height: 800px;
+		background-color: #f4f8fb;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		overflow: hidden;
+	}
 
-    <section class="test-figma-bg">
-        
-        <div class="background-huge-text">
-            <span>Quindi</span><span class="orange-text">tale</span>smettendo di
-        </div>
+	.background-huge-text {
+		position: absolute;
+		top: 40%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		font-family: system-ui, sans-serif;
+		font-size: 8rem;
+		font-weight: 500;
+		color: #000000;
+		white-space: nowrap;
+		z-index: 1;
+		letter-spacing: -0.05em;
+	}
 
-        <GlassEffect class="figma-glass-card">
-            <p class="glass-text">
-                Improvviso calo delle prestazioni in situazioni ad alta pressione.<br>
-                L’ansia interferisce con l’esecuzione automatica di competenze consolidate.
-            </p>
-        </GlassEffect>
+	.orange-text {
+		color: #d88e73;
+	}
 
-    </section>
-</main>
+	:global(.figma-glass-card) {
+		position: relative;
+		z-index: 10;
+		max-width: 600px;
+		border-radius: 24px;
+		padding: 32px 40px;
+		margin-top: 100px;
+	}
 
-<style>
-    /* 1. Lo sfondo chiaro della sezione (simile a F1FAFD) */
-    .test-figma-bg {
-        position: relative;
-        min-height: 800px;
-        background-color: #f4f8fb; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-    }
-
-    /* 2. Le scritte giganti che staranno DIETRO al vetro */
-    .background-huge-text {
-        position: absolute;
-        top: 40%; /* Posizionato per essere tagliato a metà dal vetro */
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-family: system-ui, sans-serif;
-        font-size: 8rem; /* Testo enorme */
-        font-weight: 500;
-        color: #000000;
-        white-space: nowrap;
-        z-index: 1; /* Sta sotto la card */
-        letter-spacing: -0.05em;
-    }
-
-    /* Il colore salmone/arancio della parola "tale" nel tuo screen */
-    .orange-text {
-        color: #d88e73; 
-    }
-
-    /* 3. La forma specifica della TUA card in questo contesto */
-    :global(.figma-glass-card) {
-        position: relative;
-        z-index: 10; /* Sta sopra le scritte */
-        max-width: 600px;
-        border-radius: 24px;
-        padding: 32px 40px;
-        /* Sposto un po' la card per sovrapporla bene alle scritte di sfondo */
-        margin-top: 100px; 
-    }
-
-    /* 4. Il testo dentro al vetro */
-    .glass-text {
-        font-family: system-ui, sans-serif;
-        color: #0c2137;
-        font-size: 1.4rem;
-        font-weight: 400;
-        line-height: 1.5;
-        margin: 0;
-    }
+	.glass-text {
+		font-family: system-ui, sans-serif;
+		color: #0c2137;
+		font-size: 1.4rem;
+		font-weight: 400;
+		line-height: 1.5;
+		margin: 0;
+	}
 </style>
