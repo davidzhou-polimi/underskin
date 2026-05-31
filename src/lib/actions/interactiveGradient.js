@@ -1,4 +1,4 @@
-import { InteractiveGradientRenderer } from '$lib/utils/interactiveGradientRenderer.js';
+import { InteractiveGradientRenderer, DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { gsap } from 'gsap';
 
 /**
@@ -64,12 +64,14 @@ export function interactiveGradient(canvas, params = {}) {
 		if (activeTween) activeTween.kill();
 
 		const proxy = renderer.getAnimatableState();
-		const { state: targetState, colorCount } = renderer.getTargetState(newConfig);
+		// DEFAULT_CONFIG come fallback: le proprietà non esplicitate in newConfig vengono riportate
+		// ai valori di default invece di ereditare lo stato della sezione precedente (es. speed, mouseStrength).
+		const { state: targetState, colorCount } = renderer.getTargetState(newConfig, DEFAULT_CONFIG);
 
-		// colorCount non è animabile (è un int GLSL): applicato subito prima del tween
+		// colorCount non è animabile (è un int GLSL): aggiornato subito prima del tween
 		// per evitare glitch cromatici quando il numero di colori cambia tra sezioni.
 		/** @type {any} */ (renderer.material.uniforms).u_color_count.value = colorCount;
-		renderer.config = { ...renderer.config, ...newConfig };
+		renderer.config = { ...DEFAULT_CONFIG, ...newConfig };
 
 		activeTween = gsap.to(proxy, {
 			...targetState,
