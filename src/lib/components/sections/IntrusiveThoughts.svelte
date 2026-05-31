@@ -1,5 +1,4 @@
 <script>
-  import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
   import { draggableThought } from '$lib/actions/draggableThought.js';
   import { thoughtsIntro } from '$lib/actions/thoughtsIntro.js';
 
@@ -16,8 +15,16 @@
   ]);
 
   let isIntroDone = $state(false);
+  let hasCompletedOnce = $state(false);
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
   
+  // Evita di bloccare nuovamente l'utente se ha già completato l'interazione almeno una volta
+  $effect(() => {
+    if (isIntroDone && activeCount === 0) {
+      hasCompletedOnce = true;
+    }
+  });
+
   // Il testo rimane nitido finché l'animazione di copertura non è completata
   let blurAmount = $derived(isIntroDone ? activeCount * 1.5 : 0); 
   let opacityAmount = $derived(isIntroDone ? (activeCount === 0 ? 1 : 0.4 + ((7 - activeCount) * 0.08)) : 1);
@@ -41,7 +48,8 @@
     isIntroDone = val;
   }
 
-  let hasLocked = $state(false);
+  // Utilizzato un let semplice anziché $state per evitare l'auto-tracking di Svelte 5 all'interno del blocco $effect
+  let hasLocked = false;
   let touchStart = 0;
 
   /**
@@ -103,7 +111,7 @@
 
   // Gestione reattiva dello scroll-lock monodirezionale e posizionamento della sezione
   $effect(() => {
-    const shouldLock = isIntroDone && activeCount > 0;
+    const shouldLock = isIntroDone && activeCount > 0 && !hasCompletedOnce;
     
     if (shouldLock) {
       window.addEventListener('wheel', preventScrollDown, { passive: false });
@@ -164,8 +172,10 @@
       role="button" 
       tabindex="0"
     >
+      <div class="shadow-container">
+        <div class="shadow-shape tail-{t.tailDir}"></div>
+      </div>
       <div class="thought-bubble tail-{t.tailDir}">
-        <GlassEffect class="thought-background" />
         {t.text}
       </div>
     </div>
@@ -210,19 +220,13 @@
     user-select: none;
     white-space: nowrap;
     
-    /* Permette di sovrapporre il testo sopra allo sfondo GlassEffect */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    /* Proietta una splendida ombra tridimensionale ad alta definizione che ricalca 
-       la forma esatta del clip-path del fumetto (compresa la codina) */
-    filter: drop-shadow(0px 8px 24px rgba(12, 33, 55, 0.12)) drop-shadow(0px 2px 6px rgba(12, 33, 55, 0.06));
   }
 
   .thought-bubble {
     position: relative;
-    padding: var(--spacing-3) var(--spacing-7); 
     
     font-family: var(--font-family-base);
     font-size: var(--text-caption-size);
@@ -234,25 +238,36 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+
+    /* Glass Effect integrato direttamente: permette a backdrop-filter di operare 
+       sul reale sfondo della pagina poiché nessun antenato ha proprietà 'filter' isolate */
+    background-color: rgb(from var(--neutral-200) r g b / 0.3);
+    border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
-  /* Forza GlassEffect ad agire come sfondo a copertura totale del fumetto */
-  :global(.thought-background) {
-    position: absolute !important;
-    top: 0;
+  /* Contenitore dell'ombra e del bordo proiettati. Posizionato a -9999px.
+     Applica i filtri drop-shadow che proiettano bordo e ombre 9999px verso il basso */
+  .shadow-container {
+    position: absolute;
+    top: -9999px;
     left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    
   }
+
+  
   
   .tail-left {
-    padding-left: var(--spacing-8);
+    padding: var(--spacing-3) var(--spacing-7) var(--spacing-3) var(--spacing-8); 
     clip-path: polygon(15px 0%, calc(100% - 16px) 0%, calc(100% - 10px) 1.5px, calc(100% - 5px) 5px, calc(100% - 1.5px) 10px, 100% 16px, 100% calc(100% - 16px), calc(100% - 1.5px) calc(100% - 10px), calc(100% - 5px) calc(100% - 5px), calc(100% - 10px) calc(100% - 1.5px), calc(100% - 16px) 100%, 31px 100%, 25px calc(100% - 1.5px), 20px calc(100% - 5px), 16.5px calc(100% - 10px), 15px calc(100% - 16px), 15px 15px, 0% 0%);
   }
 
   .tail-right {
-    padding-right: var(--spacing-8);
+    padding: var(--spacing-3) var(--spacing-8) var(--spacing-3) var(--spacing-7); 
     clip-path: polygon(0% 16px, 1.5px 10px, 5px 5px, 10px 1.5px, 16px 0%, calc(100% - 15px) 0%, 100% 0%, calc(100% - 15px) 15px, calc(100% - 15px) calc(100% - 16px), calc(100% - 16.5px) calc(100% - 10px), calc(100% - 20px) calc(100% - 5px), calc(100% - 25px) calc(100% - 1.5px), calc(100% - 31px) 100%, 16px 100%, 10px calc(100% - 1.5px), 5px calc(100% - 5px), 1.5px calc(100% - 10px), 0% calc(100% - 16px));
   }
 </style>

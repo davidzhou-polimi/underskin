@@ -60,7 +60,7 @@
 		
 		/* Applicazione rigorosa dei token tipografici d'ambiente richiesti */
 		font-family: var(--font-family-base);
-		font-size: var(--text-body-size);
+		font-size: var(--text-m);
 		font-weight: var(--text-body-weight);
 	}
 
@@ -68,22 +68,12 @@
         position: relative;
 		display: inline;
 		font-weight: 700; /* Spessore marcato per evidenziare i termini */
-        text-decoration: dotted underline;
-        text-decoration-thickness: 4px;
-        text-underline-offset: 0px;
-        text-decoration-color: currentColor;
+        padding-bottom: 6px;
 	}
 
 	.favorito-color {
 		--gradient-c1: var(--azzurro-800);
 		--gradient-c2: var(--azzurro-300);
 		--gradient-c3: var(--azzurro-600);
-
-        /* Applica il ritaglio e imposta l'effetto trasparenza ereditabile anche dalla sottolineatura */
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        background-size: 300% 100%;
 	}
 </style>
