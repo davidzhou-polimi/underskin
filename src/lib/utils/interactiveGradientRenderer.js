@@ -141,18 +141,23 @@ const fsSource = `
 	void main() {
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
 		vec2 uv = v_uv;
-		vec2 centered_uv_aspect = (uv - 0.5) * aspect;
 		
-		// 1. Mouse Soft Attraction (SDF-like field)
-		vec2 mouse_diff = (uv - u_mouse) * aspect;
-		float mouse_dist = length(mouse_diff);
-		// Mouse adds softly to the density instead of harsh distortion
-		float mouse_attraction = smoothstep(0.8, 0.0, mouse_dist) * 0.6;
+		// 1. Mouse Gravitational UV Warp (slow current pulling existing color toward cursor)
+		vec2 to_mouse = (u_mouse - uv) * aspect;
+		float mouse_dist = length(to_mouse);
+		
+		// Wide reach (radius ~0.40) and slow soft transition
+		float mouse_attraction = smoothstep(0.40, 0.0, mouse_dist);
+		
+		// Inverted warp direction (subtracting to_mouse pulls texture coordinates away, dragging colors toward mouse)
+		vec2 warp_vector = (u_mouse - uv) * mouse_attraction * 0.10;
+		vec2 warped_by_mouse_uv = uv - warp_vector;
+		vec2 centered_uv_aspect = (warped_by_mouse_uv - 0.5) * aspect;
 		
 		// 2. Scroll vortex/spiral coordinate mapping
 		float scroll_angle = u_scroll * 3.14159 * 1.5;
 		mat2 scroll_rot = mat2(cos(scroll_angle), sin(scroll_angle), -sin(scroll_angle), cos(scroll_angle));
-		vec2 centered_uv = uv - 0.5;
+		vec2 centered_uv = warped_by_mouse_uv - 0.5;
 		centered_uv = mix(centered_uv, scroll_rot * centered_uv, u_scroll * 0.7);
 		vec2 shifted_uv = centered_uv + 0.5;
 		
@@ -175,8 +180,8 @@ const fsSource = `
 		// Map mask from 0-1 to -1 to 1 to act as a bias for the noise
 		float target_bias = (target_shape_mask - 0.5) * 2.0;
 		
-		// 6. Combine everything
-		float base_fluid = shape_noise + mouse_attraction;
+		// 6. Combine everything without additive color bias
+		float base_fluid = shape_noise;
 		
 		// Only apply SDF morphing if u_target_shape > 0.5
 		float is_shaped = step(0.5, u_target_shape);
