@@ -50,7 +50,7 @@
         align-items: center;
         padding: var(--spacing-4, 32px) 80px;
         z-index: 100;
-		background-color: var(--background-primary, #F1FAFD);
+        background-color: transparent;
         box-sizing: border-box;
     }
 

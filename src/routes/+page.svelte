@@ -74,7 +74,7 @@
 	<PerformanceSection />
 </main>
 
-<section class="test-figma-bg">
+<section class="test-figma-bg hidden">
 	<div class="background-huge-text">
 		<span>Quindi</span><span class="orange-text">tale</span>smettendo di
 	</div>
@@ -88,6 +88,10 @@
 </section>
 
 <style>
+	.test-figma-bg.hidden {
+		display: none;
+	}
+
 	.layer-container {
 		position: relative;
 		width: 100%;
