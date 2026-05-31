@@ -23,8 +23,8 @@
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container" use:scrollReveal>
 		<p class="narrative-text">
-			Dopo il recupero, molti atleti convivono<br />
-			con la 
+			Dopo il recupero, molti atleti convivono con<br />
+			la 
 			<span 
 				class="highlighted-keyword gradient-text animate-gradient-text infortunato-color"
 				role="tooltip"
@@ -45,9 +45,8 @@
 				onmouseenter={() => tooltip.show(textResetMentale, 'paragrafo')}
 				onmouseleave={() => tooltip.hide()}
 			>
-				reset mentale:
-			</span> 
-			smettendo di <br />
+				reset mentale
+			</span>: smettendo di <br />
 			competere con il ricordo del dolore.
 		</p>
 	</div>
