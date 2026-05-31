@@ -11,11 +11,11 @@
         '36% soffre di disturbi del sonno'
     ];
 
-    const scrollSteps = stats.length;
+    const scrollSteps = stats.length + 1;
     const scrollSegment = 0.5;
     /** @type {HTMLElement | null} */
     let section = null;
-    let activeIndex = 0;
+    let activeIndex = -1;
 
     onMount(() => {
         const updateActiveIndex = () => {
@@ -25,7 +25,7 @@
             const viewportHeight = window.innerHeight;
             const scrollableDistance = Math.max(section.offsetHeight - viewportHeight, 1);
             const progress = Math.min(Math.max(-sectionRect.top / (scrollableDistance * scrollSegment), 0), 1);
-            const nextIndex = Math.min(Math.floor(progress * scrollSteps), scrollSteps - 1);
+            const nextIndex = Math.min(Math.floor(progress * scrollSteps) - 1, stats.length - 1);
 
             activeIndex = nextIndex;
         };
@@ -49,11 +49,13 @@
             </div>
 
             <div class="stats-stage" aria-live="polite">
-                {#key activeIndex}
-                    <div class="phrase" in:fly={{ y: 18, duration: 220, easing: cubicOut }} out:fade={{ duration: 140 }}>
-                        <span>{stats[activeIndex]}</span>
-                    </div>
-                {/key}
+                {#if activeIndex >= 0}
+                    {#key activeIndex}
+                        <div class="phrase" in:fly={{ y: 18, duration: 220, easing: cubicOut }} out:fade={{ duration: 140 }}>
+                            <span>{stats[activeIndex]}</span>
+                        </div>
+                    {/key}
+                {/if}
             </div>
         </div>
     </div>
