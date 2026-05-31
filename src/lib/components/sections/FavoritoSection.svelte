@@ -1,33 +1,40 @@
 <script>
-	// 1. Importa le azioni necessarie
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 </script>
 
-<section id="hero" class="hero-section" use:trackSection>
+<section id="favorito" class="favorito-section" use:trackSection>
 	<!--
 		Commento solo il PERCHÉ: Rimuoviamo absolute={true} per far sì che il gradiente rimanga 
 		fixed sullo sfondo di tutta la pagina, coprendo anche gli spaziatore durante lo scroll.
 	-->
-	<InteractiveGradient config={{ coverage: 0.3, maskClamp: [0.0, 0.7] }} />
+	<InteractiveGradient
+		config={{
+			colors: ['var(--background-primary)', 'var(--archetipi-favorito)', 'var(--archetipi-favorito)'],
+			coverage: 1.0,
+			maskClamp: [0.0, 1.0]
+		}}
+	/>
 	<div class="content">
-		<!-- Inserisci qui il contenuto della sezione -->
+		<h2>Sezione Favorito</h2>
 	</div>
 </section>
 
 <style>
-	/* 3. Usa esclusivamente le variabili token per lo styling */
-	.hero-section {
+	/* Use relative positioning and hidden overflow to properly bound the absolute canvas */
+	.favorito-section {
 		position: relative;
 		overflow: hidden;
 		height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		color: var(--content-primary);
 	}
 
 	.content {
 		position: relative;
 		z-index: 1;
+		text-align: center;
 	}
 </style>

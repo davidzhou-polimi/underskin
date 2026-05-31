@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
+	import { narrative } from '$lib/stores/narrative.svelte.js';
 
 	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 3000 } = $props();
 
@@ -34,27 +35,25 @@
 		{ label: "Infortunato", sectionId: 'infortunato' }
 	];
 
-	/**
-	 * Gestione dello scorrimento programmatico senza alterare l'URL
-	 * @param {string} sectionId
-	 */
+	// Commento solo il PERCHÉ: Cambia la sezione attiva nello store narrative se la sezione fa parte dei rami 
+	// a bivi o della home (hero), altrimenti effettua lo scroll per le altre sezioni statiche.
+	/** @param {string} sectionId */
 	const handleNavClick = (sectionId) => {
-		const target = document.getElementById(sectionId);
-		if (target) {
-			target.scrollIntoView({ behavior: 'smooth' });
+		if (['hero', 'favorito', 'insoddisfatto', 'infortunato'].includes(sectionId)) {
+			narrative.activeSection = sectionId;
+		} else {
+			const target = document.getElementById(sectionId);
+			if (target) {
+				target.scrollIntoView({ behavior: 'smooth' });
+			}
 		}
 	};
 
-	/**
-	 * Gestione dello scorrimento programmatico per il logo (torna a inizio pagina)
-	 * @param {MouseEvent} e
-	 */
+	// Commento solo il PERCHÉ: Consente di tornare alla Home (Hero) reimpostando lo stato attivo nello store.
+	/** @param {MouseEvent} e */
 	const handleLogoClick = (e) => {
 		e.preventDefault();
-		const target = document.getElementById('hero');
-		if (target) {
-			target.scrollIntoView({ behavior: 'smooth' });
-		}
+		narrative.activeSection = 'hero';
 	};
 
 	onMount(() => {
@@ -147,7 +146,7 @@
 {#snippet menu()}
 	<div class="link-nav">
 		{#each links as link}
-			{@const isActive = scroll.activeSection === link.sectionId}
+			{@const isActive = narrative.activeSection === link.sectionId}
 			<button 
 				type="button"
 				class="link-nav__item" 

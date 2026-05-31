@@ -2,8 +2,14 @@
 	import { interactiveGradient } from '$lib/actions/interactiveGradient.js';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
 
-	/** @type {{ config?: import('$lib/utils/interactiveGradientRenderer.js').GradientConfig }} */
-	let { config = {} } = $props();
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} [config]
+	 * @property {boolean} [absolute] - Whether the canvas is absolute-positioned to its relative parent container
+	 */
+
+	/** @type {Props} */
+	let { config = {}, absolute = false } = $props();
 
 	/** @type {any} */
 	let canvasElement;
@@ -19,6 +25,7 @@
 	bind:this={canvasElement}
 	use:interactiveGradient={{ config }}
 	class="interactive-gradient-canvas"
+	class:absolute
 ></canvas>
 
 <style>
@@ -31,5 +38,10 @@
 		z-index: -1;
 		pointer-events: none;
 		background-color: var(--background-primary);
+	}
+
+	/* Override fixed positioning to allow section-bound background rendering */
+	.interactive-gradient-canvas.absolute {
+		position: absolute;
 	}
 </style>

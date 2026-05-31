@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 /**
  * @typedef {Object} GradientConfig
- * @property {{ bg?: string, c1?: string, c2?: string, c3?: string } | null} [colors]
+ * @property {{ bg?: string, c1?: string, c2?: string, c3?: string } | { bg?: string, colors?: string[] } | string[] | null} [colors]
  * @property {number} [speed]            - Animation speed multiplier (default 1.0)
  * @property {number} [waveFrequency]    - Spatial frequency of noise blobs (lower = larger blobs)
  * @property {[number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
@@ -56,35 +56,101 @@ export const DEFAULT_CONFIG = {
 
 const MAX_SPLATS = 16;
 
+// Commento solo il PERCHÉ: Consente di risolvere le espressioni CSS `var(--token)` in valori 
+// esadecimali reali leggibili da Three.js senza dover dipendere da valori hardcoded in JS.
 /**
- * @param {{ bg?: string, c1?: string, c2?: string, c3?: string } | null} [override]
+ * @param {any} colorVal
+ * @returns {string}
+ */
+function resolveColorString(colorVal) {
+	if (typeof window !== 'undefined' && typeof colorVal === 'string' && colorVal.startsWith('var(')) {
+		const match = colorVal.match(/var\((--[a-zA-Z0-9_-]+)\)/);
+		if (match) {
+			const style = getComputedStyle(document.documentElement);
+			return style.getPropertyValue(match[1]).trim() || colorVal;
+		}
+	}
+	return colorVal;
+}
+
+/**
+ * @param {any} [override]
  */
 function getThemeColors(override = null) {
-	if (override) {
-		return {
-			bg: new THREE.Color(override.bg ?? '#f1fafd'),
-			c1: new THREE.Color(override.c1 ?? '#6a96df'),
-			c2: new THREE.Color(override.c2 ?? '#8035d2'),
-			c3: new THREE.Color(override.c3 ?? '#d86146'),
-		};
+	let bgVal = '#f1fafd';
+	/** @type {string[]} */
+	let gradientColors = [];
+
+	// Fallback to global CSS custom design token properties when running in a browser environment
+	if (typeof window !== 'undefined') {
+		const style = getComputedStyle(document.documentElement);
+		bgVal = style.getPropertyValue('--background-primary').trim() || '#f1fafd';
+		gradientColors = [
+			style.getPropertyValue('--archetipi-favorito').trim() || '#6a96df',
+			style.getPropertyValue('--archetipi-insoddisfatto').trim() || '#8035d2',
+			style.getPropertyValue('--archetipi-infortunato').trim() || '#d86146'
+		];
+	} else {
+		gradientColors = ['#6a96df', '#8035d2', '#d86146'];
 	}
-	if (typeof window === 'undefined') return {
-		bg: new THREE.Color('#f1fafd'),
-		c1: new THREE.Color('#6a96df'),
-		c2: new THREE.Color('#8035d2'),
-		c3: new THREE.Color('#d86146')
-	};
-	const style = getComputedStyle(document.documentElement);
-	const bgVal = style.getPropertyValue('--background-primary').trim() || '#f1fafd';
-	const c1Val = style.getPropertyValue('--azzurro-500').trim() || '#6a96df';
-	const c2Val = style.getPropertyValue('--viola-500').trim() || '#8035d2';
-	const c3Val = style.getPropertyValue('--arancione-500').trim() || '#d86146';
+
+	// Resolve the color formats supporting arrays, configurations with bg, or legacy flat objects
+	if (override) {
+		if (Array.isArray(override)) {
+			gradientColors = override;
+		} else if (typeof override === 'object') {
+			if (override.bg !== undefined) {
+				bgVal = override.bg;
+			}
+			if (Array.isArray(override.colors)) {
+				gradientColors = override.colors;
+			} else {
+				const temp = [];
+				if (override.c1 !== undefined) temp.push(override.c1);
+				else if (override.colors?.[0] !== undefined) temp.push(override.colors[0]);
+				else temp.push(gradientColors[0]);
+
+				if (override.c2 !== undefined) temp.push(override.c2);
+				else if (override.colors?.[1] !== undefined) temp.push(override.colors[1]);
+				else temp.push(gradientColors[1]);
+
+				if (override.c3 !== undefined) temp.push(override.c3);
+				else if (override.colors?.[2] !== undefined) temp.push(override.colors[2]);
+				else temp.push(gradientColors[2]);
+
+				gradientColors = temp;
+			}
+		}
+	}
+
+	// Commento solo il PERCHÉ: Converte le variabili CSS in esadecimale prima di istanziare THREE.Color
+	// per evitare che Three.js fallisca il parsing della stringa var().
+	const finalBg = resolveColorString(bgVal);
+	const finalColors = gradientColors.map(resolveColorString);
+
 	return {
-		bg: new THREE.Color(bgVal),
-		c1: new THREE.Color(c1Val),
-		c2: new THREE.Color(c2Val),
-		c3: new THREE.Color(c3Val)
+		bg: new THREE.Color(finalBg),
+		colors: finalColors.map(c => new THREE.Color(c))
 	};
+}
+
+/**
+ * Pads the color array to meet WebGL uniform array length requirements
+ * @param {THREE.Color[]} themeColorsArray
+ * @param {number} maxColors
+ */
+function getUniformColors(themeColorsArray, maxColors = 16) {
+	const uniformArray = [];
+	const length = themeColorsArray.length;
+	for (let i = 0; i < maxColors; i++) {
+		if (i < length) {
+			uniformArray.push(themeColorsArray[i]);
+		} else {
+			// Pad the remaining slots with the last active color to avoid blending issues with black/null colors
+			uniformArray.push(length > 0 ? themeColorsArray[length - 1] : new THREE.Color(0, 0, 0));
+		}
+	}
+	return uniformArray;
 }
 
 const fsSource = `
@@ -101,7 +167,8 @@ const fsSource = `
 	uniform float u_shape_morph;
 
 	uniform vec3 u_bg_color;
-	uniform vec3 u_colors[3];
+	uniform vec3 u_colors[16];
+	uniform int u_color_count;
 
 	// Configurable animation parameters
 	uniform float u_speed;
@@ -325,9 +392,18 @@ const fsSource = `
 
 		// 8. Color blending — scroll_z offsets the color noise too so colors morph with scroll
 		float blend_range = u_color_blending * 0.8;
-		float blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.7, scaled_time * 0.1 + scroll_z * 0.5)));
-		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
-		shape_color = mix(shape_color, u_colors[2], smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07 + scroll_z * 0.35))));
+		vec3 shape_color = u_colors[0];
+		for (int i = 1; i < 16; i++) {
+			if (i >= u_color_count) break;
+			// We dynamically scale frequency and coordinate offsets based on indices to match the legacy 3-color blending
+			// mathematically, while scaling organically for any additional user-configured colors.
+			float scale = 0.7 + float(i - 1) * 0.2;
+			vec2 offset = vec2(float(i - 1) * 1.5);
+			float time_mult = 0.1 - float(i - 1) * 0.03;
+			float scroll_mult = 0.5 - float(i - 1) * 0.15;
+			float layer_blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * scale + offset, scaled_time * time_mult + scroll_z * scroll_mult)));
+			shape_color = mix(shape_color, u_colors[i], layer_blend);
+		}
 
 		// 9. Film grain — step-based animation to avoid high-frequency flickering.
 		// If u_grain_speed is 0.0, the grain pattern remains completely static.
@@ -403,7 +479,8 @@ export class InteractiveGradientRenderer {
 				u_target_shape:   { value: this.shape.id },
 				u_shape_morph:    { value: 0 },
 				u_bg_color:       { value: this.themeColors.bg },
-				u_colors:         { value: [this.themeColors.c1, this.themeColors.c2, this.themeColors.c3] },
+				u_colors:         { value: getUniformColors(this.themeColors.colors, 16) },
+				u_color_count:    { value: this.themeColors.colors.length },
 				// Configurable parameters
 				u_speed:          { value: this.config.speed },
 				u_wave_freq:      { value: this.config.waveFrequency },
@@ -447,7 +524,8 @@ export class InteractiveGradientRenderer {
 		this.themeColors = getThemeColors(this.config.colors);
 		const uniforms = /** @type {any} */ (this.material.uniforms);
 		uniforms.u_bg_color.value = this.themeColors.bg;
-		uniforms.u_colors.value = [this.themeColors.c1, this.themeColors.c2, this.themeColors.c3];
+		uniforms.u_colors.value = getUniformColors(this.themeColors.colors, 16);
+		uniforms.u_color_count.value = this.themeColors.colors.length;
 	}
 
 	/**

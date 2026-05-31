@@ -10,6 +10,8 @@ if (typeof window !== 'undefined') {
 /**
  * Azione Svelte per tracciare quando una sezione entra nello schermo.
  * Aggiorna lo store globale `scroll.activeSection`.
+ * @param {HTMLElement} node
+ * @param {{ id?: string, trigger?: Object }} [params]
  */
 export function trackSection(node, params = {}) {
 	const sectionId = params.id || node.id || 'unknown';
