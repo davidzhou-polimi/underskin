@@ -22,7 +22,8 @@ import * as THREE from 'three';
  * @property {number} [shapeId]          - 0=fluid, 1=circle, 2=capsule
  * @property {number} [morphProgress]    - Shape morph 0.0–1.0
  * @property {[number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
- * @property {'vortex' | 'none'} [scrollEffect] - Scroll interaction type
+ * @property {'depth' | 'none'} [scrollEffect] - Scroll interaction: 'depth' = NEAT-style infinite procedural scroll
+ * @property {number} [scrollDepth]     - Depth units traversed over full scroll (higher = more dramatic morph)
  */
 
 /** @type {Required<GradientConfig>} */
@@ -47,7 +48,8 @@ export const DEFAULT_CONFIG = {
 	shapeId: 0,
 	morphProgress: 0.0,
 	maskClamp: [0.0, 1.0],
-	scrollEffect: 'vortex',
+	scrollEffect: 'depth',
+	scrollDepth: 0.75,
 };
 
 const MAX_SPLATS = 16;
@@ -112,6 +114,7 @@ const fsSource = `
 	uniform float u_color_blending;
 	uniform float u_vorticity;
 	uniform vec2 u_mask_clamp;
+	uniform float u_scroll_depth;
 
 	// Persistent fluid splat field
 	uniform vec4 u_splats[16];
@@ -225,16 +228,19 @@ const fsSource = `
 		return force;
 	}
 
-	vec2 domainWarp(vec2 uv, float time, float mouse_effect, float scroll_effect) {
-		vec3 p = vec3(uv * u_wave_freq, time * 0.12);
+	vec2 domainWarp(vec2 uv, float time, float mouse_effect) {
+		// Scroll advances the Z axis of the noise — scrolling travels through an infinite 3D fluid field.
+		// The gradient morphs continuously and never repeats, like NEAT's yOffset-driven depth traversal.
+		float z = time * 0.12 + u_scroll * u_scroll_depth;
+		vec3 p = vec3(uv * u_wave_freq, z);
 
 		vec2 q = vec2(
 			snoise(p),
 			snoise(p + vec3(5.2, 1.3, 0.8))
 		);
 
-		// u_wave_amp.x scales both the internal feedback (1.4) and the first-layer output (0.35 = 1.4 * 0.25)
-		vec3 r_p = p + vec3(q * u_wave_amp.x, time * 0.08) + vec3(mouse_effect * 0.4, scroll_effect * 0.6, 0.0);
+		// u_wave_amp.x scales both the internal feedback and the first-layer output (0.35 = 1.4 * 0.25)
+		vec3 r_p = p + vec3(q * u_wave_amp.x, time * 0.08) + vec3(mouse_effect * 0.4, 0.0, 0.0);
 		vec2 r = vec2(
 			snoise(r_p),
 			snoise(r_p + vec3(8.3, 2.8, 1.7))
@@ -272,23 +278,19 @@ const fsSource = `
 		vec2 warped_by_mouse_uv = uv - warp_vector;
 		vec2 centered_uv_aspect = (warped_by_mouse_uv - 0.5) * aspect;
 
-		// 3. Scroll vortex/spiral coordinate mapping
-		float scroll_angle = u_scroll * 3.14159 * 1.5;
-		mat2 scroll_rot = mat2(cos(scroll_angle), sin(scroll_angle), -sin(scroll_angle), cos(scroll_angle));
-		vec2 centered_uv = warped_by_mouse_uv - 0.5;
-		centered_uv = mix(centered_uv, scroll_rot * centered_uv, u_scroll * 0.7);
-		vec2 shifted_uv = centered_uv + 0.5;
+		// 3. Domain warping — scroll depth is now baked into domainWarp's Z axis
+		vec2 warped_uv = domainWarp(warped_by_mouse_uv * aspect, scaled_time, mouse_attraction);
 
-		// 4. Domain warping (deforms the coordinate grid recursively)
-		vec2 warped_uv = domainWarp(shifted_uv * aspect, scaled_time, mouse_attraction, u_scroll);
+		// 4. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
+		// Cap force magnitude to avoid UV tearing at high splat densities.
+		vec2 splat_force = computeSplatField(uv);
+		float sf_len = length(splat_force);
+		splat_force *= min(1.0, 0.15 / max(sf_len, 0.0001));
+		warped_uv -= splat_force * aspect;
 
-		// 5. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
-		// This moves the actual colors rather than just distorting the lookup space.
-		// aspect conversion keeps the displacement isotropic on screen.
-		warped_uv -= computeSplatField(uv) * aspect;
-
-		// 6. Base fluid noise — 0.75 factor maintains original shape/warp frequency ratio
-		float shape_noise = snoise(vec3(warped_uv * (u_wave_freq * 0.75), scaled_time * 0.08));
+		// 5. Base fluid noise — scroll depth offset ensures infinite procedural variation on scroll
+		float scroll_z = u_scroll * u_scroll_depth * 0.8;
+		float shape_noise = snoise(vec3(warped_uv * (u_wave_freq * 0.75), scaled_time * 0.08 + scroll_z));
 
 		// 7. SDF shape morphing
 		float circle_sdf = sdCircle(centered_uv_aspect, 0.35);
@@ -320,7 +322,7 @@ const fsSource = `
 		float blend_range = u_color_blending * 0.8;
 		float blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.7, scaled_time * 0.1)));
 		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
-		shape_color = mix(shape_color, u_colors[2], smoothstep(-0.4, 0.8, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07))));
+		shape_color = mix(shape_color, u_colors[2], smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * 0.9 + vec2(1.5), scaled_time * 0.07))));
 
 		// 9. Film grain — step-based animation to avoid high-frequency flickering.
 		// If u_grain_speed is 0.0, the grain pattern remains completely static.
@@ -410,6 +412,7 @@ export class InteractiveGradientRenderer {
 				u_color_blending: { value: this.config.colorBlending },
 				u_vorticity:      { value: this.config.splatVorticity },
 				u_mask_clamp:     { value: new THREE.Vector2(...this.config.maskClamp) },
+				u_scroll_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth },
 				// Splat system
 				u_splats:         { value: this.splatPool },
 				u_splat_count:    { value: 0 },
@@ -454,6 +457,7 @@ export class InteractiveGradientRenderer {
 	 */
 	updateScroll(value) {
 		if (this.config.scrollEffect === 'none') return;
+		// Scroll progress is passed to the shader as u_scroll and used as depth offset in domainWarp
 		if (value > 1.0) {
 			const docHeight = document.documentElement.scrollHeight - window.innerHeight;
 			this.scroll.target = docHeight > 0 ? value / docHeight : 0;
@@ -493,6 +497,8 @@ export class InteractiveGradientRenderer {
 		if (options.splatVorticity !== undefined) u.u_vorticity.value = this.config.splatVorticity;
 		if (options.splatRadius !== undefined)    u.u_splat_radius.value = this.config.splatRadius;
 		if (options.maskClamp !== undefined)      u.u_mask_clamp.value.set(...this.config.maskClamp);
+		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined)
+			u.u_scroll_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth;
 		if (options.colors !== undefined)         this.updateColors();
 		if (options.shapeId !== undefined)        this.updateShape(this.config.shapeId, this.config.morphProgress);
 	}
