@@ -1,27 +1,9 @@
 <script>
     // Commento solo il PERCHÉ: Importa trackSection per aggiornare lo store dello scroll
-    // e InteractiveGradient per renderizzare lo sfondo animato specifico di questa sezione.
     import { trackSection } from "$lib/actions/trackSection.js";
-    import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
 </script>
 
 <section id="insoddisfatto" class="insoddisfatto-section" use:trackSection>
-    <!--
-		Commento solo il PERCHÉ: Imposta il gradiente con la tonalità viola associata
-		all'archetipo insoddisfatto e copre l'intero viewport.
-	-->
-    <InteractiveGradient
-        config={{
-            colors: [
-                "var(--viola-200)",
-                "var(--archetipi-insoddisfatto)",
-                "var(--viola-600)",
-            ],
-            grainIntensity: 0.025,
-            coverage: 1.0,
-            maskClamp: [0.0, 1.0],
-        }}
-    />
     <div class="content">
         <h2>INSODDISFATTO</h2>
     </div>

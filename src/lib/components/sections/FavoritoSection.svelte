@@ -1,20 +1,8 @@
 <script>
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 </script>
 
 <section id="favorito" class="favorito-section" use:trackSection>
-	<!--
-		Commento solo il PERCHÉ: Rimuoviamo absolute={true} per far sì che il gradiente rimanga 
-		fixed sullo sfondo di tutta la pagina, coprendo anche gli spaziatore durante lo scroll.
-	-->
-	<InteractiveGradient
-		config={{
-			colors: ['var(--azzurro-200)', 'var(--archetipi-favorito)', 'var(--azzurro-600)'],
-			coverage: 1.0,
-			maskClamp: [0.0, 1.0]
-		}}
-	/>
 	<div class="content">
 		<h2>FAVORITO</h2>
 	</div>

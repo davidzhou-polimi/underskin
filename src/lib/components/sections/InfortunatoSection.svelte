@@ -1,26 +1,9 @@
 <script>
     // Commento solo il PERCHÉ: Importa trackSection per sincronizzare lo scroll attivo
-    // e InteractiveGradient per il canvas dello sfondo.
     import { trackSection } from "$lib/actions/trackSection.js";
-    import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
 </script>
 
 <section id="infortunato" class="infortunato-section" use:trackSection>
-    <!--
-		Commento solo il PERCHÉ: Imposta il gradiente con la tonalità arancione associata
-		all'archetipo infortunato coprendo l'intero sfondo.
-	-->
-    <InteractiveGradient
-        config={{
-            colors: [
-                "var(--arancione-200)",
-                "var(--archetipi-infortunato)",
-                "var(--arancione-600)",
-            ],
-            coverage: 1.0,
-            maskClamp: [0.0, 1.0],
-        }}
-    />
     <div class="content">
         <h2>INFORTUNATO</h2>
     </div>

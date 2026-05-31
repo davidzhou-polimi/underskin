@@ -528,6 +528,21 @@ export class InteractiveGradientRenderer {
 		uniforms.u_color_count.value = this.themeColors.colors.length;
 	}
 
+	// Commento solo il PERCHÉ: Risolve la palette di colori configurata (anche con var CSS)
+	// e restituisce i colori formattati e allineati a 16 slot per le uniform di WebGL.
+	/**
+	 * @param {any} colorsOverride
+	 */
+	resolvePalette(colorsOverride) {
+		const resolved = getThemeColors(colorsOverride);
+		return {
+			bg: resolved.bg,
+			colors: getUniformColors(resolved.colors, 16),
+			count: resolved.colors.length
+		};
+	}
+
+
 	/**
 	 * @param {number} x - normalized x [0-1]
 	 * @param {number} y - normalized y [0-1]

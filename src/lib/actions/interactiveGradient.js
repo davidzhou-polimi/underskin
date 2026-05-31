@@ -1,4 +1,5 @@
 import { InteractiveGradientRenderer } from '$lib/utils/interactiveGradientRenderer.js';
+import { gsap } from 'gsap';
 
 /**
  * @typedef {Object} GradientParams
@@ -41,17 +42,111 @@ export function interactiveGradient(canvas, params = {}) {
 	window.addEventListener('resize', handleResize);
 	window.addEventListener('colors-update', handleThemeUpdate);
 
+	/** @type {gsap.core.Tween | null} */
+	let activeTween = null;
+
+	// Commento solo il PERCHÉ: GSAP interpola fluidamente sia i parametri scalari (coverage, speed) 
+	// sia i canali cromatici (R, G, B) delle uniform di Three.js per evitare cambi di stato netti.
+	/**
+	 * @param {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} newConfig
+	 * @param {number} [duration]
+	 */
+	function transitionConfig(newConfig, duration = 1.2) {
+		if (activeTween) {
+			activeTween.kill();
+		}
+
+		const u = renderer.material.uniforms;
+		const targetValues = /** @type {any} */ ({});
+
+		const startSpeed = u.u_speed.value;
+		const startCoverage = u.u_coverage.value;
+		const startGrain = u.u_grain_intensity.value;
+		const startClampMin = u.u_mask_clamp.value.x;
+		const startClampMax = u.u_mask_clamp.value.y;
+
+		const targetSpeed = newConfig.speed !== undefined ? newConfig.speed : renderer.config.speed;
+		const targetCoverage = newConfig.coverage !== undefined ? newConfig.coverage : renderer.config.coverage;
+		const targetGrain = newConfig.grainIntensity !== undefined ? newConfig.grainIntensity : renderer.config.grainIntensity;
+		const targetClampMin = newConfig.maskClamp !== undefined ? newConfig.maskClamp[0] : renderer.config.maskClamp[0];
+		const targetClampMax = newConfig.maskClamp !== undefined ? newConfig.maskClamp[1] : renderer.config.maskClamp[1];
+
+		/** @type {any} */
+		const proxy = {
+			speed: startSpeed,
+			coverage: startCoverage,
+			grainIntensity: startGrain,
+			clampMin: startClampMin,
+			clampMax: startClampMax,
+		};
+
+
+		targetValues.speed = targetSpeed;
+		targetValues.coverage = targetCoverage;
+		targetValues.grainIntensity = targetGrain;
+		targetValues.clampMin = targetClampMin;
+		targetValues.clampMax = targetClampMax;
+
+		// Resolve target colors to THREE.Color format
+		const targetPalette = renderer.resolvePalette(newConfig.colors !== undefined ? newConfig.colors : renderer.config.colors);
+		const currentBg = u.u_bg_color.value;
+		const currentColors = u.u_colors.value;
+
+		proxy.bgR = currentBg.r;
+		proxy.bgG = currentBg.g;
+		proxy.bgB = currentBg.b;
+
+		targetValues.bgR = targetPalette.bg.r;
+		targetValues.bgG = targetPalette.bg.g;
+		targetValues.bgB = targetPalette.bg.b;
+
+		for (let i = 0; i < 16; i++) {
+			proxy[`c${i}R`] = currentColors[i].r;
+			proxy[`c${i}G`] = currentColors[i].g;
+			proxy[`c${i}B`] = currentColors[i].b;
+
+			targetValues[`c${i}R`] = targetPalette.colors[i].r;
+			targetValues[`c${i}G`] = targetPalette.colors[i].g;
+			targetValues[`c${i}B`] = targetPalette.colors[i].b;
+		}
+
+		u.u_color_count.value = targetPalette.count;
+
+		// Maintain internal config state in renderer
+		renderer.config = { ...renderer.config, ...newConfig };
+
+		activeTween = gsap.to(proxy, {
+			...targetValues,
+			duration,
+			ease: 'power2.out',
+			onUpdate: () => {
+				u.u_speed.value = proxy.speed;
+				u.u_coverage.value = proxy.coverage;
+				u.u_grain_intensity.value = proxy.grainIntensity;
+				u.u_mask_clamp.value.set(proxy.clampMin, proxy.clampMax);
+
+				currentBg.setRGB(proxy.bgR, proxy.bgG, proxy.bgB);
+				for (let i = 0; i < 16; i++) {
+					currentColors[i].setRGB(proxy[`c${i}R`], proxy[`c${i}G`], proxy[`c${i}B`]);
+				}
+			}
+		});
+	}
+
 	return {
 		/** @param {GradientParams} newParams */
 		update(newParams) {
 			if (newParams.config !== undefined) {
-				renderer.updateConfig(newParams.config);
+				transitionConfig(newParams.config, 1.2);
 			}
 			if (newParams.shapeId !== undefined) {
 				renderer.updateShape(newParams.shapeId, newParams.morphProgress ?? 1.0);
 			}
 		},
 		destroy() {
+			if (activeTween) {
+				activeTween.kill();
+			}
 			window.removeEventListener('mousemove', handleMouseMove);
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('colors-update', handleThemeUpdate);
@@ -60,3 +155,4 @@ export function interactiveGradient(canvas, params = {}) {
 		}
 	};
 }
+
