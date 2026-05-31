@@ -68,6 +68,14 @@
 
 	--text-intro-card-size:   var(--text-xs);
 	--text-intro-card-weight: 700;
+
+	/* Solo per la barra di navigazione e logo */
+	--text-nav-size:          var(--text-xs);
+	--text-nav-weight:        600;
+	--text-nav-active-weight: 700;
+
+	--text-logo-size:         var(--text-m);
+	--text-logo-weight:       800;
 }
 
 html,

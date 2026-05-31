@@ -3,6 +3,7 @@
 </script>
 
 <main>
+    <section class="scroll-spacer" aria-hidden="true"></section>
 
     <section class="test-figma-bg">
         
@@ -21,6 +22,14 @@
 </main>
 
 <style>
+
+    main {
+        background: var(--background-primary);
+    }
+
+	.scroll-spacer {
+		min-height: 120vh;
+	}
     /* 1. Lo sfondo chiaro della sezione (simile a F1FAFD) */
     .test-figma-bg {
         position: relative;
@@ -73,3 +82,4 @@
         margin: 0;
     }
 </style>
+
