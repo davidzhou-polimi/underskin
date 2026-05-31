@@ -276,14 +276,12 @@
 				hasScrolledDown = true;
 			} else {
 				layers.quizCompleted = true;
-				unlockScroll();
+				isLocked = false;
 			}
 		} else if (deltaY < -10) {
 			if (hasScrolledDown) {
 				hasScrolledDown = false;
 				layers.quizCompleted = false;
-			} else {
-				unlockScroll();
 			}
 		}
 	}
@@ -302,7 +300,7 @@
 		<canvas use:bindCanvas></canvas>
 	</div>
 
-	<div class="quiz-title-wrap" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
+	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded'}>
 		<h1 class="quiz-title">
 			<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
 			<span class="title-line-2">cosa pesa davvero di più?</span>
@@ -361,19 +359,21 @@
 						{/if}
 					</div>
 				</button>
+
+				{#if quizState === 'expanded'}
+					<div class="expanded-title-area">
+						<h1 class="quiz-title">
+							<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
+							<span class="title-line-2">cosa pesa davvero di più?</span>
+						</h1>
+					</div>
+				{/if}
 			</div>
 		</div>
 
 		<div class="quiz-column right-column">
 			<div class="circle-wrap right-wrap" class:fly-out={fisicoFading}>
-				<button
-					class="circle right"
-					class:clicked={selectedSide === 'fisico'}
-					class:fisico-expand={fisicoExpanding}
-					onclick={() => selectFisico(false)}
-					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}
-					disabled={quizState === 'expanding' || quizState === 'expanded'}
-				>
+				<button class="circle right" onclick={() => selectFisico(false)} use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}>
 					<svg class="border-svg" viewBox="0 0 407 407">
 						<defs>
 							<mask id="mask-right">
@@ -402,16 +402,14 @@
 							mask="url(#mask-right)"
 						/>
 					</svg>
-
 					<div class="expanded-text-container">
-						<span class="text" class:gradient={selectedSide === 'fisico'}>fisico</span>
-						<span class="clicca-hint">clicca</span>
+						<span class="text">fisico</span>
 					</div>
 				</button>
 			</div>
 
-			{#if quizState === 'expanding' || quizState === 'expanded'}
-				<div class="right-text-panel" class:visible={quizState === 'expanded'}>
+			{#if quizState === 'expanded'}
+				<div class="right-text-panel visible">
 					<div class="text-block short-phrase" class:blur-out={hasScrolledDown}>
 						<p>
 							Il fisico porta l'atleta alla partenza.<br />
@@ -447,7 +445,7 @@
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		padding: var(--spacing-10) 0 var(--spacing-3) 0;
+		padding: 0 0 var(--spacing-3) 0;
 		background-color: #f1fafd;
 		transition: transform 0.1s linear;
 		will-change: transform;
@@ -485,6 +483,40 @@
 		padding: 0 var(--spacing-3);
 	}
 
+	/* Risultato finale 标题 - 定位在 70% 圆圈右侧 */
+	.left-wrap {
+		position: relative;
+		min-width: 540px;
+	}
+
+	.expanded-title-area {
+		position: absolute;
+		left: calc(100% + 100px);
+		top: 25%;
+		width: 600px;
+		min-width: 600px;
+		display: flex;
+		align-items: center;
+		z-index: 10;
+		box-sizing: border-box;
+		animation: fadeIn 0.6s ease;
+	}
+
+	.expanded-title-area h1 {
+		font-family: 'Rethink Sans', sans-serif;
+		font-weight: 700;
+		text-align: left;
+		margin: 0;
+		font-size: 32px;
+		line-height: 1.4;
+		color: var(--color-content-primary, #071e45);
+	}
+
+	.expanded-title-area .title-line-1,
+	.expanded-title-area .title-line-2 {
+		display: block;
+	}
+
 	.quiz-title {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 700;
@@ -502,6 +534,11 @@
 		transform: scale(0.714);
 	}
 
+	.quiz-title-wrap.hidden {
+		opacity: 0;
+		pointer-events: none;
+	}
+
 	.title-line-1,
 	.title-line-2 {
 		display: block;
@@ -511,16 +548,27 @@
 	.quiz-body {
 		display: flex;
 		justify-content: center;
-		gap: var(--spacing-10);
+		align-items: center;
+		gap: var(--spacing-10);  ;
 		width: 100%;
 		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
-		margin-top: var(--spacing-11);
-		height: 574px;
-		align-items: center;
-		transition: gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		margin-top: var(--spacing-12);
+		height: calc(100vh - 200px);
+		min-height: 574px;
+		transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 1;
+	}
+
+	/* 展开状态：垂直居中，给右侧标题腾空间 */
+	.quiz-body.expanded {
+		justify-content: center;
+		align-items: center;
+		gap: 100px;
+		margin-top: 0;
+		height: 100vh;
+		min-height: 100vh;
 	}
 
 	.quiz-column {
@@ -528,8 +576,7 @@
 		align-items: center;
 		justify-content: center;
 		position: relative;
-		height: 574px;
-		min-height: 407px;
+		height: 100%;
 	}
 
 	.left-column {
@@ -537,7 +584,16 @@
 	}
 
 	.right-column {
+		display: flex;
+		flex-direction: column;
 		justify-content: center;
+		align-items: flex-start;
+		height: auto;
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
 	}
 
 	/* Cerchi */
@@ -553,13 +609,12 @@
 	}
 
 	.right-wrap {
-    position: relative; 
-    transition:
-        transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-        opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    z-index: 4;
-}
-
+		position: relative;
+		transition:
+			transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+			opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+		z-index: 4;
+	}
 	.right-wrap.fly-out {
 		transform: translateX(350px);
 		opacity: 0;
@@ -601,9 +656,7 @@
 		cursor: default;
 	}
 
-	/* ───────────────────────────────────────
-	   ⭕ 选择页面样式：完全恢复最初无污染的纯文字效果
-	   ─────────────────────────────────────── */
+	
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 800;
@@ -614,7 +667,6 @@
 		z-index: 1;
 	}
 
-	/* 选择页面 Hover 与 点击激活时，仅对原生文本剪切渐变 */
 	.circle:hover .text,
 	.circle.clicked .text {
 		background: linear-gradient(
@@ -630,9 +682,7 @@
 		animation: global-shift-gradient 6s linear infinite;
 	}
 
-	/* ───────────────────────────────────────
-	   🎭 展开页面样式：独占的 CSS Mask 裁剪（绝无背景色块）
-	   ─────────────────────────────────────── */
+	
 	.expanded-text {
 		display: inline-flex;
 		align-items: center;
@@ -641,7 +691,6 @@
 		position: relative;
 		z-index: 1;
 
-		/* 注入与全局 6s 平移完全同步的 CSS 动态渐变皮肤 */
 		background: linear-gradient(
 			120deg,
 			var(--archetipi-favorito),
@@ -651,7 +700,6 @@
 		background-size: 300% 100%;
 		animation: global-shift-gradient 6s linear infinite;
 
-		/* 通过 CSS 蒙版把大块渐变背景严格限制在 Canvas 导出的字体轮廓内 */
 		-webkit-mask-image: var(--canvas-mask);
 		mask-image: var(--canvas-mask);
 		-webkit-mask-size: 100% 100%;
@@ -660,7 +708,6 @@
 		mask-repeat: no-repeat;
 	}
 
-	/* 幕后计算的 Canvas 保持隐形，只负责向 CSS 变量提供字形像素 */
 	.slot-machine-canvas {
 		display: block;
 		font-size: var(--text-hero); 
@@ -668,11 +715,10 @@
 		pointer-events: none;
 	}
 
-	/* 左侧大圆展开时的正常背景色 */
 	.left.mentale-show {
-		width: 574px;
-		height: 574px;
-		border-radius: 287px;
+		width: 540px;
+		height: 540px;
+		border-radius: 280px;
 		background-color: var(--background-primary);
 		transition:
 			width 0.6s cubic-bezier(0.25, 1, 0.5, 1),
@@ -680,7 +726,6 @@
 			border-radius 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
-	/* ─────────────────────────────────────── */
 
 	.right.fisico-expand {
 		width: 480px;
@@ -745,6 +790,7 @@
 		width: 540px;
 		height: 220px;
 		position: absolute;
+		top: calc(50% - 60px);
 		left: 0;
 		z-index: 5;
 		transform: translateX(-100px);
