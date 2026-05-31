@@ -1,9 +1,20 @@
 <script>
 	import { interactiveGradient } from '$lib/actions/interactiveGradient.js';
+	import { scroll } from '$lib/stores/scroll.svelte.js';
+
+	/** @type {any} */
+	let canvasElement;
+
+	// Automatically sync Svelte store scroll progress with the WebGL renderer
+	$effect(() => {
+		if (canvasElement && canvasElement.__gradientRenderer) {
+			canvasElement.__gradientRenderer.updateScroll(scroll.progress);
+		}
+	});
 </script>
 
-<!-- Renders the full-screen interactive background. The canvas is controlled by a custom WebGL Svelte Action -->
-<canvas use:interactiveGradient class="interactive-gradient-canvas"></canvas>
+<!-- Renders the full-screen interactive background -->
+<canvas bind:this={canvasElement} use:interactiveGradient class="interactive-gradient-canvas"></canvas>
 
 <style>
 	/* Position fixed to screen boundary behind all section wrappers */

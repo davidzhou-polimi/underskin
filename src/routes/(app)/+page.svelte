@@ -12,7 +12,7 @@
 
 <style>
     main {
-        background: var(--background-primary);
+        background: transparent;
     }
 
 	.scroll-spacer {
