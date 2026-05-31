@@ -10,13 +10,13 @@
 	-->
 	<InteractiveGradient
 		config={{
-			colors: ['var(--background-primary)', 'var(--archetipi-favorito)', 'var(--archetipi-favorito)'],
+			colors: ['var(--azzurro-200)', 'var(--archetipi-favorito)', 'var(--azzurro-600)'],
 			coverage: 1.0,
 			maskClamp: [0.0, 1.0]
 		}}
 	/>
 	<div class="content">
-		<h2>Sezione Favorito</h2>
+		<h2>FAVORITO</h2>
 	</div>
 </section>
 
@@ -29,7 +29,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--content-primary);
+		color: var(--content-dark-primary);
+        font-size: var(--text-title-size);
+        font-weight: var(--text-title-weight);
 	}
 
 	.content {

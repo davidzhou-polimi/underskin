@@ -4,8 +4,10 @@
 	   ============================================================ */
 	--background-primary: #f1fafd;
 	--background-secondary: #dff4fa;
-	--content-primary: #071e45;
-	--content-secondary: #1f4066;
+	--content-light-primary: #071e45;
+	--content-light-secondary: #1f4066;
+    --content-dark-primary: #f1fafd;
+	--content-dark-secondary: #dff4fa;
 	--archetipi-favorito: #6a96df;
 	--archetipi-infortunato: #d86146;
 	--archetipi-insoddisfatto: #8035d2;

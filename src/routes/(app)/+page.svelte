@@ -31,6 +31,6 @@
 	}
 
 	.scroll-spacer {
-		min-height: 120vh;
+		min-height: 300vh;
 	}
 </style>
