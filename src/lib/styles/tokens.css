@@ -3,6 +3,7 @@
 @import "./tokens/spacing.css";
 @import "./tokens/radius.css";
 @import "./tokens/typography.css";
+@import "./tokens/motion.css";
 
 /* ==========================================================================
    Utility Globali: Testo con Gradiente (Statico o Animato)
@@ -43,5 +44,3 @@
 	50% { background-position: 100% 50%; }
 	100% { background-position: 0% 50%; }
 }
-@import "./tokens/motion.css";
-
