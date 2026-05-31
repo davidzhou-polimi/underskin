@@ -29,6 +29,7 @@ const fsSource = `
 	uniform vec2 u_resolution;
 	uniform float u_time;
 	uniform vec2 u_mouse;
+	uniform vec2 u_mouse_velocity;
 	uniform float u_scroll;
 	
 	uniform float u_target_shape;
@@ -142,15 +143,34 @@ const fsSource = `
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
 		vec2 uv = v_uv;
 		
-		// 1. Mouse Gravitational UV Warp (slow current pulling existing color toward cursor)
+		// 1. Mouse Gravitational UV Warp based on velocity and direction
 		vec2 to_mouse = (u_mouse - uv) * aspect;
 		float mouse_dist = length(to_mouse);
 		
 		// Wide reach (radius ~0.40) and slow soft transition
 		float mouse_attraction = smoothstep(0.40, 0.0, mouse_dist);
 		
-		// Inverted warp direction (subtracting to_mouse pulls texture coordinates away, dragging colors toward mouse)
-		vec2 warp_vector = (u_mouse - uv) * mouse_attraction * 0.10;
+		// Calculate speed and direction of the cursor
+		float speed = length(u_mouse_velocity);
+		vec2 warp_vector = vec2(0.0);
+		
+		if (speed > 0.01) {
+			vec2 move_dir = normalize(u_mouse_velocity);
+			
+			// Perturb the direction of the warp with noise to break radial symmetry (~20 deg max rotation)
+			float angle_noise = snoise(vec3(uv * 4.0, u_time * 0.5)) * 0.35;
+			float c = cos(angle_noise);
+			float s = sin(angle_noise);
+			mat2 noise_rot = mat2(c, s, -s, c);
+			vec2 perturbed_dir = noise_rot * move_dir;
+			
+			// Strength is proportional to velocity, capped to prevent extreme warping
+			float strength = min(speed * 0.01, 0.10);
+			
+			// Warp direction is aligned with movement, pulling the color behind it
+			warp_vector = perturbed_dir * strength * mouse_attraction;
+		}
+		
 		vec2 warped_by_mouse_uv = uv - warp_vector;
 		vec2 centered_uv_aspect = (warped_by_mouse_uv - 0.5) * aspect;
 		
@@ -189,6 +209,8 @@ const fsSource = `
 		
 		// Generous smoothstep for soft fluid edges blending into background
 		float shape_mask = smoothstep(-0.4, 0.6, morphed_fluid);
+		// Clamp mask to keep a subtle persistent haze and prevent oversaturation
+		shape_mask = clamp(shape_mask, 0.12, 0.78);
 		
 		// Blending colors ONLY inside the shapes (wide smoothstep creates a beautiful blurred gradient)
 		float blend = smoothstep(-0.8, 0.8, snoise(vec3(warped_uv * 0.7, u_time * 0.1)));
@@ -218,11 +240,15 @@ export class InteractiveGradientRenderer {
 		this.canvas = canvas;
 		this.animationFrameId = 0;
 		this.startTime = performance.now();
+		this.lastTime = performance.now();
 
 		// Interactive uniforms states (targets for mouse & scroll)
 		this.mouse = {
 			current: new THREE.Vector2(0.5, 0.5),
-			target: new THREE.Vector2(0.5, 0.5)
+			target: new THREE.Vector2(0.5, 0.5),
+			lastTarget: new THREE.Vector2(0.5, 0.5),
+			velocity: new THREE.Vector2(0, 0),
+			speed: 0
 		};
 		this.scroll = {
 			current: 0,
@@ -256,6 +282,7 @@ export class InteractiveGradientRenderer {
 				u_resolution: { value: new THREE.Vector2() },
 				u_time: { value: 0 },
 				u_mouse: { value: this.mouse.current },
+				u_mouse_velocity: { value: this.mouse.velocity },
 				u_scroll: { value: 0 },
 				u_target_shape: { value: 0 },
 				u_shape_morph: { value: 0 },
@@ -336,7 +363,32 @@ export class InteractiveGradientRenderer {
 	}
 
 	animate() {
-		const elapsedSeconds = (performance.now() - this.startTime) * 0.001;
+		const now = performance.now();
+		const dt = Math.max((now - this.lastTime) * 0.001, 0.0001);
+		this.lastTime = now;
+		const elapsedSeconds = (now - this.startTime) * 0.001;
+
+		// Calculate instant velocity based on target movement
+		const targetDiffX = this.mouse.target.x - this.mouse.lastTarget.x;
+		const targetDiffY = this.mouse.target.y - this.mouse.lastTarget.y;
+		this.mouse.lastTarget.copy(this.mouse.target);
+
+		const instSpeed = Math.min(Math.sqrt(targetDiffX * targetDiffX + targetDiffY * targetDiffY) / dt, 5.0);
+
+		if (instSpeed > 0.01) {
+			const dirX = targetDiffX / (instSpeed * dt || 1.0);
+			const dirY = targetDiffY / (instSpeed * dt || 1.0);
+
+			// Lerp velocity direction and speed
+			this.mouse.velocity.x += (dirX * instSpeed - this.mouse.velocity.x) * 0.1;
+			this.mouse.velocity.y += (dirY * instSpeed - this.mouse.velocity.y) * 0.1;
+			this.mouse.speed += (instSpeed - this.mouse.speed) * 0.15;
+		} else {
+			// Exponential decay for speed and velocity when stationary (~1.0s dissolution)
+			const decay = Math.exp(-dt / 0.35);
+			this.mouse.velocity.multiplyScalar(decay);
+			this.mouse.speed *= decay;
+		}
 
 		// Viscous Easing (Linear Interpolation) with a factor of 0.07 for smooth follow
 		this.mouse.current.x += (this.mouse.target.x - this.mouse.current.x) * 0.07;
