@@ -71,7 +71,7 @@ export function interactiveGradient(canvas, params = {}) {
 		// colorCount non è animabile (è un int GLSL): aggiornato subito prima del tween
 		// per evitare glitch cromatici quando il numero di colori cambia tra sezioni.
 		/** @type {any} */ (renderer.material.uniforms).u_color_count.value = colorCount;
-		renderer.config = { ...DEFAULT_CONFIG, ...newConfig };
+		renderer.config = { ...renderer.config, ...newConfig };
 
 		activeTween = gsap.to(proxy, {
 			...targetState,

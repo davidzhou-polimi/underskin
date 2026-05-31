@@ -541,7 +541,6 @@ export class InteractiveGradientRenderer {
 			speed: u.u_speed.value,
 			coverage: u.u_coverage.value,
 			grainIntensity: u.u_grain_intensity.value,
-			mouseStrength: u.u_mouse_strength.value,
 			clampMin: u.u_mask_clamp.value.x,
 			clampMax: u.u_mask_clamp.value.y,
 			focusX: u.u_focus.value.x,
@@ -580,7 +579,6 @@ export class InteractiveGradientRenderer {
 			speed: newConfig.speed ?? c.speed,
 			coverage: newConfig.coverage ?? c.coverage,
 			grainIntensity: newConfig.grainIntensity ?? c.grainIntensity,
-			mouseStrength: newConfig.mouseStrength ?? c.mouseStrength,
 			clampMin: (newConfig.maskClamp ?? c.maskClamp)[0],
 			clampMax: (newConfig.maskClamp ?? c.maskClamp)[1],
 			focusX: focusCenter[0],
@@ -609,7 +607,6 @@ export class InteractiveGradientRenderer {
 		u.u_speed.value = state.speed;
 		u.u_coverage.value = state.coverage;
 		u.u_grain_intensity.value = state.grainIntensity;
-		u.u_mouse_strength.value = state.mouseStrength;
 		u.u_mask_clamp.value.set(state.clampMin, state.clampMax);
 		u.u_focus.value.set(state.focusX, state.focusY, state.focusRx, state.focusRy);
 		u.u_bg_color.value.setRGB(state.bgR, state.bgG, state.bgB);

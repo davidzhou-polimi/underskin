@@ -76,7 +76,6 @@
                   ...SECTION_CONFIGS.hero,
                   speed: 2.0,
                   coverage: 1.0,
-                  mouseStrength: 100.0,
                   focusCenter: [0.5, -0.2],
                   focusRadius: [1.5, 0.95],
               }
