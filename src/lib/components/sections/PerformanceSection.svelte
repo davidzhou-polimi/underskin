@@ -5,9 +5,10 @@
 	let opacity = $derived.by(() => {
 		return layers.getLayerOpacity(2);
 	});
+	let layerStyle = $derived(layers.getLayerStyle(2));
 </script>
 
-<section id="performance" class="performance-section" style:opacity={opacity} use:trackSection>
+<section id="performance" class="performance-section" style:opacity={opacity} style={layerStyle} use:trackSection>
 	<div class="content-wrapper">
 		<blockquote class="quote-text">
 			La performance non consuma solo il corpo: modella

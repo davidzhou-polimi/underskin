@@ -15,6 +15,7 @@
 	let opacity = $derived.by(() => {
 		return layers.getLayerOpacity(0);
 	});
+	let layerStyle = $derived(layers.getLayerStyle(0));
 
 	// Tiene traccia del progresso precedente per rilevare quando si torna all'inizio
 	let prevProgress = $state(1);
@@ -99,7 +100,13 @@
 	});
 </script>
 
-<section id="intro-text" class="intro-section" style:opacity={opacity} use:trackSection>
+<section 
+	id="intro-text" 
+	class="intro-section"
+	style:opacity={opacity}
+	style={layerStyle}
+	use:trackSection
+>
 	<div class="canvas-layer">
 		<canvas use:bindCanvas></canvas>
 	</div>

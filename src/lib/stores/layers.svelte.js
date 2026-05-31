@@ -2,52 +2,91 @@
  * Store per gestire lo stato dei layer sovrapposti (stile Apple)
  */
 class LayerState {
-	activeLayer = $state(0);
-	totalLayers = 3;
-	_progress = $state(0);
+    activeLayer = $state(0);
+    totalLayers = 3;
+    _progress = $state(0);
+    lastProgress = 0;
+    scrollDirection = $state('down'); // 'up' | 'down'
+    quizCompleted = $state(false); // True quando il quiz ha completato e l'utente ha scrollato
 
-	get progress() {
-		return this._progress;
-	}
+    get progress() {
+        return this._progress;
+    }
 
-	set progress(value) {
-		this._progress = value;
-	}
+    set progress(value) {
+        // Determina la direzione dello scroll globale
+        if (value > this._progress) {
+            this.scrollDirection = 'down';
+        } else if (value < this._progress) {
+            this.scrollDirection = 'up';
+        }
+        this.lastProgress = this._progress;
+        this._progress = value;
+    }
 
-	setActiveLayer(index) {
-		if (index >= 0 && index < this.totalLayers) {
-			this.activeLayer = index;
-		}
-	}
+    setActiveLayer(index) {
+        if (index >= 0 && index < this.totalLayers) {
+            this.activeLayer = index;
+        }
+    }
 
-	getLayerOpacity(layerIndex) {
+    getLayerOpacity(layerIndex) {
 		const p = this._progress;
-
-		// Layer 0 (IntroTextSection): 完全可见，被 CerchiQuiz 从底部覆盖
+	
+		// --- Layer 0 (IntroTextSection) ---
 		if (layerIndex === 0) {
-			if (p < 0.45) return 1; // 完全可见，直到 CerchiQuiz 完全覆盖
-			return 1; // 保持 1，直到被完全覆盖
-		}
-
-		// Layer 1 (CerchiQuiz): 滑入覆盖
-		if (layerIndex === 1) {
-			if (p < 0.35) return 0; // 隐藏
-			if (p < 0.45) return (p - 0.35) / 0.1; // 滑入
+			// Si nasconde quando il quiz appare (p >= 0.35)
+			if (p >= 0.85) return 0;
 			return 1;
 		}
-
-		// Layer 2 (PerformanceSection): entra dopo Layer 1, resta
-		if (layerIndex === 2) {
-			if (p < 0.75) return 0; // Nascosto
-			if (p < 0.85) return (p - 0.75) / 0.1; // Fade in
-			return 1; // Visibile
+	
+		// --- Layer 1 (CerchiQuiz) ---
+		if (layerIndex === 1) {
+			if (p < 0.35) return 0;
+			if (p >= 0.85) return 0;
+			return 1;
 		}
-
+	
+		// --- Layer 2 (PerformanceSection) ---
+		if (layerIndex === 2) {
+			if (p >= 0.85) return 1;
+			return 0;
+		}
+	
 		return 0;
 	}
+	
+	getLayerZIndex(layerIndex) {
+		const p = this._progress;
+		
+		if (layerIndex === 0) {
+			if (p >= 0.35) return -9999;
+			return 0;
+		}
+		
+		if (layerIndex === 1) {
+			if (p >= 0.85) return -9999;
+			return p >= 0.35 ? 30 : -10;
+		}
+		
+		if (layerIndex === 2) {
+			if (p >= 0.85) return 50;
+			return 10;
+		}
+		
+		return 0;
+	}
+	
+    isLayerActive(layerIndex) {
+        return this.activeLayer === layerIndex;
+    }
 
-	isLayerActive(layerIndex) {
-		return this.activeLayer === layerIndex;
+	getLayerStyle(layerIndex) {
+		const opacity = this.getLayerOpacity(layerIndex);
+		if (opacity === 0) {
+			return 'display: none;';
+		}
+		return '';
 	}
 }
 
