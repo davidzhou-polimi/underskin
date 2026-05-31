@@ -119,7 +119,8 @@ const fsSource = `
 	
 	// Domain Warping function to morph the coordinates recursively (creates paint blending)
 	vec2 domainWarp(vec2 uv, float time, float mouse_effect, float scroll_effect) {
-		vec3 p = vec3(uv * 1.5, time * 0.12);
+		// Low spatial frequency for the base coordinates to ensure large, unified masses
+		vec3 p = vec3(uv * 0.8, time * 0.12);
 		
 		// First warp layer
 		vec2 q = vec2(
@@ -158,8 +159,8 @@ const fsSource = `
 		// 3. Domain warping (deforms the coordinate grid)
 		vec2 warped_uv = domainWarp(shifted_uv * aspect, u_time, mouse_attraction, u_scroll);
 		
-		// 4. Distinct floating shapes/blobs
-		float shape_noise = snoise(vec3(warped_uv * 1.2, u_time * 0.08));
+		// 4. Distinct floating shapes/blobs with low frequency to keep them unified
+		float shape_noise = snoise(vec3(warped_uv * 0.6, u_time * 0.08));
 		
 		// 5. Calculate Target SDF Shapes
 		float circle_sdf = sdCircle(centered_uv_aspect, 0.35);
