@@ -6,7 +6,6 @@
 </script>
 
 <main>
-
     <section class="scroll-spacer" aria-hidden="true"></section>
 
     <section class="test-figma-bg">
@@ -39,7 +38,6 @@
 	.scroll-spacer {
 		min-height: 120vh;
 	}
-
     .test-figma-bg {
         position: relative;
         min-height: 800px;
