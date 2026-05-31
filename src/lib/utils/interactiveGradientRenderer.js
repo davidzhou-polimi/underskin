@@ -210,7 +210,7 @@ const fsSource = `
 		// Generous smoothstep for soft fluid edges blending into background
 		float shape_mask = smoothstep(-0.4, 0.6, morphed_fluid);
 		// Clamp mask to keep a subtle persistent haze and prevent oversaturation
-		shape_mask = clamp(shape_mask, 0.12, 0.78);
+		shape_mask = clamp(shape_mask, 0.15, 0.50);
 		
 		// Blending colors ONLY inside the shapes (wide smoothstep creates a beautiful blurred gradient)
 		float blend = smoothstep(-0.8, 0.8, snoise(vec3(warped_uv * 0.7, u_time * 0.1)));
