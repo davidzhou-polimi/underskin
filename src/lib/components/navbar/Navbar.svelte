@@ -7,9 +7,16 @@
         hideThreshold = 50,
         showThreshold = 150,
         autoHideDelay = 3000,
+        hideByDefault = false,
     } = $props();
 
     let hidden = $state(false);
+
+    // Commento solo il PERCHÉ: Assicura che la barra si adegui immediatamente al comportamento richiesto dalla sezione corrente attiva.
+    $effect(() => {
+        hidden = hideByDefault;
+    });
+
     let lastScrollY = 0;
     let isHovered = $state(false);
     let isFocused = $state(false);
@@ -25,7 +32,7 @@
         /* Evita di nascondere la barra se l'utente la sta sorvolando con il mouse o la sta navigando con la tastiera */
         if (
             autoHideDelay <= 0 ||
-            window.scrollY <= 10 ||
+            (!hideByDefault && window.scrollY <= 10) ||
             isHovered ||
             isFocused
         )
@@ -80,8 +87,8 @@
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
 
-            // Blocca visibile in prossimità del top della pagina
-            if (currentScrollY <= 10) {
+            // Blocca visibile in prossimità del top della pagina a meno che non sia richiesto di nasconderla di default
+            if (currentScrollY <= 10 && !hideByDefault) {
                 hidden = false;
                 lastScrollY = currentScrollY;
                 clearTimeout(autoHideTimeout);
