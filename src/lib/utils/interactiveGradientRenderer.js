@@ -8,7 +8,7 @@ import * as THREE from 'three';
  * @property {[number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
  * @property {number} [coverage]         - 0=sparse blobs, 1=full-screen wash
  * @property {[number, number]} [focusCenter]   - UV center of gradient concentration [x, y]
- * @property {number} [focusRadius]      - Focus radius in aspect-corrected UV (>1 = whole screen)
+ * @property {number | [number, number]} [focusRadius] - Focus radius [rx, ry] or single value for circle
  * @property {number} [viscosity]        - Mouse follow lerp factor (lower = more viscous)
  * @property {number} [mouseRadius]      - Radius of mouse gravitational influence
  * @property {number} [mouseStrength]    - Max UV displacement from mouse
@@ -175,7 +175,7 @@ const fsSource = `
 	uniform float u_wave_freq;
 	uniform vec2 u_wave_amp;
 	uniform float u_coverage;
-	uniform vec3 u_focus;
+	uniform vec4 u_focus; // xy = center, zw = radius [rx, ry]
 	uniform float u_mouse_radius;
 	uniform float u_mouse_strength;
 	uniform float u_grain_intensity;
@@ -384,9 +384,10 @@ const fsSource = `
 		// eliminating the hard boundary between gradient blobs and background entirely.
 		shape_mask = mix(0.05, 1.0, shape_mask);
 
-		// Focus area: attenuate gradient outside a configurable radial region
-		float focus_dist = length((uv - u_focus.xy) * aspect);
-		float focus_weight = 1.0 - smoothstep(u_focus.z * 0.5, u_focus.z, focus_dist);
+		// Focus area: attenuate gradient outside a configurable elliptical region
+		vec2 focus_offset = ((uv - u_focus.xy) * aspect) / max(u_focus.zw, vec2(0.0001));
+		float focus_dist = length(focus_offset);
+		float focus_weight = 1.0 - smoothstep(0.5, 1.0, focus_dist);
 		shape_mask *= mix(0.0, 1.0, focus_weight);
 		shape_mask = clamp(shape_mask, u_mask_clamp.x, u_mask_clamp.y);
 
@@ -486,7 +487,12 @@ export class InteractiveGradientRenderer {
 				u_wave_freq:      { value: this.config.waveFrequency },
 				u_wave_amp:       { value: new THREE.Vector2(...this.config.waveAmplitude) },
 				u_coverage:       { value: this.config.coverage },
-				u_focus:          { value: new THREE.Vector3(this.config.focusCenter[0], this.config.focusCenter[1], this.config.focusRadius) },
+				u_focus:          { value: new THREE.Vector4(
+					this.config.focusCenter[0],
+					this.config.focusCenter[1],
+					Array.isArray(this.config.focusRadius) ? this.config.focusRadius[0] : this.config.focusRadius,
+					Array.isArray(this.config.focusRadius) ? this.config.focusRadius[1] : this.config.focusRadius
+				) },
 				u_mouse_radius:   { value: this.config.mouseRadius },
 				u_mouse_strength: { value: this.config.mouseStrength },
 				u_grain_intensity:{ value: this.config.grainIntensity },
@@ -586,8 +592,11 @@ export class InteractiveGradientRenderer {
 		if (options.waveFrequency !== undefined)  u.u_wave_freq.value = this.config.waveFrequency;
 		if (options.waveAmplitude !== undefined)  u.u_wave_amp.value.set(...this.config.waveAmplitude);
 		if (options.coverage !== undefined)       u.u_coverage.value = this.config.coverage;
-		if (options.focusCenter !== undefined || options.focusRadius !== undefined)
-			u.u_focus.value.set(this.config.focusCenter[0], this.config.focusCenter[1], this.config.focusRadius);
+		if (options.focusCenter !== undefined || options.focusRadius !== undefined) {
+			const rx = Array.isArray(this.config.focusRadius) ? this.config.focusRadius[0] : this.config.focusRadius;
+			const ry = Array.isArray(this.config.focusRadius) ? this.config.focusRadius[1] : this.config.focusRadius;
+			u.u_focus.value.set(this.config.focusCenter[0], this.config.focusCenter[1], rx, ry);
+		}
 		if (options.mouseRadius !== undefined)    u.u_mouse_radius.value = this.config.mouseRadius;
 		if (options.mouseStrength !== undefined)  u.u_mouse_strength.value = this.config.mouseStrength;
 		if (options.grainIntensity !== undefined) u.u_grain_intensity.value = this.config.grainIntensity;

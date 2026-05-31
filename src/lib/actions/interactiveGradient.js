@@ -64,12 +64,23 @@ export function interactiveGradient(canvas, params = {}) {
 		const startGrain = u.u_grain_intensity.value;
 		const startClampMin = u.u_mask_clamp.value.x;
 		const startClampMax = u.u_mask_clamp.value.y;
+		const startFocusX = u.u_focus.value.x;
+		const startFocusY = u.u_focus.value.y;
+		const startFocusRx = u.u_focus.value.z;
+		const startFocusRy = u.u_focus.value.w;
 
 		const targetSpeed = newConfig.speed !== undefined ? newConfig.speed : renderer.config.speed;
 		const targetCoverage = newConfig.coverage !== undefined ? newConfig.coverage : renderer.config.coverage;
 		const targetGrain = newConfig.grainIntensity !== undefined ? newConfig.grainIntensity : renderer.config.grainIntensity;
 		const targetClampMin = newConfig.maskClamp !== undefined ? newConfig.maskClamp[0] : renderer.config.maskClamp[0];
 		const targetClampMax = newConfig.maskClamp !== undefined ? newConfig.maskClamp[1] : renderer.config.maskClamp[1];
+		
+		const targetFocusX = newConfig.focusCenter !== undefined ? newConfig.focusCenter[0] : (renderer.config.focusCenter !== undefined ? renderer.config.focusCenter[0] : 0.5);
+		const targetFocusY = newConfig.focusCenter !== undefined ? newConfig.focusCenter[1] : (renderer.config.focusCenter !== undefined ? renderer.config.focusCenter[1] : 0.5);
+		
+		const targetFocusRadius = newConfig.focusRadius !== undefined ? newConfig.focusRadius : renderer.config.focusRadius;
+		const targetFocusRx = Array.isArray(targetFocusRadius) ? targetFocusRadius[0] : (targetFocusRadius !== undefined ? targetFocusRadius : 2.0);
+		const targetFocusRy = Array.isArray(targetFocusRadius) ? targetFocusRadius[1] : (targetFocusRadius !== undefined ? targetFocusRadius : 2.0);
 
 		/** @type {any} */
 		const proxy = {
@@ -78,14 +89,22 @@ export function interactiveGradient(canvas, params = {}) {
 			grainIntensity: startGrain,
 			clampMin: startClampMin,
 			clampMax: startClampMax,
+			focusX: startFocusX,
+			focusY: startFocusY,
+			focusRx: startFocusRx,
+			focusRy: startFocusRy,
 		};
-
 
 		targetValues.speed = targetSpeed;
 		targetValues.coverage = targetCoverage;
 		targetValues.grainIntensity = targetGrain;
 		targetValues.clampMin = targetClampMin;
 		targetValues.clampMax = targetClampMax;
+		targetValues.focusX = targetFocusX;
+		targetValues.focusY = targetFocusY;
+		targetValues.focusRx = targetFocusRx;
+		targetValues.focusRy = targetFocusRy;
+
 
 		// Resolve target colors to THREE.Color format
 		const targetPalette = renderer.resolvePalette(newConfig.colors !== undefined ? newConfig.colors : renderer.config.colors);
@@ -124,6 +143,7 @@ export function interactiveGradient(canvas, params = {}) {
 				u.u_coverage.value = proxy.coverage;
 				u.u_grain_intensity.value = proxy.grainIntensity;
 				u.u_mask_clamp.value.set(proxy.clampMin, proxy.clampMax);
+				u.u_focus.value.set(proxy.focusX, proxy.focusY, proxy.focusRx, proxy.focusRy);
 
 				currentBg.setRGB(proxy.bgR, proxy.bgG, proxy.bgB);
 				for (let i = 0; i < 16; i++) {
