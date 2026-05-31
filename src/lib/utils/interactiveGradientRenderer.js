@@ -98,6 +98,11 @@ const fsSource = `
 		return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 	}
 	
+	// High-frequency procedural grain texture
+	float grain(vec2 uv, float time) {
+		return fract(sin(dot(uv + time * 0.01, vec2(12.9898, 78.233))) * 43758.5453) * 2.0 - 1.0;
+	}
+	
 	// Domain Warping function to morph the coordinates recursively (creates paint blending)
 	vec2 domainWarp(vec2 uv, float time, float mouse_effect, float scroll_effect) {
 		vec3 p = vec3(uv * 1.5, time * 0.12);
@@ -122,34 +127,47 @@ const fsSource = `
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
 		vec2 uv = v_uv;
 		
-		// 1. Mouse coordinate local displacement (radial push/warp)
+		// 1. Mouse coordinate local fluid displacement (elastic push/stretch away from cursor)
 		vec2 mouse_diff = (uv - u_mouse) * aspect;
 		float mouse_dist = length(mouse_diff);
-		float mouse_influence = smoothstep(0.6, 0.0, mouse_dist);
+		float mouse_influence = smoothstep(0.8, 0.0, mouse_dist);
+		
+		// Procedural noise to make the push wavy/deformed (behaves like pushed liquid)
+		float deform_noise = snoise(vec3(uv * 3.5, u_time * 0.2));
+		
+		// Using mouse_diff directly instead of normalize(mouse_diff) removes the coordinate singularity.
+		// This ensures displacement goes to 0 at the cursor center, preventing tearing or seams.
+		vec2 push_vector = mouse_diff * mouse_influence * (0.8 + deform_noise * 0.2);
+		vec2 local_uv = uv - push_vector;
 		
 		// 2. Scroll vortex/spiral coordinate mapping
 		float scroll_angle = u_scroll * 3.14159 * 1.5;
 		mat2 scroll_rot = mat2(cos(scroll_angle), sin(scroll_angle), -sin(scroll_angle), cos(scroll_angle));
-		vec2 centered_uv = uv - 0.5;
+		vec2 centered_uv = local_uv - 0.5;
 		centered_uv = mix(centered_uv, scroll_rot * centered_uv, u_scroll * 0.7);
 		vec2 shifted_uv = centered_uv + 0.5;
 		
-		// 3. Domain warping
+		// 3. Domain warping (deforms the coordinate grid)
 		vec2 warped_uv = domainWarp(shifted_uv * aspect, u_time, mouse_influence, u_scroll);
 		
-		// 4. Floating shapes definition
+		// 4. Distinct floating shapes/blobs (using noise threshold with wide smoothstep for blur)
 		float shape_noise = snoise(vec3(warped_uv * 1.2, u_time * 0.08));
-		float shape_factor = smoothstep(-0.4, 0.5, shape_noise);
+		float shape_mask = smoothstep(-0.4, 0.6, shape_noise + mouse_influence * 0.25);
 		
-		// 5. Blending floating shapes over the fixed u_bg_color background
-		vec3 shape_color = mix(u_colors[0], u_colors[1], smoothstep(-0.6, 0.6, snoise(vec3(warped_uv * 0.8, u_time * 0.1))));
-		shape_color = mix(shape_color, u_colors[2], shape_factor);
+		// Blending colors ONLY inside the shapes (wide smoothstep creates a beautiful blurred gradient)
+		float blend = smoothstep(-0.8, 0.8, snoise(vec3(warped_uv * 0.7, u_time * 0.1)));
+		vec3 shape_color = mix(u_colors[0], u_colors[1], blend);
+		shape_color = mix(shape_color, u_colors[2], smoothstep(-0.4, 0.8, snoise(vec3(warped_uv * 0.9 + vec2(1.5), u_time * 0.07))));
 		
-		// Blends base background and colors using shape noise factor
-		float mix_factor = smoothstep(0.0, 0.75, shape_noise + mouse_influence * 0.15);
-		vec3 final_color = mix(u_bg_color, shape_color, mix_factor);
+		// 5. Apply grain/noise ONLY on the liquid shapes
+		float g = grain(v_uv * u_resolution, u_time) * 0.07;
+		vec3 shape_color_with_grain = shape_color + vec3(g);
 		
-		gl_FragColor = vec4(final_color, 1.0);
+		// 6. Blend shapes with grain over the flat, clean base background
+		vec3 final_color = mix(u_bg_color, shape_color_with_grain, shape_mask);
+		
+		// 7. Gamma correction to convert Linear colors to sRGB (fixes the dark colors issue)
+		gl_FragColor = vec4(pow(final_color, vec3(1.0 / 2.2)), 1.0);
 	}
 `;
 
