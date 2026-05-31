@@ -35,7 +35,9 @@ export function zoomTextTransition(node) {
 			scale: 1, 
 			opacity: 0, 
 			filter: 'blur(15px)',
-			y: 20
+			y: 20,
+			// Disabilita la creazione del layer 3D compositato per garantire una renderizzazione vettoriale fluida
+			force3D: false
 		});
 		
 		gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 20 });
@@ -55,7 +57,9 @@ export function zoomTextTransition(node) {
 		  .to(zoomText, { 
 				scale: 250, 
 				duration: 2, // Velocizzato il movimento dello zoom per nascondere la sgranatura
-				ease: 'power2.in' 
+				ease: 'power2.in',
+				// Evita la bitmap-rasterizzazione durante la transizione per mantenere i vettori nitidi
+				force3D: false
 		  }, '+=0.1') // Piccolo stacco quasi impercettibile di 0.1s giusto per far leggere i testi
 		  
 		  // Questo fade out parte ESATTAMENTE insieme allo zoom in (grazie al puntatore "<")

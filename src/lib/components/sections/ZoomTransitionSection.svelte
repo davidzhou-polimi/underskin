@@ -61,7 +61,6 @@
         font-weight: var(--text-caption-weight);
         color: var(--content-primary);
         margin-bottom: var(--spacing-4);
-        text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
@@ -73,12 +72,10 @@
         line-height: 1.1;
         text-align: center;
         
-        /* AGGIUNGI QUESTA PROPRIETÀ: Impedisce la rasterizzazione a bassa risoluzione */
-        transform: translateZ(0); 
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-    
-    will-change: transform;
+        /* Rimosse le proprietà 3D e will-change poiché promuovono il testo a texture GPU statica.
+           Questo costringeva il browser a stretchare un'immagine rasterizzata anziché calcolare i vettori. */
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
     }
 
     .break-line {
