@@ -1,7 +1,7 @@
 <script>
     // Commento solo il PERCHÉ: Importa le sezioni e lo store di narrazione per orchestrare
     // la visualizzazione condizionale della sezione corrente attiva sulla pagina singola.
-    import HomeSection from "$lib/components/sections/HomeSection.svelte";
+    import MainSection from "$lib/components/sections/MainSection.svelte";
     import Footer from "$lib/components/sections/Footer.svelte";
     import FavoritoSection from "$lib/components/sections/FavoritoSection.svelte";
     import InsoddisfattoSection from "$lib/components/sections/InsoddisfattoSection.svelte";
@@ -98,7 +98,7 @@
 
 <main use:trackScrollProgress>
     {#if narrative.activeSection === "hero"}
-        <HomeSection />
+        <MainSection />
         <section class="scroll-spacer" aria-hidden="true"></section>
         <Footer />
     {:else if narrative.activeSection === "favorito"}
