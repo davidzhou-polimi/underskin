@@ -11,6 +11,10 @@
 </main>
 
 <style>
+    main {
+        background: var(--background-primary);
+    }
+
 	.scroll-spacer {
 		min-height: 120vh;
 	}
