@@ -12,6 +12,7 @@
 	<IntrusiveThoughts />
 	<FavoritoTextSection />
 	<ZoomTransitionSection />
+	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 
 
