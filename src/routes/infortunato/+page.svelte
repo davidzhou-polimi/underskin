@@ -10,7 +10,9 @@
 	import InfortunatoHero from '$lib/components/sections/InfortunatoHero.svelte';
 	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
 	import RecoverySection from '$lib/components/sections/RecoverySection.svelte';
+	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
+
 
 <!-- SEO Best Practices: Titolo descrittivo e meta description unici per questa pagina -->
 <svelte:head>
@@ -30,6 +32,9 @@
 
 	<!-- 3. Sezione narrativa di superamento e reset psicofisico post-recupero -->
 	<RecoverySection />
+
+	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
+	<ZoomTransitionSection theme="infortunato" />
 </main>
 
 <style>

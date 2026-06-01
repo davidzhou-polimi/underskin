@@ -1,6 +1,29 @@
 <script>
     import { zoomTextTransition } from '$lib/actions/zoomTextTransition.js';
     import { trackSection } from '$lib/actions/trackSection.js';
+
+    /**
+     * @typedef {Object} Props
+     * @property {'favorito' | 'infortunato' | 'insoddisfatto'} [theme] - Il tema cromatico dell'archetipo
+     * @property {string} [nextTitle] - Il titolo della sezione successiva
+     * @property {import('svelte').Snippet} [children] - Frammento Svelte per iniettare contenuti personalizzati
+     */
+
+    /** @type {Props} */
+    let { 
+        theme = 'favorito', 
+        nextTitle = 'Nuova Sezione',
+        children = undefined 
+    } = $props();
+
+    /** @type {Record<string, string>} */
+    const themeColors = {
+        favorito: 'var(--azzurro-600)',
+        infortunato: 'var(--arancione-600)',
+        insoddisfatto: 'var(--viola-500)'
+    };
+
+    let textColor = $derived(themeColors[theme] || 'var(--azzurro-600)');
 </script>
 
 <section id="zoom-transition" class="zoom-section" use:trackSection use:zoomTextTransition>
@@ -9,7 +32,7 @@
         <span class="first-text">Alcuni casi a</span>
         
         <svg class="zoom-svg" viewBox="0 0 1000 400" width="100%" height="100%">
-            <text class="zoom-text" x="50%" text-anchor="middle">
+            <text class="zoom-text" x="50%" text-anchor="middle" style:fill={textColor}>
                 <tspan x="50%" dy="180">Milano Cortina</tspan>
                 <tspan x="50%" dy="220" class="year-text">2026</tspan>
             </text>
@@ -18,7 +41,11 @@
 
     <div class="next-section-content">
         <div class="content-wrapper">
-            <h2>Nuova Sezione</h2>
+            {#if children}
+                {@render children()}
+            {:else}
+                <h2>{nextTitle}</h2>
+            {/if}
         </div>
     </div>
 
@@ -33,7 +60,6 @@
         overflow: hidden;
         background-color: var(--background-primary);
         font-family: var(--font-family-base);
-        margin-top: -30vh; 
         z-index: 5;
     }
 
@@ -69,7 +95,6 @@
     .zoom-text {
         font-size: var(--text-3xl); /* Dimensione calibrata sul viewBox dell'SVG */
         font-weight: 1000;
-        fill: var(--azzurro-600); 
         line-height: 1.1;
     }
 

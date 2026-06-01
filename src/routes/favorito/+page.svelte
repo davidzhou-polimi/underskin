@@ -11,6 +11,19 @@
 	import IntrusiveThoughts from '$lib/components/sections/IntrusiveThoughts.svelte';
 	import FavoritotextSection from '$lib/components/sections/FavoritotextSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+
+	import { onMount } from 'svelte';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+
+	onMount(() => {
+		// Consente a tutte le Svelte Actions dei componenti figli di completare
+		// la creazione e l'inizializzazione asincrona dei loro ScrollTriggers e pin spacers.
+		const timer = setTimeout(() => {
+			ScrollTrigger.refresh();
+		}, 100);
+
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->

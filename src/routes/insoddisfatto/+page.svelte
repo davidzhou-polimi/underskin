@@ -10,6 +10,20 @@
 	import InsoddisfattoHero from '$lib/components/sections/InsoddisfattoHero.svelte';
 	import PerfectionGame from '$lib/components/sections/PerfectionGame.svelte';
 	import SilverParadoxSection from '$lib/components/sections/SilverParadoxSection.svelte';
+	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+
+	import { onMount } from 'svelte';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+
+	onMount(() => {
+		// Consente a tutte le Svelte Actions dei componenti figli di completare
+		// la creazione e l'inizializzazione asincrona dei loro ScrollTriggers e pin spacers.
+		const timer = setTimeout(() => {
+			ScrollTrigger.refresh();
+		}, 100);
+
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -30,6 +44,9 @@
 
 	<!-- 3. Sezione narrativa sul paradosso dell'argento e i casi di Milano Cortina 2026 -->
 	<SilverParadoxSection />
+
+	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
+	<ZoomTransitionSection theme="insoddisfatto" />
 </main>
 
 <style>
