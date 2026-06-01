@@ -64,7 +64,7 @@
 
     /* Solo per testo "UnderSkin" nel footer */
 	--text-footer-size:       var(--text-3xl);
-	--text-footer-weight:     800;
+	--text-footer-weight:     1000;
 
 	--text-intro-card-size:   var(--text-xs);
 	--text-intro-card-weight: 700;
