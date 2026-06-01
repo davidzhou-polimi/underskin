@@ -18,10 +18,7 @@
         hero: {
             coverage: 0.3,
             maskClamp: [0.0, 0.7],
-            grainIntensity: 0.1,
-            colors: null,
-            focusCenter: [0.5, 0.5],
-            focusRadius: 2.0,
+            grainIntensity: 0.1
         },
         favorito: {
             colors: [
