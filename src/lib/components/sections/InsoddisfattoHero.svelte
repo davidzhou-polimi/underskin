@@ -1,11 +1,14 @@
 <script>
-	import { onMount } from 'svelte';
+		import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import DecorativeCircle from '$lib/components/ui/DecorativeCircle.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 
-	gsap.registerPlugin(ScrollTrigger);
+	// Registrazione del plugin protetta per prevenire ReferenceError lato server (SSR)
+	if (typeof window !== 'undefined') {
+		gsap.registerPlugin(ScrollTrigger);
+	}
 
 	/** @type {SVGPathElement | null} */
 	let blobContainer1 = null;
