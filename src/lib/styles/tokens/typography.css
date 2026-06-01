@@ -81,5 +81,6 @@
 html,
 body {
 	font-family: var(--font-family-base);
+	overscroll-behavior: none; /* Disattiva lo scroll bounce elastico nativo e la comparsa di bordi bianchi in fase di trascinamento */
 }
 
