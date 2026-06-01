@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
+	import { page } from '$app/state';
 
 	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 3000 } = $props();
 
@@ -26,35 +27,68 @@
 	};
 
 	const logoLabel = 'UnderSkin';
+	
+	// Rotte e ancore reali configurate per una navigazione cross-page fluida
 	const links = [
-		{ label: 'Home', sectionId: 'hero' },
-		{ label: 'About', sectionId: 'about' },
-		{ label: "Insoddisfatto", sectionId: 'insoddisfatto' },
-		{ label: 'Favorito', sectionId: 'favorito' },
-		{ label: "Infortunato", sectionId: 'infortunato' }
+		{ label: 'Home', sectionId: 'hero', path: '/' },
+		{ label: 'About', sectionId: 'about', path: '/#about' },
+		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
+		{ label: 'Favorito', sectionId: 'favorito-profile-page', path: '/favorito' },
+		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: '/infortunato' }
 	];
 
 	/**
-	 * Gestione dello scorrimento programmatico senza alterare l'URL
-	 * @param {string} sectionId
+	 * Gestione della navigazione o dello scorrimento dinamico in base alla pagina corrente
+	 * @param {MouseEvent} event
+	 * @param {{ label: string, sectionId: string, path: string }} link
 	 */
-	const handleNavClick = (sectionId) => {
-		const target = document.getElementById(sectionId);
-		if (target) {
-			target.scrollIntoView({ behavior: 'smooth' });
+	const handleNavClick = (event, link) => {
+		const currentPath = page.url.pathname;
+		const isHome = currentPath === '/';
+
+		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta
+		if (currentPath === link.path || (link.path === '/' && isHome) || (link.path.startsWith('/#') && isHome)) {
+			event.preventDefault();
+			const target = document.getElementById(link.sectionId);
+			if (target) {
+				target.scrollIntoView({ behavior: 'smooth' });
+			} else {
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			}
 		}
 	};
 
 	/**
-	 * Gestione dello scorrimento programmatico per il logo (torna a inizio pagina)
+	 * Gestione dello scorrimento programmatico per il logo (torna a inizio pagina se siamo sulla home)
 	 * @param {MouseEvent} e
 	 */
 	const handleLogoClick = (e) => {
-		e.preventDefault();
-		const target = document.getElementById('hero');
-		if (target) {
-			target.scrollIntoView({ behavior: 'smooth' });
+		const currentPath = page.url.pathname;
+		if (currentPath === '/') {
+			e.preventDefault();
+			const target = document.getElementById('hero');
+			if (target) {
+				target.scrollIntoView({ behavior: 'smooth' });
+			} else {
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			}
 		}
+	};
+
+	/**
+	 * Determina reattivamente se un link debba essere evidenziato come attivo
+	 * @param {{ label: string, sectionId: string, path: string }} link
+	 * @returns {boolean}
+	 */
+	const getIsActive = (link) => {
+		const currentPath = page.url.pathname;
+		if (link.path === '/') {
+			return currentPath === '/' && (scroll.activeSection === 'hero' || !scroll.activeSection);
+		}
+		if (link.path.startsWith('/#')) {
+			return currentPath === '/' && scroll.activeSection === link.sectionId;
+		}
+		return currentPath === link.path;
 	};
 
 	onMount(() => {
@@ -147,15 +181,15 @@
 {#snippet menu()}
 	<div class="link-nav">
 		{#each links as link}
-			{@const isActive = scroll.activeSection === link.sectionId}
-			<button 
-				type="button"
+			{@const isActive = getIsActive(link)}
+			<a 
+				href={link.path}
 				class="link-nav__item" 
 				class:link-nav__item--active={isActive}
-				onclick={() => handleNavClick(link.sectionId)}
+				onclick={(e) => handleNavClick(e, link)}
 			>
 				{link.label}
-			</button>
+			</a>
 		{/each}
 	</div>
 {/snippet}
