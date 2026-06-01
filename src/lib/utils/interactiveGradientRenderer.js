@@ -303,7 +303,7 @@ const fsSource = `
 	void main() {
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
 		vec2 uv = v_uv;
-		float scaled_time = u_time * u_speed;
+		float scaled_time = u_time; // la moltiplicazione per speed avviene in JS (scaledTime += dt * u_speed)
 
 		// 1. Mouse gravitational UV warp based on velocity and direction
 		vec2 to_mouse = (u_mouse - uv) * aspect;
@@ -416,6 +416,9 @@ export class InteractiveGradientRenderer {
 		this.animationFrameId = 0;
 		this.startTime = performance.now();
 		this.lastTime = performance.now();
+		// scaledTime accumula il tempo pesato per u_speed frame-by-frame in JS,
+		// evitando il salto di fase in scaled_time = u_time * u_speed quando u_time è grande.
+		this.scaledTime = 0.0;
 
 		this.mouse = {
 			current: new THREE.Vector2(0.5, 0.5),
@@ -767,7 +770,10 @@ export class InteractiveGradientRenderer {
 		}
 
 		const uniforms = /** @type {any} */ (this.material.uniforms);
-		uniforms.u_time.value = elapsedSeconds;
+		// u_speed viene letto DOPO che GSAP ha applicato il suo tick per questo frame,
+		// garantendo che l'accumulo rifletta il valore interpolato corrente.
+		this.scaledTime += dt * uniforms.u_speed.value;
+		uniforms.u_time.value = this.scaledTime;
 		uniforms.u_scroll.value = this.scroll.current;
 		uniforms.u_shape_morph.value = this.shape.currentMorph;
 		uniforms.u_splat_count.value = activeSplats;
