@@ -31,62 +31,24 @@
 		const cRight = circleContainerRight;
 
 		const ctx = gsap.context(() => {
-			gsap.set('.dot, .dot-right', { scale: 0, opacity: 0, transformOrigin: 'center' });
-
+			// Avvia immediatamente la rotazione continua asincrona senza animazioni di ingresso (stagger/scale/fade)
 			gsap.to(cLeft, {
-				rotation: 360,
-				duration: 3,
+				rotation: '+=360',
+				duration: 45,
+				repeat: -1,
 				ease: 'none',
 				transformOrigin: '50% 50%'
 			});
 
 			gsap.to(cRight, {
-				rotation: -360,
-				duration: 3,
+				rotation: '-=360',
+				duration: 45,
+				repeat: -1,
 				ease: 'none',
 				transformOrigin: '50% 50%'
 			});
 
-			gsap.to('.dot', {
-				scale: 1,
-				opacity: 1,
-				duration: 1,
-				stagger: {
-					amount: 1.5,
-					from: 'start',
-					grid: 'auto'
-				},
-				ease: 'power2.out',
-				onComplete: () => {
-					gsap.to(cLeft, {
-						rotation: '+=360',
-						duration: 45,
-						repeat: -1,
-						ease: 'none'
-					});
-				}
-			});
-
-			gsap.to('.dot-right', {
-				scale: 1,
-				opacity: 1,
-				duration: 1,
-				stagger: {
-					amount: 1.5,
-					from: 'end',
-					grid: 'auto'
-				},
-				ease: 'power2.out',
-				onComplete: () => {
-					gsap.to(cRight, {
-						rotation: '-=360',
-						duration: 45,
-						repeat: -1,
-						ease: 'none'
-					});
-				}
-			});
-
+			// Controllo della rotazione in base allo scorrimento della sezione blob
 			gsap.timeline({
 				scrollTrigger: {
 					trigger: '.blob-section',

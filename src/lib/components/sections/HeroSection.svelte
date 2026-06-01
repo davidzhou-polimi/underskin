@@ -197,11 +197,6 @@
 		pointer-events: none;
 	}
 
-	/* Colora i pallini in base al tema dello sfondo chiaro per l'insoddisfatto */
-	.mod-insoddisfatto :global(.circles-layer .dot),
-	.mod-insoddisfatto :global(.circles-layer .dot-right) {
-		fill: rgba(128, 53, 210, 0.09) !important;
-	}
 
 	.blob-svg {
 		position: absolute;
