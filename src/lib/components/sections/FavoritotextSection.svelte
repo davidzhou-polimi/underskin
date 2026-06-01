@@ -1,4 +1,13 @@
 <script>
+	/**
+	 * Assunzioni per questa sezione:
+	 * 1. La sezione presenta il testo narrativo del Favorito suddiviso in due paragrafi per migliorare la leggibilità.
+	 * 2. Le parole chiave Fear of Failure e Choking Under Pressure integrano spiegazioni contestuali tramite tooltip.
+	 * 3. L'animazione all'ingresso è delegata a scrollReveal e lo stato scrollytelling a trackSection.
+	 */
+
+	import { trackSection } from '$lib/actions/trackSection.js';
+	import { scrollReveal } from '$lib/actions/scrollReveal.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	// Definizione dei testi descrittivi da mostrare nel riquadro vicino al mouse in modalità paragrafo
@@ -6,11 +15,16 @@
 	const textChokingUnderPressure = "Improvviso calo delle prestazioni in situazioni ad alta pressione. L’ansia interferisce con l’esecuzione automatica di competenze consolidate.";
 </script>
 
-<section class="pressure-text-section">
-	<div class="text-box">
-		<p class="main-paragraph">
-			La pressione cresce fino a trasformarsi in 
-			
+<section
+	id="favorito-narrative"
+	class="narrative-section"
+	use:trackSection={{ id: 'favorito-narrative' }}
+>
+	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
+	<div class="content-container" use:scrollReveal>
+		<p class="narrative-text">
+			Quando l'aspettativa esterna si fa insostenibile,<br />
+			la pressione cresce fino a diventare 
 			<span 
 				class="highlighted-keyword gradient-text animate-gradient-text favorito-color"
 				role="tooltip"
@@ -19,10 +33,10 @@
 				onmouseleave={() => tooltip.hide()}
 			>
 				Fear of Failure
-			</span>, 
-			
-			mentre il bisogno di essere perfetti porta spesso al 
-			
+			</span>.
+			<br /><br />
+			Il bisogno ossessivo di essere perfetti porta spesso<br />
+			al 
 			<span 
 				class="highlighted-keyword gradient-text animate-gradient-text favorito-color"
 				role="tooltip"
@@ -31,49 +45,64 @@
 				onmouseleave={() => tooltip.hide()}
 			>
 				Choking Under Pressure
-			</span>: 
-			un momento in cui la mente interferisce con ciò che anni di allenamento avevano reso naturale.
+			</span>: un blocco in cui la mente<br />
+			ostacola ciò che l'allenamento aveva reso naturale.
 		</p>
 	</div>
 </section>
 
 <style>
-	.pressure-text-section {
-		width: 100%;
+	/* Sezione a scorrimento a schermo intero posizionata in background neutro */
+	.narrative-section {
+		position: relative;
 		min-height: 100vh;
+		width: 100%;
 		display: flex;
-		justify-content: center;
 		align-items: center;
-		padding: 6rem 2rem;
+		justify-content: center;
+		background-color: var(--background-primary);
+		overflow: hidden;
+		padding: var(--spacing-6) var(--spacing-4);
 	}
 
-	.text-box {
-		width: 1000px;
-		max-width: 100%;
+	/* Contenitore interno con larghezza controllata per ottimizzare la lettura dei paragrafi */
+	.content-container {
+		position: relative;
+		z-index: 10;
+		width: 100%;
+		max-width: var(--spacing-17);
+		margin: 0 auto;
 	}
 
-	.main-paragraph {
-		text-align: left; /* Bandiera a sinistra */
-		margin: 0;
-		line-height: 1.5;
-		color: var(--content-primary, #ffffff);
-		
-		/* Applicazione rigorosa dei token tipografici d'ambiente richiesti */
+	/* Allineamento a sinistra (bandiera) ma blocco centrato orizzontalmente nello schermo */
+	.narrative-text {
 		font-family: var(--font-family-base);
 		font-size: var(--text-m);
 		font-weight: var(--text-body-weight);
+		line-height: 1.5;
+		color: var(--content-primary);
+		margin: 0 auto;
+		width: fit-content;
+		text-align: left;
 	}
 
 	.highlighted-keyword {
-        position: relative;
+		position: relative;
 		display: inline;
-		font-weight: 700; /* Spessore marcato per evidenziare i termini */
-        padding-bottom: 6px;
+		font-weight: 700;
+		padding-bottom: 6px;
 	}
 
 	.favorito-color {
 		--gradient-c1: var(--azzurro-800);
 		--gradient-c2: var(--azzurro-300);
 		--gradient-c3: var(--azzurro-600);
+
+		/* Permette di ritagliare lo sfondo seguendo precisamente il contorno delle lettere */
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+
+		background-size: 300% 100%;
 	}
 </style>
