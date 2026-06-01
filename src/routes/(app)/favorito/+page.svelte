@@ -7,7 +7,7 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import FavoritoHero from '$lib/components/sections/favorito/FavoritoHero.svelte';
+	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import IntrusiveThoughts from '$lib/components/sections/favorito/IntrusiveThoughts.svelte';
 	import FavoritoTextSection from '$lib/components/sections/favorito/FavoritoTextSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
@@ -24,7 +24,15 @@
 
 <main id="favorito-profile-page">
 	<!-- 1. Sezione di benvenuto con lo sfondo azzurro e il grande blob wiggling -->
-	<FavoritoHero />
+	<HeroSection 
+		theme="favorito" 
+		title="IL FAVORITO" 
+		sectionId="favorito-hero"
+		bg="var(--azzurro-900)"
+		blob1="#6A96DF"
+		blob2="#3555A0"
+		textShadow="none"
+	/>
 
 	<!-- 2. Sezione interattiva per rimuovere i pensieri intrusivi (Intrusive Thoughts) -->
 	<IntrusiveThoughts />

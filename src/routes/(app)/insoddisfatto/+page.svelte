@@ -7,7 +7,7 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import InsoddisfattoHero from '$lib/components/sections/insoddisfatto/InsoddisfattoHero.svelte';
+	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import PerfectionGame from '$lib/components/sections/insoddisfatto/PerfectionGame.svelte';
 	import SilverParadoxSection from '$lib/components/sections/insoddisfatto/SilverParadoxSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
@@ -24,7 +24,15 @@
 
 <main id="insoddisfatto-profile-page">
 	<!-- 1. Sezione di benvenuto con morfologia fluida e grandi blob viola wiggling -->
-	<InsoddisfattoHero />
+	<HeroSection 
+		theme="insoddisfatto" 
+		title="L'INSODDISFATTO" 
+		sectionId="insoddisfatto-hero"
+		bg="var(--background-primary)"
+		blob1="var(--viola-500)"
+		blob2="var(--viola-700)"
+		textShadow="0 4px 40px rgba(128, 53, 210, 0.2)"
+	/>
 
 	<!-- 2. Sezione interattiva per catturare il centro perfetto (Perfection Game) -->
 	<PerfectionGame />

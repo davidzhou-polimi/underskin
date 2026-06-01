@@ -1,10 +1,42 @@
 <script>
+	/**
+	 * Assunzioni per questo componente unificato:
+	 * 1. Sostituisce i tre file Hero specifici in un unico componente riutilizzabile.
+	 * 2. Gestisce reattivamente sfondi, colori dei blob e testi tramite le rune di Svelte 5.
+	 * 3. Tutte le animazioni GSAP e ScrollTrigger sono isolate nel context ed eseguono il cleanup su distruzione del componente.
+	 */
+
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import DecorativeCircle from '$lib/components/ui/DecorativeCircle.svelte';
+	import { trackSection } from '$lib/actions/trackSection.js';
 
-	gsap.registerPlugin(ScrollTrigger);
+	if (typeof window !== 'undefined') {
+		gsap.registerPlugin(ScrollTrigger);
+	}
+
+	/**
+	 * @typedef {Object} Props
+	 * @property {string} [title] - Il titolo principale dell'intestazione
+	 * @property {string} [sectionId] - L'ID univoco per lo scrollytelling
+	 * @property {string} [bg] - Colore dello sfondo della sezione
+	 * @property {string} [blob1] - Colore del blob principale
+	 * @property {string} [blob2] - Colore del secondo blob (sfondo)
+	 * @property {string} [textShadow] - Effetto ombra per il testo
+	 * @property {'favorito' | 'infortunato' | 'insoddisfatto'} [theme] - Il tema per le impostazioni delle animazioni
+	 */
+
+	/** @type {Props} */
+	let {
+		title = 'IL FAVORITO',
+		sectionId = 'favorito-hero',
+		bg = 'var(--azzurro-900)',
+		blob1 = '#6A96DF',
+		blob2 = '#3555A0',
+		textShadow = 'none',
+		theme = 'favorito'
+	} = $props();
 
 	/** @type {SVGPathElement | null} */
 	let blobContainer1 = null;
@@ -15,13 +47,12 @@
 	/** @type {HTMLElement | null} */
 	let sectionRef = null;
 
+	// Dati del tracciato SVG condiviso per la forma del blob fluttuante
 	const pathData = 'M481.115 405.442C181.913 138.178 -223.629 419.158 -389 593.056L-338.761 931.321C-203.859 847.161 126 304.237 323 931.321C350.247 1018.05 421.997 1054.57 517.5 1059.7C754.61 1072.42 1138.14 891.593 1350.53 805.082C1648.48 683.725 1770.59 557.486 1740.58 284.085C1710.58 10.6835 1370.77 228.986 1133.53 521.916C896.286 814.846 855.118 739.521 481.115 405.442Z';
 
 	onMount(() => {
-		// Controllo di sicurezza: eseguiamo le animazioni solo se tutti gli elementi sono stati renderizzati nel DOM
 		if (!blobContainer1 || !blobContainer2 || !blobText || !sectionRef) return;
 
-		// Assegniamo gli elementi a costanti non nulle per far felice TypeScript
 		const el1 = blobContainer1;
 		const el2 = blobContainer2;
 		const txt = blobText;
@@ -30,10 +61,11 @@
 		gsap.set([el1, el2, txt], { opacity: 1 });
 
 		const ctx = gsap.context(() => {
+			// Dissolve i blob gradualmente per dare una transizione fluida verso la sezione successiva
 			gsap.fromTo([el1, el2], 
 				{ opacity: 1 },
 				{
-					opacity: 0.3,
+					opacity: theme === 'insoddisfatto' ? 0.35 : 0.3,
 					scrollTrigger: {
 						trigger: sec,
 						start: 'top top',
@@ -43,11 +75,12 @@
 				}
 			);
 
+			// Dissolvenza e parallasse verticale del titolo durante lo scroll
 			gsap.fromTo(txt,
 				{ opacity: 1, y: 0 },
 				{
 					opacity: 0,
-					y: -50,
+					y: theme === 'insoddisfatto' ? -80 : -50,
 					scrollTrigger: {
 						trigger: sec,
 						start: 'top top',
@@ -57,21 +90,23 @@
 				}
 			);
 
+			// Fluttuazione organica continua asincrona (blob primario)
 			gsap.to(el1, {
 				y: '+=40',
 				x: '-=20',
-				rotation: '+=6',
-				duration: 6,
+				rotation: theme === 'insoddisfatto' ? '+=8' : '+=6',
+				duration: theme === 'insoddisfatto' ? 8 : 6,
 				repeat: -1,
 				yoyo: true,
 				ease: 'sine.inOut'
 			});
 
+			// Fluttuazione con fase e direzione sfalsate (blob secondario)
 			gsap.to(el2, {
 				y: '+=30',
 				x: '+=20',
-				rotation: '-=8',
-				duration: 7,
+				rotation: theme === 'insoddisfatto' ? '-=10' : '-=8',
+				duration: theme === 'insoddisfatto' ? 9 : 7,
 				repeat: -1,
 				yoyo: true,
 				ease: 'sine.inOut'
@@ -82,15 +117,15 @@
 	});
 </script>
 
-<section class="blob-section" bind:this={sectionRef}>
-	<div class="circles-layer">
-		<DecorativeCircle />
-	</div>
-	
+<section id={sectionId} class="blob-section" class:mod-insoddisfatto={theme === 'insoddisfatto'} style:background-color={bg} bind:this={sectionRef} use:trackSection={{ id: sectionId }}>
 	<div class="sticky-viewport">
+		<div class="circles-layer">
+			<DecorativeCircle />
+		</div>
+		
 		<div class="text-container">
-			<h1 bind:this={blobText} class="blob-text">
-				IL FAVORITO
+			<h1 bind:this={blobText} class="blob-text" style:text-shadow={textShadow}>
+				{title}
 			</h1>
 		</div>
 
@@ -127,13 +162,13 @@
 
 			<g filter="url(#filter0_fgn_600_977)">
 				<g class="blob-back">
-					<path bind:this={blobContainer2} d={pathData} fill="#3555A0" />
+					<path bind:this={blobContainer2} d={pathData} fill={blob2} />
 				</g>
 			</g>
 
 			<g filter="url(#filter0_fgn_600_977)">
 				<g>
-					<path bind:this={blobContainer1} d={pathData} fill="#6A96DF" />
+					<path bind:this={blobContainer1} d={pathData} fill={blob1} />
 				</g>
 			</g>
 		</svg>
@@ -141,12 +176,11 @@
 </section>
 
 <style>
-	/* ... (Mantieni invariati gli stili CSS di prima) ... */
 	.blob-section {
 		position: relative;
 		width: 100%;
 		height: 100vh;
-		background-color: var(--azzurro-900);
+		background-color: var(--background-primary);
 	}
 	.sticky-viewport {
 		position: sticky;
@@ -162,6 +196,13 @@
 		z-index: 1;
 		pointer-events: none;
 	}
+
+	/* Colora i pallini in base al tema dello sfondo chiaro per l'insoddisfatto */
+	.mod-insoddisfatto :global(.circles-layer .dot),
+	.mod-insoddisfatto :global(.circles-layer .dot-right) {
+		fill: rgba(128, 53, 210, 0.09) !important;
+	}
+
 	.blob-svg {
 		position: absolute;
 		top: 0;

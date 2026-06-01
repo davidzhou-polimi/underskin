@@ -7,7 +7,7 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import InfortunatoHero from '$lib/components/sections/infortunato/InfortunatoHero.svelte';
+	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import ShatterGlass from '$lib/components/sections/infortunato/ShatterGlass.svelte';
 	import RecoverySection from '$lib/components/sections/infortunato/RecoverySection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
@@ -25,7 +25,15 @@
 
 <main id="infortunato-profile-page">
 	<!-- 1. Sezione di benvenuto con sfondo arancione caldo -->
-	<InfortunatoHero />
+	<HeroSection 
+		theme="infortunato" 
+		title="L'INFORTUNATO" 
+		sectionId="infortunato-hero"
+		bg="var(--arancione-900)"
+		blob1="var(--arancione-500)"
+		blob2="var(--arancione-700)"
+		textShadow="none"
+	/>
 
 	<!-- 2. Sezione interattiva di scorrimento Voronoi con sfondo azzurro-ghiaccio -->
 	<ShatterGlass />
