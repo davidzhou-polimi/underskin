@@ -8,7 +8,7 @@
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import ShatterGlass from '$lib/components/sections/infortunato/ShatterGlass.svelte';
+	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
 	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>

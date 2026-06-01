@@ -8,7 +8,7 @@
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import PerfectionGame from '$lib/components/sections/insoddisfatto/PerfectionGame.svelte';
+	import PerfectionGame from '$lib/components/sections/PerfectionGame.svelte';
 	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
