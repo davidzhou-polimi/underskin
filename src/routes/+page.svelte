@@ -1,11 +1,13 @@
 <script>
     import OutroSection from '$lib/components/sections/OutroSection.svelte';
+    import FinaleSection from '$lib/components/sections/FinaleSection.svelte';
     import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 </script>
 
 <main>
     <OutroSection />
     <PerformanceSection />
+    <FinaleSection />
 </main>
 
 <style>
