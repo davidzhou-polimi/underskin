@@ -3,14 +3,17 @@
 	 * Assunzioni per questa pagina rotta:
 	 * 1. Questa pagina funge da puro orchestratore sequenziale delle sezioni del profilo "L'Insoddisfatto".
 	 * 2. Ciascun componente gestisce autonomamente la propria veste grafica e i propri sfondi.
-	 * 3. Utilizziamo <svelte:head> per impostare i metadati SEO del profilo archetipico.
+	 * 3. Il testo narrativo e i tooltip sono definiti qui e iniettati come snippet children in NarrativeSection.
 	 */
 
-	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import PerfectionGame from '$lib/components/sections/insoddisfatto/PerfectionGame.svelte';
-	import SilverParadoxSection from '$lib/components/sections/insoddisfatto/SilverParadoxSection.svelte';
+	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+
+	const textPensieroControfattuale = "Tendenza a ricostruire mentalmente eventi passati immaginando esiti alternativi, valutando come scelte o circostanze diverse avrebbero potuto cambiare il risultato.";
+	const textParadossoArgento = "Gli atleti con l'argento spesso sono meno soddisfatti di quelli con il bronzo, perché pensano alla vittoria mancata. La soddisfazione dipende quindi più dal confronto mentale che dal risultato reale.";
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -38,7 +41,33 @@
 	<PerfectionGame />
 
 	<!-- 3. Sezione narrativa sul paradosso dell'argento e i casi di Milano Cortina 2026 -->
-	<SilverParadoxSection />
+	<NarrativeSection theme="insoddisfatto" sectionId="insoddisfatto-narrative">
+		A volte il podio non basta. Chi arriva più vicino all'oro<br />
+		è spesso quello che fa più fatica ad accettare<br />
+		il risultato, intrappolato dal 
+		<span 
+			class="highlighted-keyword gradient-text animate-gradient-text keyword-color"
+			role="tooltip"
+			tabindex="-1"
+			onmouseenter={() => tooltip.show(textPensieroControfattuale, 'paragrafo')}
+			onmouseleave={() => tooltip.hide()}
+		>
+			pensiero controfattuale
+		</span>.
+		<br /><br />
+		Viene definito il 
+		<span 
+			class="highlighted-keyword gradient-text animate-gradient-text keyword-color"
+			role="tooltip"
+			tabindex="-1"
+			onmouseenter={() => tooltip.show(textParadossoArgento, 'paragrafo')}
+			onmouseleave={() => tooltip.hide()}
+		>
+			paradosso dell'argento
+		</span>: la mente<br />
+		continua a guardare ciò che è mancato, cancellando<br />
+		quello che è stato raggiunto.
+	</NarrativeSection>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection theme="insoddisfatto" />
