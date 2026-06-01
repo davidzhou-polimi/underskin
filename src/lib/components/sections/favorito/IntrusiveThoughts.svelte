@@ -240,8 +240,9 @@
     height: 100%;
 
     /* Glass Effect integrato direttamente: permette a backdrop-filter di operare 
-       sul reale sfondo della pagina poiché nessun antenato ha proprietà 'filter' isolate */
-    background-color: rgb(from var(--neutral-200) r g b / 0.3);
+       sul reale sfondo della pagina poiché nessun antenato ha proprietà 'filter' isolate.
+       Valori uniformati con GlassEffect.svelte (var(--neutral-100) al 50% di opacità) */
+    background-color: rgb(from var(--neutral-100) r g b / 0.5);
     border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
