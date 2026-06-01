@@ -63,6 +63,10 @@
 						container?.scrollIntoView({ behavior: 'smooth' });
 						isScrollLocked = true;
 					}
+				},
+				onLeaveBack: () => {
+					// Quando si risale oltre la cima della sezione, rilasciamo temporaneamente lo scroll
+					isScrollLocked = false;
 				}
 			});
 		}
@@ -74,26 +78,50 @@
 		}
 	});
 
-	// Rimuove o applica i listener di blocco dello scroll in base allo stato del gioco
+	// Rimuove o applica i listener di blocco dello scroll in base allo stato del gioco.
+	// Consente sempre di risalire verso l'alto se e.deltaY < 0 o touchDeltaY < 0.
 	$effect(() => {
 		if (isScrollLocked && attempts === 0) {
-			/** @param {any} e */
+			let touchStartY = 0;
+
+			/** @param {WheelEvent} e */
 			const preventDefault = (e) => {
-				// Consente il pinch-to-zoom su trackpad (ctrlKey: true)
+				// Consente il pinch-to-zoom su trackpad
 				if (e.ctrlKey) return;
 
-				// Consente lo zoom multitouch su dispositivi mobile
-				if (e.touches && e.touches.length > 1) return;
+				// Consente lo scroll verso l'alto per ritornare su
+				if (e.deltaY < 0) return;
 
 				e.preventDefault();
 			};
 
+			/** @param {TouchEvent} e */
+			const handleTouchStart = (e) => {
+				touchStartY = e.touches[0].clientY;
+			};
+
+			/** @param {TouchEvent} e */
+			const handleTouchMove = (e) => {
+				// Consente lo zoom multitouch su dispositivi mobile
+				if (e.touches && e.touches.length > 1) return;
+
+				const touchCurrentY = e.touches[0].clientY;
+				const touchDeltaY = touchStartY - touchCurrentY;
+
+				// Blocca lo scroll solo se l'utente tenta di andare verso il basso
+				if (touchDeltaY > 0) {
+					e.preventDefault();
+				}
+			};
+
 			window.addEventListener('wheel', preventDefault, { passive: false });
-			window.addEventListener('touchmove', preventDefault, { passive: false });
+			window.addEventListener('touchstart', handleTouchStart, { passive: true });
+			window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
 			return () => {
 				window.removeEventListener('wheel', preventDefault);
-				window.removeEventListener('touchmove', preventDefault);
+				window.removeEventListener('touchstart', handleTouchStart);
+				window.removeEventListener('touchmove', handleTouchMove);
 			};
 		}
 	});
@@ -171,7 +199,18 @@
 		onmouseenter={() => isHovering = true}
 		onmouseleave={() => isHovering = false}
 	>
-		<div class="target-circle"></div>
+		<svg class="target-circle" viewBox="0 0 320 320">
+			<circle
+				cx="160"
+				cy="160"
+				r="157.89"
+				fill="none"
+				stroke="var(--content-primary)"
+				stroke-width="4"
+				stroke-dasharray="0 12.4"
+				stroke-linecap="round"
+			/>
+		</svg>
 
 		<!-- 
 			Delega l'animazione traslazionale e di scale all'azione GSAP.
@@ -200,7 +239,7 @@
 	{#if isHovering && attempts === 0}
 		<CursorTooltip 
 			visible={true} 
-			text="click o spazio"
+			text="Click o Spazio"
 			type="semplice"
 			x={mouseX} 
 			y={mouseY} 
@@ -285,10 +324,8 @@
 		/* 320px è l'80% di 400px (var(--spacing-14)) */
 		width: calc(var(--spacing-14) * 0.8);
 		height: calc(var(--spacing-14) * 0.8);
-		border: 2px dashed var(--content-primary);
-		border-radius: 50%;
-		opacity: 0.5;
 		z-index: 1;
+		pointer-events: none;
 	}
 
 	.blob-wrapper {

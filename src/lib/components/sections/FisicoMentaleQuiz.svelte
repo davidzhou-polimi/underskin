@@ -123,7 +123,8 @@
 			const yOffset = (logicalHeight - fontSize) / 2;
 
 			// A. 绘制十位 '7'
-			ctx.font = `800 ${fontSize}px 'Rethink Sans', sans-serif`;
+			// Adattato a 700 (bold) per coerenza con il peso dei cerchi di scelta
+			ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
 			ctx.fillText('7', 0, yOffset + animData.tensY);
 
 			// B. 绘制个位 '0'
@@ -139,7 +140,8 @@
 			const baseTextX = percentX + charWidth * 1.0 + 24; 
 			
 			ctx.globalAlpha = animData.textOpacity;
-			ctx.font = `800 ${fontSize}px 'Rethink Sans', sans-serif`;
+			// Adattato a 700 (bold) per coerenza con il peso dei cerchi di scelta
+			ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
 			
 			ctx.fillText('mentale', baseTextX + animData.textX, yOffset);
 			ctx.restore();
@@ -386,7 +388,7 @@
 							fill="none"
 							stroke="var(--content-primary)"
 							stroke-width="4"
-							stroke-dasharray="0 16"
+							stroke-dasharray="0 12.4"
 							stroke-linecap="round"
 							mask="url(#mask-left-exp)"
 						/>
@@ -445,7 +447,7 @@
 							fill="none"
 							stroke="var(--content-primary)"
 							stroke-width="4"
-							stroke-dasharray="0 16"
+							stroke-dasharray="0 12.4"
 							stroke-linecap="round"
 							mask="url(#mask-right)"
 						/>
@@ -482,7 +484,7 @@
 	{#if isHovering && quizState === 'choosing' && layerVisible}
 		<CursorTooltip
 			visible={true}
-			text="scegli"
+			text="Scegli"
 			type="semplice"
 			x={mouseX}
 			y={mouseY}
@@ -648,8 +650,6 @@
 		flex-shrink: 0;
 	}
 
-
-
 	.right-wrap {
 		position: relative;
 		transition:
@@ -698,7 +698,6 @@
 		cursor: default;
 	}
 
-	
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
 		/* Peso impostato a 700 (bold) ed adattato alla misura var(--text-l) (40px) per un bilanciamento ottimale */
@@ -725,7 +724,6 @@
 		animation: global-shift-gradient 6s linear infinite;
 	}
 
-	
 	.expanded-text {
 		display: inline-flex;
 		align-items: center;
@@ -767,17 +765,6 @@
 			width 0.6s cubic-bezier(0.25, 1, 0.5, 1),
 			height 0.6s cubic-bezier(0.25, 1, 0.5, 1),
 			border-radius 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-	}
-
-
-	.right.fisico-expand {
-		width: 480px;
-		height: 480px;
-		border-radius: 240px;
-		transition:
-			width 0.3s ease-out,
-			height 0.3s ease-out,
-			border-radius 0.3s ease-out;
 	}
 
 	/* Border SVG */
@@ -884,7 +871,6 @@
 		margin: 0 0 var(--spacing-4) 0;
 		white-space: normal;
 	}
-
 
 	.long-quote.blur-in {
 		opacity: 1;

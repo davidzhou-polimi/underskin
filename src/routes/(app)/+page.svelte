@@ -3,7 +3,7 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
-	import CerchiQuiz from '$lib/components/sections/CerchiQuiz.svelte';
+	import FisicoMentaleQuiz from '$lib/components/sections/FisicoMentaleQuiz.svelte';
 	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 	import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 	import { layers } from '$lib/stores/layers.svelte.js';
@@ -69,7 +69,7 @@
 
 <main class="layer-container">
 	<IntroTextSection />
-	<CerchiQuiz
+	<FisicoMentaleQuiz
 		lockScroll={() => isLocked = true}
 		unlockScroll={() => isLocked = false}
 		onExpand={() => quizExpanded = true}
