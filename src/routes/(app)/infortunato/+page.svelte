@@ -9,7 +9,7 @@
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import ShatterGlass from '$lib/components/sections/infortunato/ShatterGlass.svelte';
-	import RecoverySection from '$lib/components/sections/infortunato/RecoverySection.svelte';
+	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
 
@@ -38,8 +38,18 @@
 	<!-- 2. Sezione interattiva di scorrimento Voronoi con sfondo azzurro-ghiaccio -->
 	<ShatterGlass />
 
-	<!-- 3. Sezione narrativa di superamento e reset psicofisico post-recupero -->
-	<RecoverySection />
+	<!-- 3. Sezione narrativa di superamento e reset psicofisico post-recupero, unificata per coerenza architetturale -->
+	<NarrativeSection
+		sectionId="recovery"
+		theme="infortunato"
+		segments={[
+			{ type: 'text', content: "Dopo il recupero, molti atleti convivono con<br />la " },
+			{ type: 'keyword', content: "kinesiophobia", tooltip: "Ansia della prestazione legata al timore di non riuscire a raggiungere un determinato obiettivo." },
+			{ type: 'text', content: " e perdita di fiducia.<br /><br />Tornare davvero in campo significa affrontare<br />un processo di " },
+			{ type: 'keyword', content: "reset mentale", tooltip: "Improvviso calo delle prestazioni in situazioni ad alta pressione. L’ansia interferisce con l’esecuzione automatica di competenze consolidate." },
+			{ type: 'text', content: ": smettendo di <br />competere con il ricordo del dolore." }
+		]}
+	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection theme="infortunato" />

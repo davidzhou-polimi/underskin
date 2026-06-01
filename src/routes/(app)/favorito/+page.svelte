@@ -9,7 +9,7 @@
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import IntrusiveThoughts from '$lib/components/sections/favorito/IntrusiveThoughts.svelte';
-	import FavoritoTextSection from '$lib/components/sections/favorito/FavoritoTextSection.svelte';
+	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
 
@@ -37,8 +37,18 @@
 	<!-- 2. Sezione interattiva per rimuovere i pensieri intrusivi (Intrusive Thoughts) -->
 	<IntrusiveThoughts />
 
-	<!-- 3. Sezione narrativa di superamento con termini evidenziati e tooltip associati -->
-	<FavoritoTextSection />
+	<!-- 3. Sezione narrativa di superamento con termini evidenziati e tooltip associati, unificata per evitare ridondanze -->
+	<NarrativeSection
+		sectionId="favorito-narrative"
+		theme="favorito"
+		segments={[
+			{ type: 'text', content: "Quando l'aspettativa esterna si fa insostenibile,<br />la pressione cresce fino a diventare " },
+			{ type: 'keyword', content: "Fear of Failure", tooltip: "Ansia della prestazione legata al timore di non riuscire a raggiungere un determinato obiettivo." },
+			{ type: 'text', content: ".<br /><br />Il bisogno ossessivo di essere perfetti porta spesso<br />al " },
+			{ type: 'keyword', content: "Choking Under Pressure", tooltip: "Improvviso calo delle prestazioni in situazioni ad alta pressione. L’ansia interferisce con l’esecuzione automatica di competenze consolidate." },
+			{ type: 'text', content: ": un blocco in cui la mente<br />ostacola ciò che l'allenamento aveva reso naturale." }
+		]}
+	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection />

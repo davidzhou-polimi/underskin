@@ -9,7 +9,7 @@
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import PerfectionGame from '$lib/components/sections/insoddisfatto/PerfectionGame.svelte';
-	import SilverParadoxSection from '$lib/components/sections/insoddisfatto/SilverParadoxSection.svelte';
+	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
 
@@ -37,8 +37,18 @@
 	<!-- 2. Sezione interattiva per catturare il centro perfetto (Perfection Game) -->
 	<PerfectionGame />
 
-	<!-- 3. Sezione narrativa sul paradosso dell'argento e i casi di Milano Cortina 2026 -->
-	<SilverParadoxSection />
+	<!-- 3. Sezione narrativa sul paradosso dell'argento, unificata per coerenza architetturale -->
+	<NarrativeSection
+		sectionId="insoddisfatto-narrative"
+		theme="insoddisfatto"
+		segments={[
+			{ type: 'text', content: "A volte il podio non basta. Chi arriva più vicino all’oro<br />è spesso quello che fa più fatica ad accettare<br />il risultato, intrappolato dal " },
+			{ type: 'keyword', content: "pensiero controfattuale", tooltip: "Tendenza a ricostruire mentalmente eventi passati immaginando esiti alternativi, valutando come scelte o circostanze diverse avrebbero potuto cambiare il risultato." },
+			{ type: 'text', content: ".<br /><br />Viene definito il " },
+			{ type: 'keyword', content: "paradosso dell’argento", tooltip: "Gli atleti con l’argento spesso sono meno soddisfatti di quelli con il bronzo, perché pensano alla vittoria mancata. La soddisfazione dipende quindi più dal confronto mentale che dal risultato reale." },
+			{ type: 'text', content: ": la mente<br />continua a guardare ciò che è mancato, cancellando<br />quello che è stato raggiunto." }
+		]}
+	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection theme="insoddisfatto" />
