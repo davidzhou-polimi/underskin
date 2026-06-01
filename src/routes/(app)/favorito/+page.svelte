@@ -15,7 +15,7 @@
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
 <svelte:head>
-	<title>Favorito — UnderSkin</title>
+	<title>Favorito - UnderSkin</title>
 	<meta 
 		name="description" 
 		content="Analisi dell'archetipo del Favorito: quando vincere diventa l'unico risultato accettabile, la pressione psicologica cresce fino a trasformarsi in Fear of Failure e Choking Under Pressure." 

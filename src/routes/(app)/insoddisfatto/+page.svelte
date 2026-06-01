@@ -15,7 +15,7 @@
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
 <svelte:head>
-	<title>Insoddisfatto — UnderSkin</title>
+	<title>Insoddisfatto - UnderSkin</title>
 	<meta 
 		name="description" 
 		content="Analisi dell'archetipo dell'Insoddisfatto: perfezionismo opprimente, il paradosso dell'argento, pensiero controfattuale e incapacità di godere dei traguardi raggiunti." 
