@@ -52,10 +52,10 @@
 </section>
 
 <style>
-	/* Sezione a scorrimento a schermo intero posizionata in background neutro */
+	/* Sezione a scorrimento posizionata in background neutro, ridotta l'altezza minima per ottimizzare lo scroll */
 	.narrative-section {
 		position: relative;
-		min-height: 100vh;
+		min-height: 80vh;
 		width: 100%;
 		display: flex;
 		align-items: center;
