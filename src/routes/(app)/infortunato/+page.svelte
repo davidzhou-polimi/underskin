@@ -6,10 +6,10 @@
 	 * 3. Utilizziamo <svelte:head> per impostare i metadati SEO del profilo archetipico.
 	 */
 
-	// Importa le sezioni della pagina in sequenza
-	import InfortunatoHero from '$lib/components/sections/InfortunatoHero.svelte';
-	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
-	import RecoverySection from '$lib/components/sections/RecoverySection.svelte';
+	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
+	import InfortunatoHero from '$lib/components/sections/infortunato/InfortunatoHero.svelte';
+	import ShatterGlass from '$lib/components/sections/infortunato/ShatterGlass.svelte';
+	import RecoverySection from '$lib/components/sections/infortunato/RecoverySection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
 </script>
 

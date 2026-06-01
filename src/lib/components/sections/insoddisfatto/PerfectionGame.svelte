@@ -1,5 +1,5 @@
 <script>
-	import { perfectionGameAction } from '$lib/actions/perfectionGame.js';
+	import { perfectionGameAction } from '$lib/actions/insoddisfatto/perfectionGame.js';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { onMount, onDestroy } from 'svelte';

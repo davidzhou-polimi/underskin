@@ -6,24 +6,11 @@
 	 * 3. Utilizziamo <svelte:head> per impostare i metadati SEO del profilo archetipico.
 	 */
 
-	// Importa le sezioni della pagina in sequenza
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import IntrusiveThoughts from '$lib/components/sections/IntrusiveThoughts.svelte';
-	import FavoritotextSection from '$lib/components/sections/FavoritotextSection.svelte';
+	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
+	import FavoritoHero from '$lib/components/sections/favorito/FavoritoHero.svelte';
+	import IntrusiveThoughts from '$lib/components/sections/favorito/IntrusiveThoughts.svelte';
+	import FavoritoTextSection from '$lib/components/sections/favorito/FavoritoTextSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
-
-	import { onMount } from 'svelte';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-
-	onMount(() => {
-		// Consente a tutte le Svelte Actions dei componenti figli di completare
-		// la creazione e l'inizializzazione asincrona dei loro ScrollTriggers e pin spacers.
-		const timer = setTimeout(() => {
-			ScrollTrigger.refresh();
-		}, 100);
-
-		return () => clearTimeout(timer);
-	});
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -37,13 +24,13 @@
 
 <main id="favorito-profile-page">
 	<!-- 1. Sezione di benvenuto con lo sfondo azzurro e il grande blob wiggling -->
-	<HeroSection />
+	<FavoritoHero />
 
 	<!-- 2. Sezione interattiva per rimuovere i pensieri intrusivi (Intrusive Thoughts) -->
 	<IntrusiveThoughts />
 
 	<!-- 3. Sezione narrativa di superamento con termini evidenziati e tooltip associati -->
-	<FavoritotextSection />
+	<FavoritoTextSection />
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection />
