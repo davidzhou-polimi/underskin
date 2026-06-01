@@ -38,11 +38,12 @@
 </main>
 
 <style>
-	/* Stili del contenitore principale che ospita gli elementi della pagina del profilo */
+	/* Stili del contenitore principale che ospita gli elementi della pagina del profilo, isolando lo scorrimento orizzontale */
 	#infortunato-profile-page {
 		position: relative;
 		width: 100%;
 		min-height: 100vh;
 		background-color: var(--background-primary);
+		overflow-x: hidden;
 	}
 </style>

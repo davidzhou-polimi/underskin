@@ -50,11 +50,12 @@
 </main>
 
 <style>
-	/* Contenitore principale che ospita gli elementi della pagina dell'archetipo */
+	/* Contenitore principale che ospita gli elementi della pagina dell'archetipo, isolando lo scorrimento orizzontale */
 	#insoddisfatto-profile-page {
 		position: relative;
 		width: 100%;
 		min-height: 100vh;
 		background-color: var(--background-primary);
+		overflow-x: hidden;
 	}
 </style>
