@@ -3,17 +3,14 @@
 	 * Assunzioni per questa pagina rotta:
 	 * 1. Questa pagina funge da puro orchestratore sequenziale delle sezioni del profilo "Il Favorito".
 	 * 2. Ciascun componente gestisce autonomamente la propria veste grafica, animazioni e sfondi.
-	 * 3. Il testo narrativo e i tooltip sono definiti qui e iniettati come snippet children in NarrativeSection.
+	 * 3. Utilizziamo <svelte:head> per impostare i metadati SEO del profilo archetipico.
 	 */
 
+	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
 	import HeroSection from '$lib/components/sections/HeroSection.svelte';
 	import IntrusiveThoughts from '$lib/components/sections/favorito/IntrusiveThoughts.svelte';
-	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
+	import FavoritoTextSection from '$lib/components/sections/favorito/FavoritoTextSection.svelte';
 	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
-	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
-
-	const textFearOfFailure = "Ansia della prestazione legata al timore di non riuscire a raggiungere un determinato obiettivo.";
-	const textChokingUnderPressure = "Improvviso calo delle prestazioni in situazioni ad alta pressione. L'ansia interferisce con l'esecuzione automatica di competenze consolidate.";
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -40,33 +37,8 @@
 	<!-- 2. Sezione interattiva per rimuovere i pensieri intrusivi (Intrusive Thoughts) -->
 	<IntrusiveThoughts />
 
-	<!-- 3. Sezione narrativa con termini evidenziati e tooltip associati -->
-	<NarrativeSection theme="favorito" sectionId="favorito-narrative">
-		Quando l'aspettativa esterna si fa insostenibile,<br />
-		la pressione cresce fino a diventare 
-		<span 
-			class="highlighted-keyword gradient-text animate-gradient-text keyword-color"
-			role="tooltip"
-			tabindex="-1"
-			onmouseenter={() => tooltip.show(textFearOfFailure, "paragrafo")}
-			onmouseleave={() => tooltip.hide()}
-		>
-			Fear of Failure
-		</span>.
-		<br /><br />
-		Il bisogno ossessivo di essere perfetti porta spesso<br />
-		al 
-		<span 
-			class="highlighted-keyword gradient-text animate-gradient-text keyword-color"
-			role="tooltip"
-			tabindex="-1"
-			onmouseenter={() => tooltip.show(textChokingUnderPressure, "paragrafo")}
-			onmouseleave={() => tooltip.hide()}
-		>
-			Choking Under Pressure
-		</span>: un blocco in cui la mente<br />
-		ostacola ciò che l'allenamento aveva reso naturale.
-	</NarrativeSection>
+	<!-- 3. Sezione narrativa di superamento con termini evidenziati e tooltip associati -->
+	<FavoritoTextSection />
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
 	<ZoomTransitionSection />
