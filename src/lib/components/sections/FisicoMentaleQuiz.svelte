@@ -6,6 +6,7 @@
 	import { miniTrailCanvas } from '$lib/actions/miniTrailCanvas.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
 	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
+	import { slotMachineCanvas } from '$lib/actions/slotMachineCanvas.js';
 
 	// Props per il controllo dello scroll dal genitore
 	let {
@@ -46,121 +47,8 @@
 	let autoExpanded = $state(false);
 	/** @type {any} */
 	let quizWrapper;
-	// 🎭 用于展开页 70% 动态裁剪路径的 Base64 变量
+	// 🎭 Variable representing CSS Mask url exported by canvas Svelte Action
 	let canvasMaskUrl = $state('');
-
-	/**
-	 * ⚡ 纯 Canvas 骨骼运动引擎 + 动态遮罩同步
-	 * 此时它只在展开后运行，负责纯黑绘制，并将像素导出为 Mask
-	 * @param {any} canvas
-	 */
-	function slotMachineCanvas(canvas) {
-		const ctx = canvas.getContext('2d');
-		let animationFrameId;
-
-		// 1. 精确获取全局响应式字号
-		const computed = getComputedStyle(document.documentElement);
-		const heroFontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
-		
-		let fontSize = parseFloat(heroFontSizeStr);
-		if (heroFontSizeStr.includes('rem')) {
-			fontSize = fontSize * parseFloat(getComputedStyle(document.documentElement).fontSize);
-		}
-		if (isNaN(fontSize) || fontSize <= 0) fontSize = 80;
-
-		// 2. 配置画布尺寸
-		const dpr = window.devicePixelRatio || 1;
-		const rowHeight = fontSize * 1.2;
-		const charWidth = fontSize * 0.65;
-		
-		const logicalWidth = charWidth * 3.5 + fontSize * 3.5; 
-		const logicalHeight = rowHeight;
-
-		canvas.width = logicalWidth * dpr;
-		canvas.height = logicalHeight * dpr;
-		canvas.style.width = `${logicalWidth}px`;
-		canvas.style.height = `${logicalHeight}px`;
-		ctx.scale(dpr, dpr);
-
-		// 3. 核心骨骼运动变量
-		const animData = { 
-			tensY: -fontSize * 0.4,
-			onesY: -fontSize * 0.5,
-			textX: -40,
-			textOpacity: 0
-		};
-
-		// 4. 使用 GSAP 打造碰撞推开效果
-		const tl = gsap.timeline({ delay: 0.05 });
-
-		tl.to(animData, {
-			tensY: 0,
-			duration: 0.55,
-			ease: 'back.out(3.5)'
-		}, 0);
-
-		tl.to(animData, {
-			onesY: 0,
-			duration: 0.65,
-			ease: 'back.out(4)'
-		}, 0.05);
-
-		tl.to(animData, {
-			textX: 0,
-			textOpacity: 1,
-			duration: 0.6,
-			ease: 'power2.out'
-		}, 0.12);
-
-		// 5. 纯像素绘制循环
-		function draw() {
-			ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-
-			// 🎨 展开页绘制纯黑实体字（用于 CSS Mask 裁剪）
-			ctx.fillStyle = '#000000';
-			ctx.textBaseline = 'top';
-
-			const yOffset = (logicalHeight - fontSize) / 2;
-
-			// A. 绘制十位 '7'
-			// Adattato a 700 (bold) per coerenza con il peso dei cerchi di scelta
-			ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
-			ctx.fillText('7', 0, yOffset + animData.tensY);
-
-			// B. 绘制个位 '0'
-			const onesX = charWidth * 0.9;
-			ctx.fillText('0', onesX, yOffset + animData.onesY);
-
-			// C. 绘制百分比 '%'
-			const percentX = onesX + charWidth * 0.9;
-			ctx.fillText('%', percentX, yOffset);
-
-			// D. 绘制被往右挤开的 "mentale" 文本
-			ctx.save();
-			const baseTextX = percentX + charWidth * 1.0 + 24; 
-			
-			ctx.globalAlpha = animData.textOpacity;
-			// Adattato a 700 (bold) per coerenza con il peso dei cerchi di scelta
-			ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
-			
-			ctx.fillText('mentale', baseTextX + animData.textX, yOffset);
-			ctx.restore();
-
-			// ⚡ 实时将像素帧导出为 Base64 供展开态 of CSS Mask 使用
-			canvasMaskUrl = `url(${canvas.toDataURL('image/png')})`;
-
-			animationFrameId = requestAnimationFrame(draw);
-		}
-
-		draw();
-
-		return {
-			destroy() {
-				cancelAnimationFrame(animationFrameId);
-				tl.kill();
-			}
-		};
-	}
 
 	onMount(() => {
 		gsap.set(quizWrapper, { y: '100vh' });
@@ -398,22 +286,13 @@
 						{#if mentaleShowing}
 							<canvas class="mini-trail-canvas" use:miniTrailCanvas={{ size: 400 }}></canvas>
 							<div class="expanded-text" style:--canvas-mask={canvasMaskUrl}>
-								<canvas class="slot-machine-canvas" use:slotMachineCanvas></canvas>
+								<canvas class="slot-machine-canvas" use:slotMachineCanvas={{ onUpdateMask: (url) => canvasMaskUrl = url }}></canvas>
 							</div>
 						{:else}
 							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
 						{/if}
 					</div>
 				</button>
-
-				{#if quizState === 'expanded' && layerVisible}
-					<div class="expanded-title-area">
-						<h1 class="quiz-title">
-							<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
-							<span class="title-line-2">cosa pesa davvero di più?</span>
-						</h1>
-					</div>
-				{/if}
 			</div>
 		</div>
 
@@ -498,7 +377,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start;
+		justify-content: center; /* Centra verticalmente l'intero gruppo di contenuti per un perfetto bilanciamento asimmetrico */
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -506,7 +385,6 @@
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		padding: 0 0 var(--spacing-3) 0;
 		background-color: var(--stage-background, #ffffff);
 		transition: transform 0.1s linear;
 		will-change: transform;
@@ -514,12 +392,8 @@
 
 	/* Titolo */
 	.quiz-title-wrap {
-		position: absolute;
-		top: var(--spacing-10);
-		left: 50%;
-		transform: translateX(-50%);
-		width: 1200px;
-		height: 140px;
+		width: 100%;
+		max-width: 1200px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -527,6 +401,7 @@
 		box-sizing: border-box;
 		padding: 0 var(--spacing-3);
 		will-change: opacity;
+		margin-bottom: var(--spacing-8); /* Aumentato a 64px per dare il corretto respiro tipografico alla doppia riga di grandi dimensioni */
 	}
 
 	/* Risultato finale 标题 - 定位在 70% 圆圈 right */
@@ -539,54 +414,22 @@
 		min-width: 540px;
 	}
 
-	.expanded-title-area {
-		position: absolute;
-		left: calc(100% + 100px);
-		top: 25%;
-		width: 600px;
-		min-width: 600px;
-		display: flex;
-		align-items: center;
-		z-index: 10;
-		box-sizing: border-box;
-		will-change: transform, opacity;
-	}
-
-	.expanded-title-area h1 {
-		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 700;
-		text-align: left;
-		margin: 0;
-		font-size: 32px;
-		line-height: 1.4;
-		color: var(--color-content-primary, #071e45);
-	}
-
-	.expanded-title-area .title-line-1,
-	.expanded-title-area .title-line-2 {
-		display: block;
-	}
-
 	.quiz-title {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 700;
 		text-align: center;
 		margin: 0;
 		font-size: var(--text-title);
-		line-height: var(--spacing-7);
+		/* Un interlinea di 1.25 offre un respiro ideale per la lettura di due righe a 56px, evitando che i caratteri appaiano visivamente troppo vicini o che si verifichino collisioni con caratteri ascendenti/discendenti */
+		line-height: 1.25;
 		color: var(--content-primary);
 		transform-origin: center top;
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		will-change: transform;
 	}
 
-	.quiz-title-wrap.expanded .quiz-title {
-		transform: scale(0.714);
-	}
-
 	.quiz-title-wrap.hidden {
-		opacity: 0 !important;
-		pointer-events: none;
+		display: none !important; /* Rimuove completamente il titolo dal flusso flex quando il quiz entra nello stato espanso a schermo intero */
 	}
 
 	.title-line-1,
@@ -599,26 +442,31 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		gap: var(--spacing-10);  ;
+		gap: var(--spacing-10);
 		width: 100%;
 		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
-		margin-top: var(--spacing-12);
-		height: calc(100vh - 200px);
-		min-height: 574px;
+		height: 320px; /* Altezza fissa pari al diametro dei cerchi per garantire che il contenitore flex esegua una centratura verticale perfetta */
 		transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 1;
 	}
 
 	/* 展开状态：垂直居中，给右侧标题腾空间 */
 	.quiz-body.expanded {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 100%;
+		max-width: 1200px;
+		height: 100vh;
+		min-height: 100vh;
 		justify-content: center;
 		align-items: center;
 		gap: 100px;
 		margin-top: 0;
-		height: 100vh;
-		min-height: 100vh;
+		z-index: 10; /* Si stacca dal flusso flex occupando l'intero schermo in modo indipendente dal titolo */
 	}
 
 	.quiz-column {
