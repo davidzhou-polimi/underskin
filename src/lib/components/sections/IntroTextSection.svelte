@@ -5,11 +5,14 @@
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
 
+	/** @type {any} */
 	let textContainer;
+	/** @type {any[]} */
 	let lines = [];
 	let currentIndex = $state(0);
 	let initialized = false;
 	
+	/** @type {any} */
 	let canvasAction = null;
 
 	let opacity = $derived.by(() => {
@@ -20,16 +23,25 @@
 	// Tiene traccia del progresso precedente per rilevare quando si torna all'inizio
 	let prevProgress = $state(1);
 
+	/**
+	 * @param {any} node
+	 * @param {any} index
+	 */
 	function bindLine(node, index) {
 		lines[index] = node;
 		return {};
 	}
 	
 	// Bind canvas per ottenere l'istanza dell'azione
+	/**
+	 * @param {any} node
+	 */
 	function bindCanvas(node) {
 		canvasAction = trailCanvas(node);
 		// Riproduce l'animazione di entrata una volta sola
-		canvasAction.startLoop(false);
+		if (canvasAction) {
+			canvasAction.startLoop(false);
+		}
 		return {
 			destroy() {
 				if (canvasAction) {

@@ -3,9 +3,9 @@
 	import { gsap } from 'gsap';
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import { trailCanvas } from '$lib/actions/trailCanvas.js';
 	import { miniTrailCanvas } from '$lib/actions/miniTrailCanvas.js';
 	import { layers } from '$lib/stores/layers.svelte.js';
+	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
 
 	// Props per il controllo dello scroll dal genitore
 	let {
@@ -24,33 +24,35 @@
 	// Stato del quiz
 	let quizState = $state('choosing');
 	let selectedSide = $state('');
+
+	// Tracciamento coordinate e stato hover per visualizzare il tooltip custom su cerchi interattivi
+	let mouseX = $state(0);
+	let mouseY = $state(0);
+	let isHovering = $state(false);
+
+	/**
+	 * Traccia le coordinate relative del mouse nella viewport per posizionare il tooltip custom
+	 * @param {MouseEvent} event
+	 */
+	function handleMouseMove(event) {
+		mouseX = event.clientX;
+		mouseY = event.clientY;
+	}
 	let fisicoExpanding = $state(false);
 	let mentaleShowing = $state(false);
 	let fisicoFading = $state(false);
 	let hasScrolledDown = $state(false);
 	let animationTriggered = $state(false);
 	let autoExpanded = $state(false);
+	/** @type {any} */
 	let quizWrapper;
-	let canvasAction = null;
-
 	// 🎭 用于展开页 70% 动态裁剪路径的 Base64 变量
 	let canvasMaskUrl = $state('');
-
-	function bindCanvas(node) {
-		canvasAction = trailCanvas(node);
-		return {
-			destroy() {
-				if (canvasAction) {
-					canvasAction.destroy();
-					canvasAction = null;
-				}
-			}
-		};
-	}
 
 	/**
 	 * ⚡ 纯 Canvas 骨骼运动引擎 + 动态遮罩同步
 	 * 此时它只在展开后运行，负责纯黑绘制，并将像素导出为 Mask
+	 * @param {any} canvas
 	 */
 	function slotMachineCanvas(canvas) {
 		const ctx = canvas.getContext('2d');
@@ -142,7 +144,7 @@
 			ctx.fillText('mentale', baseTextX + animData.textX, yOffset);
 			ctx.restore();
 
-			// ⚡ 实时将像素帧导出为 Base64 供展开态的 CSS Mask 使用
+			// ⚡ 实时将像素帧导出为 Base64 供展开态 of CSS Mask 使用
 			canvasMaskUrl = `url(${canvas.toDataURL('image/png')})`;
 
 			animationFrameId = requestAnimationFrame(draw);
@@ -177,6 +179,8 @@
 				duration: 1.2,
 				ease: 'power3.out'
 			});
+
+			// Reset
 
 			// 重置并淡入选择页标题
 			gsap.set('.quiz-title-wrap', { opacity: 1 });
@@ -300,6 +304,9 @@
 		}, 600);
 	}
 
+	/**
+	 * @param {any} e
+	 */
 	function handleVirtualScroll(e) {
 		if (quizState !== 'expanded' || layers.quizCompleted) return;
 
@@ -312,7 +319,7 @@
 				hasScrolledDown = true;
 			} else {
 				layers.quizCompleted = true;
-				isLocked = false;
+				unlockScroll();
 			}
 		} else if (deltaY < -10) {
 			if (hasScrolledDown) {
@@ -327,14 +334,16 @@
 	id="cerchi-quiz"
 	class="quiz-wrapper"
 	bind:this={quizWrapper}
+	aria-label="Scelta tra mentale e fisico"
 	style:z-index={zIndex}
 	style={layerStyle}
 	onwheel={handleVirtualScroll}
 	use:trackSection
+	onmousemove={handleMouseMove}
+	onmouseenter={() => isHovering = true}
+	onmouseleave={() => isHovering = false}
 >
-	<div class="canvas-layer">
-		<canvas use:bindCanvas></canvas>
-	</div>
+
 
 	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded' || !layerVisible}>
 		<h1 class="quiz-title">
@@ -345,7 +354,7 @@
 
 	<div class="quiz-body" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<div class="quiz-column left-column">
-			<div class="circle-wrap left-wrap">
+			<div class="circle-wrap left-wrap" class:expanded={quizState === 'expanded'}>
 				<button
 					class="circle left"
 					class:clicked={selectedSide === 'mentale'}
@@ -354,26 +363,26 @@
 					use:drawBorder={{ clicked: selectedSide === 'mentale', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
-					<svg class="border-svg" viewBox="0 0 407 407">
+					<svg class="border-svg" viewBox="0 0 320 320">
 						<defs>
 							<mask id="mask-left-exp">
 								<circle
 									class="mask-circle"
-									cx="203.5"
-									cy="203.5"
-									r="201.5"
+									cx="160"
+									cy="160"
+									r="157.89"
 									fill="none"
 									stroke="white"
 									stroke-width="10"
-									stroke-dasharray="1266"
-									stroke-dashoffset="1266"
+									stroke-dasharray="992"
+									stroke-dashoffset="992"
 								/>
 							</mask>
 						</defs>
 						<circle
-							cx="203.5"
-							cy="203.5"
-							r="201.5"
+							cx="160"
+							cy="160"
+							r="157.89"
 							fill="none"
 							stroke="var(--content-primary)"
 							stroke-width="4"
@@ -391,7 +400,6 @@
 							</div>
 						{:else}
 							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
-							<span class="clicca-hint">clicca</span>
 						{/if}
 					</div>
 				</button>
@@ -409,27 +417,31 @@
 
 		<div class="quiz-column right-column">
 			<div class="circle-wrap right-wrap" class:fly-out={fisicoFading}>
-				<button class="circle right" onclick={() => selectFisico(false)} use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}>
-					<svg class="border-svg" viewBox="0 0 407 407">
+				<button
+					class="circle right"
+					onclick={() => selectFisico(false)}
+					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}
+				>
+					<svg class="border-svg" viewBox="0 0 320 320">
 						<defs>
 							<mask id="mask-right">
 								<circle
 									class="mask-circle"
-									cx="203.5"
-									cy="203.5"
-									r="201.5"
+									cx="160"
+									cy="160"
+									r="157.89"
 									fill="none"
 									stroke="white"
 									stroke-width="10"
-									stroke-dasharray="1266"
-									stroke-dashoffset="1266"
+									stroke-dasharray="992"
+									stroke-dashoffset="992"
 								/>
 							</mask>
 						</defs>
 						<circle
-							cx="203.5"
-							cy="203.5"
-							r="201.5"
+							cx="160"
+							cy="160"
+							r="157.89"
 							fill="none"
 							stroke="var(--content-primary)"
 							stroke-width="4"
@@ -440,7 +452,6 @@
 					</svg>
 					<div class="expanded-text-container">
 						<span class="text">fisico</span>
-						<span class="clicca-hint">clicca</span>
 					</div>
 				</button>
 			</div>
@@ -467,6 +478,16 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if isHovering && quizState === 'choosing' && layerVisible}
+		<CursorTooltip
+			visible={true}
+			text="scegli"
+			type="semplice"
+			x={mouseX}
+			y={mouseY}
+		/>
+	{/if}
 </section>
 
 <style>
@@ -484,24 +505,9 @@
 		overflow: hidden;
 		box-sizing: border-box;
 		padding: 0 0 var(--spacing-3) 0;
-		background-color: #f1fafd;
+		background-color: var(--stage-background, #ffffff);
 		transition: transform 0.1s linear;
 		will-change: transform;
-	}
-
-	/* Canvas layer */
-	.canvas-layer {
-		position: absolute;
-		inset: 0;
-		z-index: 0;
-		pointer-events: none;
-	}
-
-	.canvas-layer canvas {
-		display: block;
-		width: 100%;
-		height: 100%;
-		filter: blur(60px) saturate(1);
 	}
 
 	/* Titolo */
@@ -521,9 +527,13 @@
 		will-change: opacity;
 	}
 
-	/* Risultato finale 标题 - 定位在 70% 圆圈右侧 */
+	/* Risultato finale 标题 - 定位在 70% 圆圈 right */
 	.left-wrap {
 		position: relative;
+		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+	}
+
+	.left-wrap.expanded {
 		min-width: 540px;
 	}
 
@@ -562,7 +572,7 @@
 		margin: 0;
 		font-size: var(--text-title);
 		line-height: var(--spacing-7);
-		color: var(--color-content-primary, #071e45);
+		color: var(--content-primary);
 		transform-origin: center top;
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		will-change: transform;
@@ -622,11 +632,7 @@
 	}
 
 	.right-column {
-		display: flex;
-		flex-direction: column;
 		justify-content: center;
-		align-items: flex-start;
-		height: auto;
 	}
 
 	@keyframes fadeIn {
@@ -642,9 +648,7 @@
 		flex-shrink: 0;
 	}
 
-	.left-wrap {
-		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-	}
+
 
 	.right-wrap {
 		position: relative;
@@ -663,9 +667,9 @@
 	}
 
 	.circle {
-		width: 407px;
-		height: 407px;
-		border-radius: 203.5px;
+		width: 320px;
+		height: 320px;
+		border-radius: 160px;
 		border: none;
 		display: flex;
 		align-items: center;
@@ -697,9 +701,10 @@
 	
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 800;
-		font-size: var(--text-title);
-		color: var(--color-content-primary, #071e45);
+		/* Peso impostato a 700 (bold) ed adattato alla misura var(--text-l) (40px) per un bilanciamento ottimale */
+		font-weight: 700;
+		font-size: var(--text-l);
+		color: var(--content-primary);
 		white-space: nowrap;
 		position: relative;
 		z-index: 1;
@@ -748,15 +753,15 @@
 
 	.slot-machine-canvas {
 		display: block;
-		font-size: var(--text-hero); 
+		font-size: var(--text-title); 
 		opacity: 0;
 		pointer-events: none;
 	}
 
 	.left.mentale-show {
-		width: 540px;
-		height: 540px;
-		border-radius: 280px;
+		width: 420px;
+		height: 420px;
+		border-radius: 210px;
 		background-color: var(--background-primary);
 		transition:
 			width 0.6s cubic-bezier(0.25, 1, 0.5, 1),
@@ -805,22 +810,6 @@
 		opacity: 0.9;
 		filter: blur(80px);
 		z-index: 0;
-	}
-
-	/* Hint clicca */
-	.clicca-hint {
-		display: none;
-		font-size: var(--text-button);
-		color: var(--color-content-secondary, #666);
-		margin-top: var(--spacing-1);
-		text-transform: lowercase;
-		letter-spacing: 1px;
-		position: absolute;
-		bottom: calc(var(--spacing-2) * -1 - var(--spacing-1));
-	}
-
-	.circle:hover .clicca-hint {
-		display: block;
 	}
 
 	/* Pannello testo destro */
