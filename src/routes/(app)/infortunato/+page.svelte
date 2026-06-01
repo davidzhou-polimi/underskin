@@ -16,7 +16,7 @@
 
 <!-- SEO Best Practices: Titolo descrittivo e meta description unici per questa pagina -->
 <svelte:head>
-	<title>L'Infortunato — UnderSkin Profilo Archetipico</title>
+	<title>Infortunato — UnderSkin</title>
 	<meta 
 		name="description" 
 		content="Analisi dell'archetipo dell'Infortunato: calo delle prestazioni in situazioni ad alta pressione, dinamiche di ansia e blocco dell'automatismo psicomotorio." 

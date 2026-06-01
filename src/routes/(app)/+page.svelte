@@ -7,13 +7,30 @@
 	 */
 </script>
 
-<div class="empty-home-placeholder"></div>
+<svelte:head>
+	<title>Home — UnderSkin</title>
+	<meta name="description" content="Chi siamo e la filosofia dietro il progetto UnderSkin." />
+</svelte:head>
+
+<div id="hero" class="empty-home-placeholder">
+	<h1 class="home-title">Home</h1>
+</div>
 
 <style>
-	/* Placeholder leggero per lo sfondo della homepage vuota */
+	/* Contenitore centrato a schermo intero per presentare visivamente la rotta Home */
 	.empty-home-placeholder {
 		width: 100%;
 		min-height: 100vh;
 		background-color: var(--background-primary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--font-family-base);
+		color: var(--content-primary);
+	}
+
+	.home-title {
+		font-size: var(--text-xl);
+		font-weight: 700;
 	}
 </style>

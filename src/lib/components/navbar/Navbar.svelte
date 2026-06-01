@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let { hideThreshold = 50, showThreshold = 150, autoHideDelay = 3000 } = $props();
 
@@ -31,7 +32,7 @@
 	// Rotte e ancore reali configurate per una navigazione cross-page fluida
 	const links = [
 		{ label: 'Home', sectionId: 'hero', path: '/' },
-		{ label: 'About', sectionId: 'about', path: '/#about' },
+		{ label: 'About', sectionId: 'about', path: '/about' },
 		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
 		{ label: 'Favorito', sectionId: 'favorito-profile-page', path: '/favorito' },
 		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: '/infortunato' }
@@ -42,19 +43,22 @@
 	 * @param {MouseEvent} event
 	 * @param {{ label: string, sectionId: string, path: string }} link
 	 */
-	const handleNavClick = (event, link) => {
+	const handleNavClick = async (event, link) => {
+		event.preventDefault();
 		const currentPath = page.url.pathname;
 		const isHome = currentPath === '/';
 
-		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta
+		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta,
+		// altrimenti esegue una navigazione client-side sicura tramite goto()
 		if (currentPath === link.path || (link.path === '/' && isHome) || (link.path.startsWith('/#') && isHome)) {
-			event.preventDefault();
 			const target = document.getElementById(link.sectionId);
 			if (target) {
 				target.scrollIntoView({ behavior: 'smooth' });
 			} else {
 				window.scrollTo({ top: 0, behavior: 'smooth' });
 			}
+		} else {
+			await goto(link.path);
 		}
 	};
 
