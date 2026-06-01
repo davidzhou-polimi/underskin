@@ -33,6 +33,7 @@
 	class="intro-section"
 	style:opacity={opacity}
 	style={layerStyle}
+	class:section-hidden={opacity === 0}
 	use:trackSection={{ id: 'intro-text' }}
 >
 	<div class="canvas-layer">
@@ -59,6 +60,11 @@
 		justify-content: center;
 		overflow: hidden;
 		background-color: var(--background-primary);
+	}
+
+	/* 当 opacity = 0 时彻底隐藏，释放布局空间 */
+	.intro-section.section-hidden {
+		display: none;
 	}
 
 	.canvas-layer {

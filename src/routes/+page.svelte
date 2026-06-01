@@ -26,12 +26,18 @@
 			pinSpacing: true,
 			scrub: 1,
 			onUpdate: (self) => {
-				// --- 核心拦截逻辑 ---
-				// 0.35 是选择页出现的进度，如果到了选择页，但 quiz 还没完成，且用户还在试着往下滚
-				if (self.progress > 0.85 && !layers.quizCompleted && self.direction > 0) {
-					self.scroll(st.start + (st.end - st.start) * 0.85); // 强行把滚动位置卡在 0.35 的地方
-					layers.progress = 0.35;
-					return; // 拦截后续执行
+				// 退出动画期间跳过，让 CerchiQuiz 手动控制 layers.progress
+				if (layers.suppressOnUpdate) return;
+				if (self.progress > 0.85 && !layers.quizCompleted) {
+					// 关键点：不要强制改滚动条位置 (self.scroll)
+					// 而是将 ScrollTrigger 锁定在当前状态
+					
+					// 可选：将当前的 progress 保持在 0.85，防止用户继续往下滚
+					// 这样不会引起“弹回”感，而是让滚动感觉“到头了”
+					if (self.progress > 0.85) {
+						layers.progress = 0.85; 
+					}
+					return; 
 				}
 
 				// 正常更新进度
@@ -43,6 +49,8 @@
 				}
 			}
 		});
+
+		layers.scrollTrigger = st;
 
 		return () => {
 			if (st) st.kill();
@@ -72,6 +80,7 @@
 		unlockScroll={() => isLocked = false}
 		onExpand={() => quizExpanded = true}
 		onCollapse={() => quizExpanded = false}
+	/>
 	/>
 	<PerformanceSection />
 </main>

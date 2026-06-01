@@ -9,6 +9,12 @@ class LayerState {
     scrollDirection = $state('down'); // 'up' | 'down'
     quizCompleted = $state(false); // True quando il quiz ha completato e l'utente ha scrollato
 
+    // 引用全局 ScrollTrigger，用于退出动画后同步物理位置
+    scrollTrigger = null;
+
+    // 退出动画期间阻止 onUpdate 覆盖 layers.progress
+    suppressOnUpdate = false;
+
     get progress() {
         return this._progress;
     }
@@ -35,8 +41,8 @@ class LayerState {
 	
 		// --- Layer 0 (IntroTextSection) ---
 		if (layerIndex === 0) {
-			// Si nasconde quando il quiz prende il controllo (p >= 0.9)
-			// così l'utente può leggere "Tutto per soli..." che appare a p ≈ 0.8
+			// Quiz 完成时强制隐藏，即使物理 progress < 0.9
+			if (this.quizCompleted) return 0;
 			if (p >= 0.9) return 0;
 			return 1;
 		}
@@ -55,7 +61,7 @@ class LayerState {
 		}
 	
 		return 0;
-	}
+    }
 	
 	getLayerZIndex(layerIndex) {
 		const p = this._progress;
@@ -76,7 +82,7 @@ class LayerState {
 		}
 		
 		return 0;
-	}
+    }
 	
     isLayerActive(layerIndex) {
         return this.activeLayer === layerIndex;
@@ -84,7 +90,7 @@ class LayerState {
 
 	getLayerStyle(layerIndex) {
 		return '';
-	}
+    }
 }
 
 export const layers = new LayerState();

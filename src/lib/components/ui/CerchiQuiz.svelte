@@ -29,6 +29,8 @@
 	let fisicoFading = $state(false);
 	let hasScrolledDown = $state(false);
 	let animationTriggered = $state(false);
+	let isExiting = $state(false);
+	let quizHidden = $state(false);
 	let autoExpanded = $state(false);
 	let quizWrapper;
 	let canvasAction = null;
@@ -165,10 +167,50 @@
 		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
 	});
 
+	// Quiz 结果页退出：从下往上划出
+	function animateQuizExit() {
+		// 阻止 onUpdate 覆盖 progress，让动画期间 layers.progress 保持稳定
+		layers.suppressOnUpdate = true;
+
+		// 杀掉所有现有动画，避免冲突
+		gsap.killTweensOf(quizWrapper);
+		gsap.killTweensOf('.quiz-title-wrap');
+		isExiting = true;
+		gsap.to(quizWrapper, {
+			y: '-100vh',
+			duration: 1.2,
+			ease: 'power3.in',
+			onComplete: () => {
+				isExiting = false;
+				animationTriggered = false;
+				// 同步 ScrollTrigger 物理位置到 0.9，消除空白
+				if (layers.scrollTrigger) {
+					layers.scrollTrigger.scroll(
+						layers.scrollTrigger.start +
+						(layers.scrollTrigger.end - layers.scrollTrigger.start) * 0.9
+					);
+				}
+				// 恢复 onUpdate，并手动设置 progress 让 PerformanceSection 可见
+				layers.suppressOnUpdate = false;
+				layers.progress = 0.9;
+				// 彻底隐藏 quiz，释放布局空间
+				quizHidden = true;
+				quizWrapper.classList.remove('quiz-hidden');
+				if (layers.scrollDirection === 'up' && layers.progress < 0.25) {
+					resetQuiz();
+				}
+			}
+		});
+
+		gsap.to('.quiz-title-wrap', { opacity: 0, duration: 0.3 });
+	}
+
 	// Animazione di entrata/uscita basata sulla visibilità del layer
 	$effect(() => {
 		if (layerVisible && !animationTriggered) {
 			animationTriggered = true;
+			// 重置隐藏状态，让 quiz 重新显示
+			quizHidden = false;
 			const targetY = layers.scrollDirection === 'up' ? '-100vh' : '100vh';
 
 			gsap.set(quizWrapper, { y: targetY });
@@ -189,10 +231,12 @@
 				ease: 'power2.out',
 				delay: 0.2
 			});
-		} else if (!layerVisible && animationTriggered) {
+		} else if (!layerVisible && animationTriggered && !layers.quizCompleted && !isExiting) {
 			animationTriggered = false;
 			const targetY = layers.scrollDirection === 'up' ? '100vh' : '-100vh';
 
+			gsap.killTweensOf(quizWrapper);
+			gsap.killTweensOf('.quiz-title-wrap');
 			gsap.to(quizWrapper, {
 				y: targetY,
 				duration: 1.0,
@@ -220,6 +264,11 @@
 			fisicoFading = false;
 			hasScrolledDown = false;
 			layers.quizCompleted = false;
+			quizHidden = false;
+			// Ripristina stato iniziale del wrapper
+			if (quizWrapper) {
+				gsap.set(quizWrapper, { y: '100vh', x: '0%' });
+			}
 		}
 	});
 
@@ -241,6 +290,8 @@
 		fisicoFading = false;
 		hasScrolledDown = false;
 		autoExpanded = false;
+		isExiting = false;
+		quizHidden = false;
 		layers.quizCompleted = false;
 	}
 
@@ -313,7 +364,7 @@
 				hasScrolledDown = true;
 			} else {
 				layers.quizCompleted = true;
-				isLocked = false;
+				animateQuizExit();
 			}
 		} else if (deltaY < -10) {
 			if (hasScrolledDown) {
@@ -327,6 +378,7 @@
 <section
 	id="cerchi-quiz"
 	class="quiz-wrapper"
+	class:quiz-hidden={quizHidden}
 	bind:this={quizWrapper}
 	style:z-index={zIndex}
 	style={layerStyle}
@@ -488,6 +540,11 @@
 		background-color: #f1fafd;
 		transition: transform 0.1s linear;
 		will-change: transform;
+	}
+
+	/* Quiz 完全退出后隐藏，不遮挡下层 */
+	.quiz-wrapper.quiz-hidden {
+		display: none;
 	}
 
 	/* Canvas layer */
