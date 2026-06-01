@@ -57,6 +57,9 @@
    * @param {WheelEvent} event
    */
   function preventScrollDown(event) {
+    // Consente lo zoom nativo (il pinch-to-zoom su trackpad invia ctrlKey: true)
+    if (event.ctrlKey) return;
+
     if (event.deltaY > 0) {
       event.preventDefault();
     }
@@ -77,6 +80,9 @@
    * @param {TouchEvent} event
    */
   function handleTouchMove(event) {
+    // Consente lo zoom multitouch su dispositivi mobile
+    if (event.touches.length > 1) return;
+
     if (event.touches.length > 0) {
       const touchCurrent = event.touches[0].clientY;
       const diffY = touchStart - touchCurrent;

@@ -77,8 +77,14 @@
 	// Rimuove o applica i listener di blocco dello scroll in base allo stato del gioco
 	$effect(() => {
 		if (isScrollLocked && attempts === 0) {
-			/** @param {Event} e */
+			/** @param {any} e */
 			const preventDefault = (e) => {
+				// Consente il pinch-to-zoom su trackpad (ctrlKey: true)
+				if (e.ctrlKey) return;
+
+				// Consente lo zoom multitouch su dispositivi mobile
+				if (e.touches && e.touches.length > 1) return;
+
 				e.preventDefault();
 			};
 
