@@ -19,7 +19,7 @@
 	let opacity = $derived(layers.getLayerOpacity(1));
 	let zIndex = $derived(layers.getLayerZIndex(1));
 	let layerStyle = $derived(layers.getLayerStyle(1));
-	let isVisible = $derived(opacity > 0);
+	let layerVisible = $derived(layers.getLayerOpacity(1) > 0 && layers.getLayerZIndex(1) >= 0);
 
 	// Stato del quiz
 	let quizState = $state('choosing');
@@ -167,7 +167,7 @@
 
 	// Animazione di entrata/uscita basata sulla visibilità del layer
 	$effect(() => {
-		if (isVisible && !animationTriggered) {
+		if (layerVisible && !animationTriggered) {
 			animationTriggered = true;
 			const targetY = layers.scrollDirection === 'up' ? '-100vh' : '100vh';
 
@@ -178,6 +178,9 @@
 				ease: 'power3.out'
 			});
 
+			// 重置并淡入选择页标题
+			gsap.set('.quiz-title-wrap', { opacity: 1 });
+			gsap.fromTo('.quiz-title-wrap', { opacity: 0 }, { opacity: 1, duration: 0.4 });
 			gsap.to('.title-line-1, .title-line-2, .circle .text', {
 				opacity: 1,
 				scale: 1,
@@ -186,7 +189,7 @@
 				ease: 'power2.out',
 				delay: 0.2
 			});
-		} else if (!isVisible && animationTriggered) {
+		} else if (!layerVisible && animationTriggered) {
 			animationTriggered = false;
 			const targetY = layers.scrollDirection === 'up' ? '100vh' : '-100vh';
 
@@ -200,6 +203,9 @@
 					}
 				}
 			});
+
+			// 淡出选择页标题
+			gsap.to('.quiz-title-wrap', { opacity: 0, duration: 0.2 });
 		}
 	});
 
@@ -245,8 +251,23 @@
 		selectedSide = 'mentale';
 		quizState = 'expanding';
 		mentaleShowing = true;
+
+		// 标题过渡动画：选择页标题滑出，展开页标题滑入
+		gsap.to('.quiz-title-wrap', {
+			x: 80,
+			opacity: 0,
+			duration: 0.4,
+			ease: 'power2.in'
+		});
+
 		setTimeout(() => { fisicoFading = true; }, 300);
-		setTimeout(() => { quizState = 'expanded'; }, 600);
+		setTimeout(() => {
+			quizState = 'expanded';
+			gsap.fromTo('.expanded-title-area',
+				{ x: -60, opacity: 0 },
+				{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+			);
+		}, 600);
 	}
 
 	function selectFisico(skipLock = false) {
@@ -256,12 +277,27 @@
 		selectedSide = 'fisico';
 		quizState = 'expanding';
 		fisicoExpanding = true;
+
+		// 标题过渡动画：选择页标题滑出
+		gsap.to('.quiz-title-wrap', {
+			x: 80,
+			opacity: 0,
+			duration: 0.4,
+			ease: 'power2.in'
+		});
+
 		setTimeout(() => {
 			fisicoExpanding = false;
 			fisicoFading = true;
 			mentaleShowing = true;
 		}, 300);
-		setTimeout(() => { quizState = 'expanded'; }, 600);
+		setTimeout(() => {
+			quizState = 'expanded';
+			gsap.fromTo('.expanded-title-area',
+				{ x: -60, opacity: 0 },
+				{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+			);
+		}, 600);
 	}
 
 	function handleVirtualScroll(e) {
@@ -300,7 +336,7 @@
 		<canvas use:bindCanvas></canvas>
 	</div>
 
-	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded'}>
+	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded' || !layerVisible}>
 		<h1 class="quiz-title">
 			<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
 			<span class="title-line-2">cosa pesa davvero di più?</span>
@@ -360,7 +396,7 @@
 					</div>
 				</button>
 
-				{#if quizState === 'expanded'}
+				{#if quizState === 'expanded' && layerVisible}
 					<div class="expanded-title-area">
 						<h1 class="quiz-title">
 							<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
@@ -404,6 +440,7 @@
 					</svg>
 					<div class="expanded-text-container">
 						<span class="text">fisico</span>
+						<span class="clicca-hint">clicca</span>
 					</div>
 				</button>
 			</div>
@@ -422,8 +459,9 @@
 							"At this level, it's probably 70% mental and 30% physical. [...] I've had races
 							where I was confident and performed incredibly well, and others where negativity took
 							over and everything fell apart. Learning to control that is the real challenge."
+							<br />
+							— Adrian Yung, sci alpino
 						</p>
-						<p class="quote-author">— Adrian Yung, sci alpino</p>
 					</div>
 				</div>
 			{/if}
@@ -472,8 +510,7 @@
 		top: var(--spacing-10);
 		left: 50%;
 		transform: translateX(-50%);
-		width: 100%;
-		max-width: 1200px;
+		width: 1200px;
 		height: 140px;
 		display: flex;
 		align-items: center;
@@ -481,6 +518,7 @@
 		z-index: 5;
 		box-sizing: border-box;
 		padding: 0 var(--spacing-3);
+		will-change: opacity;
 	}
 
 	/* Risultato finale 标题 - 定位在 70% 圆圈右侧 */
@@ -499,7 +537,7 @@
 		align-items: center;
 		z-index: 10;
 		box-sizing: border-box;
-		animation: fadeIn 0.6s ease;
+		will-change: transform, opacity;
 	}
 
 	.expanded-title-area h1 {
@@ -535,7 +573,7 @@
 	}
 
 	.quiz-title-wrap.hidden {
-		opacity: 0;
+		opacity: 0 !important;
 		pointer-events: none;
 	}
 
@@ -853,17 +891,11 @@
 		font-size: var(--text-body);
 		line-height: var(--spacing-4);
 		color: var(--content-primary, #071e45);
-		margin: 0 0 var(--spacing-1) 0;
+		padding-top: var(--spacing-10);
+		margin: 0 0 var(--spacing-4) 0;
 		white-space: normal;
 	}
 
-	.long-quote .quote-author {
-		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 600;
-		font-size: 15px;
-		color: color-mix(in srgb, var(--content-primary, #071e45) 70%, transparent);
-		margin: 0;
-	}
 
 	.long-quote.blur-in {
 		opacity: 1;
