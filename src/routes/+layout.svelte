@@ -7,10 +7,10 @@
 </script>
 
 <svelte:head>
-    <title>UnderSkin</title>
-    <meta name="description" content="Descrizione" />
+	<title>UnderSkin</title>
+	<meta name="description" content="Descrizione" />
 
-    <link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} />
 </svelte:head>
 
 {@render children()}
