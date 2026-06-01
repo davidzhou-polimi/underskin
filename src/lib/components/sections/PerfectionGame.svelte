@@ -194,6 +194,8 @@
 	{#if isHovering && attempts === 0}
 		<CursorTooltip 
 			visible={true} 
+			text="click o spazio"
+			type="semplice"
 			x={mouseX} 
 			y={mouseY} 
 		/>
@@ -235,9 +237,25 @@
 		transition: color 0.3s ease;
 	}
 
+	/* Applica lo stesso gradiente animato viola dell'Insoddisfatto per coerenza visiva premium */
 	.subtitle.game-over-text {
-		color: var(--archetipi-insoddisfatto); /* Colore viola per marcare lo stato finale */
-        font-weight: 500;
+		--gradient-c1: var(--viola-800);
+		--gradient-c2: var(--viola-300);
+		--gradient-c3: var(--viola-600);
+
+		background: linear-gradient(
+			120deg,
+			var(--gradient-c1),
+			var(--gradient-c2),
+			var(--gradient-c3)
+		);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-size: 300% 100%;
+		font-weight: 700;
+		animation: global-shift-gradient 8s linear infinite;
+		display: inline-block;
 	}
 
 	.game-area {
