@@ -32,11 +32,12 @@ export function zoomTextTransition(node) {
 		// Configurazione iniziale (il testo SVG parte invisibile e leggermente sfocato)
 		gsap.set(zoomSvg, { 
 			// Calibrato sul centro dello '0' di '2026' dentro la viewbox SVG
-			transformOrigin: '44% 80%', 
+			transformOrigin: '44.2% 85%',
+			transformBox: 'view-box',
 			scale: 1, 
 			opacity: 0, 
 			filter: 'blur(15px)',
-			y: 50
+			y: 20
 		});
 		
 		gsap.set(firstText, { 
@@ -58,7 +59,7 @@ export function zoomTextTransition(node) {
 		  // 2. Zoom cinematografico super-nitido (essendo SVG rimarrà vettoriale)
 		  // Ridotto leggermente il target di scale massimo poiché SVG risponde diversamente alle proporzioni rispetto al CSS del font
 		  .to(zoomSvg, { 
-				scale: 160, 
+				scale: 20, 
 				duration: 2, 
 				ease: 'power2.in' 
 		  }, '+=0.1')
