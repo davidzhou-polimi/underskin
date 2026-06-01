@@ -1,34 +1,35 @@
 import { gsap } from 'gsap';
 
 /**
- * Action Svelte per gestire l'effetto slot-machine 70% mentale su Canvas con GSAP.
- * Ottimizza le performance separando il loop di disegno e GSAP dallo stato principale del componente.
- * 
- * @param {HTMLCanvasElement} canvas 
- * @param {{ onUpdateMask: (url: string) => void }} params 
+ * Action Svelte per l'effetto slot-machine "70% mentale" su Canvas con GSAP.
+ * Il loop di disegno viene automaticamente messo in pausa quando la scheda
+ * non è visibile (Visibility API), risparmiando GPU durante il background.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ onUpdateMask: (url: string) => void }} params
  */
 export function slotMachineCanvas(canvas, params = {}) {
 	const ctx = canvas.getContext('2d');
 	if (!ctx) return;
-	
-	let animationFrameId;
 
-	// 1. Estrae la dimensione font computata per la viewport
+	let rafId = 0;
+	let destroyed = false;
+
+	// Legge la dimensione font computata per adattarsi alla viewport corrente
 	const computed = getComputedStyle(document.documentElement);
-	const heroFontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
-	
-	let fontSize = parseFloat(heroFontSizeStr);
-	if (heroFontSizeStr.includes('rem')) {
+	const fontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
+
+	let fontSize = parseFloat(fontSizeStr);
+	if (fontSizeStr.includes('rem')) {
 		fontSize = fontSize * parseFloat(getComputedStyle(document.documentElement).fontSize);
 	}
 	if (isNaN(fontSize) || fontSize <= 0) fontSize = 80;
 
-	// 2. Configura le dimensioni logiche e DPR del canvas per alta nitidezza
+	// Configura le dimensioni logiche e DPR del canvas per alta nitidezza su display Retina
 	const dpr = window.devicePixelRatio || 1;
 	const rowHeight = fontSize * 1.2;
 	const charWidth = fontSize * 0.65;
-	
-	const logicalWidth = charWidth * 3.5 + fontSize * 3.5; 
+	const logicalWidth = charWidth * 3.5 + fontSize * 3.5;
 	const logicalHeight = rowHeight;
 
 	canvas.width = logicalWidth * dpr;
@@ -37,82 +38,74 @@ export function slotMachineCanvas(canvas, params = {}) {
 	canvas.style.height = `${logicalHeight}px`;
 	ctx.scale(dpr, dpr);
 
-	// 3. Modello dati per le trasformazioni geometriche gestite da GSAP
-	const animData = { 
+	// Modello dati per le trasformazioni geometriche pilotate da GSAP
+	const animData = {
 		tensY: -fontSize * 0.4,
 		onesY: -fontSize * 0.5,
 		textX: -40,
 		textOpacity: 0
 	};
 
-	// 4. Innesca l'animazione traslazionale GSAP
 	const tl = gsap.timeline({ delay: 0.05 });
+	tl.to(animData, { tensY: 0, duration: 0.55, ease: 'back.out(3.5)' }, 0);
+	tl.to(animData, { onesY: 0, duration: 0.65, ease: 'back.out(4)' }, 0.05);
+	tl.to(animData, { textX: 0, textOpacity: 1, duration: 0.6, ease: 'power2.out' }, 0.12);
 
-	tl.to(animData, {
-		tensY: 0,
-		duration: 0.55,
-		ease: 'back.out(3.5)'
-	}, 0);
-
-	tl.to(animData, {
-		onesY: 0,
-		duration: 0.65,
-		ease: 'back.out(4)'
-	}, 0.05);
-
-	tl.to(animData, {
-		textX: 0,
-		textOpacity: 1,
-		duration: 0.6,
-		ease: 'power2.out'
-	}, 0.12);
-
-	// 5. Ciclo continuo di disegno su canvas
 	function draw() {
+		// ctx è già verificato all'avvio, ma il type-checker non lo propaga automaticamente nelle closure
 		if (!ctx) return;
-		ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+		if (destroyed) return;
 
-		// Disegna caratteri neri coprenti per la maschera CSS
+		ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 		ctx.fillStyle = '#000000';
 		ctx.textBaseline = 'top';
 
 		const yOffset = (logicalHeight - fontSize) / 2;
 
-		// A. Decina "7"
+		// Decina "7" con effetto slot-machine verticale
 		ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
 		ctx.fillText('7', 0, yOffset + animData.tensY);
 
-		// B. Unità "0"
+		// Unità "0"
 		const onesX = charWidth * 0.9;
 		ctx.fillText('0', onesX, yOffset + animData.onesY);
 
-		// C. Percentuale "%"
+		// Simbolo "%"
 		const percentX = onesX + charWidth * 0.9;
 		ctx.fillText('%', percentX, yOffset);
 
-		// D. Testo "mentale" spinto verso destra
+		// Testo "mentale" con dissolvenza in entrata
 		ctx.save();
-		const baseTextX = percentX + charWidth * 1.0 + 24; 
-		
 		ctx.globalAlpha = animData.textOpacity;
 		ctx.font = `700 ${fontSize}px 'Rethink Sans', sans-serif`;
-		
-		ctx.fillText('mentale', baseTextX + animData.textX, yOffset);
+		ctx.fillText('mentale', percentX + charWidth * 1.0 + 24 + animData.textX, yOffset);
 		ctx.restore();
 
-		// Ritorna l'immagine in Base64 via callback al componente genitore
+		// Esporta l'immagine come maschera CSS per il layer gradiente soprastante
 		if (params.onUpdateMask) {
 			params.onUpdateMask(`url(${canvas.toDataURL('image/png')})`);
 		}
 
-		animationFrameId = requestAnimationFrame(draw);
+		rafId = requestAnimationFrame(draw);
 	}
 
-	draw();
+	// Mette in pausa il loop quando la scheda non è visibile per risparmiare GPU
+	function onVisibilityChange() {
+		if (document.hidden) {
+			cancelAnimationFrame(rafId);
+		} else if (!destroyed) {
+			rafId = requestAnimationFrame(draw);
+		}
+	}
+
+	document.addEventListener('visibilitychange', onVisibilityChange);
+	rafId = requestAnimationFrame(draw);
 
 	return {
 		destroy() {
-			cancelAnimationFrame(animationFrameId);
+			destroyed = true;
+			cancelAnimationFrame(rafId);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
 			tl.kill();
 		}
 	};

@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { gsap } from 'gsap';
 	import { drawBorder } from '$lib/actions/drawBorder.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
@@ -16,8 +16,7 @@
 		onCollapse = () => {}
 	} = $props();
 
-	// Opacità e z-index del layer
-	let opacity = $derived(layers.getLayerOpacity(1));
+	// z-index e stile del layer calcolati dallo store globale
 	let zIndex = $derived(layers.getLayerZIndex(1));
 	let layerStyle = $derived(layers.getLayerStyle(1));
 	let layerVisible = $derived(layers.getLayerOpacity(1) > 0 && layers.getLayerZIndex(1) >= 0);
@@ -44,11 +43,13 @@
 	let fisicoFading = $state(false);
 	let hasScrolledDown = $state(false);
 	let animationTriggered = $state(false);
-	let autoExpanded = $state(false);
 	/** @type {any} */
 	let quizWrapper;
-	// 🎭 Variable representing CSS Mask url exported by canvas Svelte Action
+	// URL della maschera CSS esportata dall'action Canvas, usata per il gradiente animato
 	let canvasMaskUrl = $state('');
+	// IDs dei timeout attivi, cancellati nel destroy per prevenire callback su DOM smontato
+	/** @type {ReturnType<typeof setTimeout>[]} */
+	let pendingTimeouts = [];
 
 	onMount(() => {
 		gsap.set(quizWrapper, { y: '100vh' });
@@ -103,11 +104,10 @@
 		}
 	});
 
-	// Reset quando torniamo all'inizio
+	// Reset allo stato di scelta quando si torna all'inizio della sessione
 	$effect(() => {
 		const progress = layers.progress;
 		if (progress < 0.30) {
-			autoExpanded = false;
 			quizState = 'choosing';
 			selectedSide = '';
 			mentaleShowing = false;
@@ -134,7 +134,6 @@
 		mentaleShowing = false;
 		fisicoFading = false;
 		hasScrolledDown = false;
-		autoExpanded = false;
 		layers.quizCompleted = false;
 	}
 
@@ -146,22 +145,19 @@
 		quizState = 'expanding';
 		mentaleShowing = true;
 
-		// 标题过渡动画：选择页标题滑出，展开页标题滑入
-		gsap.to('.quiz-title-wrap', {
-			x: 80,
-			opacity: 0,
-			duration: 0.4,
-			ease: 'power2.in'
-		});
+		// Titolo scelta scivola fuori, poi quello espanso scivola dentro
+		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
 
-		setTimeout(() => { fisicoFading = true; }, 300);
-		setTimeout(() => {
-			quizState = 'expanded';
-			gsap.fromTo('.expanded-title-area',
-				{ x: -60, opacity: 0 },
-				{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
-			);
-		}, 600);
+		pendingTimeouts.push(
+			setTimeout(() => { fisicoFading = true; }, 300),
+			setTimeout(() => {
+				quizState = 'expanded';
+				gsap.fromTo('.expanded-title-area',
+					{ x: -60, opacity: 0 },
+					{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+				);
+			}, 600)
+		);
 	}
 
 	function selectFisico(skipLock = false) {
@@ -172,27 +168,29 @@
 		quizState = 'expanding';
 		fisicoExpanding = true;
 
-		// 标题过渡动画：选择页标题滑出
-		gsap.to('.quiz-title-wrap', {
-			x: 80,
-			opacity: 0,
-			duration: 0.4,
-			ease: 'power2.in'
-		});
+		// Titolo scelta scivola fuori, poi il cerchio fisico si trasforma in mentale
+		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
 
-		setTimeout(() => {
-			fisicoExpanding = false;
-			fisicoFading = true;
-			mentaleShowing = true;
-		}, 300);
-		setTimeout(() => {
-			quizState = 'expanded';
-			gsap.fromTo('.expanded-title-area',
-				{ x: -60, opacity: 0 },
-				{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
-			);
-		}, 600);
+		pendingTimeouts.push(
+			setTimeout(() => {
+				fisicoExpanding = false;
+				fisicoFading = true;
+				mentaleShowing = true;
+			}, 300),
+			setTimeout(() => {
+				quizState = 'expanded';
+				gsap.fromTo('.expanded-title-area',
+					{ x: -60, opacity: 0 },
+					{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+				);
+			}, 600)
+		);
 	}
+
+	// Cancella tutti i timeout pendenti al momento dello smontaggio del componente
+	onDestroy(() => {
+		for (const id of pendingTimeouts) clearTimeout(id);
+	});
 
 	/**
 	 * @param {any} e
