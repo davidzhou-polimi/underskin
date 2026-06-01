@@ -35,15 +35,16 @@ class LayerState {
 	
 		// --- Layer 0 (IntroTextSection) ---
 		if (layerIndex === 0) {
-			// Si nasconde quando il quiz appare (p >= 0.35)
-			if (p >= 0.85) return 0;
+			// Si nasconde quando il quiz prende il controllo (p >= 0.9)
+			// così l'utente può leggere "Tutto per soli..." che appare a p ≈ 0.8
+			if (p >= 0.9) return 0;
 			return 1;
 		}
 	
 		// --- Layer 1 (CerchiQuiz) ---
 		if (layerIndex === 1) {
 			if (p < 0.35) return 0;
-			if (p >= 0.85) return 0;
+			if (p >= 0.9) return 0;
 			return 1;
 		}
 	
@@ -60,12 +61,12 @@ class LayerState {
 		const p = this._progress;
 		
 		if (layerIndex === 0) {
-			if (p >= 0.35) return -9999;
+			if (p >= 0.9) return -9999;
 			return 0;
 		}
 		
 		if (layerIndex === 1) {
-			if (p >= 0.85) return -9999;
+			if (p >= 0.9) return -9999;
 			return p >= 0.35 ? 30 : -10;
 		}
 		
@@ -82,10 +83,6 @@ class LayerState {
     }
 
 	getLayerStyle(layerIndex) {
-		const opacity = this.getLayerOpacity(layerIndex);
-		if (opacity === 0) {
-			return 'display: none;';
-		}
 		return '';
 	}
 }

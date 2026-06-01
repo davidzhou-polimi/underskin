@@ -15,11 +15,13 @@
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
 
-		// ScrollTrigger per il layer container
+			// ScrollTrigger per il layer container
 		st = ScrollTrigger.create({
 			trigger: '.layer-container',
 			start: 'top top',
-			end: '+=100%',
+			// 500% = abbastanza spazio perché scrollReveal (200%) finisca con ampio margine
+			// l'utente può leggere "Tutto per soli..." e continuare a scrollare oltre
+			end: '+=900%',
 			pin: true,
 			pinSpacing: true,
 			scrub: 1,

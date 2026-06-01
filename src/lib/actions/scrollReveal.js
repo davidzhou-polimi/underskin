@@ -6,25 +6,51 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Azione Svelte per rivelare un elemento con fade-in durante lo scroll.
+ * Azione Svelte per la rivelazione sequenziale di elementi con effetto blur e opacity.
  * @param {HTMLElement} node - L'elemento del DOM a cui è applicata l'azione
- * @param {object} params - Parametri opzionali
- * @param {object} params.trigger - Parametri per ScrollTrigger
- * @param {object} params.tween - Parametri per l'animazione GSAP
+ * @param {{ selector?: string; startPercent?: number }} [params] - Parametri configurabili
  */
 export function scrollReveal(node, params = {}) {
+	const selector = params.selector ?? '.reveal-line';
+	const startPercent = params.startPercent ?? 50;
+
+	const lines = node.querySelectorAll(selector);
+	if (!lines.length) return;
+
 	const ctx = gsap.context(() => {
-		gsap.from(node, {
+		const tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: node,
-				start: 'top 80%',
-				...params.trigger
-			},
-			opacity: 0,
-			y: 40,
-			duration: 1,
-			...params.tween
+				start: 'top 0%',
+				end: `+=${lines.length * startPercent}%`,
+				scrub: 1
+			}
 		});
+
+		// Stato iniziale: CSS class stabilisce l'aspetto visivo
+		// reveal-visible → opacity:1, filter:blur(0px) per la prima riga
+		// reveal-hidden  → opacity:0, filter:blur(15px) per le altre
+		node.classList.add('reveal-container');
+		for (let i = 1; i < lines.length; i++) {
+			lines[i].classList.add('reveal-hidden');
+		}
+		lines[0].classList.add('reveal-visible');
+
+		// Sequenza di scambio delle frasi
+		for (let i = 0; i < lines.length - 1; i++) {
+			tl.to(lines[i], {
+				opacity: 0,
+				filter: 'blur(15px)',
+				y: -20,
+				duration: 1
+			})
+			.to(lines[i + 1], {
+				opacity: 1,
+				filter: 'blur(0px)',
+				y: 0,
+				duration: 1
+			}, '-=0.5');
+		}
 	}, node);
 
 	return {

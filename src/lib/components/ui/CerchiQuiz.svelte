@@ -302,6 +302,7 @@
 
 	function handleVirtualScroll(e) {
 		if (quizState !== 'expanded' || layers.quizCompleted) return;
+		if (!layerVisible) return;
 
 		const deltaY = e.deltaY;
 		e.preventDefault();
