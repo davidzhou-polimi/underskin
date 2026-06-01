@@ -1,15 +1,34 @@
 <script>
     import { onMount } from 'svelte';
-    import { fade } from 'svelte/transition';
     import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
+    /** @type {HTMLElement | null} */
     let sectionRef = null;
     
     // Tracciamento dello scroll reattivo (Svelte 5 Runes)
     let scrollProgress = $state(0);
     
-    // Calcolo del movimento della scritta BURNOUT gigante
-    let translateXValue = $derived(`translateX(calc(140vw - (${scrollProgress} * 520vw)))`);
+    // Posizione di partenza e movimento della scritta BURNOUT gigante
+    let burnoutPositionVw = $derived(140 - (scrollProgress * 520));
+    let translateXValue = $derived(`translateX(${burnoutPositionVw}vw)`);
+
+    // 1. IL PRIMO BLOCCO (Intro) viene spinto via da sinistra verso destra
+    let introPushProgress = $derived(Math.max(0, Math.min(1, (60 - burnoutPositionVw) / 90)));
+    let introTranslateXValue = $derived(`translateX(${-introPushProgress * 120}vw)`);
+    let introOpacityValue = $derived(Math.max(0, Math.min(1, 1 - (introPushProgress * 1.15))));
+
+    // 2. IL SECONDO BLOCCO (Outro) entra da destra agganciato alla "T" di BURNOUT
+    // Abbiamo aumentato il valore da 220 a 350 per spostare il punto di contatto dalla U alla T.
+    // SE NOTI CHE È ANCORA TROPPO A SINISTRA: aumenta 350 (es. 380, 400)
+    // SE NOTI CHE HA SUPERATO LA T ED È TROPPO A DESTRA: diminuisci 350 (es. 320, 330)
+    let tailOfBurnout = $derived(burnoutPositionVw + 350); 
+
+    // Il testo arriva da destra seguendo la T, e si pianta a 0 (centro esatto) quando la T raggiunge il centro
+    let outroX = $derived(Math.max(0, tailOfBurnout));
+    let outroTranslateXValue = $derived(`translateX(${outroX}vw)`);
+    
+    // L'opacità diventa 1 solo quando la T (e quindi il testo) si avvicina visivamente alla viewport (sotto i 60vw da destra)
+    let outroOpacityValue = $derived(Math.max(0, Math.min(1, (60 - outroX) / 30)));
 
     function handleScroll() {
         if (!sectionRef) return;
@@ -42,21 +61,27 @@
     <div class="sticky-viewport">
         
         <div class="text-container">
-            {#if scrollProgress < 0.5}
-                <div class="text-wrapper" out:fade={{ duration: 250 }} in:fade={{ duration: 250 }}>
-                    <p class="subtitle">La salute mentale non è separata dalla performance.</p>
-                    <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
-                        è la performance
-                    </h1>
-                </div>
-            {:else}
-                <div class="text-wrapper new-spacing" in:fade={{ duration: 250, delay: 250 }} out:fade={{ duration: 250 }}>
-                    <h2 class="new-title">Il burnout nasce in silenzio.</h2>
-                    <p class="new-subtitle">
-                        Cresce ogni volta che un atleta viene ridotto <br /> a un tempo, una medaglia, un risultato.
-                    </p>
-                </div>
-            {/if}
+            <div
+                class="text-wrapper intro-wrapper"
+                style:transform={introTranslateXValue}
+                style:opacity={introOpacityValue}
+            >
+                <p class="subtitle">La salute mentale non è separata dalla performance.</p>
+                <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
+                    è la performance
+                </h1>
+            </div>
+
+            <div
+                class="text-wrapper new-spacing outro-wrapper"
+                style:transform={outroTranslateXValue}
+                style:opacity={outroOpacityValue}
+            >
+                <h2 class="new-title">Il burnout nasce in silenzio.</h2>
+                <p class="new-subtitle">
+                    Cresce ogni volta che un atleta viene ridotto <br /> a un tempo, una medaglia, un risultato.
+                </p>
+            </div>
         </div>
 
         <div class="marquee-container" style:transform={translateXValue}>
@@ -86,7 +111,6 @@
         overflow: hidden; 
     }
 
-    /* Mantiene i blocchi perfettamente allineati al centro esatto della viewport */
     .text-container {
         position: relative;
         display: flex;
@@ -97,23 +121,30 @@
         z-index: 1; 
     }
 
-    /* Struttura base dei blocchi di testo */
     .text-wrapper {
-        position: absolute; /* Evita scatti e sovrapposizioni verticali durante il fade */
+        position: absolute; 
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: var(--spacing-5); /* Spacing 5 (40px) per il primo blocco */
+        gap: var(--spacing-5); 
         width: 100%;
+        will-change: transform, opacity;
     }
 
-    /* Configurazione per il secondo blocco di testo */
     .text-wrapper.new-spacing {
-        gap: var(--spacing-2); /* Spacing 2 (16px) esatto richiesto */
+        gap: var(--spacing-2); 
     }
 
-    /* Stili Primo Blocco */
+    .intro-wrapper {
+        z-index: 2;
+    }
+
+    /* Resta a z-index 4 per passare sopra l'effetto vetroso */
+    .outro-wrapper {
+        z-index: 4; 
+    }
+
     .subtitle {
         margin: 0;
         font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
@@ -131,12 +162,11 @@
         line-height: 1.2;
     }
 
-    /* Stili Secondo Blocco */
     .new-title {
         margin: 0;
         font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
         font-size: 56px;
-        font-weight: 800; /* ExtraBold */
+        font-weight: 800; 
         color: var(--content-primary, #ffffff);
         line-height: 1.2;
     }
@@ -145,12 +175,11 @@
         margin: 0;
         font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
         font-size: 24px;
-        font-weight: 400; /* Regular */
+        font-weight: 400; 
         color: var(--content-primary, #ffffff);
-        line-height: 30px; /* Interlinea a 30px */
+        line-height: 30px; 
     }
 
-    /* Animazione e stile BURNOUT */
     .marquee-container {
         position: absolute;
         left: 0;
@@ -165,17 +194,13 @@
     }
 
     :global(.glass-text) {
-        /* Dimensioni calcolate per mantenere perfettamente l'aspect ratio originale dell'SVG (5376x891) basandoci sul 105vh di altezza */
         height: 105vh;
         width: 633.535vh;
-        
-        /* Mascheramento per ritagliare l'effetto vetroso di GlassEffect esclusivamente sulla sagoma dell'SVG */
         mask-image: url('../../assets/BURNOUT.svg');
         -webkit-mask-image: url('../../assets/BURNOUT.svg');
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;
-        
         display: block;
     }
 
