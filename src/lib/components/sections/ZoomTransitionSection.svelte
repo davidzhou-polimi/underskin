@@ -8,12 +8,12 @@
     <div class="intro-container">
         <span class="first-text">Alcuni casi a</span>
         
-        <h1 class="zoom-text">
-            Milano Cortina
-            <span class="break-line">
-                2<span class="target-digit">0</span>26
-            </span>
-        </h1>
+        <svg class="zoom-svg" viewBox="0 0 1000 400" width="100%" height="100%">
+            <text class="zoom-text" x="50%" text-anchor="middle">
+                <tspan x="50%" dy="180">Milano Cortina</tspan>
+                <tspan x="50%" dy="220" class="year-text">2026</tspan>
+            </text>
+        </svg>
     </div>
 
     <div class="next-section-content">
@@ -33,11 +33,7 @@
         overflow: hidden;
         background-color: var(--background-primary);
         font-family: var(--font-family-base);
-        
-        /* MODIFICA: Sposta la sezione verso l'alto di un terzo del viewport */
         margin-top: -30vh; 
-        
-        /* Garantisce che lo sfondo della sezione zoom copra lo spazio vuoto della precedente */
         z-index: 5;
     }
 
@@ -51,7 +47,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        text-align: center;
         z-index: 1;
         padding: var(--spacing-4);
     }
@@ -64,26 +59,18 @@
         letter-spacing: 0.05em;
     }
 
+    /* Stili per l'SVG e il testo vettoriale */
+    .zoom-svg {
+        max-width: 900px;
+        max-height: 350px;
+        overflow: visible;
+    }
+
     .zoom-text {
-        font-size: var(--text-footer-size);
-        font-weight: var(--text-footer-weight);
-        color: var(--azzurro-600); 
-        margin: var(--spacing-0);
+        font-size: var(--text-3xl); /* Dimensione calibrata sul viewBox dell'SVG */
+        font-weight: 1000;
+        fill: var(--azzurro-600); 
         line-height: 1.1;
-        text-align: center;
-        
-        /* Rimosse le proprietà 3D e will-change poiché promuovono il testo a texture GPU statica.
-           Questo costringeva il browser a stretchare un'immagine rasterizzata anziché calcolare i vettori. */
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-    }
-
-    .break-line {
-        display: block;
-    }
-
-    .target-digit {
-        display: inline-block;
     }
 
     .next-section-content {
@@ -96,17 +83,6 @@
         align-items: center;
         justify-content: center;
         z-index: 2;
-        background-color: var(--azzurro-600); 
-    }
-
-    .content-wrapper {
-        text-align: center;
-        color: var(--background-primary);
-        padding: var(--spacing-4);
-    }
-
-    .content-wrapper h2 {
-        font-size: var(--text-xl);
-        margin-bottom: var(--spacing-2);
+        background-color: var(--background-primary);
     }
 </style>
