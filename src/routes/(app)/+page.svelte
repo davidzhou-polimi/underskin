@@ -1,25 +1,19 @@
 <script>
-	// Importa qui in sequenza le macro-sezioni dalla cartella components/sections/
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import IntrusiveThoughts from '$lib/components/sections/IntrusiveThoughts.svelte';
-	import FavoritotextSection from '$lib/components/sections/FavoritotextSection.svelte';
-	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+	/**
+	 * Assunzioni per questa pagina rotta:
+	 * 1. Questa è la homepage temporaneamente vuota.
+	 * 2. Eredita automaticamente la Navbar dal layout di gruppo (app).
+	 * 3. Le sezioni del profilo Favorito sono state correttamente spostate nella rotta dedicata /favorito.
+	 */
 </script>
 
-<main>
-	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
-	<HeroSection />
-	<IntrusiveThoughts />
-	<FavoritotextSection />
-	<ZoomTransitionSection />
-</main>
-
+<div class="empty-home-placeholder"></div>
 
 <style>
-	main {
+	/* Placeholder leggero per lo sfondo della homepage vuota */
+	.empty-home-placeholder {
 		width: 100%;
 		min-height: 100vh;
 		background-color: var(--background-primary);
-		overflow-x: hidden;
 	}
 </style>
