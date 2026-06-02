@@ -25,7 +25,8 @@
 	/* ============================================================
 	   TYPE SCALE
 	   ============================================================ */
-	--text-xs:  1rem;      /*  16px */
+	--text-2xs:  1rem;      /*  16px */
+    --text-xs:  1.25rem;   /*  20px */
 	--text-s:   1.5rem;    /*  24px */
 	--text-m:   2rem;      /*  32px */
 	--text-l:   2.5rem;    /*  40px */
@@ -50,14 +51,14 @@
 	--text-important-size:    var(--text-xl);
 	--text-important-weight:  700;
 
-	--text-service-size:      var(--text-xs);
+	--text-service-size:      var(--text-2xs);
 	--text-service-weight:    400;
 
 	--text-card-front-size:   var(--text-m);
 	--text-card-front-weight: 700;
 
-    --text-card-back-context-size:   var(--text-xs);
-    --text-card-back-context-weight: 550;
+    --text-card-back-context-size:   var(--text-2xs);
+    --text-card-back-context-weight: 400;
 
     --text-card-back-quote-size:   var(--text-xs);
     --text-card-back-quote-weight: 400;
@@ -66,11 +67,11 @@
 	--text-footer-size:       var(--text-3xl);
 	--text-footer-weight:     800;
 
-	--text-intro-card-size:   var(--text-xs);
+	--text-intro-card-size:   var(--text-2xs);
 	--text-intro-card-weight: 700;
 
 	/* Solo per la barra di navigazione e logo */
-	--text-nav-size:          var(--text-xs);
+	--text-nav-size:          var(--text-2xs);
 	--text-nav-weight:        600;
 	--text-nav-active-weight: 700;
 
@@ -83,3 +84,15 @@ body {
 	font-family: var(--font-family-base);
 }
 
+/* Reset headings default styles to let them inherit typography tokens from their parent components */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+	margin: 0;
+	font-size: inherit;
+	font-weight: inherit;
+}
