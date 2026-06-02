@@ -1,6 +1,13 @@
 <script>
 	import AthleteCarousel from '$lib/components/ui/AthleteCarousel.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
+
+	/**
+	 * @type {{
+	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto'
+	 * }}
+	 */
+	let { type = 'favorito' } = $props();
 </script>
 
 <section 
@@ -9,7 +16,7 @@
 	use:trackSection={{ id: 'hero' }}
 >
 	<div class="athlete-section__container">
-		<AthleteCarousel />
+		<AthleteCarousel {type} />
 	</div>
 </section>
 
