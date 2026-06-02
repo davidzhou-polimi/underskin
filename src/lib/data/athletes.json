@@ -53,14 +53,14 @@
 		"type": "insoddisfatto",
 		"imageSrc": "/images/athletes/nika-prevc.png",
 		"context": "La saltatrice slovena, dopo tredici vittorie stagionali, perde l'oro per poco più di un punto, e sale sul podio senza riuscire a esultare.",
-		"quote": "I still need some time to think about what was going on today [...]. There was too much pressure on me [...], that's a thing I wasn't able to cooperate with."
+		"quote": "I still need some time to\nthink about what was going on today [...]. There was too much pressure on me [...], that's a thing I wasn't able to cooperate with."
 	},
 	{
 		"name": "Kaori Sakamoto",
 		"type": "insoddisfatto",
 		"imageSrc": "/images/athletes/kaori-sakamoto.png",
-		"context": "Favorita assoluta, vede il suo oro trasformarsi in un argento che sa solo di fallimento.",
-		"quote": "I felt like the bronze medal last time was a miracle, and I'm wearing a better medal around my neck yet I'm frustrated - which probably says a lot about all the work I put in the last four years."
+		"context": "Favorita assoluta, vede il suo oro trasformarsi in un argento che sa\nsolo di fallimento.",
+		"quote": "I felt like the bronze medal last time was a miracle, and I'm wearing a better medal around my neck yet I'm frustrated - which probably says a lot about all the work\nI put in the last four years."
 	},
 	{
 		"name": "Scotty James",
@@ -73,15 +73,15 @@
 		"name": "Sofia Goggia",
 		"type": "infortunato",
 		"imageSrc": "/images/athletes/sofia-goggia.png",
-		"context": "La campionessa azzurra si presenta a Milano Cortina dopo dieci anni di calvari medici e l'ennesimo infortunio, trasformando la fragilità fisica in una rinascita spirituale.",
-		"quote": "Gli infortuni sono sempre figli di un conflitto emotivo dentro di noi, sono emozioni che fanno un bluff e te lo trasmettono nel corpo."
+		"context": "La campionessa azzurra si presenta\na Milano Cortina dopo dieci anni di calvari medici e l'ennesimo infortunio, trasformando la fragilità fisica in una rinascita spirituale.",
+		"quote": "Gli infortuni sono sempre\nfigli di un conflitto emotivo dentro di noi, sono emozioni che fanno un bluff e te lo trasmettono nel corpo."
 	},
 	{
 		"name": "Petra Vlhová",
 		"type": "infortunato",
 		"imageSrc": "/images/athletes/petra-vlhova.png",
 		"context": "Oro olimpico a Pechino 2022, si rompe crociato e collaterale a Jasná nel gennaio 2024. Venti mesi di silenzio, due operazioni, e un ritorno che nessuno avrebbe scommesso.",
-		"quote": "Today was about the feeling, not about the results, so I'm happy that I could start it.\nOf course, DNF, but whatever, I'm just proud."
+		"quote": "Today was about the feeling, not about the results, so\nI'm happy that I could start it.\nOf course, DNF, but whatever, I'm just proud."
 	},
 	{
 		"name": "Federica Brignone",

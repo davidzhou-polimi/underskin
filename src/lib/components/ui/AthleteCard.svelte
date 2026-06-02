@@ -37,7 +37,7 @@
 		},
 		infortunato: {
 			brand: 'var(--archetipi-infortunato)',
-			brandBack: 'var(--arancione-400)',
+			brandBack: 'var(--arancione-300)',
 			brandBackEnd: 'var(--arancione-100)',
 			textPrimary: 'var(--arancione-900)',
 			textSecondary: 'var(--arancione-700)'

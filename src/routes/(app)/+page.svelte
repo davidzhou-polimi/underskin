@@ -4,7 +4,9 @@
 
 <main>
 	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
-	<AthleteSection />
+	<AthleteSection type="favorito" />
+	<AthleteSection type="insoddisfatto" />
+	<AthleteSection type="infortunato" />
 	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 
