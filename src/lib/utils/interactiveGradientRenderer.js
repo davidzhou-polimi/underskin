@@ -7,6 +7,7 @@ import * as THREE from 'three';
  * @property {number} [waveFrequency]    - Spatial frequency of noise blobs (lower = larger blobs)
  * @property {[number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
  * @property {number} [coverage]         - 0=sparse blobs, 1=full-screen wash
+ * @property {number} [intensity]        - Opacity/saturation of the blobs (0=invisible, 1=full, default 1.0); independent from coverage
  * @property {[number, number]} [focusCenter]   - UV center of gradient concentration [x, y]
  * @property {number | [number, number]} [focusRadius] - Focus radius [rx, ry] or single value for circle
  * @property {number} [viscosity]        - Mouse follow lerp factor (lower = more viscous)
@@ -34,6 +35,7 @@ export const DEFAULT_CONFIG = {
 	waveFrequency: 0.8,
 	waveAmplitude: [1.4, 0.18],
 	coverage: 0.5,
+	intensity: 1.0,
 	focusCenter: [0.5, 0.5],
 	focusRadius: 2.0,
 	viscosity: 0.07,
@@ -156,6 +158,7 @@ const fsSource = `
 	uniform float u_wave_freq;
 	uniform vec2 u_wave_amp;
 	uniform float u_coverage;
+	uniform float u_intensity;
 	uniform vec4 u_focus; // xy = center, zw = radius [rx, ry]
 	uniform float u_mouse_radius;
 	uniform float u_mouse_strength;
@@ -355,9 +358,9 @@ const fsSource = `
 		float is_shaped = step(0.5, u_target_shape);
 		float morphed_fluid = mix(shape_noise, shape_noise + target_bias * 1.5, u_shape_morph * is_shaped);
 
-		// 7. Coverage bias: shifts the noise threshold so more/less surface is covered.
-		// Wide range (-1.2, 1.2) spans the full snoise output — the transition is so gradual
-		// that hard edges between gradient regions and background become impossible.
+		// 7. Coverage bias: sposta il threshold del noise decidendo *dove* compaiono i blob.
+		// La normalizzazione successiva garantisce che l'intensità del colore nelle zone blob
+		// rimanga piena indipendentemente da coverage — bassa coverage = blob radi ma saturi.
 		float coverage_bias = (u_coverage - 0.5) * 2.5;
 		float shape_mask = smoothstep(-1.2, 1.2, morphed_fluid + coverage_bias);
 
@@ -371,6 +374,17 @@ const fsSource = `
 		float focus_weight = 1.0 - smoothstep(0.5, 1.0, focus_dist);
 		shape_mask *= mix(0.0, 1.0, focus_weight);
 		shape_mask = clamp(shape_mask, u_mask_clamp.x, u_mask_clamp.y);
+
+		// Riscala shape_mask in [0, 1] rispetto al picco atteso per questa coverage,
+		// così i blob mantengono piena intensità cromatica anche a coverage bassa.
+		// Il picco teorico di smoothstep(-1.2, 1.2, x + bias) con x in [-1,1] è
+		// smoothstep(-1.2, 1.2, 1.0 + bias); lo approssimiamo con il soft-floor già applicato.
+		float expected_peak = mix(0.05, 1.0, smoothstep(-1.2, 1.2, 1.0 + coverage_bias));
+		expected_peak = max(expected_peak, 0.06); // evita divisione per zero a coverage≈0
+		shape_mask = clamp(shape_mask / expected_peak, 0.0, 1.0);
+
+		// intensity scala l'opacità dei blob indipendentemente dalla coverage
+		shape_mask *= u_intensity;
 
 		// 8. Color blending — scroll_z offsets the color noise too so colors morph with scroll
 		float blend_range = u_color_blending * 0.8;
@@ -471,6 +485,7 @@ export class InteractiveGradientRenderer {
 				u_wave_freq:      { value: this.config.waveFrequency },
 				u_wave_amp:       { value: new THREE.Vector2(...this.config.waveAmplitude) },
 				u_coverage:       { value: this.config.coverage },
+				u_intensity:      { value: this.config.intensity },
 				u_focus:          { value: new THREE.Vector4(
 					this.config.focusCenter[0],
 					this.config.focusCenter[1],
@@ -543,6 +558,7 @@ export class InteractiveGradientRenderer {
 		const state = {
 			speed: u.u_speed.value,
 			coverage: u.u_coverage.value,
+			intensity: u.u_intensity.value,
 			grainIntensity: u.u_grain_intensity.value,
 			clampMin: u.u_mask_clamp.value.x,
 			clampMax: u.u_mask_clamp.value.y,
@@ -581,6 +597,7 @@ export class InteractiveGradientRenderer {
 		const state = {
 			speed: newConfig.speed ?? c.speed,
 			coverage: newConfig.coverage ?? c.coverage,
+			intensity: newConfig.intensity ?? c.intensity,
 			grainIntensity: newConfig.grainIntensity ?? c.grainIntensity,
 			clampMin: (newConfig.maskClamp ?? c.maskClamp)[0],
 			clampMax: (newConfig.maskClamp ?? c.maskClamp)[1],
@@ -609,6 +626,7 @@ export class InteractiveGradientRenderer {
 		const u = /** @type {any} */ (this.material.uniforms);
 		u.u_speed.value = state.speed;
 		u.u_coverage.value = state.coverage;
+		u.u_intensity.value = state.intensity;
 		u.u_grain_intensity.value = state.grainIntensity;
 		u.u_mask_clamp.value.set(state.clampMin, state.clampMax);
 		u.u_focus.value.set(state.focusX, state.focusY, state.focusRx, state.focusRy);
@@ -663,6 +681,7 @@ export class InteractiveGradientRenderer {
 		if (options.waveFrequency !== undefined)  u.u_wave_freq.value = this.config.waveFrequency;
 		if (options.waveAmplitude !== undefined)  u.u_wave_amp.value.set(...this.config.waveAmplitude);
 		if (options.coverage !== undefined)       u.u_coverage.value = this.config.coverage;
+		if (options.intensity !== undefined)      u.u_intensity.value = this.config.intensity;
 		if (options.focusCenter !== undefined || options.focusRadius !== undefined) {
 			const rx = Array.isArray(this.config.focusRadius) ? this.config.focusRadius[0] : this.config.focusRadius;
 			const ry = Array.isArray(this.config.focusRadius) ? this.config.focusRadius[1] : this.config.focusRadius;
