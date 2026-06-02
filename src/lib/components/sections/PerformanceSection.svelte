@@ -42,9 +42,12 @@
 <section id="performance" class="performance-section" use:trackSection>
 	<div class="perf-content" bind:this={contentWrapper}>
 		<blockquote class="perf-quote">
-			La performance non consuma solo il corpo: modella
-			<span class="gradient-text animate-gradient-text my-archetypes-color">identità, abitudini e ossessioni</span>.
-			Nel tempo emergono schemi ricorrenti, modi diversi di vivere il peso della performance.
+			La performance non consuma solo il corpo: <br />
+			modella <span class="gradient-text animate-gradient-text my-archetypes-color">identità</span>,
+			<span class="gradient-text animate-gradient-text my-archetypes-color">abitudini</span> e
+			<span class="gradient-text animate-gradient-text my-archetypes-color">ossessioni</span>.<br />
+			Nel tempo emergono schemi ricorrenti, modi<br />
+			diversi di vivere il peso della performance.
 		</blockquote>
 	</div>
 </section>
@@ -64,9 +67,8 @@
 	.perf-quote {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: var(--text-important-weight);
-		/* Usa il token standard per testi importanti in quanto --text-title è ridondante */
-		font-size: var(--text-important-size);
-		line-height: 1.6;
+		font-size: var(--text-l);
+		line-height: 1.5;
 		color: var(--content-primary);
 		text-align: center;
 		margin: 0;
@@ -78,22 +80,5 @@
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
-	}
-
-	.gradient-text {
-		background: linear-gradient(90deg, var(--gradient-c1), var(--gradient-c2), var(--gradient-c3));
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	@keyframes gradient-shift {
-		0%, 100% { background-position: 0% 50%; }
-		50% { background-position: 100% 50%; }
-	}
-
-	.animate-gradient-text {
-		background-size: 200% 200%;
-		animation: gradient-shift 3s ease infinite;
 	}
 </style>

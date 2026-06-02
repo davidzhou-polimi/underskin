@@ -594,7 +594,7 @@
 							<canvas class="mini-trail-canvas" use:miniTrailCanvas={{ size: 400 }}></canvas>
 							<canvas class="slot-machine-canvas" use:slotMachineCanvas></canvas>
 						{:else}
-							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
+							<span class="text gradient-text animate-gradient-text">mentale</span>
 						{/if}
 					</div>
 				</button>
@@ -638,7 +638,7 @@
 						/>
 					</svg>
 					<div class="expanded-text-container">
-						<span class="text">fisico</span>
+						<span class="text gradient-text animate-gradient-text">fisico</span>
 					</div>
 				</button>
 			</div>
@@ -861,25 +861,22 @@
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 700;
 		font-size: var(--text-l);
-		color: var(--content-primary);
 		white-space: nowrap;
 		position: relative;
 		z-index: 1;
+
+		/* Colore solido di default (nessun gradiente visibile) */
+		--gradient-c1: var(--content-primary);
+		--gradient-c2: var(--content-primary);
+		--gradient-c3: var(--content-primary);
 	}
 
 	.circle:hover .text,
 	.circle.clicked .text {
-		background: linear-gradient(
-			120deg,
-			var(--archetipi-favorito),
-			var(--archetipi-insoddisfatto),
-			var(--archetipi-infortunato)
-		);
-		background-size: 300% 100%;
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
-		animation: global-shift-gradient 6s linear infinite;
+		/* Applica il gradiente animato sovrascrivendo i colori della variabile globale */
+		--gradient-c1: var(--archetipi-favorito);
+		--gradient-c2: var(--archetipi-insoddisfatto);
+		--gradient-c3: var(--archetipi-infortunato);
 	}
 
 	.slot-machine-canvas {
