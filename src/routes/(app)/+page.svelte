@@ -1,6 +1,10 @@
+<script>
+	import AthleteSection from '$lib/components/sections/AthleteSection.svelte';
+</script>
+
 <main>
 	<!-- Impila qui le sezioni (l'aggiornamento dello store è gestito internamente tramite use:trackSection) -->
-	<HeroSection />
+	<AthleteSection />
 	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 
@@ -13,3 +17,4 @@
 		min-height: 120vh;
 	}
 </style>
+

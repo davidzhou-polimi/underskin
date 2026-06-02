@@ -1,0 +1,39 @@
+<script>
+	import AthleteCarousel from '$lib/components/ui/AthleteCarousel.svelte';
+	import { trackSection } from '$lib/actions/trackSection.js';
+</script>
+
+<section 
+	id="hero" 
+	class="athlete-section" 
+	use:trackSection={{ id: 'hero' }}
+>
+	<div class="athlete-section__container">
+		<AthleteCarousel />
+	</div>
+</section>
+
+<style>
+	.athlete-section {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 100vh;
+		width: 100%;
+		/* padding-top evita la sovrapposizione visiva con la navbar fissa durante il rendering iniziale */
+		padding-top: var(--spacing-10);
+		padding-bottom: var(--spacing-6);
+		box-sizing: border-box;
+		/* overflow-x nasconde le card del carosello che vengono posizionate al di fuori dei limiti laterali dello schermo */
+		overflow-x: hidden;
+	}
+
+	.athlete-section__container {
+		width: 100%;
+		max-width: var(--spacing-17);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+</style>
