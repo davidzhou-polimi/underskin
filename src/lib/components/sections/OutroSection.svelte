@@ -221,7 +221,7 @@
     .circle-percentage {
         position: absolute;
         left: 50%;
-        top: 50%;
+        top: 60%;
         transform: translate(-50%, -100%);
         font-family: var(--font-family-base);
         font-size: 7.5rem;
@@ -232,24 +232,28 @@
 
     .circle-description {
         position: absolute;
-        left: 50%;
-        top: calc(50% + 4.5rem);
-        transform: translateX(-50%);
-        font-family: var(--font-family-base);
-        font-size: var(--text-s);
-        font-weight: 700;
-        line-height: 1.2;
-        max-width: 24rem;
-        margin-top: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: var(--circle-description-gap, 0px);
-        text-align: center;
+    left: 50%;
+    top: calc(50% + 4.5rem);
+    transform: translateX(-50%);
+    font-family: var(--font-family-base);
+    font-size: var(--text-s);
+    font-weight: 700;
+    line-height: 1.2;
+    
+    /* 1. Cambiamo la larghezza massima portandola al 100% del cerchio (o rimuovila) */
+    max-width: 100%; 
+    
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--circle-description-gap, 0px);
+    text-align: center;
     }
 
     .circle-description-line {
         display: block;
+        white-space: nowrap;
     }
 
     .dotted-circle {
