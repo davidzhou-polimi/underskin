@@ -14,9 +14,16 @@ if (typeof window !== 'undefined') {
 export function outroScrollAnimation(node) {
     const title = node.querySelector('.podium-title');
     const circleStage = node.querySelector('.circle-stage');
-    const percentageText = node.querySelector('.circle-percentage');
+    const percentageText = /** @type {SVGTextElement} */ (node.querySelector('.circle-percentage'));
     const revealCircle = node.querySelector('.reveal-circle');
-    const descriptionText = node.querySelector('.circle-description');
+    const descriptionText = /** @type {SVGTextElement} */ (node.querySelector('.circle-description'));
+
+    // Guard: verify all elements exist
+    if (!title || !circleStage || !percentageText || !revealCircle || !descriptionText) {
+        return {
+            destroy() {}
+        };
+    }
 
     // Il trigger per lo scorrimento è la sezione intera che racchiude la scena sticky
     const triggerElement = node.closest('section') || node;
