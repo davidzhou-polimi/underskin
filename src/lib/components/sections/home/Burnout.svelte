@@ -14,8 +14,10 @@
 
     // 1. IL PRIMO BLOCCO (Intro) viene spinto via da sinistra verso destra
     let introPushProgress = $derived(Math.max(0, Math.min(1, (60 - burnoutPositionVw) / 90)));
-    let introTranslateXValue = $derived(`translateX(${-introPushProgress * 120}vw)`);
+    let introTranslateXValue = $derived(`scale(${introScale}) translateX(${-introPushProgress * 120}vw)`);
     let introOpacityValue = $derived(Math.max(0, Math.min(1, 1 - (introPushProgress * 1.15))));
+    let introBlur = $derived(introPushProgress * 10); // 0→10px blur sull'uscita
+    let introScale = $derived(1 - (introPushProgress * 0.1)); // scala da 1 a 0.9
 
     // 2. IL SECONDO BLOCCO (Outro) entra da destra agganciato alla "T" di BURNOUT
     // Abbiamo aumentato il valore da 220 a 350 per spostare il punto di contatto dalla U alla T.
@@ -25,10 +27,12 @@
 
     // Il testo arriva da destra seguendo la T, e si pianta a 0 (centro esatto) quando la T raggiunge il centro
     let outroX = $derived(Math.max(0, tailOfBurnout));
-    let outroTranslateXValue = $derived(`translateX(${outroX}vw)`);
+    let outroTranslateXValue = $derived(`scale(${outroScale}) translateX(${outroX}vw)`);
     
     // L'opacità diventa 1 solo quando la T (e quindi il testo) si avvicina visivamente alla viewport (sotto i 60vw da destra)
     let outroOpacityValue = $derived(Math.max(0, Math.min(1, (60 - outroX) / 30)));
+    let outroBlur = $derived((1 - outroOpacityValue) * 8); // 8px→0 sull'entrata
+    let outroScale = $derived(0.9 + (outroOpacityValue * 0.1)); // scala da 0.9 a 1
 
     function handleScroll() {
         if (!sectionRef) return;
@@ -65,10 +69,11 @@
                 class="text-wrapper intro-wrapper"
                 style:transform={introTranslateXValue}
                 style:opacity={introOpacityValue}
+                style:--intro-blur="{introBlur}px"
             >
                 <p class="subtitle">La salute mentale non è separata dalla performance.</p>
                 <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
-                    è la performance
+                    È la performance.
                 </h1>
             </div>
 
@@ -76,6 +81,7 @@
                 class="text-wrapper new-spacing outro-wrapper"
                 style:transform={outroTranslateXValue}
                 style:opacity={outroOpacityValue}
+                style:--outro-blur="{outroBlur}px"
             >
                 <h2 class="new-title">Il burnout nasce in silenzio.</h2>
                 <p class="new-subtitle">
@@ -117,8 +123,8 @@
         align-items: center;
         justify-content: center;
         width: 100%;
-        padding: var(--spacing-2); 
-        z-index: 1; 
+        padding: var(--spacing-2);
+        z-index: var(--z-text-container, 1);
     }
 
     .text-wrapper {
@@ -137,47 +143,50 @@
     }
 
     .intro-wrapper {
-        z-index: 2;
+        z-index: var(--z-intro, 2);
+        filter: blur(var(--intro-blur, 0px));
+        transform-origin: center;
     }
 
-    /* Resta a z-index 4 per passare sopra l'effetto vetroso */
     .outro-wrapper {
-        z-index: 4; 
+        z-index: var(--z-outro, 4);
+        filter: blur(var(--outro-blur, 0px));
+        transform-origin: center;
     }
 
     .subtitle {
         margin: 0;
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 24px;
-        font-weight: 400; 
+        font-family: var(--font-family-base);
+        font-size: var(--text-s);
+        font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
         line-height: 1.4;
     }
 
     .main-title {
         margin: 0;
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 56px;
-        font-weight: 700; 
+        font-family: var(--font-family-base);
+        font-size: var(--text-xl);
+        font-weight: var(--text-important-weight);
         line-height: 1.2;
     }
 
     .new-title {
         margin: 0;
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 56px;
-        font-weight: 800; 
+        font-family: var(--font-family-base);
+        font-size: var(--text-xl);
+        font-weight: var(--text-title-weight);
         color: var(--content-primary, #ffffff);
         line-height: 1.2;
     }
 
     .new-subtitle {
         margin: 0;
-        font-family: 'Rethink Sans', var(--font-family-base), sans-serif;
-        font-size: 24px;
-        font-weight: 400; 
+        font-family: var(--font-family-base);
+        font-size: var(--text-s);
+        font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
-        line-height: 30px; 
+        line-height: 1.25; /* token approssimativo */
     }
 
     .marquee-container {
@@ -187,10 +196,10 @@
         height: 100vh;
         white-space: nowrap;
         will-change: transform;
-        pointer-events: none; 
-        z-index: 3; 
+        pointer-events: none;
+        z-index: var(--z-marquee, 3);
         display: flex;
-        align-items: center; 
+        align-items: center;
     }
 
     :global(.glass-text) {
