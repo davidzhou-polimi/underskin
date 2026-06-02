@@ -64,7 +64,8 @@
 	.perf-quote {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: var(--text-important-weight);
-		font-size: var(--text-title);
+		/* Usa il token standard per testi importanti in quanto --text-title è ridondante */
+		font-size: var(--text-important-size);
 		line-height: 1.6;
 		color: var(--content-primary);
 		text-align: center;

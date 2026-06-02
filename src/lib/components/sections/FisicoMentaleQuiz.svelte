@@ -128,7 +128,8 @@
 		const color2 = computed.getPropertyValue('--archetipi-insoddisfatto').trim() || '#8035d2';
 		const color3 = computed.getPropertyValue('--archetipi-infortunato').trim() || '#d86146';
 
-		const heroFontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
+		/* Legge --text-xl in quanto --text-hero è stato rimosso per consolidare i token */
+		const heroFontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-xl') || '80px';
 		
 		let fontSize = parseFloat(heroFontSizeStr);
 		if (heroFontSizeStr.includes('rem')) {
@@ -734,7 +735,8 @@
 		font-weight: 700;
 		text-align: center;
 		margin: 0;
-		font-size: var(--text-title);
+		/* Consuma il token standard per testi importanti/titoli medi */
+		font-size: var(--text-important-size);
 		line-height: 1.25;
 		color: var(--content-primary);
 		transform-origin: center top;
@@ -882,7 +884,8 @@
 
 	.slot-machine-canvas {
 		display: block;
-		font-size: var(--text-hero); 
+		/* Usa il token standard --text-xl per l'altezza del canvas slot-machine */
+		font-size: var(--text-xl); 
 		opacity: 1;
 		pointer-events: none;
 		z-index: 2;
@@ -974,7 +977,8 @@
 	.short-phrase p {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 400;
-		font-size: var(--text-body);
+		/* Sostituisce il vecchio token --text-body con il token standard per didascalie/sottotitoli */
+		font-size: var(--text-caption-size);
 		line-height: var(--spacing-4);
 		color: var(--content-primary, #071e45);
 		margin: 0;
@@ -996,7 +1000,8 @@
 	.long-quote .quote-content {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: 400;
-		font-size: var(--text-body);
+		/* Sostituisce il vecchio token --text-body con il token standard per didascalie/sottotitoli */
+		font-size: var(--text-caption-size);
 		line-height: var(--spacing-4);
 		color: var(--content-primary, #071e45);
 		padding-top: var(--spacing-10);

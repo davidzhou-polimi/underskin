@@ -6,7 +6,7 @@ import { gsap } from 'gsap';
  * non è visibile (Visibility API), risparmiando GPU durante il background.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {{ onUpdateMask: (url: string) => void }} params
+ * @param {{ onUpdateMask?: (url: string) => void }} [params]
  */
 export function slotMachineCanvas(canvas, params = {}) {
 	const ctx = canvas.getContext('2d');
@@ -17,7 +17,8 @@ export function slotMachineCanvas(canvas, params = {}) {
 
 	// Legge la dimensione font computata per adattarsi alla viewport corrente
 	const computed = getComputedStyle(document.documentElement);
-	const fontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
+	/* Utilizza --text-xl poiché --text-hero è stato rimosso */
+	const fontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-xl') || '80px';
 
 	let fontSize = parseFloat(fontSizeStr);
 	if (fontSizeStr.includes('rem')) {
