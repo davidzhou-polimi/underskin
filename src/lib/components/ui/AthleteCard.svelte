@@ -300,6 +300,7 @@
 		margin: 0;
 		font-weight: var(--text-card-back-context-weight);
 		text-align: center;
+		white-space: pre-line;
 	}
 
 	.quote-container {
@@ -324,5 +325,6 @@
 		margin: 0;
 		font-weight: var(--text-card-back-quote-weight);
 		text-align: center;
+		white-space: pre-line;
 	}
 </style>
