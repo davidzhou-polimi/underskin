@@ -9,6 +9,7 @@
 	import Outro from '$lib/components/sections/home/Outro.svelte';
 	import Burnout from '$lib/components/sections/home/Burnout.svelte';
 	import Final from '$lib/components/sections/home/Final.svelte';
+	import Footer from '$lib/components/sections/home/Footer.svelte';
 
 	let isLocked = $state(false);
 	let quizExpanded = $state(false);
@@ -49,6 +50,7 @@
 	<Outro />
 	<Burnout />
 	<Final />
+	<Footer />
 </main>
 
 <style>
