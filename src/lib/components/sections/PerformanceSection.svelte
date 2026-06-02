@@ -1,61 +1,45 @@
 <script>
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import { layers } from '$lib/stores/layers.svelte.js';
 
 	let contentWrapper;
-	let isVisible = $state(false);
-	let hasAnimated = $state(false);
-
-	let opacity = $derived.by(() => {
-		return layers.getLayerOpacity(2);
-	});
-	let layerStyle = $derived(layers.getLayerStyle(2));
 
 	onMount(() => {
-		// Impostiamo lo stato iniziale sfocato e nascosto
+		gsap.registerPlugin(ScrollTrigger);
+
+		// Impostiamo lo stato iniziale del testo (sfocato e traslato verso il basso)
 		gsap.set('.perf-quote', {
 			opacity: 0,
 			filter: 'blur(15px)',
 			y: 20
 		});
-	});
 
-	$effect(() => {
-		// Avviamo l'animazione di rivelazione quando la sezione diventa visibile
-		if (opacity > 0 && !hasAnimated) {
-			isVisible = true;
-			setTimeout(() => {
-				animateQuote();
-			}, 100);
-		}
-
-		// Resettiamo lo stato dell'animazione quando la sezione si nasconde
-		if (opacity === 0) {
-			isVisible = false;
-			hasAnimated = false;
-		}
-	});
-
-	function animateQuote() {
-		if (hasAnimated) return;
-
-		// Riveliamo il testo con sfocatura progressiva e traslazione
-		gsap.to('.perf-quote', {
+		// Attiviamo l'animazione quando la sezione entra in vista
+		const st = gsap.to('.perf-quote', {
 			opacity: 1,
 			filter: 'blur(0px)',
 			y: 0,
-			duration: 1,
+			duration: 1.2,
 			ease: 'power2.out',
-			onComplete: () => {
-				hasAnimated = true;
+			scrollTrigger: {
+				trigger: '#performance',
+				start: 'top 75%',
+				toggleActions: 'play none none reverse'
 			}
 		});
-	}
+
+		return () => {
+			if (st.scrollTrigger) {
+				st.scrollTrigger.kill();
+			}
+			st.kill();
+		};
+	});
 </script>
 
-<section id="performance" class="performance-section" style:opacity={opacity} style={layerStyle} use:trackSection>
+<section id="performance" class="performance-section" use:trackSection>
 	<div class="perf-content" bind:this={contentWrapper}>
 		<blockquote class="perf-quote">
 			La performance non consuma solo il corpo: modella
@@ -67,14 +51,14 @@
 
 <style>
 	.performance-section {
-		position: absolute;
-		inset: 0;
+		position: relative;
+		width: 100%;
+		min-height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0 80px;
 		background-color: var(--background-primary);
-		will-change: opacity;
 	}
 
 	.perf-quote {

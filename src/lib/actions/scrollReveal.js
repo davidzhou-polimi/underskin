@@ -7,36 +7,41 @@ if (typeof window !== 'undefined') {
 
 /**
  * Azione Svelte per la rivelazione sequenziale di elementi con effetto blur e opacity.
+ * Ottimizzata per lavorare in sinergia con il pinning locale del componente genitore.
  * 
- * @param {HTMLElement} node - L'elemento del DOM a cui è applicata l'azione
- * @param {{ selector?: string; startPercent?: number }} [params] - Parametri configurabili
+ * @param {HTMLElement} node - L'elemento del DOM a cui è applicata l'azione (.text-container)
+ * @param {{ selector?: string; startPercent?: number; trigger?: HTMLElement | string; end?: string }} [params] - Parametri configurabili
  */
 export function scrollReveal(node, params = {}) {
 	const selector = params.selector ?? '.reveal-line';
 	const startPercent = params.startPercent ?? 50;
 
+	// Troviamo il trigger reale (la sezione genitore che viene bloccata) per calcolare i punti di avvio corretti
+	const triggerElement = params.trigger 
+		? (typeof params.trigger === 'string' ? document.querySelector(params.trigger) : params.trigger)
+		: (node.closest('section') ?? node);
+
 	const lines = node.querySelectorAll(selector);
 	if (!lines.length) return;
 
-	// Creiamo un contesto GSAP per gestire in sicurezza il cleanup di tween e ScrollTrigger
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({
 			scrollTrigger: {
-				trigger: node,
+				trigger: triggerElement,
 				start: 'top 0%',
-				end: `+=${lines.length * startPercent}%`,
+				end: params.end ?? `+=${lines.length * startPercent}%`,
 				scrub: 1
 			}
 		});
 
-		// Aggiungiamo le classi di stato iniziali
+		// Stato iniziale non distruttivo tramite classi CSS
 		node.classList.add('reveal-container');
 		for (let i = 1; i < lines.length; i++) {
 			lines[i].classList.add('reveal-hidden');
 		}
 		lines[0].classList.add('reveal-visible');
 
-		// Definiamo la sequenza temporale per alternare le frasi in dissolvenza
+		// Definiamo la sequenza di dissolvenza/sfocatura sequenziale tra le frasi
 		for (let i = 0; i < lines.length - 1; i++) {
 			tl.to(lines[i], {
 				opacity: 0,
@@ -49,13 +54,12 @@ export function scrollReveal(node, params = {}) {
 				filter: 'blur(0px)',
 				y: 0,
 				duration: 1
-			}, '-=0.5'); // Leggera sovrapposizione temporale per rendere il passaggio meno brusco
+			}, '-=0.5'); // Sovrapposizione parziale dei tween per ammorbidire la transizione
 		}
 	}, node);
 
 	return {
 		destroy() {
-			// Preveniamo perdite di memoria e tween orfani annullando il contesto
 			ctx.revert();
 		}
 	};

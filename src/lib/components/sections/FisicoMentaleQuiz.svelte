@@ -8,7 +8,7 @@
 	import { layers } from '$lib/stores/layers.svelte.js';
 	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
 
-	// Props per il controllo dello scroll ricevute dal genitore
+	// Props per il controllo dello scroll
 	let {
 		lockScroll = () => {},
 		unlockScroll = () => {},
@@ -16,13 +16,7 @@
 		onCollapse = () => {}
 	} = $props();
 
-	// Opacità e z-index calcolati dinamicamente
-	let opacity = $derived(layers.getLayerOpacity(1));
-	let zIndex = $derived(layers.getLayerZIndex(1));
-	let layerStyle = $derived(layers.getLayerStyle(1));
-	let layerVisible = $derived(layers.getLayerOpacity(1) > 0 && layers.getLayerZIndex(1) >= 0);
-
-	// Stato interno del quiz
+	// Stato del quiz
 	let quizState = $state('choosing');
 	let selectedSide = $state('');
 	let fisicoExpanding = $state(false);
@@ -31,13 +25,14 @@
 	let hasScrolledDown = $state(false);
 	let animationTriggered = $state(false);
 	let isExiting = $state(false);
-	let quizHidden = $state(false);
-	let autoExpanded = $state(false);
-	
+	let layerVisible = $state(false);
+
 	/** @type {HTMLElement} */
 	let quizWrapper;
 	/** @type {any} */
 	let canvasAction = null;
+	/** @type {any} */
+	let quizPinST = null;
 
 	// URL della maschera dinamica esportata dal canvas
 	let canvasMaskUrl = $state('');
@@ -51,7 +46,7 @@
 	const pendingTimeouts = [];
 
 	/**
-	 * Traccia le coordinate relative del mouse per posizionare il tooltip custom
+	 * Traccia le coordinate relative del mouse nella viewport per posizionare il tooltip custom
 	 * @param {MouseEvent} event
 	 */
 	function handleMouseMove(event) {
@@ -76,7 +71,7 @@
 	}
 
 	/**
-	 * Action per il canvas slot machine con masking dinamico (70% mentale)
+	 * Action per il canvas slot machine con masking dinamico
 	 * @param {HTMLCanvasElement} canvas
 	 */
 	function slotMachineCanvas(canvas) {
@@ -177,67 +172,41 @@
 		};
 	}
 
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+
 	onMount(() => {
-		// Posizione di partenza del quiz fuori dallo schermo (in basso)
-		gsap.set(quizWrapper, { y: '100vh' });
-		gsap.set('.quiz-title-wrap .title-line-1', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
-		gsap.set('.quiz-title-wrap .title-line-2', { opacity: 0, scale: 0.85, y: 15, transformOrigin: 'center center' });
-		gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30, transformOrigin: 'center center' });
-	});
+		gsap.registerPlugin(ScrollTrigger);
 
-	// Animazione di uscita del quiz (scorrimento verso l'alto) e allineamento dello scrollbar
-	function animateQuizExit() {
-		layers.suppressOnUpdate = true;
-
-		gsap.killTweensOf(quizWrapper);
-		gsap.killTweensOf('.quiz-title-wrap');
-		isExiting = true;
-		
-		gsap.to(quizWrapper, {
-			y: '-100vh',
-			duration: 1.2,
-			ease: 'power3.in',
-			onComplete: () => {
-				isExiting = false;
-				animationTriggered = false;
-				
-				// Sincronizziamo il progresso reale dello ScrollTrigger a 0.9 per evitare scatti
-				if (layers.scrollTrigger) {
-					layers.scrollTrigger.scroll(
-						layers.scrollTrigger.start +
-						(layers.scrollTrigger.end - layers.scrollTrigger.start) * 0.9
-					);
-				}
-				
-				layers.suppressOnUpdate = false;
-				layers.progress = 0.9;
-				quizHidden = true;
-				
-				// Se l'utente scorre subito all'indietro, resettiamo il quiz
-				if (layers.scrollDirection === 'up' && layers.progress < 0.25) {
-					resetQuiz();
-				}
+		// Controlla quando la sezione entra nel viewport per attivare la comparsa dei testi
+		const viewTrigger = ScrollTrigger.create({
+			trigger: quizWrapper,
+			start: 'top 80%',
+			end: 'bottom 20%',
+			onUpdate: (self) => {
+				layerVisible = self.isActive;
 			}
 		});
 
-		gsap.to('.quiz-title-wrap', { opacity: 0, duration: 0.3 });
-	}
+		// Ripristina lo stato del quiz quando si scorre all'indietro oltre la sezione
+		const backTrigger = ScrollTrigger.create({
+			trigger: quizWrapper,
+			start: 'top 95%',
+			onLeaveBack: () => {
+				resetQuiz();
+			}
+		});
 
-	// Gestione entrata/uscita del layer basata sul progresso dello scroll globale
+		return () => {
+			viewTrigger.kill();
+			backTrigger.kill();
+			if (quizPinST) quizPinST.kill();
+		};
+	});
+
+	// Animazione di comparsa del titolo e dei cerchi all'ingresso
 	$effect(() => {
 		if (layerVisible && !animationTriggered) {
 			animationTriggered = true;
-			quizHidden = false;
-			const targetY = layers.scrollDirection === 'up' ? '-100vh' : '100vh';
-
-			gsap.set(quizWrapper, { y: targetY });
-			gsap.to(quizWrapper, {
-				y: '0',
-				duration: 1.2,
-				ease: 'power3.out'
-			});
-
-			gsap.set('.quiz-title-wrap', { opacity: 1 });
 			gsap.fromTo('.quiz-title-wrap', { opacity: 0 }, { opacity: 1, duration: 0.4 });
 			gsap.to('.title-line-1, .title-line-2, .circle .text', {
 				opacity: 1,
@@ -247,46 +216,31 @@
 				ease: 'power2.out',
 				delay: 0.2
 			});
-		} else if (!layerVisible && animationTriggered && !layers.quizCompleted && !isExiting) {
+		} else if (!layerVisible && animationTriggered) {
 			animationTriggered = false;
-			const targetY = layers.scrollDirection === 'up' ? '100vh' : '-100vh';
-
-			gsap.killTweensOf(quizWrapper);
-			gsap.killTweensOf('.quiz-title-wrap');
-			gsap.to(quizWrapper, {
-				y: targetY,
-				duration: 1.0,
-				ease: 'power3.inOut',
-				onComplete: () => {
-					if (layers.scrollDirection === 'up' && layers.progress < 0.25) {
-						resetQuiz();
-					}
-				}
-			});
-
 			gsap.to('.quiz-title-wrap', { opacity: 0, duration: 0.2 });
+			gsap.set('.quiz-title-wrap .title-line-1', { opacity: 0, scale: 0.85, y: 15 });
+			gsap.set('.quiz-title-wrap .title-line-2', { opacity: 0, scale: 0.85, y: 15 });
+			gsap.set('.circle .text', { opacity: 0, scale: 0.85, y: 30 });
 		}
 	});
 
-	// Reset dello stato del quiz quando si torna alla sezione intro
+	// Gestisce reattivamente la creazione e la rimozione del Pinning locale
 	$effect(() => {
-		const progress = layers.progress;
-		if (progress < 0.30) {
-			autoExpanded = false;
-			quizState = 'choosing';
-			selectedSide = '';
-			mentaleShowing = false;
-			fisicoFading = false;
-			hasScrolledDown = false;
-			layers.quizCompleted = false;
-			quizHidden = false;
-			if (quizWrapper) {
-				gsap.set(quizWrapper, { y: '100vh', x: '0%' });
-			}
+		if (layers.quizCompleted && quizPinST) {
+			quizPinST.kill();
+			quizPinST = null;
+		} else if (!layers.quizCompleted && !quizPinST && quizWrapper) {
+			quizPinST = ScrollTrigger.create({
+				trigger: quizWrapper,
+				start: 'top top',
+				pin: true,
+				pinSpacing: true
+			});
 		}
 	});
 
-	// Comunica lo stato di espansione al genitore per bloccare/sbloccare lo scorrimento della pagina
+	// Comunica lo stato di espansione al genitore per inibire lo scorrimento
 	$effect(() => {
 		if (quizState === 'expanded' || quizState === 'expanding') {
 			onExpand();
@@ -294,6 +248,30 @@
 			onCollapse();
 		}
 	});
+
+	// Animazione di uscita sfumata e sblocco verso la PerformanceSection
+	function animateQuizExit() {
+		isExiting = true;
+		gsap.to(quizWrapper, {
+			opacity: 0,
+			y: -80, // Leggero slide verso l'alto per rendere fluida la scomparsa
+			duration: 0.8,
+			ease: 'power2.in',
+			onComplete: () => {
+				isExiting = false;
+				layers.quizCompleted = true; // Questo effetto eliminerà il pinning locale
+				unlockScroll();
+
+				// Eseguiamo uno scrolling smooth verso la sezione successiva
+				setTimeout(() => {
+					const nextSec = document.getElementById('performance');
+					if (nextSec) {
+						nextSec.scrollIntoView({ behavior: 'smooth' });
+					}
+				}, 50);
+			}
+		});
+	}
 
 	function resetQuiz() {
 		unlockScroll();
@@ -303,10 +281,11 @@
 		mentaleShowing = false;
 		fisicoFading = false;
 		hasScrolledDown = false;
-		autoExpanded = false;
 		isExiting = false;
-		quizHidden = false;
 		layers.quizCompleted = false;
+		if (quizWrapper) {
+			gsap.set(quizWrapper, { opacity: 1, y: 0 });
+		}
 	}
 
 	/**
@@ -321,13 +300,7 @@
 		quizState = 'expanding';
 		mentaleShowing = true;
 
-		// Dissolvenza del titolo del quiz in preparazione del titolo espanso
-		gsap.to('.quiz-title-wrap', {
-			x: 80,
-			opacity: 0,
-			duration: 0.4,
-			ease: 'power2.in'
-		});
+		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
 
 		pendingTimeouts.push(
 			setTimeout(() => { fisicoFading = true; }, 300),
@@ -342,7 +315,7 @@
 	}
 
 	/**
-	 * Seleziona il ramo fisico (con transizione che devia sul mentale)
+	 * Seleziona il ramo fisico (con deviazione sul mentale)
 	 * @param {boolean} skipLock
 	 */
 	function selectFisico(skipLock = false) {
@@ -353,12 +326,7 @@
 		quizState = 'expanding';
 		fisicoExpanding = true;
 
-		gsap.to('.quiz-title-wrap', {
-			x: 80,
-			opacity: 0,
-			duration: 0.4,
-			ease: 'power2.in'
-		});
+		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
 
 		pendingTimeouts.push(
 			setTimeout(() => {
@@ -382,7 +350,6 @@
 	 */
 	function handleVirtualScroll(e) {
 		if (quizState !== 'expanded' || layers.quizCompleted) return;
-		if (!layerVisible) return;
 
 		const deltaY = e.deltaY;
 		e.preventDefault();
@@ -392,13 +359,11 @@
 			if (!hasScrolledDown) {
 				hasScrolledDown = true;
 			} else {
-				layers.quizCompleted = true;
 				animateQuizExit();
 			}
 		} else if (deltaY < -10) {
 			if (hasScrolledDown) {
 				hasScrolledDown = false;
-				layers.quizCompleted = false;
 			}
 		}
 	}
@@ -413,16 +378,13 @@
 <section
 	id="cerchi-quiz"
 	class="quiz-wrapper"
-	class:quiz-hidden={quizHidden}
 	bind:this={quizWrapper}
-	style:z-index={zIndex}
-	style={layerStyle}
+	aria-label="Scelta tra mentale e fisico"
 	onwheel={handleVirtualScroll}
 	use:trackSection
 	onmousemove={handleMouseMove}
 	onmouseenter={() => isHovering = true}
 	onmouseleave={() => isHovering = false}
-	aria-label="Scelta tra mentale e fisico"
 >
 	<div class="canvas-layer">
 		<canvas use:bindCanvas></canvas>
@@ -483,27 +445,17 @@
 							</div>
 						{:else}
 							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
-							<span class="clicca-hint">clicca</span>
 						{/if}
 					</div>
 				</button>
-
-				{#if quizState === 'expanded' && layerVisible}
-					<div class="expanded-title-area">
-						<h1 class="quiz-title">
-							<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
-							<span class="title-line-2">cosa pesa davvero di più?</span>
-						</h1>
-					</div>
-				{/if}
 			</div>
 		</div>
 
 		<div class="quiz-column right-column">
 			<div class="circle-wrap right-wrap" class:fly-out={fisicoFading}>
-				<button 
-					class="circle right" 
-					onclick={() => selectFisico(false)} 
+				<button
+					class="circle right"
+					onclick={() => selectFisico(false)}
 					use:drawBorder={{ clicked: selectedSide === 'fisico', enabled: animationTriggered }}
 					disabled={quizState === 'expanding' || quizState === 'expanded'}
 				>
@@ -537,7 +489,6 @@
 					</svg>
 					<div class="expanded-text-container">
 						<span class="text">fisico</span>
-						<span class="clicca-hint">clicca</span>
 					</div>
 				</button>
 			</div>
@@ -582,26 +533,17 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start;
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100vh;
+		justify-content: center;
+		position: relative;
+		min-height: 100vh;
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		padding: 0 0 var(--spacing-3) 0;
 		background-color: #f1fafd;
-		transition: transform 0.1s linear;
-		will-change: transform;
+		will-change: opacity, transform;
 	}
 
-	/* Nascondiamo completamente per liberare l'interazione al layer inferiore */
-	.quiz-wrapper.quiz-hidden {
-		display: none;
-	}
-
-	/* Canvas di sfondo delle scie */
+	/* Canvas di sfondo */
 	.canvas-layer {
 		position: absolute;
 		inset: 0;
@@ -618,12 +560,8 @@
 
 	/* Area del titolo */
 	.quiz-title-wrap {
-		position: absolute;
-		top: var(--spacing-10);
-		left: 50%;
-		transform: translateX(-50%);
-		width: 1200px;
-		height: 140px;
+		width: 100%;
+		max-width: 1200px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -631,6 +569,7 @@
 		box-sizing: border-box;
 		padding: 0 var(--spacing-3);
 		will-change: opacity;
+		margin-bottom: var(--spacing-8);
 	}
 
 	/* Container del cerchio sinistro */
@@ -650,16 +589,15 @@
 		text-align: center;
 		margin: 0;
 		font-size: var(--text-title);
-		line-height: var(--spacing-7);
-		color: var(--color-content-primary, #071e45);
+		line-height: 1.25;
+		color: var(--content-primary);
 		transform-origin: center top;
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		will-change: transform;
 	}
 
 	.quiz-title-wrap.hidden {
-		opacity: 0 !important;
-		pointer-events: none;
+		display: none !important;
 	}
 
 	.title-line-1,
@@ -706,22 +644,23 @@
 		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
-		margin-top: var(--spacing-12);
-		height: calc(100vh - 200px);
-		min-height: 574px;
-		/* Modifichiamo solo height e gap per evitare il glitch visivo del riposizionamento */
+		height: 320px;
 		transition: height 0.8s cubic-bezier(0.25, 1, 0.5, 1), gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 1;
 	}
 
-	/* Stato espanso: allineamento e gap aumentati per fare spazio alla frase del risultato */
+	/* Stato espanso */
 	.quiz-body.expanded {
+		position: relative;
+		width: 100%;
+		max-width: 1200px;
+		height: 100vh;
+		min-height: 100vh;
 		justify-content: center;
 		align-items: center;
 		gap: 100px;
 		margin-top: 0;
-		height: 100vh;
-		min-height: 100vh;
+		z-index: 10;
 	}
 
 	.quiz-column {
@@ -737,11 +676,7 @@
 	}
 
 	.right-column {
-		display: flex;
-		flex-direction: column;
 		justify-content: center;
-		align-items: flex-start;
-		height: auto;
 	}
 
 	/* Cerchi interattivi */
@@ -803,9 +738,9 @@
 
 	.text {
 		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 800;
-		font-size: var(--text-title);
-		color: var(--color-content-primary, #071e45);
+		font-weight: 700;
+		font-size: var(--text-l);
+		color: var(--content-primary);
 		white-space: nowrap;
 		position: relative;
 		z-index: 1;
@@ -901,22 +836,6 @@
 		opacity: 0.9;
 		filter: blur(80px);
 		z-index: 0;
-	}
-
-	/* Hint clicca */
-	.clicca-hint {
-		display: none;
-		font-size: var(--text-button);
-		color: var(--color-content-secondary, #666);
-		margin-top: var(--spacing-1);
-		text-transform: lowercase;
-		letter-spacing: 1px;
-		position: absolute;
-		bottom: calc(var(--spacing-2) * -1 - var(--spacing-1));
-	}
-
-	.circle:hover .clicca-hint {
-		display: block;
 	}
 
 	/* Pannello di testo con citazioni nel risultato */

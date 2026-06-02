@@ -6,53 +6,12 @@
 	import FisicoMentaleQuiz from '$lib/components/sections/FisicoMentaleQuiz.svelte';
 	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
 	import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
-	import { layers } from '$lib/stores/layers.svelte.js';
 
-	/** @type {any} */
-	let st = null;
 	let isLocked = $state(false);
 	let quizExpanded = $state(false);
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
-
-		// Registriamo lo ScrollTrigger per gestire il blocco (pinning) del container
-		st = ScrollTrigger.create({
-			trigger: '.layer-container',
-			start: 'top top',
-			// Impostiamo 900% per rallentare a sufficienza lo scorrimento dei layer sovrapposti
-			end: '+=900%',
-			pin: true,
-			pinSpacing: true,
-			scrub: 1,
-			onUpdate: (self) => {
-				// Saltiamo gli aggiornamenti durante l'animazione di uscita del quiz
-				if (layers.suppressOnUpdate) return;
-				
-				// Impediamo all'utente di scorrere oltre prima di aver completato il quiz
-				if (self.progress > 0.85 && !layers.quizCompleted) {
-					if (self.progress > 0.85) {
-						layers.progress = 0.85; 
-					}
-					return; 
-				}
-
-				// Aggiorniamo la progress bar reattiva nello store
-				layers.progress = self.progress;
-
-				// Sblocchiamo lo scroll se si torna all'inizio assoluto della pagina
-				if (self.progress < 0.05 && isLocked) {
-					isLocked = false;
-				}
-			}
-		});
-
-		// Salviamo l'istanza nello store globale per consentire a FisicoMentaleQuiz di allineare lo scroll fisico all'uscita
-		layers.scrollTrigger = st;
-
-		return () => {
-			if (st) st.kill();
-		};
 	});
 
 	/**
@@ -60,7 +19,7 @@
 	 * @param {any} e - L'evento di scroll wheel o touch
 	 */
 	function handlePreventScroll(e) {
-		// Lasciamo passare gli eventi di scroll se il quiz è espanso in modo da gestire l'avanzamento interno
+		// Se il quiz è espanso, lascia passare gli eventi interni
 		if (quizExpanded) return;
 
 		if (isLocked && e.cancelable) {
@@ -74,7 +33,7 @@
 	ontouchmove={handlePreventScroll}
 />
 
-<main class="layer-container">
+<main class="page-flow">
 	<IntroTextSection />
 	<FisicoMentaleQuiz
 		lockScroll={() => isLocked = true}
@@ -103,11 +62,10 @@
 		display: none;
 	}
 
-	.layer-container {
-		position: relative;
+	.page-flow {
 		width: 100%;
 		min-height: 100vh;
-		overflow: hidden;
+		background-color: var(--background-primary);
 	}
 
 	.test-figma-bg {

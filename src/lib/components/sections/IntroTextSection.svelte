@@ -1,18 +1,15 @@
 <script>
+	import { onMount } from 'svelte';
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { trailCanvas } from '$lib/actions/trailCanvas.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { scrollReveal } from '$lib/actions/scrollReveal.js';
-	import { layers } from '$lib/stores/layers.svelte.js';
 
 	/** @type {any} */
 	let canvasAction = null;
 
-	let opacity = $derived.by(() => {
-		return layers.getLayerOpacity(0);
-	});
-	let layerStyle = $derived(layers.getLayerStyle(0));
-
-	// Bind canvas per ottenere l'istanza dell'azione e far partire il loop
+	// Bind del canvas di sfondo per avviare il ciclo di particelle
 	/**
 	 * @param {HTMLCanvasElement} node
 	 */
@@ -30,20 +27,34 @@
 			}
 		};
 	}
+
+	onMount(() => {
+		gsap.registerPlugin(ScrollTrigger);
+
+		// Pinning locale della sezione per consentire lo scrub sequenziale delle righe di testo
+		const st = ScrollTrigger.create({
+			trigger: '#intro-text',
+			start: 'top top',
+			end: '+=300%',
+			pin: true,
+			pinSpacing: true
+		});
+
+		return () => {
+			if (st) st.kill();
+		};
+	});
 </script>
 
 <section
 	id="intro-text"
 	class="intro-section"
-	style:opacity={opacity}
-	style={layerStyle}
-	class:section-hidden={opacity === 0}
 	use:trackSection={{ id: 'intro-text' }}
 >
 	<div class="canvas-layer">
 		<canvas use:bindCanvas></canvas>
 	</div>
-	<div class="text-container" use:scrollReveal>
+	<div class="text-container" use:scrollReveal={{ end: '+=200%' }}>
 		<p class="reveal-line">Milano-Cortina 2026</p>
 		<p class="reveal-line">2.900 atleti</p>
 		<p class="reveal-line">1 vita di sacrifici</p>
@@ -57,18 +68,14 @@
 
 <style>
 	.intro-section {
-		position: absolute;
-		inset: 0;
+		position: relative;
+		width: 100%;
+		height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
 		background-color: var(--background-primary);
-	}
-
-	/* Nascondiamo completamente quando invisibile per prevenire intercettazione pointer-events */
-	.intro-section.section-hidden {
-		display: none;
 	}
 
 	.canvas-layer {
@@ -125,7 +132,7 @@
 		--gradient-c3: var(--archetipi-infortunato);
 	}
 
-	/* reveal-hidden: stato iniziale impostato dall'azione Svelte */
+	/* reveal-hidden: stato iniziale non visibile e sfocato */
 	:global(.reveal-hidden) {
 		opacity: 0;
 		filter: blur(15px);
