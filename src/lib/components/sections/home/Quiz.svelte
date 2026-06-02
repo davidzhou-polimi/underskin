@@ -1,11 +1,10 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { gsap } from 'gsap';
-	import { drawBorder } from '$lib/actions/drawBorder.js';
+	import { drawBorder } from '$lib/actions/home/drawBorder.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import { trailCanvas } from '$lib/actions/trailCanvas.js';
-	import { miniTrailCanvas } from '$lib/actions/miniTrailCanvas.js';
-	import { layers } from '$lib/stores/layers.svelte.js';
+	import { trailCanvas } from '$lib/actions/home/trailCanvas.js';
+	import { miniTrailCanvas } from '$lib/actions/home/miniTrailCanvas.js';
 	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
 
 	// Props per il controllo dello scroll
@@ -27,6 +26,7 @@
 	let isExiting = $state(false);
 	let layerVisible = $state(false);
 	let hasActivatedQuiz = $state(false);
+	let quizCompleted = $state(false);
 
 	/** @type {HTMLElement} */
 	let quizWrapper;
@@ -289,10 +289,10 @@
 
 	// Gestisce reattivamente la creazione e la rimozione del Pinning locale
 	$effect(() => {
-		if (layers.quizCompleted && quizPinST) {
+		if (quizCompleted && quizPinST) {
 			quizPinST.kill();
 			quizPinST = null;
-		} else if (!layers.quizCompleted && !quizPinST && quizWrapper) {
+		} else if (!quizCompleted && !quizPinST && quizWrapper) {
 			quizPinST = ScrollTrigger.create({
 				trigger: quizWrapper,
 				start: 'top top',
@@ -321,7 +321,7 @@
 			ease: 'power2.in',
 			onComplete: () => {
 				isExiting = false;
-				layers.quizCompleted = true; // Questo effetto eliminerà il pinning locale
+				quizCompleted = true; // Questo effetto eliminerà il pinning locale
 				unlockScroll();
 
 				// Eseguiamo uno scrolling smooth verso la sezione successiva
@@ -347,7 +347,7 @@
 		fisicoFading = false;
 		hasScrolledDown = false;
 		isExiting = false;
-		layers.quizCompleted = false;
+		quizCompleted = false;
 		if (activeTimeline) {
 			activeTimeline.kill();
 			activeTimeline = null;
@@ -492,7 +492,7 @@
 	 * @param {WheelEvent} e
 	 */
 	function handleVirtualScroll(e) {
-		if (quizState !== 'expanded' || layers.quizCompleted) return;
+		if (quizState !== 'expanded' || quizCompleted) return;
 
 		const deltaY = e.deltaY;
 		e.preventDefault();

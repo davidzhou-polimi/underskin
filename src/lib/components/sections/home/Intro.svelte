@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-	import { trailCanvas } from '$lib/actions/trailCanvas.js';
+	import { trailCanvas } from '$lib/actions/home/trailCanvas.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { scrollReveal } from '$lib/actions/scrollReveal.js';
 

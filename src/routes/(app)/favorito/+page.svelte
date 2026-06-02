@@ -7,10 +7,10 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import IntrusiveThoughts from '$lib/components/sections/IntrusiveThoughts.svelte';
-	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
-	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+	import HeroSection from '$lib/components/sections/archetypes/HeroSection.svelte';
+	import IntrusiveThoughts from '$lib/components/sections/archetypes/IntrusiveThoughts.svelte';
+	import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
+	import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -38,7 +38,7 @@
 	<IntrusiveThoughts />
 
 	<!-- 3. Sezione narrativa di superamento con termini evidenziati e tooltip associati, unificata per evitare ridondanze -->
-	<NarrativeSection
+	<NarrativeText
 		sectionId="favorito-narrative"
 		theme="favorito"
 		segments={[
@@ -51,7 +51,7 @@
 	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
-	<ZoomTransitionSection />
+	<ZoomTransition />
 </main>
 
 <style>

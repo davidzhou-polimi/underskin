@@ -7,10 +7,10 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import PerfectionGame from '$lib/components/sections/PerfectionGame.svelte';
-	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
-	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+	import HeroSection from '$lib/components/sections/archetypes/HeroSection.svelte';
+	import PerfectionGame from '$lib/components/sections/archetypes/PerfectionGame.svelte';
+	import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
+	import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -38,7 +38,7 @@
 	<PerfectionGame />
 
 	<!-- 3. Sezione narrativa sul paradosso dell'argento, unificata per coerenza architetturale -->
-	<NarrativeSection
+	<NarrativeText
 		sectionId="insoddisfatto-narrative"
 		theme="insoddisfatto"
 		segments={[
@@ -51,7 +51,7 @@
 	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
-	<ZoomTransitionSection theme="insoddisfatto" />
+	<ZoomTransition theme="insoddisfatto" />
 </main>
 
 <style>

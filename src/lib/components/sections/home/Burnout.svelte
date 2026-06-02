@@ -196,8 +196,8 @@
     :global(.glass-text) {
         height: 105vh;
         width: 633.535vh;
-        mask-image: url('../../assets/BURNOUT.svg');
-        -webkit-mask-image: url('../../assets/BURNOUT.svg');
+        mask-image: url('../../../assets/BURNOUT.svg');
+        -webkit-mask-image: url('../../../assets/BURNOUT.svg');
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;

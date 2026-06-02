@@ -1,5 +1,5 @@
 <script>
-    import { zoomTextTransition } from '$lib/actions/zoomTextTransition.js';
+    import { zoomTextTransition } from '$lib/actions/archetypes/zoomTextTransition.js';
     import { trackSection } from '$lib/actions/trackSection.js';
 
     /**

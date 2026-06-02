@@ -2,13 +2,13 @@
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
-	import FisicoMentaleQuiz from '$lib/components/sections/FisicoMentaleQuiz.svelte';
-	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
-	import Cards from '$lib/components/sections/Cards.svelte';
-	import OutroSection from '$lib/components/sections/OutroSection.svelte';
-	import BurnoutSection from '$lib/components/sections/BurnoutSection.svelte';
-	import FinaleSection from '$lib/components/sections/FinaleSection.svelte';
+	import Intro from '$lib/components/sections/home/Intro.svelte';
+	import Quiz from '$lib/components/sections/home/Quiz.svelte';
+	import Performance from '$lib/components/sections/home/Performance.svelte';
+	import Cards from '$lib/components/sections/home/Cards.svelte';
+	import Outro from '$lib/components/sections/home/Outro.svelte';
+	import Burnout from '$lib/components/sections/home/Burnout.svelte';
+	import Final from '$lib/components/sections/home/Final.svelte';
 
 	let isLocked = $state(false);
 	let quizExpanded = $state(false);
@@ -37,18 +37,18 @@
 />
 
 <main class="page-flow">
-	<IntroTextSection />
-	<FisicoMentaleQuiz
+	<Intro />
+	<Quiz
 		lockScroll={() => isLocked = true}
 		unlockScroll={() => isLocked = false}
 		onExpand={() => quizExpanded = true}
 		onCollapse={() => quizExpanded = false}
 	/>
-	<PerformanceSection />
+	<Performance />
 	<Cards />
-	<OutroSection />
-	<BurnoutSection />
-	<FinaleSection />
+	<Outro />
+	<Burnout />
+	<Final />
 </main>
 
 <style>

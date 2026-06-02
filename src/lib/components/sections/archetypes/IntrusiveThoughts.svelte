@@ -1,6 +1,6 @@
 <script>
-  import { draggableThought } from '$lib/actions/favorito/draggableThought.js';
-  import { thoughtsIntro } from '$lib/actions/favorito/thoughtsIntro.js';
+  import { draggableThought } from '$lib/actions/archetypes/draggableThought.js';
+  import { thoughtsIntro } from '$lib/actions/archetypes/thoughtsIntro.js';
 
   let container = $state();
   

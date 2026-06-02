@@ -7,10 +7,10 @@
 	 */
 
 	// Importa le sezioni della pagina in sequenza dalle sotto-cartelle modulari dedicate
-	import HeroSection from '$lib/components/sections/HeroSection.svelte';
-	import ShatterGlass from '$lib/components/sections/ShatterGlass.svelte';
-	import NarrativeSection from '$lib/components/sections/NarrativeSection.svelte';
-	import ZoomTransitionSection from '$lib/components/sections/ZoomTransitionSection.svelte';
+	import HeroSection from '$lib/components/sections/archetypes/HeroSection.svelte';
+	import ShatterGlass from '$lib/components/sections/archetypes/ShatterGlass.svelte';
+	import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
+	import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
 </script>
 
 
@@ -39,7 +39,7 @@
 	<ShatterGlass />
 
 	<!-- 3. Sezione narrativa di superamento e reset psicofisico post-recupero, unificata per coerenza architetturale -->
-	<NarrativeSection
+	<NarrativeText
 		sectionId="recovery"
 		theme="infortunato"
 		segments={[
@@ -52,7 +52,7 @@
 	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
-	<ZoomTransitionSection theme="infortunato" />
+	<ZoomTransition theme="infortunato" />
 </main>
 
 <style>
