@@ -12,8 +12,9 @@
 
     let hidden = $state(false);
 
-    // Commento solo il PERCHÉ: Assicura che la barra si adegui immediatamente al comportamento richiesto dalla sezione corrente attiva.
+    // Commento solo il PERCHÉ: Assicura che la barra si adegui immediatamente al comportamento richiesto e si nasconda al cambio di sezione attiva.
     $effect(() => {
+        const _active = narrative.activeSection;
         hidden = hideByDefault;
     });
 
@@ -143,15 +144,48 @@
             }
         };
 
+        /** @param {WheelEvent} e */
+        const handleWheel = (e) => {
+            // Commento solo il PERCHÉ: Mostra la navbar se l'utente tenta di scrollare verso l'alto quando si trova già in cima alla pagina.
+            if (window.scrollY <= 10 && e.deltaY < 0 && hidden) {
+                hidden = false;
+                startAutoHideTimer();
+            }
+        };
+
+        let touchStartY = 0;
+        /** @param {TouchEvent} e */
+        const handleTouchStart = (e) => {
+            touchStartY = e.touches[0].clientY;
+        };
+
+        /** @param {TouchEvent} e */
+        const handleTouchMove = (e) => {
+            // Commento solo il PERCHÉ: Rileva lo swipe verso il basso (scroll verso l'alto) quando la pagina è già al limite superiore.
+            if (window.scrollY <= 10 && hidden) {
+                const touchY = e.touches[0].clientY;
+                if (touchY - touchStartY > 30) {
+                    hidden = false;
+                    startAutoHideTimer();
+                }
+            }
+        };
+
         startAutoHideTimer();
 
         window.addEventListener("scroll", handleScroll, { passive: true });
         window.addEventListener("mousemove", handleMouseMove, {
             passive: true,
         });
+        window.addEventListener("wheel", handleWheel, { passive: true });
+        window.addEventListener("touchstart", handleTouchStart, { passive: true });
+        window.addEventListener("touchmove", handleTouchMove, { passive: true });
         return () => {
             window.removeEventListener("scroll", handleScroll);
             window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("wheel", handleWheel);
+            window.removeEventListener("touchstart", handleTouchStart);
+            window.removeEventListener("touchmove", handleTouchMove);
             clearTimeout(scrollTimeout);
             clearTimeout(mouseRevealTimeout);
             clearTimeout(autoHideTimeout);
@@ -293,7 +327,9 @@
         font-weight: var(--text-nav-weight);
         color: var(--content-light-primary);
         text-decoration: none;
-        transition: color var(--transition-duration-fast) var(--easing-standard);
+        transition:
+            color var(--transition-duration-fast) var(--easing-standard),
+            font-weight var(--transition-duration-fast) var(--easing-standard);
     }
 
     .link-nav__item:hover,

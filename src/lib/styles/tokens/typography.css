@@ -71,7 +71,7 @@
 
 	/* Solo per la barra di navigazione e logo */
 	--text-nav-size:          var(--text-xs);
-	--text-nav-weight:        600;
+	--text-nav-weight:        500;
 	--text-nav-active-weight: 700;
 
 	--text-logo-size:         var(--text-m);
