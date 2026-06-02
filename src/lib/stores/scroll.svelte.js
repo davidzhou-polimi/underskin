@@ -8,6 +8,9 @@ class ScrollState {
 	// Altre variabili utili per lo scrollytelling
 	progress = $state(0);
 	direction = $state(1); // 1 = giù, -1 = su
+	// Commento solo il PERCHÉ: Memorizza lo scostamento in pixel dell'ultima posizione della home
+	// per consentirne il ripristino all'utente quando torna indietro dalle sezioni di bivio.
+	savedHomeScrollY = 0;
 }
 
 export const scroll = new ScrollState();

@@ -66,15 +66,33 @@
         narrative.activeSection === "hero" && scroll.progress > 0.99,
     );
 
+    let previousSection = narrative.activeSection;
+
+    // Commento solo il PERCHÉ: Cattura la coordinata Y reale dello scroll prima che il DOM cambi
+    // per impedire al browser di azzerare o limitare il valore dovuto al cambiamento di altezza.
+    $effect.pre(() => {
+        const currentSection = narrative.activeSection;
+        if (previousSection !== currentSection) {
+            if (previousSection === "hero") {
+                scroll.savedHomeScrollY = window.scrollY;
+            }
+            previousSection = currentSection;
+        }
+    });
+
     // Commento solo il PERCHÉ: scroll.progress mantiene il valore dell'ultima onUpdate GSAP.
-    // Quando il branch {#if} rimonta l'hero, il derived isNearHeroBottom leggerebbe un progress
-    // stale (es. 0.99) prima che ScrollTrigger possa ricalcolare. Azzeriamo sincronamente
-    // così Svelte re-evaluta il derived a 0 già nel prossimo micro-task. Il RAF garantisce
-    // che il pin-spacer di GSAP sia nel layout prima che refresh() misuri l'altezza di <main>.
+    // Quando si cambia sezione, azzera progress e ripristina lo scrollY registrato (se si torna a hero)
+    // o imposta lo scroll a 0 (se si va a una sezione di bivio). Il tick e il RAF garantiscono che i
+    // pin-spacer e gli elementi di GSAP siano posizionati e pronti prima del refresh delle misurazioni.
     $effect(() => {
-        const _section = narrative.activeSection;
+        const currentSection = narrative.activeSection;
         scroll.progress = 0;
         tick().then(() => {
+            if (currentSection === "hero") {
+                window.scrollTo(0, scroll.savedHomeScrollY);
+            } else {
+                window.scrollTo(0, 0);
+            }
             requestAnimationFrame(() => {
                 ScrollTrigger.refresh();
             });
