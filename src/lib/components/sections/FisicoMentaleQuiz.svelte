@@ -26,6 +26,7 @@
 	let animationTriggered = $state(false);
 	let isExiting = $state(false);
 	let layerVisible = $state(false);
+	let hasActivatedQuiz = $state(false);
 
 	/** @type {HTMLElement} */
 	let quizWrapper;
@@ -367,6 +368,7 @@
 		if (quizState === 'expanded' || quizState === 'expanding') return;
 		if (!skipLock) lockScroll();
 
+		hasActivatedQuiz = true;
 		selectedSide = 'mentale';
 		quizState = 'expanding';
 		mentaleShowing = true;
@@ -415,11 +417,8 @@
 		);
 
 		// 5. Cambio di stato per far montare il blocco risultati nel DOM
-		activeTimeline.to({}, {
-			duration: 0,
-			onStart: () => {
-				quizState = 'expanded';
-			}
+		activeTimeline.add(() => {
+			quizState = 'expanded';
 		}, 0.45);
 	}
 
@@ -431,6 +430,7 @@
 		if (quizState === 'expanded' || quizState === 'expanding') return;
 		if (!skipLock) lockScroll();
 
+		hasActivatedQuiz = true;
 		selectedSide = 'fisico';
 		quizState = 'expanding';
 		
@@ -481,11 +481,8 @@
 		);
 
 		// 5. Cambio di stato per montare i risultati
-		activeTimeline.to({}, {
-			duration: 0,
-			onStart: () => {
-				quizState = 'expanded';
-			}
+		activeTimeline.add(() => {
+			quizState = 'expanded';
 		}, 0.45);
 	}
 
@@ -544,7 +541,7 @@
 		<canvas use:bindCanvas></canvas>
 	</div>
 
-	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded' || !layerVisible}>
+	<div class="quiz-title-wrap" class:hidden={quizState === 'expanded' || !layerVisible || hasActivatedQuiz}>
 		<h1 class="quiz-title">
 			<span class="title-line-1">Quando tutto si decide in pochi istanti,</span>
 			<span class="title-line-2">cosa pesa davvero di più?</span>
@@ -758,14 +755,18 @@
 	.quiz-body {
 		display: flex;
 		justify-content: center;
-		align-items: center;
+		align-items: flex-start;
 		gap: var(--spacing-10);
 		width: 100%;
 		max-width: 1200px;
 		position: relative;
 		box-sizing: border-box;
 		height: 320px;
-		transition: height 0.8s cubic-bezier(0.25, 1, 0.5, 1), gap 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+		padding-top: 140px;
+		transition:
+			height 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+			gap 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+			padding-top 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 		z-index: 1;
 	}
 
@@ -779,6 +780,7 @@
 		justify-content: center;
 		align-items: center;
 		gap: 100px;
+		padding-top: 0;
 		margin-top: 0;
 		z-index: 10;
 	}
@@ -797,6 +799,7 @@
 
 	.right-column {
 		justify-content: center;
+		position: relative;
 	}
 
 	/* Cerchi interattivi */
