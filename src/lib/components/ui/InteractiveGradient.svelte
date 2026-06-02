@@ -1,6 +1,7 @@
 <script>
 	import { interactiveGradient } from '$lib/actions/interactiveGradient.js';
 	import { scroll } from '$lib/stores/scroll.svelte.js';
+	import { scrollX } from '$lib/stores/scrollX.svelte.js';
 
 	/**
 	 * @typedef {Object} Props
@@ -16,7 +17,13 @@
 
 	$effect(() => {
 		if (canvasElement && canvasElement.__gradientRenderer) {
-			canvasElement.__gradientRenderer.updateScroll(scroll.progress);
+			canvasElement.__gradientRenderer.updateScrollY(scroll.progress);
+		}
+	});
+
+	$effect(() => {
+		if (canvasElement && canvasElement.__gradientRenderer) {
+			canvasElement.__gradientRenderer.updateScrollX(scrollX.progress);
 		}
 	});
 </script>

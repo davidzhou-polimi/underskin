@@ -24,8 +24,10 @@ import * as THREE from 'three';
  * @property {number} [morphProgress]    - Shape morph 0.0–1.0
  * @property {[number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
  * @property {'depth' | 'none'} [scrollEffect] - Scroll interaction: 'depth' = NEAT-style infinite procedural scroll
- * @property {number} [scrollDepth]     - Depth units traversed over full scroll (higher = more dramatic morph)
- * @property {number} [scrollParallax]  - Y parallax shift over full scroll in UV units (default 0.6 = 60% of screen height)
+ * @property {number} [scrollYDepth]     - Depth units traversed over full vertical scroll (higher = more dramatic morph)
+ * @property {number} [scrollYParallax]  - Y parallax shift over full scroll in UV units (default 0.6 = 60% of screen height)
+ * @property {number} [scrollXDepth]    - Depth units traversed over full horizontal scroll (default 0 = disabled)
+ * @property {number} [scrollXParallax] - X parallax shift over full horizontal scroll in UV units (default 0)
  */
 
 /** @type {Required<GradientConfig>} */
@@ -52,8 +54,10 @@ export const DEFAULT_CONFIG = {
 	morphProgress: 0.0,
 	maskClamp: [0.0, 1.0],
 	scrollEffect: 'depth',
-	scrollDepth: 0.75,
-	scrollParallax: 0.9,
+	scrollYDepth: 0.75,
+	scrollYParallax: 0.9,
+	scrollXDepth: 0,
+	scrollXParallax: 0,
 };
 
 const MAX_SPLATS = 16;
@@ -144,7 +148,7 @@ const fsSource = `
 	uniform float u_time;
 	uniform vec2 u_mouse;
 	uniform vec2 u_mouse_velocity;
-	uniform float u_scroll;
+	uniform float u_scroll_y;
 
 	uniform float u_target_shape;
 	uniform float u_shape_morph;
@@ -167,8 +171,11 @@ const fsSource = `
 	uniform float u_color_blending;
 	uniform float u_vorticity;
 	uniform vec2 u_mask_clamp;
-	uniform float u_scroll_depth;
-	uniform float u_scroll_parallax;
+	uniform float u_scroll_y_depth;
+	uniform float u_scroll_y_parallax;
+	uniform float u_scroll_x;
+	uniform float u_scroll_x_depth;
+	uniform float u_scroll_x_parallax;
 
 	// Persistent fluid splat field
 	uniform vec4 u_splats[16];
@@ -283,9 +290,9 @@ const fsSource = `
 	}
 
 	vec2 domainWarp(vec2 uv, float time, float mouse_effect) {
-		// Scroll advances the Z axis of the noise — scrolling travels through an infinite 3D fluid field.
-		// The gradient morphs continuously and never repeats, like NEAT's yOffset-driven depth traversal.
-		float z = time * 0.12 + u_scroll * u_scroll_depth;
+		// Vertical scroll advances Z; horizontal scroll adds an independent Z contribution.
+		// This lets a pinned horizontal section morph the gradient without conflicting with vertical depth.
+		float z = time * 0.12 + u_scroll_y * u_scroll_y_depth + u_scroll_x * u_scroll_x_depth;
 		vec3 p = vec3(uv * u_wave_freq, z);
 
 		vec2 q = vec2(
@@ -332,9 +339,11 @@ const fsSource = `
 		vec2 warped_by_mouse_uv = uv - warp_vector;
 		vec2 centered_uv_aspect = (warped_by_mouse_uv - 0.5) * aspect;
 
-		// 3. Domain warping — scroll drives both Z depth (morph) and Y parallax (spatial drift)
-		// Y shift: as scroll increases the noise field drifts downward, creating natural parallax
-		vec2 scroll_uv_offset = vec2(0.0, -u_scroll * u_scroll_parallax);
+		// 3. Domain warping — vertical scroll: Z depth + Y parallax; horizontal scroll: Z depth + X parallax
+		vec2 scroll_uv_offset = vec2(
+			-u_scroll_x * u_scroll_x_parallax,
+			-u_scroll_y * u_scroll_y_parallax
+		);
 		vec2 warped_uv = domainWarp((warped_by_mouse_uv + scroll_uv_offset) * aspect, scaled_time, mouse_attraction);
 
 		// 4. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
@@ -345,7 +354,7 @@ const fsSource = `
 		warped_uv -= splat_force * aspect;
 
 		// 5. Base fluid noise — scroll depth offset ensures infinite procedural variation on scroll
-		float scroll_z = u_scroll * u_scroll_depth * 0.8;
+		float scroll_z = u_scroll_y * u_scroll_y_depth * 0.8;
 		float shape_noise = snoise(vec3(warped_uv * (u_wave_freq * 0.75), scaled_time * 0.08 + scroll_z));
 
 		// 7. SDF shape morphing
@@ -441,7 +450,8 @@ export class InteractiveGradientRenderer {
 			velocity: new THREE.Vector2(0, 0),
 			speed: 0
 		};
-		this.scroll = { current: 0, target: 0 };
+		this.scrollY = { current: 0, target: 0 };
+		this.scrollX = { current: 0, target: 0 };
 		this.shape = {
 			id: this.config.shapeId,
 			morph: this.config.morphProgress,
@@ -474,7 +484,7 @@ export class InteractiveGradientRenderer {
 				u_time:           { value: 0 },
 				u_mouse:          { value: this.mouse.current },
 				u_mouse_velocity: { value: this.mouse.velocity },
-				u_scroll:         { value: 0 },
+				u_scroll_y:         { value: 0 },
 				u_target_shape:   { value: this.shape.id },
 				u_shape_morph:    { value: 0 },
 				u_bg_color:       { value: this.themeColors.bg },
@@ -499,8 +509,11 @@ export class InteractiveGradientRenderer {
 				u_color_blending: { value: this.config.colorBlending },
 				u_vorticity:      { value: this.config.splatVorticity },
 				u_mask_clamp:     { value: new THREE.Vector2(...this.config.maskClamp) },
-				u_scroll_depth:     { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth },
-				u_scroll_parallax:  { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollParallax },
+				u_scroll_y_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYDepth },
+				u_scroll_y_parallax:{ value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYParallax },
+				u_scroll_x:         { value: 0 },
+				u_scroll_x_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXDepth },
+				u_scroll_x_parallax:{ value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXParallax },
 				// Splat system
 				u_splats:         { value: this.splatPool },
 				u_splat_count:    { value: 0 },
@@ -647,17 +660,27 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
+	 * Updates vertical scroll progress — drives u_scroll in the shader.
 	 * @param {number} value - scroll progress [0-1] or pixel offset [>1]
 	 */
-	updateScroll(value) {
+	updateScrollY(value) {
 		if (this.config.scrollEffect === 'none') return;
-		// Scroll progress is passed to the shader as u_scroll and used as depth offset in domainWarp
+		// Scroll progress is passed to the shader as u_scroll_y and used as depth offset in domainWarp
 		if (value > 1.0) {
 			const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-			this.scroll.target = docHeight > 0 ? value / docHeight : 0;
+			this.scrollY.target = docHeight > 0 ? value / docHeight : 0;
 		} else {
-			this.scroll.target = value;
+			this.scrollY.target = value;
 		}
+	}
+
+	/**
+	 * Updates horizontal scroll progress — drives u_scroll_x in the shader.
+	 * @param {number} value - normalized progress [0-1]
+	 */
+	updateScrollX(value) {
+		if (this.config.scrollEffect === 'none') return;
+		this.scrollX.target = Math.max(0, Math.min(1, value));
 	}
 
 	/**
@@ -695,9 +718,13 @@ export class InteractiveGradientRenderer {
 		if (options.splatVorticity !== undefined) u.u_vorticity.value = this.config.splatVorticity;
 		if (options.splatRadius !== undefined)    u.u_splat_radius.value = this.config.splatRadius;
 		if (options.maskClamp !== undefined)      u.u_mask_clamp.value.set(...this.config.maskClamp);
-		if (options.scrollDepth !== undefined || options.scrollEffect !== undefined || options.scrollParallax !== undefined) {
-			u.u_scroll_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollDepth;
-			u.u_scroll_parallax.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollParallax;
+		if (options.scrollYDepth !== undefined || options.scrollEffect !== undefined || options.scrollYParallax !== undefined) {
+			u.u_scroll_y_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollYDepth;
+			u.u_scroll_y_parallax.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollYParallax;
+		}
+		if (options.scrollXDepth !== undefined || options.scrollEffect !== undefined || options.scrollXParallax !== undefined) {
+			u.u_scroll_x_depth.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollXDepth;
+			u.u_scroll_x_parallax.value = this.config.scrollEffect === 'none' ? 0 : this.config.scrollXParallax;
 		}
 		if (options.colors !== undefined)         this.updateColors();
 		if (options.shapeId !== undefined)        this.updateShape(this.config.shapeId, this.config.morphProgress);
@@ -769,7 +796,8 @@ export class InteractiveGradientRenderer {
 		this.mouse.current.x += (this.mouse.target.x - this.mouse.current.x) * this.config.viscosity;
 		this.mouse.current.y += (this.mouse.target.y - this.mouse.current.y) * this.config.viscosity;
 
-		this.scroll.current += (this.scroll.target - this.scroll.current) * 0.05;
+		this.scrollY.current += (this.scrollY.target - this.scrollY.current) * 0.05;
+		this.scrollX.current += (this.scrollX.target - this.scrollX.current) * 0.05;
 		this.shape.currentMorph += (this.shape.morph - this.shape.currentMorph) * 0.05;
 
 		// Decay splat life — frame-rate independent
@@ -793,7 +821,8 @@ export class InteractiveGradientRenderer {
 		// garantendo che l'accumulo rifletta il valore interpolato corrente.
 		this.scaledTime += dt * uniforms.u_speed.value;
 		uniforms.u_time.value = this.scaledTime;
-		uniforms.u_scroll.value = this.scroll.current;
+		uniforms.u_scroll_y.value = this.scrollY.current;
+		uniforms.u_scroll_x.value = this.scrollX.current;
 		uniforms.u_shape_morph.value = this.shape.currentMorph;
 		uniforms.u_splat_count.value = activeSplats;
 

@@ -19,6 +19,7 @@ export function trackScrollProgress(node) {
 			trigger: node,
 			start: 'top top',
 			end: 'bottom bottom',
+			refreshPriority: -1,
 			onUpdate: (self) => {
 				scroll.progress = self.progress;
 			}
