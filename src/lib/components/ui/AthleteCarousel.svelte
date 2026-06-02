@@ -127,18 +127,8 @@
 		{/each}
 	</div>
 
-	<!-- Navigation Bar containing dots along the SVG Bezier curve and arrows -->
+	<!-- Navigation Bar containing dots along the SVG Bezier curve -->
 	<div class="carousel-navigation">
-		<button 
-			class="nav-btn prev-btn" 
-			onclick={prev} 
-			aria-label="Previous athlete" 
-		>
-			<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M15 18l-6-6 6-6" />
-			</svg>
-		</button>
-		
 		<div class="svg-track-container">
 			<svg class="svg-track" viewBox="0 0 1000 100" preserveAspectRatio="none">
 				<!-- Dotted curve path -->
@@ -176,16 +166,6 @@
 				/>
 			</svg>
 		</div>
-
-		<button 
-			class="nav-btn next-btn" 
-			onclick={next} 
-			aria-label="Next athlete" 
-		>
-			<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M9 5l6 6-6 6" />
-			</svg>
-		</button>
 	</div>
 </div>
 
@@ -239,9 +219,8 @@
 		max-width: 800px;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: center;
 		margin-top: var(--spacing-4);
-		gap: var(--spacing-4);
 	}
 
 	.svg-track-container {
@@ -264,29 +243,5 @@
 	.track-dot:hover {
 		opacity: 0.8;
 		r: 8px;
-	}
-
-	.nav-btn {
-		background: rgba(0, 0, 0, 0.04);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		border-radius: 50%;
-		width: 48px;
-		height: 48px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--content-primary);
-		cursor: pointer;
-		transition: background 0.3s ease, transform 0.2s ease;
-	}
-
-	.nav-btn:hover:not(:disabled) {
-		background: rgba(0, 0, 0, 0.08);
-		transform: scale(1.1);
-	}
-
-	.nav-btn:disabled {
-		opacity: 0.3;
-		cursor: not-allowed;
 	}
 </style>
