@@ -147,12 +147,9 @@
 					</feMerge>
 					<feTurbulence type="fractalNoise" baseFrequency="100 100" stitchTiles="stitch" numOctaves="3" result="noise" seed="2540"/>
 					<feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise"/>
-					<feComponentTransfer in="alphaNoise" result="coloredNoise1">
-						<feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
-					</feComponentTransfer>
-					<feComposite operator="in" in2="effect2_texture_600_977" in="coloredNoise1" result="noise1Clipped"/>
+					<feComposite operator="in" in2="effect2_texture_600_977" in="coloredNoise1" result="coloredNoise1"/>
 					<feFlood flood-color="rgba(0, 0, 0, 0.15)" result="color1Flood"/>
-					<feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1"/>
+					<feComposite operator="in" in2="coloredNoise1" in="color1Flood" result="color1"/>
 					<feMerge result="effect3_noise_600_977">
 						<feMergeNode in="effect2_texture_600_977"/>
 						<feMergeNode in="color1"/>

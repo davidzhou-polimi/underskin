@@ -5,7 +5,7 @@
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
 
-	let { children } = $props();
+    let { children } = $props();
 </script>
 
 <svelte:head>
