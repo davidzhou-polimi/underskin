@@ -14,10 +14,10 @@
 
     // 1. IL PRIMO BLOCCO (Intro) viene spinto via da sinistra verso destra
     let introPushProgress = $derived(Math.max(0, Math.min(1, (60 - burnoutPositionVw) / 90)));
+    let introScale = $derived(1 - (introPushProgress * 0.1)); // scala da 1 a 0.9
     let introTranslateXValue = $derived(`scale(${introScale}) translateX(${-introPushProgress * 120}vw)`);
     let introOpacityValue = $derived(Math.max(0, Math.min(1, 1 - (introPushProgress * 1.15))));
     let introBlur = $derived(introPushProgress * 10); // 0→10px blur sull'uscita
-    let introScale = $derived(1 - (introPushProgress * 0.1)); // scala da 1 a 0.9
 
     // 2. IL SECONDO BLOCCO (Outro) entra da destra agganciato alla "T" di BURNOUT
     // Abbiamo aumentato il valore da 220 a 350 per spostare il punto di contatto dalla U alla T.
@@ -27,12 +27,10 @@
 
     // Il testo arriva da destra seguendo la T, e si pianta a 0 (centro esatto) quando la T raggiunge il centro
     let outroX = $derived(Math.max(0, tailOfBurnout));
-    let outroTranslateXValue = $derived(`scale(${outroScale}) translateX(${outroX}vw)`);
-    
-    // L'opacità diventa 1 solo quando la T (e quindi il testo) si avvicina visivamente alla viewport (sotto i 60vw da destra)
     let outroOpacityValue = $derived(Math.max(0, Math.min(1, (60 - outroX) / 30)));
-    let outroBlur = $derived((1 - outroOpacityValue) * 8); // 8px→0 sull'entrata
     let outroScale = $derived(0.9 + (outroOpacityValue * 0.1)); // scala da 0.9 a 1
+    let outroTranslateXValue = $derived(`scale(${outroScale}) translateX(${outroX}vw)`);
+    let outroBlur = $derived((1 - outroOpacityValue) * 8); // 8px→0 sull'entrata
 
     function handleScroll() {
         if (!sectionRef) return;
