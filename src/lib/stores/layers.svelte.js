@@ -9,12 +9,19 @@ class LayerState {
     scrollDirection = $state('down'); // 'up' | 'down'
     quizCompleted = $state(false); // True quando il quiz ha completato e l'utente ha scrollato
 
+    // Riferimento allo ScrollTrigger globale del layout, per sincronizzare il progresso fisico all'uscita dal quiz
+    /** @type {any} */
+    scrollTrigger = null;
+
+    // Blocca gli aggiornamenti di onUpdate dallo ScrollTrigger del genitore durante l'animazione di uscita
+    suppressOnUpdate = false;
+
     get progress() {
         return this._progress;
     }
 
     set progress(value) {
-        // Determina la direzione dello scroll globale
+        // Determiniamo la direzione dello scroll globale confrontando il nuovo progresso con il precedente
         if (value > this._progress) {
             this.scrollDirection = 'down';
         } else if (value < this._progress) {
@@ -24,26 +31,33 @@ class LayerState {
         this._progress = value;
     }
 
+    /**
+     * @param {number} index
+     */
     setActiveLayer(index) {
         if (index >= 0 && index < this.totalLayers) {
             this.activeLayer = index;
         }
     }
 
+    /**
+     * @param {number} layerIndex
+     */
     getLayerOpacity(layerIndex) {
 		const p = this._progress;
 	
 		// --- Layer 0 (IntroTextSection) ---
 		if (layerIndex === 0) {
-			// Si nasconde quando il quiz appare (p >= 0.35)
-			if (p >= 0.85) return 0;
+			// Forza la sparizione se il quiz ha completato l'uscita
+			if (this.quizCompleted) return 0;
+			if (p >= 0.9) return 0;
 			return 1;
 		}
 	
-		// --- Layer 1 (CerchiQuiz) ---
+		// --- Layer 1 (FisicoMentaleQuiz) ---
 		if (layerIndex === 1) {
 			if (p < 0.35) return 0;
-			if (p >= 0.85) return 0;
+			if (p >= 0.9) return 0;
 			return 1;
 		}
 	
@@ -54,18 +68,21 @@ class LayerState {
 		}
 	
 		return 0;
-	}
+    }
 	
+    /**
+     * @param {number} layerIndex
+     */
 	getLayerZIndex(layerIndex) {
 		const p = this._progress;
 		
 		if (layerIndex === 0) {
-			if (p >= 0.35) return -9999;
+			if (p >= 0.9) return -9999;
 			return 0;
 		}
 		
 		if (layerIndex === 1) {
-			if (p >= 0.85) return -9999;
+			if (p >= 0.9) return -9999;
 			return p >= 0.35 ? 30 : -10;
 		}
 		
@@ -75,19 +92,21 @@ class LayerState {
 		}
 		
 		return 0;
-	}
+    }
 	
+    /**
+     * @param {number} layerIndex
+     */
     isLayerActive(layerIndex) {
         return this.activeLayer === layerIndex;
     }
 
+    /**
+     * @param {number} layerIndex
+     */
 	getLayerStyle(layerIndex) {
-		const opacity = this.getLayerOpacity(layerIndex);
-		if (opacity === 0) {
-			return 'display: none;';
-		}
 		return '';
-	}
+    }
 }
 
 export const layers = new LayerState();

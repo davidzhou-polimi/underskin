@@ -14,7 +14,7 @@
 	let layerStyle = $derived(layers.getLayerStyle(2));
 
 	onMount(() => {
-		// Imposta stato iniziale con blur come nell'azione blurScrollReveal
+		// Impostiamo lo stato iniziale sfocato e nascosto
 		gsap.set('.perf-quote', {
 			opacity: 0,
 			filter: 'blur(15px)',
@@ -23,6 +23,7 @@
 	});
 
 	$effect(() => {
+		// Avviamo l'animazione di rivelazione quando la sezione diventa visibile
 		if (opacity > 0 && !hasAnimated) {
 			isVisible = true;
 			setTimeout(() => {
@@ -30,6 +31,7 @@
 			}, 100);
 		}
 
+		// Resettiamo lo stato dell'animazione quando la sezione si nasconde
 		if (opacity === 0) {
 			isVisible = false;
 			hasAnimated = false;
@@ -39,7 +41,7 @@
 	function animateQuote() {
 		if (hasAnimated) return;
 
-		// Animazione blur come in blurScrollReveal
+		// Riveliamo il testo con sfocatura progressiva e traslazione
 		gsap.to('.perf-quote', {
 			opacity: 1,
 			filter: 'blur(0px)',

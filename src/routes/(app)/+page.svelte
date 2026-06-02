@@ -16,32 +16,39 @@
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
 
-		// ScrollTrigger per il layer container
+		// Registriamo lo ScrollTrigger per gestire il blocco (pinning) del container
 		st = ScrollTrigger.create({
 			trigger: '.layer-container',
 			start: 'top top',
-			end: '+=100%',
+			// Impostiamo 900% per rallentare a sufficienza lo scorrimento dei layer sovrapposti
+			end: '+=900%',
 			pin: true,
 			pinSpacing: true,
 			scrub: 1,
 			onUpdate: (self) => {
-				// --- 核心拦截逻辑 ---
-				// 0.35 是选择页出现的进度，如果到了选择页，但 quiz 还没完成，且用户还在试end
-				if (self.progress > 0.85 && !layers.quizCompleted && self.direction > 0) {
-					self.scroll(st.start + (st.end - st.start) * 0.85); // 强行把滚动位置卡在 0.35 的地方
-					layers.progress = 0.35;
-					return; // 拦截后续执行
+				// Saltiamo gli aggiornamenti durante l'animazione di uscita del quiz
+				if (layers.suppressOnUpdate) return;
+				
+				// Impediamo all'utente di scorrere oltre prima di aver completato il quiz
+				if (self.progress > 0.85 && !layers.quizCompleted) {
+					if (self.progress > 0.85) {
+						layers.progress = 0.85; 
+					}
+					return; 
 				}
 
-				// 正常更新进度
+				// Aggiorniamo la progress bar reattiva nello store
 				layers.progress = self.progress;
 
-				// Sblocca quando si torna all'inizio
+				// Sblocchiamo lo scroll se si torna all'inizio assoluto della pagina
 				if (self.progress < 0.05 && isLocked) {
 					isLocked = false;
 				}
 			}
 		});
+
+		// Salviamo l'istanza nello store globale per consentire a FisicoMentaleQuiz di allineare lo scroll fisico all'uscita
+		layers.scrollTrigger = st;
 
 		return () => {
 			if (st) st.kill();
@@ -49,11 +56,11 @@
 	});
 
 	/**
-	 * Previene lo scroll quando il quiz è attivo (ma non quando è espanso - deve ricevere gli eventi)
-	 * @param {any} e
+	 * Impedisce lo scroll wheel/touch quando il quiz è attivo, a meno che il quiz non sia espanso a schermo intero
+	 * @param {any} e - L'evento di scroll wheel o touch
 	 */
 	function handlePreventScroll(e) {
-		// Se il quiz è espanso, lascia passare gli eventi (sarà il quiz a gestirli)
+		// Lasciamo passare gli eventi di scroll se il quiz è espanso in modo da gestire l'avanzamento interno
 		if (quizExpanded) return;
 
 		if (isLocked && e.cancelable) {
@@ -62,7 +69,7 @@
 	}
 </script>
 
-<window
+<svelte:window
 	onwheel={handlePreventScroll}
 	ontouchmove={handlePreventScroll}
 />
