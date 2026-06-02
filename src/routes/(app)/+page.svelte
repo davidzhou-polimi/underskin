@@ -17,8 +17,6 @@
     const SECTION_CONFIGS = {
         hero: {
             coverage: 0.3,
-            maskClamp: [0.0, 1.0],
-            grainIntensity: 0.1
         },
         favorito: {
             colors: [
@@ -27,8 +25,7 @@
                 "var(--azzurro-600)",
             ],
             coverage: 1.0,
-            maskClamp: [0.0, 1.0],
-            grainIntensity: 0.05,
+            
         },
         insoddisfatto: {
             colors: [
@@ -37,8 +34,7 @@
                 "var(--viola-600)",
             ],
             coverage: 1.0,
-            maskClamp: [0.0, 1.0],
-            grainIntensity: 0.025,
+            
         },
         infortunato: {
             colors: [
@@ -47,8 +43,7 @@
                 "var(--arancione-600)",
             ],
             coverage: 1.0,
-            maskClamp: [0.0, 1.0],
-            grainIntensity: 0.05,
+            
         },
     };
 
@@ -74,7 +69,7 @@
                   speed: 2.0,
                   coverage: 1.0,
                   focusCenter: [0.5, -0.2],
-                  focusRadius: [1.5, 0.95],
+                  focusRadius: [1.5, 1.0],
               }
             : isPastFirstViewport &&
                 ["favorito", "insoddisfatto", "infortunato"].includes(

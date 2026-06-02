@@ -5,7 +5,7 @@
 
 <section id="insoddisfatto" class="insoddisfatto-section" use:trackSection>
     <div class="content">
-        <h2>INSODDISFATTO</h2>
+        <h2>L'INSODDISFATTO</h2>
     </div>
 </section>
 
@@ -17,7 +17,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
+        color: color-mix(in srgb, var(--content-dark-primary) 90%, transparent);
         font-size: var(--text-title-size);
         font-weight: var(--text-title-weight);
     }
