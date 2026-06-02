@@ -687,7 +687,7 @@
 		width: 100%;
 		overflow: hidden;
 		box-sizing: border-box;
-		background-color: #f1fafd;
+		background-color: transparent;
 		will-change: opacity, transform;
 	}
 

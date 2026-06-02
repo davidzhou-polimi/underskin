@@ -80,7 +80,7 @@
     .outro-scroll-container {
         position: relative;
         height: calc(100vh * 7);
-        background-color: var(--background-primary);
+        background-color: transparent;
         width: 100%;
     }
 

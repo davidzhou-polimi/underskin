@@ -61,7 +61,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 0 80px;
-		background-color: var(--background-primary);
+		background-color: transparent;
 	}
 
 	.perf-quote {

@@ -75,7 +75,7 @@
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
-		background-color: var(--background-primary);
+		background-color: transparent;
 	}
 
 	.canvas-layer {

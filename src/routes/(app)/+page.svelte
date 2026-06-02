@@ -10,6 +10,7 @@
 	import Burnout from '$lib/components/sections/home/Burnout.svelte';
 	import Final from '$lib/components/sections/home/Final.svelte';
 	import Footer from '$lib/components/sections/home/Footer.svelte';
+	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 
 	let isLocked = $state(false);
 	let quizExpanded = $state(false);
@@ -37,6 +38,8 @@
 	ontouchmove={handlePreventScroll}
 />
 
+<InteractiveGradient config={{ coverage: 0.35, speed: 0.6 }} />
+
 <main class="page-flow">
 	<Intro />
 	<Quiz
@@ -57,7 +60,7 @@
 	.page-flow {
 		width: 100%;
 		min-height: 100vh;
-		background-color: var(--background-primary);
+		background: transparent;
 	}
 
 	:global(body) {

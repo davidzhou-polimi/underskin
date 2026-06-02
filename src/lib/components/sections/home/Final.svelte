@@ -11,7 +11,7 @@
         padding-left: var(--spacing-2);
         padding-right: var(--spacing-2);
         padding-bottom: var(--spacing-14);
-        background-color: var(--background-primary);
+        background-color: transparent;
         display: flex;
         align-items: flex-start;
         justify-content: center;

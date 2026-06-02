@@ -100,7 +100,7 @@
         height: 500vh; 
         position: relative;
         margin-top: var(--spacing-1);
-        background-color: var(--background-primary, #000000);
+        background-color: transparent;
         width: 100%;
     }
 
