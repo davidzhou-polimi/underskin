@@ -25,13 +25,13 @@
 	/* ============================================================
 	   TYPE SCALE
 	   ============================================================ */
-	--text-xs:  1rem;      /*  16px */
-	--text-s:   1.5rem;    /*  24px */
-	--text-m:   2rem;      /*  32px */
-	--text-l:   2.5rem;    /*  40px */
-	--text-xl:  3.5rem;    /*  56px */
-	--text-2xl: 8rem;      /* 128px */
-	--text-3xl: 12.5rem;   /* 200px */
+	--text-xs:  1rem;      /*  16px  */
+	--text-s:   1.5rem;    /*  24px  */
+	--text-m:   2rem;      /*  32px  */
+	--text-l:   2.5rem;    /*  40px  */
+	--text-xl:  3.5rem;    /*  56px  */
+	--text-2xl: 7rem;      /*  112px  */
+	--text-3xl: 15rem;     /*  240px */
 
 	/* ============================================================
 	   TEXT STYLES
@@ -71,7 +71,7 @@
 
 	/* Solo per la barra di navigazione e logo */
 	--text-nav-size:          var(--text-xs);
-	--text-nav-weight:        600;
+	--text-nav-weight:        500;
 	--text-nav-active-weight: 700;
 
 	--text-logo-size:         var(--text-m);
@@ -82,5 +82,17 @@ html,
 body {
 	font-family: var(--font-family-base);
 	overscroll-behavior: none; /* Disattiva lo scroll bounce elastico nativo e la comparsa di bordi bianchi in fase di trascinamento */
+}
+
+/* Reset headings default styles to let them inherit typography tokens from their parent components */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	font-size: inherit;
+	font-weight: inherit;
 }
 
