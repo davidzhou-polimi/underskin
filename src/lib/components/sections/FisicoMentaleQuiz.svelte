@@ -54,6 +54,48 @@
 		mouseY = event.clientY;
 	}
 
+	let touchStartY = 0;
+
+	/**
+	 * Intercetta l'evento wheel prima della scelta
+	 * @param {WheelEvent} e
+	 */
+	function handleSelectiveWheel(e) {
+		if (quizState !== 'choosing' || !layerVisible) return;
+
+		// Se l'utente tenta di scrollare verso il basso, blocchiamo l'evento
+		if (e.deltaY > 0 && e.cancelable) {
+			e.preventDefault();
+		}
+	}
+
+	/**
+	 * Registra la coordinata Y di partenza del touch
+	 * @param {TouchEvent} e
+	 */
+	function handleTouchStart(e) {
+		if (quizState !== 'choosing' || !layerVisible) return;
+		if (e.touches.length > 0) {
+			touchStartY = e.touches[0].clientY;
+		}
+	}
+
+	/**
+	 * Intercetta il touchmove per bloccare lo scorrimento verso il basso
+	 * @param {TouchEvent} e
+	 */
+	function handleSelectiveTouchMove(e) {
+		if (quizState !== 'choosing' || !layerVisible) return;
+		if (e.touches.length > 0 && e.cancelable) {
+			const currentY = e.touches[0].clientY;
+			const deltaY = touchStartY - currentY; // deltaY > 0 significa scorrimento verso il basso
+
+			if (deltaY > 0) {
+				e.preventDefault();
+			}
+		}
+	}
+
 	/**
 	 * Associa il canvas per le scie di particelle
 	 * @param {HTMLCanvasElement} node
@@ -81,6 +123,10 @@
 		let animationFrameId;
 
 		const computed = getComputedStyle(document.documentElement);
+		const color1 = computed.getPropertyValue('--archetipi-favorito').trim() || '#6a96df';
+		const color2 = computed.getPropertyValue('--archetipi-insoddisfatto').trim() || '#8035d2';
+		const color3 = computed.getPropertyValue('--archetipi-infortunato').trim() || '#d86146';
+
 		const heroFontSizeStr = getComputedStyle(canvas).fontSize || computed.getPropertyValue('--text-hero') || '80px';
 		
 		let fontSize = parseFloat(heroFontSizeStr);
@@ -109,6 +155,8 @@
 			textOpacity: 0
 		};
 
+		let gradientOffset = 0;
+
 		const tl = gsap.timeline({ delay: 0.05 });
 
 		tl.to(animData, {
@@ -134,7 +182,21 @@
 			if (!ctx) return;
 			ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-			ctx.fillStyle = '#000000';
+			// Calcoliamo lo spostamento del gradiente continuo per un effetto fluido a 60fps
+			gradientOffset += 2;
+			if (gradientOffset > logicalWidth * 2) {
+				gradientOffset = 0;
+			}
+
+			// Creamo il gradiente direttamente sul contesto 2D della canvas
+			const grad = ctx.createLinearGradient(gradientOffset - logicalWidth, 0, gradientOffset + logicalWidth, 0);
+			grad.addColorStop(0, color1);
+			grad.addColorStop(0.25, color2);
+			grad.addColorStop(0.5, color3);
+			grad.addColorStop(0.75, color1);
+			grad.addColorStop(1, color2);
+
+			ctx.fillStyle = grad;
 			ctx.textBaseline = 'top';
 
 			const yOffset = (logicalHeight - fontSize) / 2;
@@ -156,8 +218,6 @@
 			
 			ctx.fillText('mentale', baseTextX + animData.textX, yOffset);
 			ctx.restore();
-
-			canvasMaskUrl = `url(${canvas.toDataURL('image/png')})`;
 
 			animationFrameId = requestAnimationFrame(draw);
 		}
@@ -273,6 +333,9 @@
 		});
 	}
 
+	/** @type {any} */
+	let activeTimeline = null;
+
 	function resetQuiz() {
 		unlockScroll();
 		quizState = 'choosing';
@@ -283,9 +346,17 @@
 		hasScrolledDown = false;
 		isExiting = false;
 		layers.quizCompleted = false;
+		if (activeTimeline) {
+			activeTimeline.kill();
+			activeTimeline = null;
+		}
 		if (quizWrapper) {
 			gsap.set(quizWrapper, { opacity: 1, y: 0 });
 		}
+		// Ripristiniamo gli stili inline di GSAP per permettere alle classi CSS e Svelte di gestire lo stato iniziale
+		gsap.set('.circle.left', { clearProps: 'width,height,borderRadius' });
+		gsap.set('.right-wrap', { clearProps: 'x,opacity' });
+		gsap.set('.slot-machine-canvas', { clearProps: 'opacity' });
 	}
 
 	/**
@@ -300,18 +371,56 @@
 		quizState = 'expanding';
 		mentaleShowing = true;
 
-		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
+		if (activeTimeline) activeTimeline.kill();
 
-		pendingTimeouts.push(
-			setTimeout(() => { fisicoFading = true; }, 300),
-			setTimeout(() => {
-				quizState = 'expanded';
-				gsap.fromTo('.expanded-title-area',
-					{ x: -60, opacity: 0 },
-					{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
-				);
-			}, 600)
+		activeTimeline = gsap.timeline();
+
+		// 1. Dissolvenza immediata del titolo iniziale del quiz
+		activeTimeline.to('.quiz-title-wrap', { 
+			y: -30,
+			opacity: 0, 
+			duration: 0.4, 
+			ease: 'power2.in' 
+		}, 0);
+
+		// 2. Dissolvenza e allontanamento immediato del cerchio escluso (fisico)
+		activeTimeline.to('.right-wrap', {
+			x: 200,
+			opacity: 0,
+			duration: 0.5,
+			ease: 'power2.inOut',
+			onStart: () => {
+				fisicoFading = true;
+			}
+		}, 0);
+
+		// 3. Espansione fluida guidata da GSAP del cerchio attivo (mentale)
+		activeTimeline.fromTo('.circle.left', 
+			{ width: 320, height: 320, borderRadius: 160 },
+			{ 
+				width: 420, 
+				height: 420, 
+				borderRadius: 210, 
+				duration: 0.7, 
+				ease: 'power3.out' 
+			}, 
+			0
 		);
+
+		// 4. Dissolvenza all'ingresso del canvas della slot machine
+		activeTimeline.fromTo('.slot-machine-canvas',
+			{ opacity: 0 },
+			{ opacity: 1, duration: 0.4, ease: 'power2.out' },
+			0.3
+		);
+
+		// 5. Cambio di stato per far montare il blocco risultati nel DOM
+		activeTimeline.to({}, {
+			duration: 0,
+			onStart: () => {
+				quizState = 'expanded';
+			}
+		}, 0.45);
 	}
 
 	/**
@@ -324,24 +433,60 @@
 
 		selectedSide = 'fisico';
 		quizState = 'expanding';
-		fisicoExpanding = true;
+		
+		// Attiviamo immediatamente il cerchio mentale per la transizione di deviazione
+		mentaleShowing = true;
 
-		gsap.to('.quiz-title-wrap', { x: 80, opacity: 0, duration: 0.4, ease: 'power2.in' });
+		if (activeTimeline) activeTimeline.kill();
 
-		pendingTimeouts.push(
-			setTimeout(() => {
-				fisicoExpanding = false;
+		activeTimeline = gsap.timeline();
+
+		// 1. Dissolvenza immediata del titolo iniziale
+		activeTimeline.to('.quiz-title-wrap', { 
+			y: -30, 
+			opacity: 0, 
+			duration: 0.4, 
+			ease: 'power2.in' 
+		}, 0);
+
+		// 2. Dissolvenza e allontanamento immediato del cerchio fisico (destro)
+		activeTimeline.to('.right-wrap', {
+			x: 200,
+			opacity: 0,
+			duration: 0.5,
+			ease: 'power2.inOut',
+			onStart: () => {
 				fisicoFading = true;
-				mentaleShowing = true;
-			}, 300),
-			setTimeout(() => {
-				quizState = 'expanded';
-				gsap.fromTo('.expanded-title-area',
-					{ x: -60, opacity: 0 },
-					{ x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
-				);
-			}, 600)
+			}
+		}, 0);
+
+		// 3. Espansione fluida del cerchio mentale (sinistro)
+		activeTimeline.fromTo('.circle.left', 
+			{ width: 320, height: 320, borderRadius: 160 },
+			{ 
+				width: 420, 
+				height: 420, 
+				borderRadius: 210, 
+				duration: 0.7, 
+				ease: 'power3.out' 
+			}, 
+			0
 		);
+
+		// 4. Dissolvenza all'ingresso del canvas della slot machine
+		activeTimeline.fromTo('.slot-machine-canvas',
+			{ opacity: 0 },
+			{ opacity: 1, duration: 0.4, ease: 'power2.out' },
+			0.3
+		);
+
+		// 5. Cambio di stato per montare i risultati
+		activeTimeline.to({}, {
+			duration: 0,
+			onStart: () => {
+				quizState = 'expanded';
+			}
+		}, 0.45);
 	}
 
 	/**
@@ -372,8 +517,17 @@
 		for (const id of pendingTimeouts) {
 			clearTimeout(id);
 		}
+		if (activeTimeline) {
+			activeTimeline.kill();
+		}
 	});
 </script>
+
+<svelte:window
+	onwheel={handleSelectiveWheel}
+	ontouchstart={handleTouchStart}
+	ontouchmove={handleSelectiveTouchMove}
+/>
 
 <section
 	id="cerchi-quiz"
@@ -399,7 +553,7 @@
 
 	<div class="quiz-body" class:expanded={quizState === 'expanding' || quizState === 'expanded'}>
 		<div class="quiz-column left-column">
-			<div class="circle-wrap left-wrap" class:expanded={quizState === 'expanded'}>
+			<div class="circle-wrap left-wrap" class:expanded={quizState === 'expanded' || quizState === 'expanding'}>
 				<button
 					class="circle left"
 					class:clicked={selectedSide === 'mentale'}
@@ -440,9 +594,7 @@
 					<div class="expanded-text-container">
 						{#if mentaleShowing}
 							<canvas class="mini-trail-canvas" use:miniTrailCanvas={{ size: 400 }}></canvas>
-							<div class="expanded-text" style:--canvas-mask={canvasMaskUrl}>
-								<canvas class="slot-machine-canvas" use:slotMachineCanvas></canvas>
-							</div>
+							<canvas class="slot-machine-canvas" use:slotMachineCanvas></canvas>
 						{:else}
 							<span class="text" class:gradient={selectedSide === 'mentale'}>mentale</span>
 						{/if}
@@ -493,26 +645,24 @@
 				</button>
 			</div>
 
-			{#if quizState === 'expanded'}
-				<div class="right-text-panel visible">
-					<div class="text-block short-phrase" class:blur-out={hasScrolledDown}>
-						<p>
-							Il fisico porta l'atleta alla partenza.<br />
-							La mente decide cosa succede dopo.
-						</p>
-					</div>
-
-					<div class="text-block long-quote" class:blur-in={hasScrolledDown}>
-						<p class="quote-content">
-							"At this level, it's probably 70% mental and 30% physical. [...] I've had races
-							where I was confident and performed incredibly well, and others where negativity took
-							over and everything fell apart. Learning to control that is the real challenge."
-							<br />
-							— Adrian Yung, sci alpino
-						</p>
-					</div>
+			<div class="right-text-panel" class:visible={quizState === 'expanded'}>
+				<div class="text-block short-phrase" class:blur-out={hasScrolledDown}>
+					<p>
+						Il fisico porta l'atleta alla partenza.<br />
+						La mente decide cosa succede dopo.
+					</p>
 				</div>
-			{/if}
+
+				<div class="text-block long-quote" class:blur-in={hasScrolledDown}>
+					<p class="quote-content">
+						"At this level, it's probably 70% mental and 30% physical. [...] I've had races
+						where I was confident and performed incredibly well, and others where negativity took
+						over and everything fell apart. Learning to control that is the real challenge."
+						<br />
+						— Adrian Yung, sci alpino
+					</p>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -560,6 +710,10 @@
 
 	/* Area del titolo */
 	.quiz-title-wrap {
+		position: absolute;
+		top: var(--spacing-11);
+		left: 50%;
+		transform: translateX(-50%);
 		width: 100%;
 		max-width: 1200px;
 		display: flex;
@@ -569,17 +723,12 @@
 		box-sizing: border-box;
 		padding: 0 var(--spacing-3);
 		will-change: opacity;
-		margin-bottom: var(--spacing-8);
 	}
 
 	/* Container del cerchio sinistro */
 	.left-wrap {
 		position: relative;
 		transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-	}
-
-	.left-wrap.expanded {
-		min-width: 540px;
 	}
 
 	/* Titolo del quiz */
@@ -602,35 +751,6 @@
 
 	.title-line-1,
 	.title-line-2 {
-		display: block;
-	}
-
-	/* Titolo espanso: posizionato a destra del cerchio 70% */
-	.expanded-title-area {
-		position: absolute;
-		left: calc(100% + 100px);
-		top: 25%;
-		width: 600px;
-		min-width: 600px;
-		display: flex;
-		align-items: center;
-		z-index: 10;
-		box-sizing: border-box;
-		will-change: transform, opacity;
-	}
-
-	.expanded-title-area h1 {
-		font-family: 'Rethink Sans', sans-serif;
-		font-weight: 700;
-		text-align: left;
-		margin: 0;
-		font-size: 32px;
-		line-height: 1.4;
-		color: var(--color-content-primary, #071e45);
-	}
-
-	.expanded-title-area .title-line-1,
-	.expanded-title-area .title-line-2 {
 		display: block;
 	}
 
@@ -717,11 +837,7 @@
 		cursor: pointer;
 		appearance: none;
 		padding: 0;
-		will-change: width, height;
-		transition:
-			width 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-			height 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-			border-radius 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+		will-change: width, height, border-radius;
 	}
 
 	.circle.left {
@@ -761,37 +877,12 @@
 		animation: global-shift-gradient 6s linear infinite;
 	}
 
-	/* Testo animato con la maschera canvas */
-	.expanded-text {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		white-space: nowrap;
-		position: relative;
-		z-index: 1;
-
-		background: linear-gradient(
-			120deg,
-			var(--archetipi-favorito),
-			var(--archetipi-insoddisfatto),
-			var(--archetipi-infortunato)
-		);
-		background-size: 300% 100%;
-		animation: global-shift-gradient 6s linear infinite;
-
-		-webkit-mask-image: var(--canvas-mask);
-		mask-image: var(--canvas-mask);
-		-webkit-mask-size: 100% 100%;
-		mask-size: 100% 100%;
-		-webkit-mask-repeat: no-repeat;
-		mask-repeat: no-repeat;
-	}
-
 	.slot-machine-canvas {
 		display: block;
-		font-size: var(--text-title); 
-		opacity: 0;
+		font-size: var(--text-hero); 
+		opacity: 1;
 		pointer-events: none;
+		z-index: 2;
 	}
 
 	/* Ingrandimento cerchio mentale */
@@ -800,10 +891,6 @@
 		height: 420px;
 		border-radius: 210px;
 		background-color: var(--background-primary);
-		transition:
-			width 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-			height 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-			border-radius 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 	}
 
 	/* Svg dei bordi rotanti */
@@ -843,7 +930,7 @@
 		width: 540px;
 		height: 220px;
 		position: absolute;
-		top: calc(50% - 60px);
+		top: calc(50% - 110px);
 		left: 0;
 		z-index: 5;
 		transform: translateX(-100px);
@@ -853,12 +940,15 @@
 			transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
 			opacity 0.6s ease,
 			filter 0.6s ease;
+		/* Disabilitiamo le interazioni quando è nascosto */
+		pointer-events: none;
 	}
 
 	.right-text-panel.visible {
 		opacity: 1;
 		transform: translateX(0);
 		filter: blur(0px);
+		pointer-events: auto;
 	}
 
 	.text-block {
