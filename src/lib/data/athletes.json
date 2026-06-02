@@ -1,107 +1,107 @@
 [
 	{
-		"name": "Amber Glenn",
+		"name": "Mikaela Shiffrin",
+		"type": "favorito",
+		"imageSrc": "/images/athletes/mikaela-shiffrin.png",
+		"context": "L'atleta più vincente della storia cerca il riscatto dopo il blackout di Pechino 2022. Ma a Cortina subentra di nuovo il choking: cade nel gigante e cede alla pressione dei suoi fantasmi.",
+		"quote": "There was, for sure, a bit of an external narrative about the ghosts of Beijing [...]. I see it, and I take it in, and I think, what if there is a curse?"
+	},
+	{
+		"name": "Amber Gleen",
 		"type": "favorito",
 		"imageSrc": "/images/athletes/amber-gleen.png",
-		"context": "Campionessa nazionale americana per tre volte, vincitrice della Grand Prix Final 2024. Finì 13ª, fuori da ogni possibilità di medaglia.",
-		"quote": "It's gone. You can't go back in time. You can't fix it. I didn't get to skate off like I see in other sports, where you make a mistake and you're done and you just kind of go off into the woods. I wish I could do that. But they expect you to smile, and they expect you to still perform, like you're having the time of your life, when in reality your dreams were just smashed to pieces."
+		"context": "Campionessa nazionale americana per tre volte e vincitrice della Grand Prix Final 2024, finisce al 13° posto, fuori da ogni possibilità di medaglia.",
+		"quote": "They expect you to smile and still perform, like you're having the time of your life, when in reality your dreams were just smashed to pieces."
 	},
 	{
-		"name": "Marco Bianchi",
+		"name": "Marco Odermatt",
 		"type": "favorito",
-		"imageSrc": "https://picsum.photos/id/1012/329/432",
-		"context": "Contesto per Marco Bianchi. Atleta di spicco nella sua disciplina, focalizzato sulla performance e sull'innovazione.",
-		"quote": "Nessun limite."
+		"imageSrc": "/images/athletes/marco-odermatt.png",
+		"context": "Il fenomeno svizzero arriva a Cortina come il favorito assoluto dello sci alpino, con tre ori annunciati. Se ne va senza un oro al collo, scoprendo che a volte dare il massimo non basta.",
+		"quote": "This obviously hurts. Finishing fourth is the worst place. [...] I thought at the finish that I was really good. I do not know where I could have skied faster."
 	},
 	{
-		"name": "Luca Verdi",
+		"name": "Atle Lie McGrath",
 		"type": "favorito",
-		"imageSrc": "https://picsum.photos/id/1013/329/432",
-		"context": "Contesto per Luca Verdi. Conosciuto per la sua determinazione e la costanza negli allenamenti.",
-		"quote": "Sempre avanti."
+		"imageSrc": "/images/athletes/atle-lie-mcgrath.png",
+		"context": "In pista col peso di un grave lutto, lo slalomista più atteso inforca ed esce di scena. La fuga nel bosco unisce dolore privato e fallimento pubblico, sotto gli occhi del mondo intero.",
+		"quote": "I just needed to get away from everything, I thought I would get some peace and quiet, which I didn't because photographers and police found me out in the woods."
 	},
 	{
-		"name": "Sofia Rossi",
+		"name": "Ilia Malinin",
 		"type": "favorito",
-		"imageSrc": "https://picsum.photos/id/1062/329/432",
-		"context": "Campionessa europea di scherma, detentrice del record di vittorie consecutive.",
-		"quote": "La mente controlla il corpo."
+		"imageSrc": "/images/athletes/ilia-malinin.png",
+		"context": "Il \"Quad God\" imbattuto da due anni e favorito assoluto nel programma libero accumula 72 punti di penalità e chiude 8°: il peso delle aspettative schiaccia anche i migliori.",
+		"quote": "They think that we're\nlike robots and there to entertain, but really we're all athletes and all of this takes mental challenges."
 	},
 	{
-		"name": "Davide Bianchi",
-		"type": "favorito",
-		"imageSrc": "https://picsum.photos/id/1069/329/432",
-		"context": "Primatista dei 100m stile libero, vincitore di due ori mondiali.",
-		"quote": "L'acqua è il mio elemento."
-	},
-	{
-		"name": "Luigi Neri",
+		"name": "Mikaël Kingsbury",
 		"type": "insoddisfatto",
-		"imageSrc": "https://picsum.photos/id/1027/329/432",
-		"context": "Contesto per Luigi Neri. Alla costante ricerca del perfezionamento tecnico e dei dettagli.",
-		"quote": "I risultati non bastano."
+		"imageSrc": "/images/athletes/mikael-kingsbury.png",
+		"context": "L'atleta di moguls più vincente della storia insegue l'unico oro che gli manca, ma perde il tie-break per settanta centesimi e scaglia gli sci a terra. Quel secondo posto diventerà la spinta per trionfare nel parallelo.",
+		"quote": "I'm always trying to win,\nso the silver felt a bit heartbreaking because\nit was so close."
 	},
 	{
-		"name": "Andrea Gialli",
+		"name": "Yūma Kagiyama",
 		"type": "insoddisfatto",
-		"imageSrc": "https://picsum.photos/id/1028/329/432",
-		"context": "Contesto per Andrea Gialli. Spinto dalla passione e dal desiderio di superare i propri standard personali.",
-		"quote": "Dobbiamo fare di più."
+		"imageSrc": "/images/athletes/yuma-kagiyama.png",
+		"context": "Un solo errore sul quad flip rovina la gara altrimenti perfetta del talento giapponese, lasciandogli il peso di un altro argento consecutivo.",
+		"quote": "Half of me is over the moon and the other half is frustrated. It was 100% fun and 100% frustrating."
 	},
 	{
-		"name": "Simone Viola",
+		"name": "Nika Prevc",
 		"type": "insoddisfatto",
-		"imageSrc": "https://picsum.photos/id/1029/329/432",
-		"context": "Contesto per Simone Viola. Concentrato sul miglioramento continuo giorno dopo giorno.",
-		"quote": "Senza sosta."
+		"imageSrc": "/images/athletes/nika-prevc.png",
+		"context": "La saltatrice slovena, dopo tredici vittorie stagionali, perde l'oro per poco più di un punto, e sale sul podio senza riuscire a esultare.",
+		"quote": "I still need some time to think about what was going on today [...]. There was too much pressure on me [...], that's a thing I wasn't able to cooperate with."
 	},
 	{
-		"name": "Fabio Marrone",
+		"name": "Kaori Sakamoto",
 		"type": "insoddisfatto",
-		"imageSrc": "https://picsum.photos/id/1074/329/432",
-		"context": "Medaglia d'argento olimpica, sente di non aver espresso il massimo potenziale.",
-		"quote": "L'argento non brilla abbastanza."
+		"imageSrc": "/images/athletes/kaori-sakamoto.png",
+		"context": "Favorita assoluta, vede il suo oro trasformarsi in un argento che sa solo di fallimento.",
+		"quote": "I felt like the bronze medal last time was a miracle, and I'm wearing a better medal around my neck yet I'm frustrated - which probably says a lot about all the work I put in the last four years."
 	},
 	{
-		"name": "Elisa Russo",
+		"name": "Scotty James",
 		"type": "insoddisfatto",
-		"imageSrc": "https://picsum.photos/id/1084/329/432",
-		"context": "Pluripremiata ginnasta, sempre alla ricerca della perfezione millimetrica.",
-		"quote": "Anche la perfezione ha margini di miglioramento."
+		"imageSrc": "/images/athletes/scotty-james.png",
+		"context": "Lo snowboarder australiano, al quinto assalto olimpico, manca l'oro per un punto e mezzo, e si ritrova a chiedere scusa al suo intero Paese.",
+		"quote": "It sounds silly to apologise for winning an Olympic medal, but I'm okay to wear my heart on my sleeve."
 	},
 	{
-		"name": "Mario Rossi",
+		"name": "Sofia Goggia",
 		"type": "infortunato",
-		"imageSrc": "https://picsum.photos/id/1025/329/432",
-		"context": "Contesto per Mario Rossi. Attualmente in fase di riabilitazione con un programma di recupero personalizzato.",
-		"quote": "Tornerò più forte di prima."
+		"imageSrc": "/images/athletes/sofia-goggia.png",
+		"context": "La campionessa azzurra si presenta a Milano Cortina dopo dieci anni di calvari medici e l'ennesimo infortunio, trasformando la fragilità fisica in una rinascita spirituale.",
+		"quote": "Gli infortuni sono sempre figli di un conflitto emotivo dentro di noi, sono emozioni che fanno un bluff e te lo trasmettono nel corpo."
 	},
 	{
-		"name": "Giovanni Blu",
+		"name": "Petra Vlhová",
 		"type": "infortunato",
-		"imageSrc": "https://picsum.photos/id/1024/329/432",
-		"context": "Contesto per Giovanni Blu. Affronta il recupero con positività e tenacia mentale.",
-		"quote": "Il dolore insegna."
+		"imageSrc": "/images/athletes/petra-vlhova.png",
+		"context": "Oro olimpico a Pechino 2022, si rompe crociato e collaterale a Jasná nel gennaio 2024. Venti mesi di silenzio, due operazioni, e un ritorno che nessuno avrebbe scommesso.",
+		"quote": "Today was about the feeling, not about the results, so I'm happy that I could start it.\nOf course, DNF, but whatever, I'm just proud."
 	},
 	{
-		"name": "Paolo Neri",
+		"name": "Federica Brignone",
 		"type": "infortunato",
-		"imageSrc": "https://picsum.photos/id/1026/329/432",
-		"context": "Contesto per Paolo Neri. Concentrato sulla riabilitazione passo dopo passo per un ritorno sicuro.",
-		"quote": "Un passo alla volta."
+		"imageSrc": "/images/athletes/federica-brignone.png",
+		"context": "Portabandiera e leggenda dello sci azzurro vince l'oro, ma la gioia del podio coesiste con una sofferenza fisica e mentale che ribalta la narrazione del successo.",
+		"quote": "Darei indietro le due medaglie olimpiche per tornare ad avere la gamba sana, come prima di quel 3 aprile 2025."
 	},
 	{
-		"name": "Roberto Gallo",
+		"name": "Eileen Gu",
 		"type": "infortunato",
-		"imageSrc": "https://picsum.photos/id/1000/329/432",
-		"context": "Rottura del legamento crociato anteriore a poche settimane dai campionati nazionali.",
-		"quote": "La pazienza è la chiave del rientro."
+		"imageSrc": "/images/athletes/eileen-gu.png",
+		"context": "Tre ori olimpici a 18 anni, poi gli infortuni, una concussione, il silenzio. Ne esce con una consapevolezza che nessuna medaglia le aveva dato, e a Milano Cortina, sale ancora sul podio.",
+		"quote": "The injuries really set me back and damaged my confidence a little, and maybe instilled some doubt in me for a period of time. [...] Skiing is not who I am, it's what I do."
 	},
 	{
-		"name": "Elena Costa",
+		"name": "Aleksander Kilde",
 		"type": "infortunato",
-		"imageSrc": "https://picsum.photos/id/1001/329/432",
-		"context": "Frattura da stress al piede sinistro durante la preparazione per la maratona.",
-		"quote": "Il corpo parla, ora tocca a me ascoltare."
+		"imageSrc": "/images/athletes/aleksander-kilde.png",
+		"context": "Rinuncia ai Giochi a poche ore\ndal via, dopo il calvario del 2024.\nIl fuoriclasse norvegese rifiuta di distruggersi per le aspettative.",
+		"quote": "I have done everything\nin my power to be able to participate in the Olympics, but my body and mind\nare not ready."
 	}
 ]
