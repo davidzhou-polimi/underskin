@@ -5,6 +5,7 @@
 	import IntroTextSection from '$lib/components/sections/IntroTextSection.svelte';
 	import FisicoMentaleQuiz from '$lib/components/sections/FisicoMentaleQuiz.svelte';
 	import PerformanceSection from '$lib/components/sections/PerformanceSection.svelte';
+	import Cards from '$lib/components/sections/Cards.svelte';
 	import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
 	let isLocked = $state(false);
@@ -42,6 +43,7 @@
 		onCollapse={() => quizExpanded = false}
 	/>
 	<PerformanceSection />
+	<Cards />
 </main>
 
 <section class="test-figma-bg hidden">
