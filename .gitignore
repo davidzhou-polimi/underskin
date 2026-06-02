@@ -22,8 +22,5 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Local Sandboxes
-/src/routes/sandbox
-
 # TODO
 TODO.md
