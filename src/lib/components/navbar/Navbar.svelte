@@ -47,8 +47,8 @@
         { label: "Home", sectionId: "hero" },
         { label: "About", sectionId: "about" },
         { label: "Favorito", sectionId: "favorito" },
-        { label: "Insoddisfatto", sectionId: "insoddisfatto" },
         { label: "Infortunato", sectionId: "infortunato" },
+        { label: "Insoddisfatto", sectionId: "insoddisfatto" },
     ];
 
     // Commento solo il PERCHÉ: Cambia la sezione attiva nello store narrative se la sezione fa parte dei rami

@@ -17,7 +17,7 @@
     const SECTION_CONFIGS = {
         hero: {
             coverage: 0.3,
-            maskClamp: [0.0, 0.7],
+            maskClamp: [0.0, 1.0],
             grainIntensity: 0.1
         },
         favorito: {

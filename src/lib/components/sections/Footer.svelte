@@ -45,7 +45,6 @@
 		font-weight: var(--text-footer-weight);
 		color: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
 		line-height: 0.85;
-		text-transform: uppercase;
 		letter-spacing: -0.02em;
 		text-align: center;
 		width: 100%;
