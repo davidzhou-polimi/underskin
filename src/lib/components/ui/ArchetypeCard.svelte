@@ -6,24 +6,30 @@
 	 *   name?: string,
 	 *   videoSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   isPlaying?: boolean
+	 *   isPlaying?: boolean,
+	 *   horizontal?: boolean
 	 * }}
 	 */
 	let { 
 		name = "nome e cognome", 
 		videoSrc = "",
 		type = 'favorito',
-		isPlaying = false
+		isPlaying = false,
+		horizontal = false
 	} = $props();
+
+	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
+	let isHovered = $state(false);
+	// Riproduciamo il video se la card è attiva (carousel) o se l'utente ci passa sopra con il mouse
+	let shouldPlay = $derived(isPlaying || isHovered);
 
 	/** @type {HTMLVideoElement | null} */
 	let videoElement = $state(null);
 
-	// Controlliamo reattivamente il video per riprodurlo solo quando la card è attiva,
-	// riducendo il carico di risorse della pagina (GPU/CPU) per i video non in primo piano.
+	// Avviamo o stoppiamo la riproduzione in base allo stato attivo o all'hover dell'utente
 	$effect(() => {
 		if (!videoElement) return;
-		if (isPlaying) {
+		if (shouldPlay) {
 			videoElement.play().catch(() => {
 				// Il browser potrebbe bloccare play() prima di un'interazione utente: ignoriamo l'eccezione
 			});
@@ -54,7 +60,14 @@
 	let colorTextPrimary = $derived(colors.textPrimary);
 </script>
 
-<div class="archetype-card-container" use:hoverLift>
+<div 
+	class="archetype-card-container" 
+	class:is-horizontal={horizontal} 
+	use:hoverLift
+	onmouseenter={() => { isHovered = true; }}
+	onmouseleave={() => { isHovered = false; }}
+	role="presentation"
+>
 	<div class="card-inner" style="--text-primary: {colorTextPrimary};">
 		<!-- Sfondo glassato ad effetto ghiaccio -->
 		<div class="background-glass"></div>
@@ -158,5 +171,31 @@
 		word-break: break-word;
 		line-height: normal;
 		pointer-events: none;
+	}
+
+	/* ─── MODALITÀ ORIZZONTALE ────────────────────────────────────────────── */
+	.archetype-card-container.is-horizontal {
+		width: 480px;
+		height: 180px;
+	}
+
+	.archetype-card-container.is-horizontal .media-container,
+	.archetype-card-container.is-horizontal .overlay-brand {
+		top: var(--spacing-2);
+		bottom: var(--spacing-2);
+		left: var(--spacing-2);
+		right: auto;
+		width: 148px;
+		height: 148px;
+	}
+
+	.archetype-card-container.is-horizontal .name-front {
+		top: var(--spacing-2);
+		left: 180px;
+		width: calc(100% - 196px); /* 180px left + 16px right padding */
+		height: calc(100% - var(--spacing-4));
+		text-align: left;
+		align-items: flex-start;
+		justify-content: center;
 	}
 </style>
