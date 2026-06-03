@@ -255,7 +255,7 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100vh; /* Schermo intero immersivo per lo scrollytelling locking */
-		background-color: var(--background-primary);
+		background-color: transparent;
 		user-select: none;
 	}
 

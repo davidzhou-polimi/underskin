@@ -193,8 +193,8 @@
     position: relative;
     width: 100%;
     height: 100vh;
-    background: var(--background-primary);
     display: flex;
+    background: transparent;
     justify-content: center;
     align-items: center;
     overflow: hidden;
