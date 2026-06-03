@@ -54,7 +54,8 @@
 	let colorTextPrimary = $derived(colors.textPrimary);
 </script>
 
-<div class="archetype-card-container" use:hoverLift>
+<!-- Trasformato in link semantico per delegare la navigazione a SvelteKit e supportare l'accessibilità -->
+<a href="/{type}" class="archetype-card-container" use:hoverLift>
 	<div class="card-inner" style="--text-primary: {colorTextPrimary};">
 		<!-- Sfondo glassato ad effetto ghiaccio -->
 		<div class="background-glass"></div>
@@ -76,7 +77,7 @@
 			<p>{name}</p>
 		</div>
 	</div>
-</div>
+</a>
 
 <style>
 	.archetype-card-container {
@@ -86,6 +87,9 @@
 		cursor: pointer;
 		will-change: transform;
 		-webkit-font-smoothing: subpixel-antialiased;
+		/* display: block e text-decoration: none servono a preservare il corretto layout box-model della card ed evitare sottolineature ereditate dai link del browser */
+		display: block;
+		text-decoration: none;
 	}
 
 	.card-inner {
