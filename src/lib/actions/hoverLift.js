@@ -1,0 +1,60 @@
+import gsap from 'gsap';
+
+/**
+ * @typedef {Object} HoverLiftParams
+ * @property {number} [y]
+ * @property {number} [scale]
+ * @property {number} [duration]
+ * @property {string} [ease]
+ */
+
+/**
+ * Gestisce l'effetto di sollevamento e ingrandimento all'hover usando GSAP
+ * @param {HTMLElement} node
+ * @param {HoverLiftParams} [params]
+ */
+export function hoverLift(node, params = {}) {
+	const {
+		y = -15,
+		duration = 0.3,
+		ease = 'power2.out'
+	} = params;
+
+	// Gestiamo il ciclo di vita dei tween tramite un contesto dedicato per garantire il cleanup corretto.
+	const ctx = gsap.context(() => {}, node);
+
+	// Avvia l'animazione di sollevamento all'ingresso del cursore
+	const onMouseEnter = () => {
+		ctx.add(() => {
+			gsap.to(node, {
+				y: y,
+				duration: duration,
+				ease: ease,
+				overwrite: 'auto'
+			});
+		});
+	};
+
+	// Ripristina lo stato originale all'uscita del cursore
+	const onMouseLeave = () => {
+		ctx.add(() => {
+			gsap.to(node, {
+				y: 0,
+				duration: duration,
+				ease: ease,
+				overwrite: 'auto'
+			});
+		});
+	};
+
+	node.addEventListener('mouseenter', onMouseEnter);
+	node.addEventListener('mouseleave', onMouseLeave);
+
+	return {
+		destroy() {
+			node.removeEventListener('mouseenter', onMouseEnter);
+			node.removeEventListener('mouseleave', onMouseLeave);
+			ctx.revert();
+		}
+	};
+}

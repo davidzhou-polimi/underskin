@@ -8,10 +8,17 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * @typedef {Object} TrackSectionParams
+ * @property {string} [id] - Custom ID for the tracked section
+ * @property {Object} [trigger] - ScrollTrigger custom settings override
+ */
+
+/**
  * Azione Svelte per tracciare quando una sezione entra nello schermo.
  * Aggiorna lo store globale `scroll.activeSection`.
  * @param {HTMLElement} node L'elemento del DOM a cui è applicata l'azione
  * @param {{ id?: string, trigger?: Object }} [params] Opzioni aggiuntive dell'azione
+ * @param {TrackSectionParams} [params]
  */
 export function trackSection(node, params = {}) {
 	const sectionId = params.id || node.id || 'unknown';

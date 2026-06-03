@@ -11,6 +11,7 @@
     import IntrusiveThoughts from '$lib/components/sections/archetypes/IntrusiveThoughts.svelte';
     import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
     import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
+	import AthleteSection from '$lib/components/sections/archetypes/AthleteSection.svelte';
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE INTERATTIVO
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
@@ -74,7 +75,13 @@
         ]}
     />
 
-    <ZoomTransition />
+	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
+	<!-- ZoomTransition apre sulla sezione athlete carousel sottostante -->
+	<ZoomTransition>
+		{#snippet children()}
+			<AthleteSection type="favorito" />
+		{/snippet}
+	</ZoomTransition>
 </main>
 
 <style>

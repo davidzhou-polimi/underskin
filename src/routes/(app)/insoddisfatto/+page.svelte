@@ -11,6 +11,7 @@
     import PerfectionGame from '$lib/components/sections/archetypes/PerfectionGame.svelte';
     import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
     import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
+	import AthleteSection from '$lib/components/sections/archetypes/AthleteSection.svelte';
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE INTERATTIVO
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
@@ -74,7 +75,13 @@
         ]}
     />
 
-    <ZoomTransition theme="insoddisfatto" />
+	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
+	<!-- ZoomTransition apre sulla sezione athlete carousel sottostante -->
+	<ZoomTransition theme="insoddisfatto">
+		{#snippet children()}
+			<AthleteSection type="insoddisfatto" />
+		{/snippet}
+	</ZoomTransition>
 </main>
 
 <style>
