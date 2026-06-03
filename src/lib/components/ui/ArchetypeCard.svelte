@@ -115,14 +115,15 @@
 	.background-glass {
 		position: absolute;
 		inset: 0;
-		background: rgba(241, 250, 253, 0.35);
+		background-color: rgb(from var(--neutral-100) r g b / 0.5);
+		border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
 		opacity: 0.5;
 		backdrop-filter: blur(13px);
 		transition: background 0.3s ease;
 	}
 
 	.archetype-card-container:hover .background-glass {
-		background: rgba(241, 250, 253, 0.65);
+		background-color: rgb(from var(--neutral-100) r g b / 0.7);
 	}
 
 	.media-container {
@@ -175,27 +176,14 @@
 
 	/* ─── MODALITÀ ORIZZONTALE ────────────────────────────────────────────── */
 	.archetype-card-container.is-horizontal {
-		width: 480px;
-		height: 180px;
-	}
-
-	.archetype-card-container.is-horizontal .media-container,
-	.archetype-card-container.is-horizontal .overlay-brand {
-		top: var(--spacing-2);
-		bottom: var(--spacing-2);
-		left: var(--spacing-2);
-		right: auto;
-		width: 148px;
-		height: 148px;
+		/* Dimensioni inverse rispetto a quella verticale (357x461 -> 461x357) */
+		width: 461px;
+		max-width: 100%;
+		height: 357px;
 	}
 
 	.archetype-card-container.is-horizontal .name-front {
-		top: var(--spacing-2);
-		left: 180px;
-		width: calc(100% - 196px); /* 180px left + 16px right padding */
-		height: calc(100% - var(--spacing-4));
-		text-align: left;
-		align-items: flex-start;
-		justify-content: center;
+		/* Adattiamo la larghezza del testo al nuovo contenitore orizzontale */
+		width: calc(100% - 28px);
 	}
 </style>
