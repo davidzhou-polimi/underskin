@@ -6,11 +6,11 @@
 
 <style>
     .finale-section {
-        min-height: 100vh;
+        min-height: 70vh;
         padding-top: var(--spacing-14);
         padding-left: var(--spacing-2);
         padding-right: var(--spacing-2);
-        padding-bottom: var(--spacing-14);
+        padding-bottom: var(--spacing-2);
         background-color: transparent;
         display: flex;
         align-items: flex-start;
