@@ -1,5 +1,6 @@
 <script>
 	import AboutSection from '$lib/components/sections/about/AboutSection.svelte';
+	import Footer from '$lib/components/sections/home/Footer.svelte';
 </script>
 
 <svelte:head>
@@ -9,6 +10,7 @@
 
 <main id="about">
 	<AboutSection />
+	<Footer />
 </main>
 
 <style>
