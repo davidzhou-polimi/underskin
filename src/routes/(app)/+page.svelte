@@ -16,7 +16,7 @@
     import Intro from '$lib/components/sections/home/Intro.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
-    import Cards from '$lib/components/sections/home/Cards.svelte';
+   import ArchetypeSection from '$lib/components/sections/ArchetypeSection.svelte';
     import Outro from '$lib/components/sections/home/Outro.svelte';
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
@@ -121,12 +121,17 @@
         onCollapse={() => quizExpanded = false}
     />
     <Performance />
-    <Cards />
+	<ArchetypeSection />
     <Outro />
     <Burnout />
     <Final />
     <Footer />
-</main>
+	
+	
+</script>
+
+	<ArchetypeSection />
+	
 
 <style>
     /* Mantiene il flusso di pagina strutturalmente trasparente per esporre il canvas in posizione fixed */
