@@ -9,7 +9,7 @@
     import { onMount } from 'svelte';
     import { gsap } from 'gsap';
     import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-    import DecorativeCircle from '$lib/components/ui/DecorativeCircle.svelte';
+
     import { trackSection } from '$lib/actions/trackSection.js';
 
     if (typeof window !== 'undefined') {
@@ -74,9 +74,7 @@
     use:trackSection={{ id: sectionId }}
 >
     <div class="sticky-viewport">
-        <div class="circles-layer">
-            <DecorativeCircle />
-        </div>
+    
         
         <div class="text-container">
             <h1 bind:this={blobText} class="blob-text" style:text-shadow={textShadow}>
