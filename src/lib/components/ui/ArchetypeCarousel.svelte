@@ -1,6 +1,7 @@
 <script>
 	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
 	import { horizontalCarousel } from '$lib/actions/horizontalCarousel.js';
+	import { autoplay } from '$lib/actions/autoplay.js';
 	// Definiamo i 3 archetipi statici con i rispettivi tipi e sorgenti video
 	/**
 	 * @type {Array<{
@@ -16,20 +17,24 @@
 	];
 
 	let activeIndex = $state(0);
+	let isHovered = $state(false);
 
 	// ─── Navigation ───────────────────────────────────────────────────────────
 
 	function next() {
 		activeIndex = (activeIndex + 1) % archetypes.length;
+		isHovered = false;
 	}
 
 	function prev() {
 		activeIndex = (activeIndex - 1 + archetypes.length) % archetypes.length;
+		isHovered = false;
 	}
 
 	/** @param {number} index */
 	function selectIndex(index) {
 		activeIndex = index;
+		isHovered = false;
 	}
 
 	// ─── Touch Events per Swipe ───────────────────────────────────────────────
@@ -69,7 +74,13 @@
 			aria-label="Carousel Track"
 		>
 			{#each archetypes as archetype, i (archetype.name)}
-				<div class="carousel-item">
+				<div
+					class="carousel-item"
+					role="group"
+					aria-roledescription="slide"
+					onmouseenter={i === activeIndex ? () => { isHovered = true; } : null}
+					onmouseleave={i === activeIndex ? () => { isHovered = false; } : null}
+				>
 					<ArchetypeCard
 						name={archetype.name}
 						videoSrc={archetype.videoSrc}
@@ -98,7 +109,14 @@
 					class:active={i === activeIndex}
 					onclick={() => selectIndex(i)}
 					aria-label="Vai alla slide {i + 1}"
-				></button>
+				>
+					{#if i === activeIndex}
+						<span
+							class="dot-progress"
+							use:autoplay={{ duration: 3.5, paused: isHovered, onComplete: next }}
+						></span>
+					{/if}
+				</button>
 			{/each}
 		</div>
 	</div>
@@ -184,7 +202,11 @@
 		border: none;
 		padding: 0;
 		cursor: pointer;
-		transition: background-color 0.3s ease, transform 0.3s ease;
+		position: relative;
+		overflow: hidden;
+		transition: background-color var(--transition-duration-normal) var(--easing-standard),
+			width var(--transition-duration-normal) var(--easing-standard),
+			border-radius var(--transition-duration-normal) var(--easing-standard);
 	}
 
 	.dot-button:hover {
@@ -192,7 +214,20 @@
 	}
 
 	.dot-button.active {
+		/* Trasformiamo il dot attivo in una pillola allungata per visualizzare il progresso temporale */
+		width: 40px;
+		border-radius: 9999px;
+		background-color: color-mix(in srgb, var(--content-primary) 20%, transparent);
+	}
+
+	.dot-progress {
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 0%;
+		border-radius: 9999px;
 		background-color: var(--content-primary); /* token per dot selezionato */
-		transform: scale(1.2);
+		pointer-events: none;
 	}
 </style>
