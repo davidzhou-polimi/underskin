@@ -1,16 +1,14 @@
 <script>
-	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { trailCanvas } from '$lib/actions/home/trailCanvas.js';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { scrollReveal } from '$lib/actions/scrollReveal.js';
+	import { introPin } from '$lib/actions/home/introPin.js';
 
 	/** @type {any} */
 	let canvasAction = null;
 
-	// Bind del canvas di sfondo per avviare il ciclo di particelle
 	/**
+	 * Gestisce l'inizializzazione del canvas di sfondo
 	 * @param {HTMLCanvasElement} node
 	 */
 	function bindCanvas(node) {
@@ -27,28 +25,12 @@
 			}
 		};
 	}
-
-	onMount(() => {
-		gsap.registerPlugin(ScrollTrigger);
-
-		// Pinning locale della sezione per consentire lo scrub sequenziale delle righe di testo
-		const st = ScrollTrigger.create({
-			trigger: '#intro-text',
-			start: 'top top',
-			end: '+=300%',
-			pin: true,
-			pinSpacing: true
-		});
-
-		return () => {
-			if (st) st.kill();
-		};
-	});
 </script>
 
 <section
 	id="intro-text"
 	class="intro-section"
+	use:introPin={{ end: '+=300%' }}
 	use:trackSection={{ id: 'intro-text' }}
 >
 	<div class="canvas-layer">
@@ -61,7 +43,9 @@
 		<p class="reveal-line">4 anni di preparazione</p>
 		<div class="reveal-line final-phrase">
 			<span>Tutto per soli</span>
-			<span class="break-line gradient-text animate-gradient-text my-archetypes-color">120 secondi di performance</span>
+			<span class="break-line gradient-text animate-gradient-text dynamic-archetypes">
+				120 secondi di performance
+			</span>
 		</div>
 	</div>
 </section>
@@ -106,11 +90,9 @@
 	.reveal-line {
 		grid-area: 1 / 1 / 2 / 2;
 		margin: var(--spacing-0);
-
 		font-size: var(--text-important-size);
 		font-weight: var(--text-important-weight);
 		color: var(--content-primary);
-
 		font-family: var(--font-family-base);
 		line-height: 1.4;
 	}
@@ -126,20 +108,25 @@
 		margin-top: var(--spacing-1);
 	}
 
-	.my-archetypes-color {
-		--gradient-c1: var(--archetipi-favorito);
-		--gradient-c2: var(--archetipi-insoddisfatto);
-		--gradient-c3: var(--archetipi-infortunato);
+	/* Consuma i token senza dichiarare o sovrascrivere variabili CSS locali */
+	.dynamic-archetypes {
+		background: linear-gradient(
+			135deg,
+			var(--archetipi-favorito),
+			var(--archetipi-insoddisfatto),
+			var(--archetipi-infortunato)
+		);
+		background-clip: text;
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
-	/* reveal-hidden: stato iniziale non visibile e sfocato */
 	:global(.reveal-hidden) {
 		opacity: 0;
 		filter: blur(15px);
 		transform: translateY(20px);
 	}
 
-	/* reveal-visible: prima riga già visibile all'avvio */
 	:global(.reveal-visible) {
 		opacity: 1;
 		filter: blur(0px);

@@ -1,5 +1,5 @@
 <script>
-	import AboutSection from '$lib/components/sections/about/AboutSection.svelte';
+	import AboutSection from '$lib/components/sections/about/About.svelte';
 	import Footer from '$lib/components/sections/home/Footer.svelte';
 </script>
 
