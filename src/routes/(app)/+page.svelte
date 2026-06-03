@@ -1,5 +1,6 @@
 <script>
 	import AthleteSection from '$lib/components/sections/AthleteSection.svelte';
+	import ArchetypeSection from '$lib/components/sections/ArchetypeSection.svelte';
 </script>
 
 <main>
@@ -7,6 +8,7 @@
 	<AthleteSection type="favorito" />
 	<AthleteSection type="insoddisfatto" />
 	<AthleteSection type="infortunato" />
+	<ArchetypeSection />
 	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 
