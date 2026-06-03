@@ -13,9 +13,14 @@
 	 */
 	function bindCanvas(node) {
 		canvasAction = trailCanvas(node);
-		if (canvasAction) {
-			canvasAction.startLoop(false);
-		}
+		
+		/* IL LOOP DEL CANVAS È STATO COMMENTATO TEMPORANEAMENTE SU RICHIESTA DELL'UTENTE
+			PER RIMUOVERE L'ANIMAZIONE GRAFICA CIRCOLARE SULLO SFONDO:
+
+			if (canvasAction) {
+				canvasAction.startLoop(false);
+			}
+		*/
 		return {
 			destroy() {
 				if (canvasAction) {
@@ -30,13 +35,14 @@
 <section
 	id="intro-text"
 	class="intro-section"
-	use:introPin={{ end: '+=300%' }}
+	use:introPin={{ end: '+=1000%' }}
 	use:trackSection={{ id: 'intro-text' }}
 >
 	<div class="canvas-layer">
 		<canvas use:bindCanvas></canvas>
 	</div>
-	<div class="text-container" use:scrollReveal={{ end: '+=200%' }}>
+	
+	<div class="text-container" use:scrollReveal={{ end: '+=800%' }}>
 		<p class="reveal-line">Milano-Cortina 2026</p>
 		<p class="reveal-line">2.900 atleti</p>
 		<p class="reveal-line">1 vita di sacrifici</p>
