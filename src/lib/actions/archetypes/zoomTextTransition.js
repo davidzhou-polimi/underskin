@@ -23,7 +23,7 @@ export function zoomTextTransition(node) {
 
 	// Stato visivo nascosto impostato immediatamente per prevenire flash durante il frame di attesa
 	gsap.set(zoomSvg, { 
-		transformOrigin: '44.2% 85%',
+		transformOrigin: '42.9% 85%',
 		transformBox: 'view-box',
 		scale: 1, 
 		opacity: 0, 
