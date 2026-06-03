@@ -1,5 +1,6 @@
 <script>
 	import { horizontalScroll } from '$lib/actions/horizontalScroll.js';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	const cards = [
 		{
@@ -21,6 +22,14 @@
 				'Non si considerava un cinefilo. Poi un pomeriggio libero, un consiglio distratto, uno schermo acceso — e qualcosa è cambiato. Non sa ancora dare un nome a quello che prova, ma vuole sentirlo ancora.',
 		},
 	];
+
+	const handleCentralCardEnter = (e) => {
+		tooltip.show('click', 'semplice', 'pointer');
+	};
+
+	const handleCentralCardLeave = () => {
+		tooltip.hide();
+	};
 </script>
 
 <section class="h-scroll-section" use:horizontalScroll>
@@ -31,14 +40,29 @@
 		</div>
 
 		{#each cards as card, i}
-			<article class="h-scroll-card">
-				<div class="card-inner">
-					<span class="card-number">0{i + 1}</span>
-					<h3 class="card-title">{card.label}</h3>
-					<p class="card-tag">{card.tag}</p>
-					<p class="card-desc">{card.description}</p>
-				</div>
-			</article>
+			{#if i === 1}
+				<article 
+					class="h-scroll-card"
+					on:mouseenter={handleCentralCardEnter}
+					on:mouseleave={handleCentralCardLeave}
+				>
+					<div class="card-inner">
+						<span class="card-number">0{i + 1}</span>
+						<h3 class="card-title">{card.label}</h3>
+						<p class="card-tag">{card.tag}</p>
+						<p class="card-desc">{card.description}</p>
+					</div>
+				</article>
+			{:else}
+				<article class="h-scroll-card">
+					<div class="card-inner">
+						<span class="card-number">0{i + 1}</span>
+						<h3 class="card-title">{card.label}</h3>
+						<p class="card-tag">{card.tag}</p>
+						<p class="card-desc">{card.description}</p>
+					</div>
+				</article>
+			{/if}
 		{/each}
 
 		<div class="h-scroll-end">
