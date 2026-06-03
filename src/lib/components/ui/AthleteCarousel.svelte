@@ -10,30 +10,53 @@
 	 */
 	let { type = 'favorito' } = $props();
 
-	// Reactive state tracking the current active card index
 	let activeIndex = $state(0);
 
-	// Derived array containing only athletes matching the selected archetype
 	let filteredAthletes = $derived(
 		/** @type {any} */ (athletesData.filter(athlete => athlete.type === type))
 	);
 
-	// Bezier control points to match the GSAP active dot path positioning
-	const p0 = { x: 100, y: 80 };
-	const p1 = { x: 500, y: 10 };
-	const p2 = { x: 900, y: 80 };
+	// ─── Navigation arc geometry ──────────────────────────────────────────────
+
+	const NAV_HEIGHT = 120; // px
+
+	// navWidth = full viewport width (SVG is positioned full-bleed via CSS transform)
+	let navWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 800);
+
+	$effect(() => {
+		const onResize = () => { navWidth = window.innerWidth; };
+		window.addEventListener('resize', onResize);
+		return () => window.removeEventListener('resize', onResize);
+	});
+
+	// Arc path: big circle that exits the viewport on both sides
+	const R_nav = $derived(navWidth * 0.694);
+	const cx_nav = $derived(navWidth / 2);
+	const cy_nav = $derived(NAV_HEIGHT * 0.17 + R_nav);
+
+	// Upper semicircle: sweep=1 goes through the top of the circle (lower y values)
+	const arcPath = $derived(
+		`M ${cx_nav - R_nav},${cy_nav} A ${R_nav},${R_nav} 0 0 1 ${cx_nav + R_nav},${cy_nav}`
+	);
+
+	const svgViewBox = $derived(`0 0 ${navWidth} ${NAV_HEIGHT}`);
+
+	// Spaziatura in gradi tra i dot lungo la circonferenza dell'arco
+	const DOT_SPACING_ANGLE = 17.25;
 
 	/**
-	 * Calculates the position along a quadratic Bezier curve
-	 * @param {number} index - The current item index
-	 * @param {number} total - Total items in the list
+	 * Position on the arc for a given angular diff (-1, 0, +1).
+	 * @param {number} diff
 	 */
-	function getDotCoordinates(index, total) {
-		const t = total > 1 ? index / (total - 1) : 0.5;
-		const x = (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
-		const y = (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
-		return { x, y };
+	function getDotPos(diff) {
+		const angle = diff * DOT_SPACING_ANGLE * (Math.PI / 180);
+		return {
+			x: cx_nav + R_nav * Math.sin(angle),
+			y: cy_nav - R_nav * Math.cos(angle)
+		};
 	}
+
+	// ─── Navigation ───────────────────────────────────────────────────────────
 
 	function next() {
 		activeIndex = (activeIndex + 1) % filteredAthletes.length;
@@ -43,15 +66,13 @@
 		activeIndex = (activeIndex - 1 + filteredAthletes.length) % filteredAthletes.length;
 	}
 
-	/**
-	 * Focuses a clicked card
-	 * @param {number} index - Target index
-	 */
+	/** @param {number} index */
 	function selectIndex(index) {
 		activeIndex = index;
 	}
 
-	// Gesture variables for touch support
+	// ─── Touch ────────────────────────────────────────────────────────────────
+
 	let touchStartX = 0;
 	let touchStartY = 0;
 
@@ -63,42 +84,21 @@
 
 	/** @param {TouchEvent} e */
 	function handleTouchEnd(e) {
-		const touchEndX = e.changedTouches[0].clientX;
-		const touchEndY = e.changedTouches[0].clientY;
-		const diffX = touchEndX - touchStartX;
-		const diffY = touchEndY - touchStartY;
-
-		// Detect swipe only if horizontal movement is dominant
-		if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-			if (diffX > 0) {
-				prev();
-			} else {
-				next();
-			}
-		}
-	}
-
-	/** @param {KeyboardEvent} e */
-	function handleKeyDown(e) {
-		if (e.key === 'ArrowLeft') {
-			prev();
-		} else if (e.key === 'ArrowRight') {
-			next();
+		const dx = e.changedTouches[0].clientX - touchStartX;
+		const dy = e.changedTouches[0].clientY - touchStartY;
+		if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+			dx > 0 ? prev() : next();
 		}
 	}
 </script>
 
-<svelte:window onkeydown={handleKeyDown} />
-
-<!-- The carousel component handles navigation and swipe tracking -->
-<div 
-	class="carousel-container" 
-	role="region" 
-	aria-label="Athlete Showcase Carousel" 
+<div
+	class="carousel-container"
+	role="region"
+	aria-label="Athlete Showcase Carousel"
 >
-	<!-- Track using the GSAP carousel Svelte action -->
-	<div 
-		class="carousel-track" 
+	<div
+		class="carousel-track"
 		use:carousel={{ activeIndex, itemsCount: filteredAthletes.length }}
 		ontouchstart={handleTouchStart}
 		ontouchend={handleTouchEnd}
@@ -107,7 +107,7 @@
 	>
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div class="carousel-item">
-				<AthleteCard 
+				<AthleteCard
 					name={athlete.name}
 					imageSrc={athlete.imageSrc}
 					context={athlete.context}
@@ -115,57 +115,50 @@
 					type={athlete.type}
 					number={"0" + (i + 1)}
 				/>
-				<!-- Overlay intercepts click on side items to change slide without flipping -->
 				{#if i !== activeIndex}
-					<button 
-						class="card-overlay" 
-						onclick={() => selectIndex(i)} 
-						aria-label="View athlete {athlete.name}" 
+					<button
+						class="card-overlay"
+						onclick={() => selectIndex(i)}
+						aria-label="View athlete {athlete.name}"
 					></button>
 				{/if}
 			</div>
 		{/each}
 	</div>
 
-	<!-- Navigation Bar containing dots along the SVG Bezier curve -->
+	<!-- Navigation: SVG uses full-bleed CSS transform so the arc exits the full section width -->
 	<div class="carousel-navigation">
-		<div class="svg-track-container">
-			<svg class="svg-track" viewBox="0 0 1000 100" preserveAspectRatio="none">
-				<!-- Dotted curve path -->
-				<path 
-					d="M 100,80 Q 500,10 900,80" 
-					stroke="var(--content-primary)" 
-					stroke-width="2" 
-					stroke-linecap="round" 
-					stroke-dasharray="0.1 8" 
-					fill="none" 
-					opacity="0.3"
+		<svg
+			class="svg-track"
+			viewBox={svgViewBox}
+			xmlns="http://www.w3.org/2000/svg"
+			aria-hidden="true"
+		>
+			<!-- Dotted arc path — equator points are off-screen, arc exits container on both sides -->
+			<path
+				d={arcPath}
+				stroke="var(--content-primary)"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-dasharray="0.1 8"
+				fill="none"
+				opacity="0.3"
+				style="pointer-events: none;"
+			/>
+
+			<!-- 3 static decorative dots — one under each visible card, on the arc -->
+			{#each [-1, 0, 1] as diff}
+				{@const pt = getDotPos(diff)}
+				<circle
+					cx={pt.x}
+					cy={pt.y}
+					r="6"
+					fill="var(--content-primary)"
+					opacity="0.4"
+					style="pointer-events: none;"
 				/>
-				<!-- Clickable static indicator circles on the path -->
-				{#each filteredAthletes as _, i}
-					{@const pt = getDotCoordinates(i, filteredAthletes.length)}
-					<circle 
-						cx={pt.x} 
-						cy={pt.y} 
-						r="6" 
-						fill="var(--content-primary)" 
-						opacity={i === activeIndex ? 1 : 0.4} 
-						class="track-dot"
-						role="button"
-						tabindex="0"
-						aria-label="Go to athlete {i + 1}"
-						onclick={() => selectIndex(i)}
-						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectIndex(i); }}
-					/>
-				{/each}
-				<!-- Active GSAP-driven pointer circle -->
-				<circle 
-					class="active-dot" 
-					r="8" 
-					fill="var(--content-primary)" 
-				/>
-			</svg>
-		</div>
+			{/each}
+		</svg>
 	</div>
 </div>
 
@@ -179,7 +172,7 @@
 		align-items: center;
 		position: relative;
 		overflow: visible;
-		padding: var(--spacing-4) 0;
+		padding: var(--spacing-2) 0;
 		outline: none;
 	}
 
@@ -216,32 +209,20 @@
 
 	.carousel-navigation {
 		width: 100%;
-		max-width: 800px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-top: var(--spacing-4);
-	}
-
-	.svg-track-container {
-		flex: 1;
-		height: 80px;
+		overflow: hidden;
+		margin-top: var(--spacing-1);
 		position: relative;
+		height: 120px;
 	}
 
 	.svg-track {
-		width: 100%;
-		height: 100%;
+		/* Full-bleed: extends to full viewport width regardless of max-width container */
+		display: block;
+		width: 100vw;
+		height: 120px;
+		position: relative;
+		left: 50%;
+		transform: translateX(-50vw);
 		overflow: visible;
-	}
-
-	.track-dot {
-		cursor: pointer;
-		transition: opacity 0.3s ease, r 0.3s ease;
-	}
-
-	.track-dot:hover {
-		opacity: 0.8;
-		r: 8px;
 	}
 </style>

@@ -25,14 +25,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 100vh;
+		height: 100vh;
 		width: 100%;
 		/* padding-top evita la sovrapposizione visiva con la navbar fissa durante il rendering iniziale */
 		padding-top: var(--spacing-10);
-		padding-bottom: var(--spacing-6);
+		padding-bottom: var(--spacing-3);
 		box-sizing: border-box;
-		/* overflow-x nasconde le card del carosello che vengono posizionate al di fuori dei limiti laterali dello schermo */
-		overflow-x: hidden;
+		/* overflow nasconde le card del carosello che escono lateralmente e previene scrollbar verticali indesiderate */
+		overflow: hidden;
 	}
 
 	.athlete-section__container {
