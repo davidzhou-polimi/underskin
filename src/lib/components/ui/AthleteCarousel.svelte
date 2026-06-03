@@ -142,7 +142,7 @@
 				stroke-linecap="round"
 				stroke-dasharray="0.1 8"
 				fill="none"
-				opacity="0.3"
+				opacity="1"
 				style="pointer-events: none;"
 			/>
 
@@ -154,7 +154,7 @@
 					cy={pt.y}
 					r="6"
 					fill="var(--content-primary)"
-					opacity="0.4"
+					opacity="1"
 					style="pointer-events: none;"
 				/>
 			{/each}

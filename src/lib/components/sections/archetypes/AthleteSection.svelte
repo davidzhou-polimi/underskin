@@ -31,8 +31,8 @@
 		padding-top: var(--spacing-10);
 		padding-bottom: var(--spacing-3);
 		box-sizing: border-box;
-		/* overflow nasconde le card del carosello che escono lateralmente e previene scrollbar verticali indesiderate */
-		overflow: hidden;
+		/* overflow visible consente al carousel di estendersi oltre i lati */
+		overflow: visible;
 	}
 
 	.athlete-section__container {

@@ -57,7 +57,7 @@
         position: relative;
         height: 100vh;
         width: 100vw;
-        overflow: hidden;
+        overflow: visible;
         background-color: var(--background-primary);
         font-family: var(--font-family-base);
         z-index: 5;
@@ -109,5 +109,6 @@
         justify-content: center;
         z-index: 2;
         background-color: var(--background-primary);
+        overflow: visible;
     }
 </style>

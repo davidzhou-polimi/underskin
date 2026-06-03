@@ -11,6 +11,7 @@
 	import PerfectionGame from '$lib/components/sections/archetypes/PerfectionGame.svelte';
 	import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
 	import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
+	import AthleteSection from '$lib/components/sections/archetypes/AthleteSection.svelte';
 </script>
 
 <!-- SEO Best Practices: Titolo descrittivo e meta descrizione esclusivi per questo profilo -->
@@ -51,7 +52,12 @@
 	/>
 
 	<!-- 4. Sezione di transizione zoom verso i casi reali di Milano Cortina 2026 -->
-	<ZoomTransition theme="insoddisfatto" />
+	<!-- ZoomTransition apre sulla sezione athlete carousel sottostante -->
+	<ZoomTransition theme="insoddisfatto">
+		{#snippet children()}
+			<AthleteSection type="insoddisfatto" />
+		{/snippet}
+	</ZoomTransition>
 </main>
 
 <style>
