@@ -127,10 +127,9 @@
     <Final />
     <Footer />
 	
-	
-</script>
+</main>
 
-	<ArchetypeSection />
+
 	
 
 <style>
