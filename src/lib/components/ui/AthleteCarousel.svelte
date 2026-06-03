@@ -42,7 +42,7 @@
 	const svgViewBox = $derived(`0 0 ${navWidth} ${NAV_HEIGHT}`);
 
 	// Spaziatura in gradi tra i dot lungo la circonferenza dell'arco
-	const DOT_SPACING_ANGLE = 17.25;
+	const DOT_SPACING_ANGLE = 17.15;
 
 	/**
 	 * Position on the arc for a given angular diff (-1, 0, +1).
@@ -143,7 +143,7 @@
 				stroke-linecap="round"
 				stroke-dasharray="0.1 8"
 				fill="none"
-				opacity="1"
+				opacity="0.7"
 				style="pointer-events: none;"
 			/>
 
@@ -155,7 +155,6 @@
 					cy={pt.y}
 					r="6"
 					fill="var(--content-primary)"
-					opacity="1"
 					style="pointer-events: none;"
 				/>
 			{/each}

@@ -197,9 +197,10 @@
 	.background-glass {
 		position: absolute;
 		inset: 0;
-		background: rgba(241, 250, 253, 0.35);
+		background-color: rgb(from var(--neutral-100) r g b / 0.5);
+		border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
 		opacity: 0.5;
-		backdrop-filter: blur(13px);
+		backdrop-filter: blur(px);
 		transition: background 0.3s ease;
 	}
 

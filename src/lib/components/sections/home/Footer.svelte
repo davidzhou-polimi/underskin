@@ -47,7 +47,7 @@
         </text>
     </svg>
     <div class="footer-bottom">
-        <span class="footer-text">Laboratorio di Web e Digital Design, a.a. 2026/27</span>
+        <span class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</span>
         <span class="footer-text">© 2026</span>
     </div>
 </footer>
