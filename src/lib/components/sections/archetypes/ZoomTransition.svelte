@@ -58,7 +58,7 @@
         height: 100vh;
         width: 100vw;
         overflow: visible;
-        background-color: var(--background-primary);
+        background-color: transparent;
         font-family: var(--font-family-base);
         z-index: 5;
     }

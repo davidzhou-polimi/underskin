@@ -89,7 +89,7 @@
   .scroll-wrapper {
     height: 100vh;
     width: 100%;
-    background: var(--background-primary);
+    background-color: transparent;
     overflow: hidden;
   }
 

@@ -69,7 +69,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background-color: var(--background-primary);
+		background-color: transparent;
 		overflow: hidden;
 		padding: var(--spacing-6) var(--spacing-4);
 	}
