@@ -57,6 +57,10 @@
         box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
     }
 
+    .mod-semplice :global(.tooltip-glass-override) {
+        border-radius: var(--radius-l) !important;
+    }
+
     .tooltip-text-content {
         display: block;
         font-family: var(--font-family-base);

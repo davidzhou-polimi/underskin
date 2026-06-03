@@ -45,7 +45,7 @@
 			{ type: 'text', content: "A volte il podio non basta. Chi arriva più vicino all’oro<br />è spesso quello che fa più fatica ad accettare<br />il risultato, intrappolato dal " },
 			{ type: 'keyword', content: "pensiero controfattuale", tooltip: "Tendenza a ricostruire mentalmente eventi passati immaginando esiti alternativi, valutando come scelte o circostanze diverse avrebbero potuto cambiare il risultato." },
 			{ type: 'text', content: ".<br /><br />Viene definito il " },
-			{ type: 'keyword', content: "paradosso dell’argento", tooltip: "Gli atleti con l’argento spesso sono meno soddisfatti di quelli con il bronzo, perché pensano alla vittoria mancata. La soddisfazione dipende quindi più dal confronto mentale che dal risultato reale." },
+			{ type: 'keyword', content: "paradosso dell’argento", tooltip: "Gli atleti con l’argento spesso sono meno soddisfatti di quelli con il bronzo, perché pensano alla vittoria mancata. \nLa soddisfazione dipende quindi più dal confronto mentale che dal risultato reale." },
 			{ type: 'text', content: ": la mente<br />continua a guardare ciò che è mancato, cancellando<br />quello che è stato raggiunto." }
 		]}
 	/>
