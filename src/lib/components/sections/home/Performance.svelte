@@ -43,9 +43,8 @@
 	<div class="perf-content" bind:this={contentWrapper}>
 		<blockquote class="perf-quote">
 			La performance non consuma solo il corpo: <br />
-			modella <span class="gradient-text animate-gradient-text my-archetypes-color">identità</span>,
-			<span class="gradient-text animate-gradient-text my-archetypes-color">abitudini</span> e
-			<span class="gradient-text animate-gradient-text my-archetypes-color">ossessioni</span>.<br />
+			modella
+			<span class="gradient-text animate-gradient-text my-archetypes-color"> identità, abitudini e ossessioni</span>.<br />
 			Nel tempo emergono schemi ricorrenti, modi<br />
 			diversi di vivere il peso della performance.
 		</blockquote>
