@@ -75,4 +75,15 @@
 	100% { background-position: 0% 50%; }
 }
 
+/* ==========================================================================
+   Utility Globali: Effetto Glass
+   ========================================================================== */
+.glass-effect {
+	background-color: rgb(from var(--neutral-100) r g b / 0.6);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);
+}
+
+
 

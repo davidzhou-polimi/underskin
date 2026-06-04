@@ -1,7 +1,6 @@
 <script>
   import { onMount } from "svelte";
   import { Delaunay } from "d3-delaunay";
-  import GlassEffect from "$lib/components/ui/GlassEffect.svelte";
   import { shatterGlass } from "$lib/actions/archetypes/shatterGlass.js";
   import { trackSection } from "$lib/actions/trackSection.js";
 
@@ -73,7 +72,7 @@
 
     <!-- Lastra intera e unita per avere un unico backdrop-filter super performante -->
     <div class="whole-glass-plate">
-      <GlassEffect class="full-plate" />
+      <div class="glass-effect full-plate"></div>
     </div>
 
     <!-- Contenitore dei frammenti ottimizzati (senza filtri pesanti in movimento) -->
@@ -134,7 +133,7 @@
     will-change: opacity;
   }
 
-  :global(.full-plate) {
+  .full-plate {
     width: 100% !important;
     height: 100% !important;
   }

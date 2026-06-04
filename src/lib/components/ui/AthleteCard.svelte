@@ -88,7 +88,7 @@
 		<!-- FRONT -->
 		<div class="card-face card-front" style="--text-primary: {colorTextPrimary};">
 			<!-- Glass background (ghiaccio) -->
-			<div class="background-glass"></div>
+			<div class="glass-effect background-glass"></div>
 			
 			<!-- Video/Image container -->
 			<div class="media-container">
@@ -112,7 +112,7 @@
 		<!-- BACK -->
 		<div class={`card-face card-back ${rotateClass}`} style="--text-primary: {colorTextPrimary}; --text-secondary: {colorTextSecondary};">
 			<!-- Glass background (ghiaccio) -->
-			<div class="background-glass"></div>
+			<div class="glass-effect background-glass"></div>
 
 			<!-- Dynamic Brand Gradient Background Inset -->
 			<div class="background-inset-back" style="background: linear-gradient(to bottom, {colorBrandBack} 0%, {colorBrandBackEnd} 50%, {colorBrandBackEnd} 100%);"></div>
@@ -161,9 +161,7 @@
 		height: 100%;
 		position: relative;
 		transform-style: preserve-3d;
-		box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.23);
 		border-radius: var(--radius-m);
-		transition: box-shadow 0.3s ease-out;
 		will-change: transform;
 	}
 
@@ -197,10 +195,7 @@
 	.background-glass {
 		position: absolute;
 		inset: 0;
-		background-color: rgb(from var(--neutral-100) r g b / 0.5);
-		border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
 		opacity: 0.5;
-		backdrop-filter: blur(px);
 		transition: background 0.3s ease;
 	}
 

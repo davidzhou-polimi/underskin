@@ -1,6 +1,5 @@
 <script>
     import { onMount } from 'svelte';
-    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
     /** @type {HTMLElement | null} */
     let sectionRef = null;
@@ -89,7 +88,7 @@
         </div>
 
         <div class="marquee-container" style:transform={translateXValue}>
-            <GlassEffect border={false} class="glass-text" />
+            <div class="glass-effect glass-text"></div>
         </div>
         
     </div>
@@ -200,7 +199,7 @@
         align-items: center;
     }
 
-    :global(.glass-text) {
+    .glass-text {
         height: 105vh;
         width: 633.535vh;
         mask-image: url('../../../assets/BURNOUT.svg');
@@ -209,6 +208,7 @@
         mask-repeat: no-repeat;
         mask-position: center;
         display: block;
+        border: none;
     }
 
     .my-archetypes-color {

@@ -102,7 +102,7 @@
 
 	<!-- Dot Navigation: barra arrotondata con ombra e opacità al 40% -->
 	<div class="dots-navigation-container">
-		<div class="dots-pill">
+		<div class="glass-effect dots-pill">
 			{#each archetypes as archetype, i}
 				<button
 					class="dot-button"
@@ -184,14 +184,8 @@
 	.dots-pill {
 		display: flex;
 		gap: var(--spacing-2);
-		/* Usiamo color-mix per applicare il 40% di opacità mantenendo la variabile del colore di sfondo */
-		background-color: color-mix(in srgb, var(--background-primary) 40%, transparent);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
 		padding: var(--spacing-2) var(--spacing-4);
 		border-radius: 9999px; /* rounded-full */
-		box-shadow: 0px 4px 16px rgba(7, 30, 69, 0.08); /* shadow calibrata su toni scuri */
-		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.dot-button {

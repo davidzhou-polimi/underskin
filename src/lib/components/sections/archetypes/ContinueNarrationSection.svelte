@@ -60,7 +60,7 @@
 		<div class="action-container">
 			<button 
 				type="button" 
-				class="pill-button" 
+				class="glass-effect pill-button" 
 				onclick={handleButtonClick}
 				aria-label="Torna alla narrazione"
 			>
@@ -121,8 +121,6 @@
 	}
 
 	.pill-button {
-		background-color: rgb(from var(--neutral-100) r g b / 0.5);
-		border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
 		color: var(--content-primary);
 		font-family: inherit;
 		font-size: var(--text-nav-size);
@@ -130,19 +128,12 @@
 		border-radius: 9999px;
 		padding: var(--spacing-2) var(--spacing-6);
 		cursor: pointer;
-		/* Shadow leggera per separarlo dal background */
-		box-shadow: 0px 4px 12px rgba(7, 30, 69, 0.06);
-		backdrop-filter: blur(13px);
-		-webkit-backdrop-filter: blur(13px);
 		transition: background-color var(--transition-duration-normal) var(--easing-standard),
-					transform var(--transition-duration-normal) var(--easing-standard),
-					box-shadow var(--transition-duration-normal) var(--easing-standard);
+					transform var(--transition-duration-normal) var(--easing-standard);
 	}
 
 	.pill-button:hover {
-		background-color: rgb(from var(--neutral-100) r g b / 0.7);
-		transform: translateY(-2px);
-		box-shadow: 0px 6px 16px rgba(7, 30, 69, 0.1);
+		background-color: rgb(from var(--neutral-100) r g b / 0.8);
 	}
 
 	/* Responsive per schermi più piccoli */

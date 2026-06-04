@@ -1,5 +1,4 @@
 <script>
-    import GlassEffect from '$lib/components/ui/GlassEffect.svelte';
 
     // Riceve le proprietà reattive dallo store globale di Lucrezia
     let { 
@@ -22,9 +21,9 @@
     style:left="{x + OFFSET_X}px"
     style:top="{y + OFFSET_Y}px"
 >
-    <GlassEffect class="tooltip-glass-override">
+    <div class="glass-effect tooltip-glass-override">
         <span class="tooltip-text-content">{text}</span>
-    </GlassEffect>
+    </div>
 </div>
 
 <style>
@@ -47,7 +46,7 @@
     }
 
     /* Forza il componente di Chiara ad adattarsi perfettamente alle dimensioni del Tooltip */
-    :global(.tooltip-glass-override) {
+    .tooltip-glass-override {
         width: 100% !important;
         height: auto !important;
         padding: var(--spacing-2) var(--spacing-3) !important;
@@ -57,7 +56,7 @@
         box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
     }
 
-    .mod-semplice :global(.tooltip-glass-override) {
+    .mod-semplice .tooltip-glass-override {
         border-radius: var(--radius-l) !important;
     }
 

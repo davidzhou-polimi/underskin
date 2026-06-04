@@ -181,7 +181,7 @@
       <div class="shadow-container">
         <div class="shadow-shape tail-{t.tailDir}"></div>
       </div>
-      <div class="thought-bubble tail-{t.tailDir}">
+      <div class="glass-effect thought-bubble tail-{t.tailDir}">
         {t.text}
       </div>
     </div>
@@ -245,13 +245,9 @@
     width: 100%;
     height: 100%;
 
-    /* Glass Effect integrato direttamente: permette a backdrop-filter di operare 
-       sul reale sfondo della pagina poiché nessun antenato ha proprietà 'filter' isolate.
-       Valori uniformati con GlassEffect.svelte (var(--neutral-100) al 50% di opacità) */
-    background-color: rgb(from var(--neutral-100) r g b / 0.5);
-    border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    /* Glass Effect integrato direttamente tramite la classe globale .glass-effect:
+       permette a backdrop-filter di operare sul reale sfondo della pagina poiché nessun
+       antenato ha proprietà 'filter' isolate. */
   }
 
   /* Contenitore dell'ombra e del bordo proiettati. Posizionato a -9999px.

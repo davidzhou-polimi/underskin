@@ -71,7 +71,7 @@
 >
 	<div class="card-inner" style="--text-primary: {colorTextPrimary};">
 		<!-- Sfondo glassato ad effetto ghiaccio -->
-		<div class="background-glass"></div>
+		<div class="glass-effect background-glass"></div>
 		
 		<!-- Contenitore video/media dell'archetipo -->
 		<div class="media-container">
@@ -109,9 +109,7 @@
 		width: 100%;
 		height: 100%;
 		position: relative;
-		box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.23);
 		border-radius: var(--radius-m);
-		transition: box-shadow 0.3s ease-out;
 		will-change: transform;
 		overflow: hidden;
 	}
@@ -119,10 +117,7 @@
 	.background-glass {
 		position: absolute;
 		inset: 0;
-		background-color: rgb(from var(--neutral-100) r g b / 0.5);
-		border: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
 		opacity: 0.5;
-		backdrop-filter: blur(px);
 		transition: background 0.3s ease;
 	}
 
