@@ -1,6 +1,7 @@
 <script>
 	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
+	import { goto } from '$app/navigation';
 
 	/**
 	 * @type {{
@@ -28,10 +29,9 @@
 		allArchetypes.filter(item => item.type !== archetype)
 	);
 
-	// Azione per scorrere dolcemente all'inizio della pagina all'interazione con il bottone
+	// Reindirizziamo alla rotta radice per consentire all'utente di selezionare un altro percorso o rivedere l'intro
 	const handleButtonClick = () => {
-		const target = document.getElementById('favorito') || document.getElementById('hero') || document.body;
-		target.scrollIntoView({ behavior: 'smooth' });
+		goto('/');
 	};
 </script>
 
