@@ -205,7 +205,7 @@
 	}
 
 	.athlete-card-container:hover .background-glass {
-		background: rgba(241, 250, 253, 0.65);
+		background-color: rgb(from var(--neutral-100) r g b / 0.7);
 	}
 
 

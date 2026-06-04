@@ -57,7 +57,7 @@
         position: relative;
         height: 100vh;
         width: 100vw;
-        overflow: visible;
+        overflow: hidden;
         background-color: transparent;
         font-family: var(--font-family-base);
         z-index: 5;

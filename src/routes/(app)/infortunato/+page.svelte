@@ -12,6 +12,8 @@
     import NarrativeText from '$lib/components/sections/archetypes/NarrativeText.svelte';
     import ZoomTransition from '$lib/components/sections/archetypes/ZoomTransition.svelte';
 	import AthleteSection from '$lib/components/sections/archetypes/AthleteSection.svelte';
+    import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
+	import ContinueNarrationSection from '$lib/components/sections/archetypes/ContinueNarrationSection.svelte';
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
@@ -86,6 +88,9 @@
 			<AthleteSection type="infortunato" />
 		{/snippet}
 	</ZoomTransition>
+
+    <ContinueNarrationSection archetype="infortunato" />
+	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 
 <style>

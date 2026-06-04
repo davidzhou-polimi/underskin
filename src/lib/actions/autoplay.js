@@ -42,7 +42,7 @@ export function autoplay(node, params = {}) {
 			}
 		},
 		destroy() {
-			// Evitiamo perdite di memoria e interruzioni indesiderate delle animazioni al cambio slide
+			// Evitiamo perdite di memoria e interruzioni indesiderate delle animazioni al cambio card
 			tween.kill();
 		}
 	};

@@ -77,7 +77,7 @@
 				<div
 					class="carousel-item"
 					role="group"
-					aria-roledescription="slide"
+					aria-roledescription="card"
 					onmouseenter={i === activeIndex ? () => { isHovered = true; } : null}
 					onmouseleave={i === activeIndex ? () => { isHovered = false; } : null}
 				>
@@ -108,7 +108,7 @@
 					class="dot-button"
 					class:active={i === activeIndex}
 					onclick={() => selectIndex(i)}
-					aria-label="Vai alla slide {i + 1}"
+					aria-label="Vai alla card {i + 1}"
 				>
 					{#if i === activeIndex}
 						<span

@@ -16,12 +16,13 @@
     import Intro from '$lib/components/sections/home/Intro.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
-   import ArchetypeSection from '$lib/components/sections/ArchetypeSection.svelte';
+   import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
     import Outro from '$lib/components/sections/home/Outro.svelte';
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
     import Footer from '$lib/components/sections/home/Footer.svelte';
     import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
+    
 
     // Stati reattivi per la gestione del blocco interattivo del Quiz
     let isLocked = $state(false);
