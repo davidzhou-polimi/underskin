@@ -16,7 +16,7 @@
     import Intro from '$lib/components/sections/home/Intro.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
-   import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
+    import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
     import Outro from '$lib/components/sections/home/Outro.svelte';
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
@@ -27,68 +27,43 @@
     // Stati reattivi per la gestione del blocco interattivo del Quiz
     let isLocked = $state(false);
     let quizExpanded = $state(false);
-    
-    // Tracciamento reattivo della finestra (Svelte 5 Runes)
     let scrollY = $state(0);
     let innerHeight = $state(0);
 
-    onMount(() => {
-        gsap.registerPlugin(ScrollTrigger);
-    });
-
-    /**
-     * PALETTE CROMATICA UNIFICATA E PERFETTAMENTE BILANCIATA
-     * Per evitare la prevalenza dell'arancione, i colori sono stati alternati uno a uno 
-     * (Azzurro -> Viola -> Arancione) incrociando anche le tonalità (Chiaro / Medium / Scuro).
-     * Questo costringe l'algoritmo del canvas a distribuire i pesi visivi in egual misura.
-     */
-    const TOTAL_COLORS = [
-        "var(--azzurro-200)",            // Chiaro - Favorito
-        "var(--viola-600)",              // Scuro  - Insoddisfatto
-        "var(--arancione-200)",          // Chiaro - Infortunato
-        
-        "var(--archetipi-favorito)",     // Medium - Favorito
-        "var(--viola-200)",              // Chiaro - Insoddisfatto
-        "var(--arancione-600)",          // Scuro  - Infortunato
-        
-        "var(--azzurro-600)",            // Scuro  - Favorito
-        "var(--archetipi-insoddisfatto)",// Medium - Insoddisfatto
-        "var(--archetipi-infortunato)"   // Medium - Infortunato
+    // Configurazione cromatica universale bilanciata per lo sfondo
+    const defaultColors = [
+        '#6a96df', // Favorito (Azzurro/Teal)
+        '#8035d2', // Insoddisfatto (Viola)
+        '#d86143'  // Infortunato (Arancione/Salmone)
     ];
 
-    // LOGICA DI SCROLL COMPUTATA REATTIVAMENTE ($derived)
-    
-    // 1. Rileva se l'utente si trova nel corpo centrale della pagina (dopo la sezione Intro)
-    let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
+    let activeConfig = $state({
+        colors: defaultColors,
+        speed: 0.45,
+        noiseSteps: 6.0,
+        mouseStrength: 0.15
+    });
 
-    // 2. Rileva con precisione quando l'utente raggiunge la fine della pagina (Final e Footer)
-    let isNearPageBottom = $derived(
-        typeof document !== 'undefined' && 
-        scrollY > (document.documentElement.scrollHeight - innerHeight * 1.8)
-    );
+    onMount(() => {
+        gsap.registerPlugin(ScrollTrigger);
 
-    // 3. Generazione dinamica della configurazione dello sfondo in base alla posizione di scroll
-    let activeConfig = $derived(
-        isNearPageBottom
-            ? {
-                  colors: TOTAL_COLORS,
-                  speed: 2.2,          // Accelerazione visiva d'impatto sul Footer
-                  coverage: 1.0,        // Copertura totale immersiva per il finale della pagina
-                  focusCenter: [0.5, -0.1],
-                  focusRadius: [1.4, 1.0]
-              }
-            : isPastFirstViewport
-                ? { 
-                      colors: TOTAL_COLORS,
-                      coverage: 0.35,   // Trasparenza controllata ed elegante sotto i testi centrali
-                      speed: 0.6 
-                  }
-                : {
-                      colors: TOTAL_COLORS,
-                      coverage: 0.5,    // Presenza intermedia e stabile nella sezione iniziale Intro
-                      speed: 0.8
-                  }
-    );
+        // Controllo e reattività cromatica in prossimità del footer della pagina
+        ScrollTrigger.create({
+            trigger: 'footer',
+            start: 'top bottom',
+            end: 'bottom bottom',
+            onUpdate: (self) => {
+                if (self.isActive) {
+                    activeConfig.speed = 1.2;
+                    activeConfig.noiseSteps = 12.0;
+                } else {
+                    activeConfig.speed = 0.45;
+                    activeConfig.noiseSteps = 6.0;
+                }
+            },
+            refreshPriority: 0.8
+        });
+    });
 
     /**
      * Intercetta e blocca i tentativi di scroll quando il quiz è attivo,
@@ -127,11 +102,7 @@
     <Burnout />
     <Final />
     <Footer />
-	
 </main>
-
-
-	
 
 <style>
     /* Mantiene il flusso di pagina strutturalmente trasparente per esporre il canvas in posizione fixed */
@@ -145,8 +116,7 @@
     :global(body) {
         margin: 0;
         padding: 0;
-        /* Isola lo scorrimento orizzontale prevenendo anomalie visive dovute alle Cards o animazioni GSAP */
         overflow-x: hidden;
-        background-color: var(--background-primary);
+        background-color: var(--bg-primary, #ffffff);
     }
 </style>
