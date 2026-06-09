@@ -1,5 +1,6 @@
 <script>
 	import { gsap } from 'gsap';
+	import { onMount } from 'svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { quizAnimation } from '$lib/actions/home/quizAnimation.js';
 	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
@@ -27,6 +28,26 @@
 	let isHovering = $state(false);
 	let mouseX = $state(0);
 	let mouseY = $state(0);
+	/** Permette allo scroll di passare quando l'utente ha finito gli step e naviga via */
+	let canLeave = $state(false);
+
+	/**
+	 * Listener wheel non-passivo montato via onMount: l'unico modo affidabile per
+	 * bloccare lo scroll anche quando ScrollTrigger usa listener propri sulla window.
+	 * passive: false è necessario per poter chiamare e.preventDefault().
+	 */
+	onMount(() => {
+		function preventScrollDuringQuiz(e) {
+			if ((quizState === 'animating' || quizState === 'results') && !canLeave) {
+				// Eccezione: scroll verso l'alto da textStep=1 in results → lascia passare,
+				// lo scroll naturale rilascerà il pin e tornerà all'intro
+				if (quizState === 'results' && textStep === 1 && e.deltaY < 0) return;
+				e.preventDefault();
+			}
+		}
+		window.addEventListener('wheel', preventScrollDuringQuiz, { passive: false });
+		return () => window.removeEventListener('wheel', preventScrollDuringQuiz);
+	});
 
 	/**
 	 * @param {MouseEvent} event
@@ -40,9 +61,12 @@
 	 * @param {WheelEvent} e
 	 */
 	function handleSelectiveScroll(e) {
-		if (quizState === 'choosing' && e.deltaY > 0 && e.cancelable) {
-			e.preventDefault();
-		}
+		// Backup: il listener non-passivo in onMount è il primary blocker;
+		// questo copre i casi in cui svelte:window sia non-passivo e cancelable
+		const shouldBlock =
+			(quizState === 'choosing' && e.deltaY > 0) ||
+			((quizState === 'animating' || quizState === 'results') && !canLeave);
+		if (shouldBlock && e.cancelable) e.preventDefault();
 	}
 
 	$effect(() => {
@@ -58,26 +82,43 @@
 	 */
 	function handleVirtualScroll(e) {
 		if (quizState !== 'results') return;
-		e.preventDefault();
 
 		if (e.deltaY > 20) {
+			// Scroll verso il basso
+			e.preventDefault();
 			if (textStep === 1) {
-				textStep = 2;
+				// Imposta lo stato iniziale su step-2 mentre è ancora hidden,
+				// così quando il DOM lo rende visibile non fa un flash
+				gsap.set('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)' });
 				gsap.timeline()
 					.to('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
-					.fromTo('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+					.add(() => { textStep = 2; }) // aggiorna solo dopo che step-1 è uscito
+					.to('.step-2', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
 			} else if (textStep === 2) {
+				// Apre il gate: il listener non-passivo non bloccherà più lo scroll
+				canLeave = true;
 				unlockScroll();
 				const nextSection = document.getElementById('performance');
 				if (nextSection) {
 					nextSection.scrollIntoView({ behavior: 'smooth' });
 				}
 			}
-		} else if (e.deltaY < -20 && textStep === 2) {
-			textStep = 1;
-			gsap.timeline()
-				.to('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
-				.fromTo('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+		} else if (e.deltaY < -20) {
+			// Scroll verso l'alto
+			if (textStep === 2) {
+				e.preventDefault();
+				// Richiude il gate se l'utente torna indietro alla prima scritta
+				canLeave = false;
+				gsap.set('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)' });
+				gsap.timeline()
+					.to('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
+					.add(() => { textStep = 1; })
+					.to('.step-1', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+			} else if (textStep === 1) {
+				// Scroll up dalla prima scritta → torna all'intro
+				// preventScrollDuringQuiz già lascia passare questo evento
+				canLeave = true; // per sicurezza, assicura che il gate sia aperto
+			}
 		}
 	}
 </script>
@@ -98,7 +139,12 @@
 		lockScroll,
 		unlockScroll,
 		onStateChange: (s) => quizState = s,
-		onStepChange: (step) => textStep = step
+		onStepChange: (step) => textStep = step,
+		onEnterBack: () => {
+			// ScrollTrigger ha rilevato che l'utente è tornato nella quiz section
+			// scrollando verso l'alto dalla sezione successiva: riattiva il controllo scroll
+			if (canLeave && quizState === 'results') canLeave = false;
+		}
 	}}
 >
 	<div class="quiz-title-wrap" class:hidden={quizState !== 'choosing'}>

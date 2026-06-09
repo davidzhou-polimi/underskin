@@ -12,6 +12,7 @@ if (typeof window !== 'undefined') {
  * @property {(() => void)} unlockScroll - Funzione per sbloccare lo scroll della pagina
  * @property {((state: string) => void)} onStateChange - Callback per notificare il cambio di stato a Svelte
  * @property {((step: number) => void)} onStepChange - Callback per notificare il cambio di step a Svelte
+ * @property {(() => void)} [onEnterBack] - Callback chiamata quando l'utente rientra nella sezione scrollando dall'alto
  */
 
 /**
@@ -21,6 +22,8 @@ if (typeof window !== 'undefined') {
  */
 export function quizAnimation(node, params) {
 	let { quizState, onStateChange, onStepChange, lockScroll, unlockScroll } = params;
+	/** @type {() => void} */
+	let onEnterBack = params.onEnterBack ?? (() => {});
 	
 	let circlesTriggered = false;
 	/** @type {gsap.core.Timeline | null} */
@@ -32,6 +35,8 @@ export function quizAnimation(node, params) {
 		end: '+=100%',
 		pin: true,
 		pinSpacing: true,
+		// Riattivazione da sotto: l'utente torna scrollando dalla sezione successiva
+		onEnterBack: () => { onEnterBack(); },
 		onToggle: (self) => {
 			if (!self.isActive && self.progress === 0 && quizState === 'choosing') {
 				circlesTriggered = false;
@@ -49,11 +54,46 @@ export function quizAnimation(node, params) {
 	});
 
 	/**
+	 * Aggiunge la fase comune a entrambi gli scenari:
+	 * fisico esce a destra, mentale si rivela con "70%", si riposiziona e il text-panel appare.
+	 * @param {gsap.core.Timeline} tl
+	 * @param {number | string} startAt - posizione di inizio (0 per caso A, '>' per dopo step B)
+	 */
+	function addMentalePhase(tl, startAt = '>') {
+		tl.addLabel('_mp', startAt);
+
+		// fisico esce a destra + mentale si ingrandisce (simultanei)
+		tl.to(node.querySelector('.circle-container.right-side'),
+			{ x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
+		tl.to(node.querySelector('.circle-container.left-side'),
+			{ x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, '_mp');
+
+		// "mentale" sfuma mentre il cerchio si espande
+		tl.to(node.querySelector('.left-side .initial-label'),
+			{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
+
+		// "70% mentale" appare durante l'ingrandimento
+		tl.fromTo(node.querySelector('.left-side .percentage-text'),
+			{ opacity: 0, scale: 0.85 },
+			{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+			'_mp+=0.3');
+
+		// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
+		tl.to(node.querySelector('.circle-container.left-side'),
+			{ x: -80, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
+
+		// text-panel entra da destra
+		tl.fromTo(node.querySelector('.text-panel'),
+			{ opacity: 0, x: 60 },
+			{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
+	}
+
+	/**
 	 * @param {string} side - 'mentale' | 'fisico'
 	 */
 	function triggerSelectionAnimation(side) {
 		if (quizState !== 'choosing') return;
-		
+
 		quizState = 'animating';
 		onStateChange('animating');
 		lockScroll();
@@ -65,60 +105,34 @@ export function quizAnimation(node, params) {
 			}
 		});
 
+		// fade out del titolo (sempre)
 		activeTimeline.to(node.querySelector('.quiz-title-wrap'), { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' }, 0);
 
 		if (side === 'mentale') {
-			// --- SCENARIO A ---
-
-			// STEP 1: tutto simultaneo — fisico esce a destra, mentale si ingrandisce E il testo cambia mentre cresce
-			activeTimeline.to(node.querySelector('.circle-container.right-side'), { x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0);
-			activeTimeline.to(node.querySelector('.circle-container.left-side'), { x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, 0);
-			// Il testo "mentale" sfuma mentre il cerchio si espande
-			activeTimeline.to(node.querySelector('.left-side .initial-label'), { opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.15);
-			// "70% mentale" appare durante l'ingrandimento (il cerchio è già grande e lo contiene)
-			activeTimeline.fromTo(
-				node.querySelector('.left-side .percentage-text'),
-				{ opacity: 0, scale: 0.85 },
-				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
-				0.3
-			);
-
-			// STEP 2: dopo una pausa, il cerchio si sposta a sinistra per formare il gruppo centrato
-			activeTimeline.to(
-				node.querySelector('.circle-container.left-side'),
-				{ x: -80, scale: 1.5, duration: 0.7, ease: 'power2.inOut' },
-				'+=0.35'
-			);
+			// --- SCENARIO A: l'utente seleziona mentale ---
+			// La fase mentale parte da posizione 0 (in parallelo al fade del titolo)
+			addMentalePhase(activeTimeline, 0);
 
 		} else {
-			// --- SCENARIO B ---
+			// --- SCENARIO B: l'utente seleziona fisico ---
 
-			// STEP 1: tutto simultaneo — il cerchio fisico si ingrandisce sul posto, il testo cambia mentre cresce
-			// Il cerchio mentale (sinistra) rimane visibile e fermo, nessuna animazione su di esso
-			activeTimeline.to(node.querySelector('.circle-container.right-side'), {
-				x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out'
-			}, 0);
-			// Il testo "fisico" sfuma mentre il cerchio si espande
-			activeTimeline.to(node.querySelector('.right-side .initial-label'), {
-				opacity: 0, duration: 0.2, ease: 'power2.in'
-			}, 0.15);
-			// "30% fisico" appare durante l'ingrandimento
-			activeTimeline.fromTo(
-				node.querySelector('.right-side .percentage-text'),
-				{ opacity: 0, scale: 0.85 },
-				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
-				0.3
-			);
+			// STEP 1: fisico si ingrandisce di poco + cambio testo in simultanea
+			// Il cerchio mentale rimane fermo
+			activeTimeline.to(node.querySelector('.circle-container.right-side'),
+				{ scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0);
+			activeTimeline.to(node.querySelector('.right-side .initial-label'),
+				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
+			activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
+				{ opacity: 0, scale: 0.9 },
+				{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
 
-			// TODO: step 2 — riposizionamento cerchi e step 3 — text panel da definire con l'utente
+			// STEP 2: fisico torna alla grandezza iniziale (con "30% fisico" ancora visibile)
+			activeTimeline.to(node.querySelector('.circle-container.right-side'),
+				{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
+
+			// STEP 3: stessa animazione del caso mentale — inizia subito dopo lo step 2
+			addMentalePhase(activeTimeline);
 		}
-
-		// STEP 3: text-panel appare a destra del cerchio (entra da destra verso la posizione di gruppo centrato)
-		activeTimeline.fromTo(node.querySelector('.text-panel'),
-			{ opacity: 0, x: 60 },
-			{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' },
-			'-=0.25'
-		);
 	}
 
 	/**
@@ -151,6 +165,7 @@ export function quizAnimation(node, params) {
 			unlockScroll = newParams.unlockScroll;
 			onStateChange = newParams.onStateChange;
 			onStepChange = newParams.onStepChange;
+			onEnterBack = newParams.onEnterBack ?? (() => {});
 		},
 		destroy() {
 			node.removeEventListener('click', handleBtnClick);
