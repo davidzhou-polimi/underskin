@@ -2,19 +2,26 @@
 	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
 	import { horizontalCarousel } from '$lib/actions/horizontalCarousel.js';
 	import { autoplay } from '$lib/actions/autoplay.js';
-	// Definiamo i 3 archetipi statici con i rispettivi tipi e sorgenti video
+
 	/**
-	 * @type {Array<{
-	 *   name: string,
-	 *   type: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   videoSrc: string
-	 * }>}
+	 * @typedef {Object} Props
+	 * @property {string} [title] - Custom section title displayed above the carousel
+	 * @property {Array<{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', videoSrc: string }>} [items] - Custom items to display
+	 * @property {boolean} [clickable] - Whether cards link to their archetype page
 	 */
-	const archetypes = [
+
+	/** @type {Props} */
+	let { title = "", items = null, clickable = true } = $props();
+
+	// Definiamo i 3 archetipi statici con i rispettivi tipi e sorgenti video di default
+	const defaultItems = [
 		{ name: "Il favorito", type: "favorito", videoSrc: "/videos/favorito.mp4" },
 		{ name: "L'infortunato", type: "infortunato", videoSrc: "/videos/infortunato.mp4" },
 		{ name: "L'insoddisfatto", type: "insoddisfatto", videoSrc: "/videos/insoddisfatto.mp4" }
 	];
+
+	// Commento solo il PERCHÉ: Deriva in modo reattivo l'array di card da visualizzare (default o custom da props)
+	const activeItems = $derived(items || defaultItems);
 
 	let activeIndex = $state(0);
 	let isHovered = $state(false);
@@ -22,12 +29,12 @@
 	// ─── Navigation ───────────────────────────────────────────────────────────
 
 	function next() {
-		activeIndex = (activeIndex + 1) % archetypes.length;
+		activeIndex = (activeIndex + 1) % activeItems.length;
 		isHovered = false;
 	}
 
 	function prev() {
-		activeIndex = (activeIndex - 1 + archetypes.length) % archetypes.length;
+		activeIndex = (activeIndex - 1 + activeItems.length) % activeItems.length;
 		isHovered = false;
 	}
 
@@ -63,6 +70,10 @@
 	role="region"
 	aria-label="Archetype Showcase Carousel"
 >
+	{#if title}
+		<h2 class="carousel-title">{title}</h2>
+	{/if}
+
 	<!-- Viewport che contiene la traccia scorrevole e ritaglia lo spazio orizzontale -->
 	<div class="carousel-viewport">
 		<div
@@ -73,7 +84,7 @@
 			role="group"
 			aria-label="Carousel Track"
 		>
-			{#each archetypes as archetype, i (archetype.name)}
+			{#each activeItems as archetype, i (archetype.name)}
 				<div
 					class="carousel-item"
 					role="group"
@@ -84,8 +95,10 @@
 					<ArchetypeCard
 						name={archetype.name}
 						videoSrc={archetype.videoSrc}
+						imageSrc={archetype.imageSrc}
 						type={archetype.type}
 						isPlaying={i === activeIndex}
+						{clickable}
 					/>
 					<!-- Overlay invisibile cliccabile per selezionare le card non attive -->
 					{#if i !== activeIndex}
@@ -103,7 +116,7 @@
 	<!-- Dot Navigation: barra arrotondata con ombra e opacità al 40% -->
 	<div class="dots-navigation-container">
 		<div class="glass-effect dots-pill">
-			{#each archetypes as archetype, i}
+			{#each activeItems as archetype, i}
 				<button
 					class="dot-button"
 					class:active={i === activeIndex}
@@ -132,6 +145,15 @@
 		overflow: visible;
 		padding: var(--spacing-2) 0;
 		outline: none;
+	}
+
+	.carousel-title {
+		font-size: var(--text-m);
+		font-weight: 400;
+		color: var(--content-primary);
+		text-align: center;
+		/* Commento solo il PERCHÉ: Fornisce la spaziatura coerente prima dell'area delle card */
+		margin: 0 0 var(--spacing-6) 0;
 	}
 
 	.carousel-viewport {

@@ -1,6 +1,16 @@
 <script>
 	import ArchetypeCarousel from '$lib/components/ui/ArchetypeCarousel.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
+
+	/**
+	 * @typedef {Object} Props
+	 * @property {string} [title]
+	 * @property {any[] | null} [items]
+	 * @property {boolean} [clickable]
+	 */
+
+	/** @type {Props} */
+	let { title = "", items = null, clickable = true } = $props();
 </script>
 
 <section 
@@ -9,7 +19,7 @@
 	use:trackSection={{ id: 'archetypes' }}
 >
 	<div class="archetype-section__container">
-		<ArchetypeCarousel />
+		<ArchetypeCarousel {title} {items} {clickable} />
 	</div>
 </section>
 
