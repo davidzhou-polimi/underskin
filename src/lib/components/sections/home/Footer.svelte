@@ -4,7 +4,9 @@
     // ingresso fluida al montaggio del componente.
     import { fadeUp } from '$lib/actions/fadeUp.js';
 
+    /** @type {SVGTextElement | null} */
     let textEl = null;
+    /** @type {SVGSVGElement | null} */
     let svgEl = null;
 
     // Funzione per calcolare l'ingombro geometrico esatto dei glifi vettoriali
@@ -53,9 +55,10 @@
 </footer>
 
 <style>
-    /* Commento solo il PERCHÉ: Posiziona il footer nel flusso relativo del documento. */
+    /* Commento solo il PERCHÉ: Posiziona il footer nel flusso e lo solleva di 30vh per farlo entrare in anticipo sullo schermo sopra lo spazio vuoto della sezione soprastante. */
     .hero-footer {
         position: relative;
+        margin-top: -45vh;
         padding-block-end: var(--spacing-6);
         display: flex;
         flex-direction: column;
