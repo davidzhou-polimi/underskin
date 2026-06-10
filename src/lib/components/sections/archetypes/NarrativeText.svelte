@@ -61,10 +61,10 @@
 </section>
 
 <style>
-	/* Sezione a scorrimento posizionata in background neutro, ridotta l'altezza minima per ottimizzare lo scroll */
+	/* Occupa l'intero viewport di default per allinearsi allo standard delle altre sezioni */
 	.narrative-section {
 		position: relative;
-		min-height: 80vh;
+		min-height: 100vh;
 		width: 100%;
 		display: flex;
 		align-items: center;

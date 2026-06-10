@@ -21,11 +21,12 @@
 </section>
 
 <style>
+	/* Altezza minima a schermo intero per consentire l'estensione su schermi piccoli senza tagliare il contenuto */
 	.athlete-section {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 100vh;
+		min-height: 100vh;
 		width: 100%;
 		/* padding-top evita la sovrapposizione visiva con la navbar fissa durante il rendering iniziale */
 		padding-top: var(--spacing-10);
