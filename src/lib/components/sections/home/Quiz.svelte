@@ -37,6 +37,9 @@
 	 * passive: false è necessario per poter chiamare e.preventDefault().
 	 */
 	onMount(() => {
+		/**
+		 * @param {WheelEvent} e
+		 */
 		function preventScrollDuringQuiz(e) {
 			if ((quizState === 'animating' || quizState === 'results') && !canLeave) {
 				// Eccezione: scroll verso l'alto da textStep=1 in results → lascia passare,
@@ -381,13 +384,7 @@
 		will-change: opacity, transform;
 	}
 
-	.teal-gradient {
-		color: var(--archetipi-favorito);
-	}
 
-	.orange-gradient {
-		color: var(--archetipi-infortunato);
-	}
 
 	.text-panel {
 		position: absolute;
