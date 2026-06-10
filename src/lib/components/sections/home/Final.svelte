@@ -9,6 +9,7 @@
     .finale-section {
         min-height: 100vh;
         padding: var(--spacing-4) var(--spacing-2);
+        margin-top: -15vh;
         background-color: transparent;
         display: flex;
         align-items: center;

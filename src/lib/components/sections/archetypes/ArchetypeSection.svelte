@@ -20,6 +20,7 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100vh;
+		margin-top: -15vh;
 		width: 100%;
 		padding-top: var(--spacing-10);
 		padding-bottom: var(--spacing-3);
