@@ -47,16 +47,11 @@
     }
 
     onMount(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        window.addEventListener('resize', handleScroll);
         handleScroll(); 
-        
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            window.removeEventListener('resize', handleScroll);
-        };
     });
 </script>
+
+<svelte:window onscroll={handleScroll} onresize={handleScroll} />
 
 <section class="performance-outer-container" bind:this={sectionRef}>
     <div class="sticky-viewport">
@@ -66,7 +61,7 @@
                 class="text-wrapper intro-wrapper"
                 style:transform={introTranslateXValue}
                 style:opacity={introOpacityValue}
-                style:--intro-blur="{introBlur}px"
+                style:filter="blur({introBlur}px)"
             >
                 <p class="subtitle">La salute mentale non è separata dalla performance.</p>
                 <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
@@ -78,7 +73,7 @@
                 class="text-wrapper new-spacing outro-wrapper"
                 style:transform={outroTranslateXValue}
                 style:opacity={outroOpacityValue}
-                style:--outro-blur="{outroBlur}px"
+                style:filter="blur({outroBlur}px)"
             >
                 <h2 class="new-title">Il burnout nasce in silenzio.</h2>
                 <p class="new-subtitle">
@@ -121,7 +116,7 @@
         justify-content: center;
         width: 100%;
         padding: var(--spacing-2);
-        z-index: var(--z-text-container, 1);
+        z-index: 1;
     }
 
     .text-wrapper {
@@ -140,24 +135,22 @@
     }
 
     .intro-wrapper {
-        z-index: var(--z-intro, 2);
-        filter: blur(var(--intro-blur, 0px));
+        z-index: 2;
         transform-origin: center;
     }
 
     .outro-wrapper {
-        z-index: var(--z-outro, 4);
-        filter: blur(var(--outro-blur, 0px));
+        z-index: 4;
         transform-origin: center;
     }
 
     .subtitle {
         margin: 0;
         font-family: var(--font-family-base);
-        font-size: var(--text-s);
+        font-size: var(--text-m);
         font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
-        line-height: 1.4;
+        line-height: 1.2;
     }
 
     .main-title {
@@ -183,7 +176,7 @@
         font-size: var(--text-s);
         font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
-        line-height: 1.25; /* token approssimativo */
+        line-height: 1.5; 
     }
 
     .marquee-container {
@@ -194,7 +187,7 @@
         white-space: nowrap;
         will-change: transform;
         pointer-events: none;
-        z-index: var(--z-marquee, 3);
+        z-index: 3;
         display: flex;
         align-items: center;
     }

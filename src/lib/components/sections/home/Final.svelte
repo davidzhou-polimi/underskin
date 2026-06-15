@@ -5,15 +5,14 @@
 </section>
 
 <style>
+    /* Centra verticalmente la frase finale e occupa l'intero schermo per dare respiro prima del footer */
     .finale-section {
-        min-height: 70vh;
-        padding-top: var(--spacing-14);
-        padding-left: var(--spacing-2);
-        padding-right: var(--spacing-2);
-        padding-bottom: var(--spacing-2);
+        min-height: 100vh;
+        padding: var(--spacing-4) var(--spacing-2);
+        margin-top: -15vh;
         background-color: transparent;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         box-sizing: border-box;
     }

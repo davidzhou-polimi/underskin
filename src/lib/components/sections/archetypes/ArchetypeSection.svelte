@@ -24,11 +24,13 @@
 </section>
 
 <style>
+	/* Altezza minima a schermo intero per consentire l'espansione e la flessibilità su schermi piccoli */
 	.archetype-section {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 100vh;
+		min-height: 100vh;
+		margin-top: -15vh;
 		width: 100%;
 		padding-top: var(--spacing-10);
 		padding-bottom: var(--spacing-3);
