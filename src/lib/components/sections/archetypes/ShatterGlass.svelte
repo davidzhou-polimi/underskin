@@ -64,10 +64,10 @@
 >
   <div class="sticky-container">
     <div class="content-behind">
-      <p>
+      <h3>
         Un infortunio non interrompe solo una carriera,<br />
         ma anche il rapporto con il proprio corpo.
-      </p>
+      </h3>
     </div>
 
     <!-- Lastra intera e unita per avere un unico backdrop-filter super performante -->
@@ -85,6 +85,10 @@
 </div>
 
 <style>
+  h3 {
+    line-height: 1.5;
+  }
+
   .scroll-wrapper {
     height: 100vh;
     width: 100%;
@@ -108,13 +112,6 @@
     text-align: center;
     font-family: var(--font-family-base);
     color: var(--content-primary);
-    font-size: var(
-      --text-body-size
-    ); /* Equivale a var(--text-l) (40px), migliorando la leggibilità del testo narrativo */
-    font-weight: var(
-      --text-body-weight
-    ); /* Assicura il peso Regular (400) del brand font */
-    line-height: 1.5; /* Interlinea proporzionale e dinamica per garantire un adattamento automatico alle dimensioni del testo */
     max-width: 80%;
 
     /* Calibrazione visiva iniziale sfocata per stimolare l'effetto svelamento */

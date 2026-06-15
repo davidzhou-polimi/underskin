@@ -102,11 +102,7 @@
         transform: translate(-50%, -50%);
         width: max-content;
         white-space: nowrap;
-        font-family: var(--font-family-base);
-        font-size: var(--text-important-size);
-        font-weight: var(--text-important-weight);
         line-height: 1.25;
-        color: var(--content-primary);
         margin: 0;
         text-align: center;
         will-change: transform, top, opacity;

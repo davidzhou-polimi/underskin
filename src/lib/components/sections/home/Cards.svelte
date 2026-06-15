@@ -36,7 +36,7 @@
 	<div class="h-scroll-track">
 		<div class="h-scroll-intro">
 			<p class="intro-label">I tre archetipi</p>
-			<h2 class="intro-headline">Chi sei<br/>al cinema?</h2>
+			<h1 class="intro-headline">Chi sei<br/>al cinema?</h1>
 		</div>
 
 		{#each cards as card, i}
@@ -144,7 +144,6 @@
 	}
 
 	.card-title {
-		font-size: var(--text-l);
 		font-weight: 700;
 		letter-spacing: -0.02em;
 		line-height: 1;

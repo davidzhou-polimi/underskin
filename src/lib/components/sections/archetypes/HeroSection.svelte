@@ -122,8 +122,6 @@
         white-space: normal;
         word-wrap: break-word;
         max-width: 100%;
-        font-size: var(--text-title-size);
-        font-weight: var(--text-title-weight);
         color: var(--background-primary); 
         line-height: 1.1;
     }

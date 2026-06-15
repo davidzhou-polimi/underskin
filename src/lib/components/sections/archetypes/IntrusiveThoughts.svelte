@@ -151,11 +151,11 @@
 <section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts }}>
   
   <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
-    <p class="main-sentence">
+    <h3 class="main-sentence">
         Quando vincere diventa l'unico risultato<br>
         accettabile, l'atleta smette di essere<br>
         una persona e diventa un risultato.
-    </p>
+    </h3>
   </div>
 
   {#each thoughts as t (t.id)}
@@ -201,10 +201,6 @@
   }
 
   .main-sentence {
-    font-family: var(--font-family-base);
-    font-size: var(--text-body-size);
-    font-weight: var(--text-body-weight);
-    color: var(--content-primary);
     line-height: 1.5;
     text-align: center;
   }

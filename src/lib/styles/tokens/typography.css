@@ -85,27 +85,58 @@ body {
 	overscroll-behavior: none; /* Disattiva lo scroll bounce elastico nativo e la comparsa di bordi bianchi in fase di trascinamento */
 }
 
-/* Reset headings default styles to let them inherit typography tokens from their parent components */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* ============================================================
+   GERARCHIA TIPOGRAFICA SEMANTICA
+   Basata sulle dimensioni visive reali del progetto.
+   I tag possono essere sovrascritti da classi locali (Strategia A).
+   ============================================================ */
+h1 {
 	margin: 0;
-	font-size: inherit;
-	font-weight: inherit;
+	font-size: var(--text-title-size);         /* 8rem / 128px */
+	font-weight: var(--text-title-weight);      /* 800 */
+	line-height: 1.1;
+	color: var(--content-primary);
 }
 
-/* Reset headings default styles to let them inherit typography tokens from their parent components */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
+h2 {
 	margin: 0;
-	font-size: inherit;
-	font-weight: inherit;
+	font-size: var(--text-important-size);      /* 3.5rem / 56px */
+	font-weight: var(--text-important-weight);  /* 700 */
+	line-height: 1.2;
+	color: var(--content-primary);
+}
+
+h3 {
+	margin: 0;
+	font-size: var(--text-body-size);           /* 2.5rem / 40px */
+	font-weight: var(--text-body-weight);       /* 400 */
+	line-height: 1.25;
+	color: var(--content-primary);
+}
+
+h4 {
+	margin: 0;
+	font-size: var(--text-caption-size);        /* 1.5rem / 24px */
+	font-weight: var(--text-caption-weight);    /* 400 */
+	line-height: 1.4;
+	color: var(--content-primary);
+}
+
+h5 {
+	margin: 0;
+	font-size: var(--text-service-size);        /* 1rem / 16px */
+	font-weight: var(--text-service-weight);    /* 500 */
+	line-height: 1.4;
+	color: var(--content-primary);
+}
+
+h6 {
+	margin: 0;
+}
+
+/* Baseline per testi di servizio: p e a hanno dimensione minima esplicita.
+   span non viene resettato: eredita dal parent per design. */
+p, a {
+	font-size: var(--text-service-size);        /* 1rem */
+	font-weight: var(--text-service-weight);    /* 500 */
 }

@@ -9,6 +9,7 @@
 	use:trackSection={{ id: 'archetypes' }}
 >
 	<div class="archetype-section__container">
+		<h3 class="section-intro-heading">Esplora gli archetipi</h3>
 		<ArchetypeCarousel />
 	</div>
 </section>
@@ -37,5 +38,9 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+	}
+
+	.section-intro-heading {
+		margin-bottom: var(--spacing-6);
 	}
 </style>

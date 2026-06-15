@@ -87,7 +87,7 @@
 
 		<!-- Nome dell'atleta in sovrapposizione frontale -->
 		<div class="name-front">
-			<p>{name}</p>
+			<span>{name}</span>
 		</div>
 	</div>
 </a>

@@ -22,31 +22,31 @@
 	>
 		<div class="text-container">
 			<div class="text-block text-block-current" bind:this={currentTextElement}>
-				<p class="caption">
+				<h4 class="caption">
 					Le Olimpiadi Milano Cortina 2026 sono un sistema di misurazione millimetrica: <br />centesimi di
 					secondo, punteggi decimali, medaglieri rigidi.
-				</p>
-				<p class="caption gradient-animated">
+				</h4>
+				<h4 class="caption gradient-animated">
 					Ma cosa succede quando riduciamo un essere umano a un puro dato oggettivo?
-				</p>
+				</h4>
 			</div>
 
 			<div class="text-block text-block-next" bind:this={nextTextElement}>
-				<p class="caption">
+				<h4 class="caption">
 					UnderSkin nasce per scollare l'etichetta dell'eroismo a tutti i costi e guardare sotto la
 					superficie della performance d'élite. Vogliamo dare voce a ciò che normalmente non si vede: le
 					aspettative schiaccianti, il peso psicologico del "quasi", la ricostruzione di un'identità
 					dopo il dolore.
-				</p>
+				</h4>
 			</div>
 		</div>
 	</div>
 
 	<div class="section section-3">
-		<p class="important">
+		<h2 class="important">
 			Scegliere di guardare l'atleta come persona è il primo atto di empatia verso una cultura della
 			prestazione più umana.
-		</p>
+		</h2>
 	</div>
 </section>
 
@@ -71,13 +71,9 @@
 	}
 
 	.title {
-		font-size: var(--text-title-size);
-		font-weight: var(--text-title-weight);
-		color: var(--content-primary);
 		text-align: center;
-		margin: 0;
-		line-height: 1.2;
 		max-width: 90%;
+		line-height: 1.2;
 	}
 
 	/* Sezione 2: Messaggio con scroll animation */
@@ -117,9 +113,6 @@
 	}
 
 	.caption {
-		font-size: var(--text-caption-size);
-		font-weight: var(--text-caption-weight);
-		color: var(--content-primary);
 		text-align: center;
 		margin: var(--spacing-4) 0;
 		line-height: 1.5;
@@ -157,9 +150,6 @@
 	}
 
 	.important {
-		font-size: var(--text-important-size);
-		font-weight: var(--text-important-weight);
-		color: var(--content-primary);
 		text-align: center;
 		margin: 0;
 		line-height: 1.4;

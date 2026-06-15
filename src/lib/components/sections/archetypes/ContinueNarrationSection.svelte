@@ -42,7 +42,7 @@
 >
 	<div class="continue-container">
 		<!-- Titolo della sezione con stile tipografico grande coordinato -->
-		<h2 class="continue-title">Continua la narrazione</h2>
+		<h3 class="continue-title">Continua la narrazione</h3>
 
 		<!-- Contenitore delle due card visualizzate in orizzontale -->
 		<div class="cards-grid">
@@ -97,10 +97,6 @@
 	}
 
 	.continue-title {
-		font-size: var(--text-body-size);
-		font-weight: var(--text-body-weight);
-		color: var(--content-primary);
-		text-align: center;
 		margin-bottom: var(--spacing-6);
 	}
 

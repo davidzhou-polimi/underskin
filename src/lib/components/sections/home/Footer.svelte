@@ -49,8 +49,8 @@
         </text>
     </svg>
     <div class="footer-bottom">
-        <span class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</span>
-        <span class="footer-text">© 2026</span>
+        <p class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</p>
+        <p class="footer-text">© 2026</p>
     </div>
 </footer>
 
@@ -107,9 +107,9 @@
     }
 
     .footer-text {
-        font-size: var(--text-service-size);
-        font-weight: var(--text-service-weight);
+        margin: 0;
         color: var(--content-dark-primary);
+        font-weight: var(--text-service-weight);
     }
 
     @media (max-width: 768px) {

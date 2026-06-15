@@ -231,10 +231,6 @@
 	}
 
 	.quiz-title {
-		font-family: var(--font-family-base, 'Rethink Sans', sans-serif);
-		font-size: var(--text-important-size, 3rem);
-		font-weight: var(--text-important-weight, 700);
-		color: var(--content-primary);
 		line-height: 1.2;
 		margin: 0;
 	}

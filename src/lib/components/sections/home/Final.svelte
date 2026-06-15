@@ -1,6 +1,6 @@
 <section class="finale-section" aria-label="Chiusura della storia">
     <div class="finale-content">
-        <p class="finale-phrase">La sfida più grande non è sul cronometro, ma…</p>
+        <h3 class="finale-phrase">La sfida più grande non è sul cronometro, ma…</h3>
     </div>
 </section>
 
@@ -26,11 +26,7 @@
 
     .finale-phrase {
         margin: 0;
-        font-family: var(--font-family-base);
-        font-size: var(--text-l);
-        font-weight: 400;
         line-height: 1.25;
-        color: var(--content-primary);
         text-align: center;
     }
 </style>

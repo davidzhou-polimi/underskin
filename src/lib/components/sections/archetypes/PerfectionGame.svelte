@@ -265,10 +265,6 @@
 	}
 
 	.title {
-		font-family: var(--font-family-base);
-		font-size: var(--text-xl); /* Utilizza il token di testo grande da 3.5rem / 56px */
-		font-weight: 700;
-		color: var(--content-primary);
 		margin: var(--spacing-0);
 	}
 

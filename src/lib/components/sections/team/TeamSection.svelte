@@ -9,6 +9,7 @@
 	use:trackSection={{ id: 'team' }}
 >
 	<div class="team-section__container">
+		<h3 class="section-intro-heading">Conosci il team</h3>
 		<TeamCarousel />
 	</div>
 </section>
@@ -37,5 +38,9 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+	}
+
+	.section-intro-heading {
+		margin-bottom: var(--spacing-6);
 	}
 </style>

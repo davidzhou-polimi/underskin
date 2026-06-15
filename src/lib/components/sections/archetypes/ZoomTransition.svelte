@@ -29,7 +29,7 @@
 <section id="zoom-transition" class="zoom-section" use:trackSection use:zoomTextTransition>
     
     <div class="intro-container">
-        <span class="first-text">Alcuni casi a</span>
+        <p class="first-text">Alcuni casi a</p>
         
         <svg class="zoom-svg" viewBox="0 0 1000 400" width="100%" height="100%">
             <text class="zoom-text" x="50%" text-anchor="middle" style:fill={textColor}>
@@ -44,7 +44,7 @@
             {#if children}
                 {@render children()}
             {:else}
-                <h2>{nextTitle}</h2>
+                <h3>{nextTitle}</h3>
             {/if}
         </div>
     </div>

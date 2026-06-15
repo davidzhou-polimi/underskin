@@ -63,10 +63,10 @@
                 style:opacity={introOpacityValue}
                 style:filter="blur({introBlur}px)"
             >
-                <p class="subtitle">La salute mentale non è separata dalla performance.</p>
-                <h1 class="main-title gradient-text animate-gradient-text my-archetypes-color">
+                <h4 class="subtitle">La salute mentale non è separata dalla performance.</h4>
+                <h2 class="main-title gradient-text animate-gradient-text my-archetypes-color">
                     È la performance.
-                </h1>
+                </h2>
             </div>
 
             <div
@@ -76,9 +76,9 @@
                 style:filter="blur({outroBlur}px)"
             >
                 <h2 class="new-title">Il burnout nasce in silenzio.</h2>
-                <p class="new-subtitle">
+                <h4 class="new-subtitle">
                     Cresce ogni volta che un atleta viene ridotto <br /> a un tempo, una medaglia, un risultato.
-                </p>
+                </h4>
             </div>
         </div>
 
@@ -146,37 +146,24 @@
 
     .subtitle {
         margin: 0;
-        font-family: var(--font-family-base);
-        font-size: var(--text-m);
-        font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
         line-height: 1.2;
     }
 
     .main-title {
         margin: 0;
-        font-family: var(--font-family-base);
-        font-size: var(--text-xl);
-        font-weight: var(--text-important-weight);
         line-height: 1.2;
     }
 
     .new-title {
         margin: 0;
-        font-family: var(--font-family-base);
-        font-size: var(--text-xl);
-        font-weight: var(--text-title-weight);
-        color: var(--content-primary, #ffffff);
         line-height: 1.2;
     }
 
     .new-subtitle {
         margin: 0;
-        font-family: var(--font-family-base);
-        font-size: var(--text-s);
-        font-weight: var(--text-caption-weight);
         color: var(--content-primary, #ffffff);
-        line-height: 1.5; 
+        line-height: 1.5;
     }
 
     .marquee-container {

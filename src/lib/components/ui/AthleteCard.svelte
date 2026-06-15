@@ -105,7 +105,7 @@
 
 			<!-- Name -->
 			<div class="name-front">
-				<p>{name}</p>
+				<span>{name}</span>
 			</div>
 		</div>
 
@@ -120,7 +120,7 @@
 			<!-- Back content container -->
 			<div class="back-content">
 				<div class="back-text name-back">
-					<p>{name}</p>
+					<span>{name}</span>
 				</div>
 				<div class="info-retro">
 					{#if context}

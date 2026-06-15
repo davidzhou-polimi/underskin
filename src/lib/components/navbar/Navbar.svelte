@@ -352,7 +352,6 @@
 		padding: 0;
 		cursor: pointer;
 		font-family: inherit;
-		font-size: var(--text-nav-size);
 		font-weight: var(--text-nav-weight);
 		color: var(--content-light-primary);
 		text-decoration: none;
