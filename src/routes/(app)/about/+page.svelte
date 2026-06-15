@@ -79,4 +79,9 @@
 		/* Commento solo il PERCHÉ: mantiene lo sfondo trasparente esponendo il canvas fixed */
 		background: transparent;
 	}
+
+	#about :global(.hero-footer) {
+		/* Commento solo il PERCHÉ: annulla il margine negativo globale del footer per distanziare in modo pulito e controllato la sezione delle card del team dall'elemento di chiusura */
+		margin-top: var(--spacing-11);
+	}
 </style>
