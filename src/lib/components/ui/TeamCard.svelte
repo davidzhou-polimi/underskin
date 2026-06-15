@@ -4,42 +4,21 @@
 	/**
 	 * @type {{
 	 *   name?: string,
-	 *   videoSrc?: string,
+	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   isPlaying?: boolean,
 	 *   horizontal?: boolean
 	 * }}
 	 */
-	let { 
-		name = "nome e cognome", 
-		videoSrc = "",
+	let {
+		name = "nome e cognome",
+		imageSrc = "",
 		type = 'favorito',
-		isPlaying = false,
 		horizontal = false
 	} = $props();
 
-	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
+	// Tracciamo lo stato hover locale per controllare il glass effect
 	let isHovered = $state(false);
-	// Riproduciamo il video se la card è attiva (carousel) o se l'utente ci passa sopra con il mouse
-	let shouldPlay = $derived(isPlaying || isHovered);
 
-	/** @type {HTMLVideoElement | null} */
-	let videoElement = $state(null);
-
-	// Avviamo o stoppiamo la riproduzione in base allo stato attivo o all'hover dell'utente
-	$effect(() => {
-		if (!videoElement) return;
-		if (shouldPlay) {
-			videoElement.play().catch(() => {
-				// Il browser potrebbe bloccare play() prima di un'interazione utente: ignoriamo l'eccezione
-			});
-		} else {
-			videoElement.pause();
-		}
-	});
-
-	// Mappiamo i colori specifici per l'overlay del team, usando i toni -700 per il brand
-	// e i rispettivi toni coordinati del tema per i testi.
 	const TEAM_COLORS = {
 		favorito: {
 			brand: 'var(--azzurro-700)',
@@ -60,37 +39,30 @@
 	let colorTextPrimary = $derived(colors.textPrimary);
 </script>
 
-<!-- Trasformato in link semantico per delegare la navigazione a SvelteKit e supportare l'accessibilità -->
-<a href="/{type}" 
-	class="team-card-container" 
-	class:is-horizontal={horizontal} 
-	use:hoverLift
-	onmouseenter={() => { isHovered = true; }}
-	onmouseleave={() => { isHovered = false; }}
-	role="presentation"
+<div
+    class="team-card-container non-clickable"
+    class:is-horizontal={horizontal}
+    use:hoverLift
+    onmouseenter={() => { isHovered = true; }}
+    onmouseleave={() => { isHovered = false; }}
+    role="presentation"
 >
-	<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-		<!-- Sfondo glassato ad effetto ghiaccio -->
-		<div class="glass-effect background-glass"></div>
-		
-		<!-- Contenitore video/media del team -->
-		<div class="media-container">
-			{#if videoSrc}
-				<video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
-			{/if}
-		</div>
-		
-		<!-- Overlay di colore con mix-blend-mode per applicare il colore del team -->
-		<div class="overlay-brand" style="background-color: {colorBrand};"></div>
-		
+    <div class="card-inner" style="--text-primary: {colorTextPrimary};">
+        <div class="glass-effect background-glass"></div>
 
+        <div class="media-container">
+            {#if imageSrc}
+                <img src={imageSrc} alt={name} class="team-member-image" loading="lazy" decoding="async" />
+            {/if}
+        </div>
 
-		<!-- Nome dell'atleta in sovrapposizione frontale -->
-		<div class="name-front">
-			<span>{name}</span>
-		</div>
-	</div>
-</a>
+        <div class="overlay-brand" style="background-color: {colorBrand};"></div>
+
+        <div class="name-front">
+            <span>{name}</span>
+        </div>
+    </div>
+</div>
 
 <style>
 	.team-card-container {
@@ -103,6 +75,10 @@
 		/* display: block e text-decoration: none servono a preservare il corretto layout box-model della card ed evitare sottolineature ereditate dai link del browser */
 		display: block;
 		text-decoration: none;
+	}
+
+	.team-card-container.non-clickable {
+		cursor: default;
 	}
 
 	.card-inner {
@@ -127,16 +103,16 @@
 
 	.media-container {
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
+		top: 15px;
+		right: 14px;
+		bottom: 14px;
 		left: 14px;
 		border-radius: var(--radius-s);
 		overflow: hidden;
 		background-color: var(--neutral-200);
 	}
 
-	.athlete-video {
+	.team-member-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -145,15 +121,14 @@
 
 	.overlay-brand {
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
+		top: 15px;
+		right: 14px;
+		bottom: 14px;
 		left: 14px;
 		mix-blend-mode: color;
 		border-radius: var(--radius-s);
 		pointer-events: none;
 	}
-
 
 	.name-front {
 		position: absolute;

@@ -1,21 +1,26 @@
 <script>
 	import { hoverLift } from '$lib/actions/hoverLift.js';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
 	 *   name?: string,
 	 *   videoSrc?: string,
+	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
 	 *   isPlaying?: boolean,
-	 *   horizontal?: boolean
+	 *   horizontal?: boolean,
+	 *   clickable?: boolean
 	 * }}
 	 */
 	let { 
 		name = "nome e cognome", 
 		videoSrc = "",
+		imageSrc = "",
 		type = 'favorito',
 		isPlaying = false,
-		horizontal = false
+		horizontal = false,
+		clickable = true
 	} = $props();
 
 	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
@@ -61,35 +66,35 @@
 </script>
 
 <!-- Trasformato in link semantico per delegare la navigazione a SvelteKit e supportare l'accessibilità -->
-<a href="/{type}" 
-	class="archetype-card-container" 
-	class:is-horizontal={horizontal} 
-	use:hoverLift
-	onmouseenter={() => { isHovered = true; }}
-	onmouseleave={() => { isHovered = false; }}
-	role="presentation"
+<a href="/{type}"
+    class="archetype-card-container"
+    class:is-horizontal={horizontal}
+    use:hoverLift
+    onmouseenter={() => { isHovered = true; tooltip.show('Esplora', 'semplice', 'pointer'); }}
+    onmouseleave={() => { isHovered = false; tooltip.hide(); }}
+    role="presentation"
 >
-	<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-		<!-- Sfondo glassato ad effetto ghiaccio -->
-		<div class="glass-effect background-glass"></div>
-		
-		<!-- Contenitore video/media dell'archetipo -->
-		<div class="media-container">
-			{#if videoSrc}
-				<video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
-			{/if}
-		</div>
-		
-		<!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
-		<div class="overlay-brand" style="background-color: {colorBrand};"></div>
-		
-
-
-		<!-- Nome dell'atleta in sovrapposizione frontale -->
-		<div class="name-front">
-			<span>{name}</span>
-		</div>
-	</div>
+    <div class="card-inner" style="--text-primary: {colorTextPrimary};">
+        <!-- Sfondo glassato ad effetto ghiaccio -->
+        <div class="glass-effect background-glass"></div>
+        
+        <!-- Contenitore video/media dell'archetipo -->
+        <div class="media-container">
+            {#if imageSrc}
+                <img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
+            {:else if videoSrc}
+                <video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
+            {/if}
+        </div>
+        
+        <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
+        <div class="overlay-brand" style="background-color: {colorBrand};"></div>
+        
+        <!-- Nome dell'atleta in sovrapposizione frontale -->
+        <div class="name-front">
+            <span>{name}</span>
+        </div>
+    </div>
 </a>
 
 <style>
@@ -103,6 +108,11 @@
 		/* display: block e text-decoration: none servono a preservare il corretto layout box-model della card ed evitare sottolineature ereditate dai link del browser */
 		display: block;
 		text-decoration: none;
+	}
+
+	.archetype-card-container.non-clickable {
+		/* Commento solo il PERCHÉ: Rimuove l'indicazione di interattività sul puntatore per elementi informativi statici */
+		cursor: default;
 	}
 
 	.card-inner {
@@ -136,7 +146,8 @@
 		background-color: var(--neutral-200);
 	}
 
-	.athlete-video {
+	.athlete-video,
+	.athlete-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;

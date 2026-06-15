@@ -19,6 +19,7 @@
 	});
 </script>
 
-<Navbar hideByDefault={['favorito', 'insoddisfatto', 'infortunato'].includes(narrative.activeSection)} />
+<!-- hideByDefault calcolato direttamente dall'URL: corretto sia in SSR che in hydration, evita flash visibile→nascosta sulle pagine archetipo -->
+<Navbar hideByDefault={['favorito', 'insoddisfatto', 'infortunato'].some(s => page.url.pathname.startsWith('/' + s))} />
 
 {@render children()}

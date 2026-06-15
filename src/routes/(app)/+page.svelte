@@ -8,10 +8,6 @@
      * 4. Isola e preserva i listener di blocco dello scroll quando il Quiz è attivo.
      */
 
-    import { onMount } from 'svelte';
-    import { gsap } from 'gsap';
-    import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-    
     // Importazione dei componenti strutturali del flusso di pagina
     import Intro from '$lib/components/sections/home/Intro.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
@@ -22,48 +18,68 @@
     import Final from '$lib/components/sections/home/Final.svelte';
     import Footer from '$lib/components/sections/home/Footer.svelte';
     import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
-    
+    import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
     // Stati reattivi per la gestione del blocco interattivo del Quiz
     let isLocked = $state(false);
     let quizExpanded = $state(false);
+    // Tracciamento reattivo della finestra (Svelte 5 Runes)
     let scrollY = $state(0);
     let innerHeight = $state(0);
 
-    // Configurazione cromatica universale bilanciata per lo sfondo
-    const defaultColors = [
-        '#6a96df', // Favorito (Azzurro/Teal)
-        '#8035d2', // Insoddisfatto (Viola)
-        '#d86143'  // Infortunato (Arancione/Salmone)
+    /**
+     * PALETTE CROMATICA UNIFICATA E PERFETTAMENTE BILANCIATA
+     * Per evitare la prevalenza dell'arancione, i colori sono stati alternati uno a uno
+     * (Azzurro -> Viola -> Arancione) incrociando anche le tonalità (Chiaro / Medium / Scuro).
+     * Questo costringe l'algoritmo del canvas a distribuire i pesi visivi in egual misura.
+     */
+    const TOTAL_COLORS = [
+        "var(--azzurro-200)",             // Chiaro - Favorito
+        "var(--viola-600)",               // Scuro  - Insoddisfatto
+        "var(--arancione-200)",           // Chiaro - Infortunato
+
+        "var(--archetipi-favorito)",      // Medium - Favorito
+        "var(--viola-200)",               // Chiaro - Insoddisfatto
+        "var(--arancione-600)",           // Scuro  - Infortunato
+
+        "var(--azzurro-600)",             // Scuro  - Favorito
+        "var(--archetipi-insoddisfatto)", // Medium - Insoddisfatto
+        "var(--archetipi-infortunato)"    // Medium - Infortunato
     ];
 
-    let activeConfig = $state({
-        colors: defaultColors,
-        speed: 0.45,
-        noiseSteps: 6.0,
-        mouseStrength: 0.15
-    });
+    // LOGICA DI SCROLL COMPUTATA REATTIVAMENTE ($derived)
 
-    onMount(() => {
-        gsap.registerPlugin(ScrollTrigger);
+    // 1. Rileva se l'utente si trova nel corpo centrale della pagina (dopo la hero)
+    let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
 
-        // Controllo e reattività cromatica in prossimità del footer della pagina
-        ScrollTrigger.create({
-            trigger: 'footer',
-            start: 'top bottom',
-            end: 'bottom bottom',
-            onUpdate: (self) => {
-                if (self.isActive) {
-                    activeConfig.speed = 1.2;
-                    activeConfig.noiseSteps = 12.0;
-                } else {
-                    activeConfig.speed = 0.45;
-                    activeConfig.noiseSteps = 6.0;
-                }
-            },
-            refreshPriority: 0.8
-        });
-    });
+    // 2. Rileva con precisione quando l'utente raggiunge la fine della pagina (footer)
+    let isNearPageBottom = $derived(
+        typeof document !== 'undefined' &&
+        scrollY > (document.documentElement.scrollHeight - innerHeight * 1.8)
+    );
+
+    // 3. Generazione dinamica della configurazione dello sfondo in base alla posizione di scroll
+    let activeConfig = $derived(
+        isNearPageBottom
+            ? {
+                  colors: TOTAL_COLORS,
+                  speed: 2.2,          // Accelerazione visiva d'impatto sul Footer
+                  coverage: 1.0,       // Copertura totale immersiva per il finale della pagina
+                  focusCenter: /** @type {[number, number]} */ ([0.5, -0.1]),
+                  focusRadius: /** @type {[number, number]} */ ([1.4, 1.0])
+              }
+            : isPastFirstViewport
+                ? {
+                      colors: TOTAL_COLORS,
+                      coverage: 0.35,  // Trasparenza controllata ed elegante sotto i testi centrali
+                      speed: 0.6
+                  }
+                : {
+                      colors: TOTAL_COLORS,
+                      coverage: 0.5,   // Presenza intermedia e stabile nella sezione iniziale
+                      speed: 0.8
+                  }
+    );
 
     /**
      * Intercetta e blocca i tentativi di scroll quando il quiz è attivo,
@@ -88,7 +104,7 @@
 
 <InteractiveGradient config={activeConfig} />
 
-<main class="page-flow">
+<main class="page-flow" use:trackScrollProgress>
     <Intro />
     <Quiz
         lockScroll={() => isLocked = true}
@@ -117,6 +133,6 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        background-color: var(--bg-primary, #ffffff);
+        background-color: var(--background-primary);
     }
 </style>

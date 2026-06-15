@@ -79,8 +79,9 @@ export function quizAnimation(node, params) {
 			'_mp+=0.3');
 
 		// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
+		// Commento solo il PERCHÉ: allinea il valore di fine corsa dell'animazione GSAP alla coordinata della classe CSS is-final per evitare microscatti al cambio di stato
 		tl.to(node.querySelector('.circle-container.left-side'),
-			{ x: -80, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
+			{ x: -40, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
 
 		// text-panel entra da destra
 		tl.fromTo(node.querySelector('.text-panel'),

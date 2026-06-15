@@ -16,6 +16,7 @@
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
+    import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
     // 2. CONFIGURAZIONE DEI COLORI PER L'INFORTUNATO
     const GRADIENT_CONFIG = {
@@ -55,7 +56,7 @@
 
 <InteractiveGradient config={activeConfig} />
 
-<main id="infortunato-profile-page">
+<main id="infortunato-profile-page" use:trackScrollProgress>
     <HeroSection 
         theme="infortunato" 
         title="L'INFORTUNATO" 
