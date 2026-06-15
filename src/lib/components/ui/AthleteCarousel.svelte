@@ -2,6 +2,7 @@
 	import AthleteCard from '$lib/components/ui/AthleteCard.svelte';
 	import { carousel } from '$lib/actions/carousel.js';
 	import athletesData from '$lib/data/athletes.json';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
@@ -106,7 +107,11 @@
 		aria-label="Carousel Track"
 	>
 		{#each filteredAthletes as athlete, i (athlete.name)}
-			<div class="carousel-item">
+			<div
+				class="carousel-item"
+				onmouseenter={i === activeIndex ? () => tooltip.show('Click', 'semplice', 'pointer') : null}
+				onmouseleave={i === activeIndex ? () => tooltip.hide() : null}
+			>
 				<AthleteCard
 					name={athlete.name}
 					imageSrc={athlete.imageSrc}
@@ -114,7 +119,6 @@
 					quote={athlete.quote}
 					type={athlete.type}
 					number={"0" + (i + 1)}
-					isActive={i === activeIndex}
 				/>
 				{#if i !== activeIndex}
 					<button

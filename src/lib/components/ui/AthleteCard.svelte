@@ -1,7 +1,6 @@
 <script>
 	import { flipCard } from '$lib/actions/flipCard.js';
 	import { hoverLift } from '$lib/actions/hoverLift.js';
-	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
@@ -12,33 +11,19 @@
 	 *   axis?: 'X' | 'Y',
 	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   duration?: number,
-	 *   isActive?: boolean
+	 *   duration?: number
 	 * }}
 	 */
-	let { 
-		name = "nome e cognome", 
+	let {
+		name = "nome e cognome",
 		number = "0N",
 		context = "",
 		quote = "testo citazione",
-		axis = 'Y', 
+		axis = 'Y',
 		imageSrc = "",
 		type = 'favorito',
-		duration = 1.0,
-		isActive = false
+		duration = 1.0
 	} = $props();
-
-	const handleCardEnter = () => {
-		if (isActive) {
-			tooltip.show('Click', 'semplice', 'pointer');
-		}
-	};
-
-	const handleCardLeave = () => {
-		if (isActive) {
-			tooltip.hide();
-		}
-	};
 
 	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
 	// Usiamo scale cromatiche specifiche per differenziare i toni del retro e dei testi
@@ -76,13 +61,7 @@
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
 </script>
 
-<div 
-	class="athlete-card-container" 
-	use:flipCard={{ axis, duration }} 
-	use:hoverLift
-	on:mouseenter={handleCardEnter}
-	on:mouseleave={handleCardLeave}
->
+<div class="athlete-card-container" use:flipCard={{ axis, duration }} use:hoverLift>
 	<div class="card-inner">
 		
 		<!-- FRONT -->
