@@ -1,58 +1,70 @@
 <script>
-	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import AboutSection from '$lib/components/sections/about/About.svelte';
-	import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
+	import TeamSection from '$lib/components/sections/team/TeamSection.svelte';
 	import Footer from '$lib/components/sections/home/Footer.svelte';
 	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 	import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
-	// Configurazione cromatica universale bilanciata per lo sfondo
-	const defaultColors = [
-		'#6a96df', // Favorito (Azzurro/Teal)
-		'#8035d2', // Insoddisfatto (Viola)
-		'#d86143'  // Infortunato (Arancione/Salmone)
+	// Tracciamento reattivo della finestra (Svelte 5 Runes)
+	let scrollY = $state(0);
+	let innerHeight = $state(0);
+
+	/**
+	 * PALETTE CROMATICA UNIFICATA E PERFETTAMENTE BILANCIATA
+	 * Per evitare la prevalenza dell'arancione, i colori sono stati alternati uno a uno
+	 * (Azzurro -> Viola -> Arancione) incrociando anche le tonalità (Chiaro / Medium / Scuro).
+	 * Questo costringe l'algoritmo del canvas a distribuire i pesi visivi in egual misura.
+	 */
+	const TOTAL_COLORS = [
+		"var(--azzurro-200)",             // Chiaro - Favorito
+		"var(--viola-600)",               // Scuro  - Insoddisfatto
+		"var(--arancione-200)",           // Chiaro - Infortunato
+
+		"var(--archetipi-favorito)",      // Medium - Favorito
+		"var(--viola-200)",               // Chiaro - Insoddisfatto
+		"var(--arancione-600)",           // Scuro  - Infortunato
+
+		"var(--azzurro-600)",             // Scuro  - Favorito
+		"var(--archetipi-insoddisfatto)", // Medium - Insoddisfatto
+		"var(--archetipi-infortunato)"    // Medium - Infortunato
 	];
 
-	// Commento solo il PERCHÉ: definisce i membri del team con l'immagine di anteprima temporanea ed alternanza cromatica (viola, azzurro, arancione)
-	const teamMembers = [
-		{ name: "Fang Ding", type: "insoddisfatto", imageSrc: "/images/athletes/ilia-malinin.png" },
-		{ name: "Chiara Fois", type: "favorito", imageSrc: "/images/athletes/ilia-malinin.png" },
-		{ name: "Ilaria La Spada", type: "infortunato", imageSrc: "/images/athletes/ilia-malinin.png" },
-		{ name: "Ziying Shao", type: "insoddisfatto", imageSrc: "/images/athletes/ilia-malinin.png" },
-		{ name: "Lucrezia Vallar", type: "favorito", imageSrc: "/images/athletes/ilia-malinin.png" },
-		{ name: "David Zhou", type: "infortunato", imageSrc: "/images/athletes/ilia-malinin.png" }
-	];
+	// LOGICA DI SCROLL COMPUTATA REATTIVAMENTE ($derived)
 
-	let activeConfig = $state({
-		colors: defaultColors,
-		speed: 0.45,
-		noiseSteps: 6.0,
-		mouseStrength: 0.15
-	});
+	// 1. Rileva se l'utente si trova nel corpo centrale della pagina (dopo la hero)
+	let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
 
-	onMount(() => {
-		gsap.registerPlugin(ScrollTrigger);
+	// 2. Rileva con precisione quando l'utente raggiunge la fine della pagina (footer)
+	let isNearPageBottom = $derived(
+		typeof document !== 'undefined' &&
+		scrollY > (document.documentElement.scrollHeight - innerHeight * 1.8)
+	);
 
-		// Commento solo il PERCHÉ: accelera il movimento del gradiente in prossimità del footer per dare intensità cromatica
-		ScrollTrigger.create({
-			trigger: 'footer',
-			start: 'top bottom',
-			end: 'bottom bottom',
-			onUpdate: (self) => {
-				if (self.isActive) {
-					activeConfig.speed = 1.2;
-					activeConfig.noiseSteps = 12.0;
-				} else {
-					activeConfig.speed = 0.45;
-					activeConfig.noiseSteps = 6.0;
-				}
-			},
-			refreshPriority: 0.8
-		});
-	});
+	// 3. Generazione dinamica della configurazione dello sfondo in base alla posizione di scroll
+	let activeConfig = $derived(
+		isNearPageBottom
+			? {
+				  colors: TOTAL_COLORS,
+				  speed: 2.2,          // Accelerazione visiva d'impatto sul Footer
+				  coverage: 1.0,       // Copertura totale immersiva per il finale della pagina
+				  focusCenter: /** @type {[number, number]} */ ([0.5, -0.1]),
+				  focusRadius: /** @type {[number, number]} */ ([1.4, 1.0])
+			  }
+			: isPastFirstViewport
+				? {
+					  colors: TOTAL_COLORS,
+					  coverage: 0.35,  // Trasparenza controllata ed elegante sotto i testi centrali
+					  speed: 0.6
+				  }
+				: {
+					  colors: TOTAL_COLORS,
+					  coverage: 0.5,   // Presenza intermedia e stabile nella sezione iniziale
+					  speed: 0.8
+				  }
+	);
 </script>
+
+<svelte:window bind:scrollY bind:innerHeight />
 
 <svelte:head>
 	<title>About - UnderSkin</title>
@@ -63,11 +75,7 @@
 
 <main id="about" use:trackScrollProgress>
 	<AboutSection />
-	<ArchetypeSection 
-		title="Il Nostro Team!" 
-		items={teamMembers} 
-		clickable={false} 
-	/>
+	<TeamSection />
 	<Footer />
 </main>
 
@@ -76,12 +84,12 @@
 		position: relative;
 		width: 100%;
 		min-height: 100vh;
-		/* Commento solo il PERCHÉ: mantiene lo sfondo trasparente esponendo il canvas fixed */
+		/* Mantiene lo sfondo trasparente esponendo il canvas fixed */
 		background: transparent;
 	}
 
 	#about :global(.hero-footer) {
-		/* Commento solo il PERCHÉ: annulla il margine negativo globale del footer per distanziare in modo pulito e controllato la sezione delle card del team dall'elemento di chiusura */
+		/* Annulla il margine negativo globale del footer per distanziare in modo pulito la sezione team dall'elemento di chiusura */
 		margin-top: var(--spacing-11);
 	}
 </style>

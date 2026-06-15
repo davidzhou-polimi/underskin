@@ -1,9 +1,5 @@
 <script>
 	import { scrollableTextSwap } from '$lib/actions/aboutScrollAnimation.js';
-
-	let currentTextElement;
-	let nextTextElement;
-	let scrollContainerElement;
 </script>
 
 <section id="about-section">
@@ -16,15 +12,10 @@
 
 	<div
 		class="section section-2"
-		bind:this={scrollContainerElement}
-		use:scrollableTextSwap={{
-			currentElement: currentTextElement,
-			nextElement: nextTextElement,
-			trigger: scrollContainerElement
-		}}
+		use:scrollableTextSwap
 	>
 		<div class="text-container">
-			<div class="text-block text-block-current" bind:this={currentTextElement}>
+			<div class="text-block text-block-current">
 				<p class="caption">
 					Le Olimpiadi Milano Cortina 2026 sono un sistema di misurazione millimetrica: <br />centesimi di
 					secondo, punteggi decimali, medaglieri rigidi.
@@ -34,7 +25,7 @@
 				</p>
 			</div>
 
-			<div class="text-block text-block-next" bind:this={nextTextElement}>
+			<div class="text-block text-block-next">
 				<p class="caption">
 					UnderSkin nasce per scollare l'etichetta dell'eroismo a tutti i costi e guardare sotto la
 					superficie della performance d'élite. Vogliamo dare voce a ciò che normalmente non si vede: le
@@ -56,7 +47,7 @@
 <style>
 	#about-section {
 		width: 100%;
-		/* Commento solo il PERCHÉ: Espone il canvas di InteractiveGradient sottostante */
+		/* Espone il canvas di InteractiveGradient sottostante */
 		background-color: transparent;
 	}
 
@@ -71,7 +62,7 @@
 
 	/* Sezione 1: Titolo principale */
 	.section-1 {
-		/* Commento solo il PERCHÉ: Evita di coprire il canvas di sfondo animato */
+		/* Evita di coprire il canvas di sfondo animato */
 		background-color: transparent;
 	}
 
@@ -86,7 +77,7 @@
 	}
 
 	.my-archetypes-color {
-		/* Commento solo il PERCHÉ: Associa le variabili del gradiente animato ai colori specifici dei tre archetipi */
+		/* Associa le variabili del gradiente animato ai colori specifici dei tre archetipi */
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
@@ -95,7 +86,7 @@
 	/* Sezione 2: Messaggio con scroll animation */
 	.section-2 {
 		position: relative;
-		/* Commento solo il PERCHÉ: Consente la trasparenza per visualizzare il gradiente interattivo durante lo scroll */
+		/* Consente la trasparenza per visualizzare il gradiente interattivo durante lo scroll */
 		background-color: transparent;
 		height: 100vh; /* Riportato a 100vh per combaciare con l'altezza dello schermo durante il pinning */
 		display: block; /* Importante per consentire il corretto funzionamento del pin di GSAP */
@@ -105,7 +96,7 @@
 	.text-container {
 		position: relative;
 		width: 100%;
-		height: 100vh; /* Il contenitore interno occupa lo schermo intero */
+		height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -166,7 +157,7 @@
 
 	/* Sezione 3: Messaggio conclusivo */
 	.section-3 {
-		/* Commento solo il PERCHÉ: Permette di visualizzare lo sfondo fluido dietro il testo finale */
+		/* Permette di visualizzare lo sfondo fluido dietro il testo finale */
 		background-color: transparent;
 	}
 

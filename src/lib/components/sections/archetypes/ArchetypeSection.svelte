@@ -1,32 +1,53 @@
 <script>
-	import ArchetypeCarousel from '$lib/components/ui/ArchetypeCarousel.svelte';
+	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 
 	/**
 	 * @typedef {Object} Props
 	 * @property {string} [title]
-	 * @property {any[] | null} [items]
+	 * @property {Array<{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', videoSrc?: string, imageSrc?: string }>} [items]
 	 * @property {boolean} [clickable]
 	 */
 
 	/** @type {Props} */
-	let { title = "", items = null, clickable = true } = $props();
+	let { title = "", items = undefined, clickable = true } = $props();
+
+	/** @type {{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', videoSrc?: string, imageSrc?: string }[]} */
+	const defaultItems = [
+		{ name: "L'insoddisfatto", type: "insoddisfatto", videoSrc: "/videos/insoddisfatto.mp4" },
+		{ name: "L'infortunato",   type: "infortunato",   videoSrc: "/videos/infortunato.mp4"   },
+		{ name: "Il favorito",     type: "favorito",      videoSrc: "/videos/favorito.mp4"      }
+	];
+
+	const activeItems = $derived(items || defaultItems);
 </script>
 
-<section 
-	id="archetypes" 
-	class="archetype-section" 
+<section
+	id="archetypes"
+	class="archetype-section"
 	use:trackSection={{ id: 'archetypes' }}
 >
-	<div class="archetype-section__container">
-		<ArchetypeCarousel {title} {items} {clickable} />
+	{#if title}
+		<h2 class="section-title">{title}</h2>
+	{/if}
+
+	<div class="cards-row">
+		{#each activeItems as archetype (archetype.name)}
+			<ArchetypeCard
+				name={archetype.name}
+				videoSrc={archetype.videoSrc ?? ''}
+				imageSrc={archetype.imageSrc ?? ''}
+				type={archetype.type}
+				{clickable}
+			/>
+		{/each}
 	</div>
 </section>
 
 <style>
-	/* Altezza minima a schermo intero per consentire l'espansione e la flessibilità su schermi piccoli */
 	.archetype-section {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		min-height: 100vh;
@@ -35,17 +56,26 @@
 		padding-top: var(--spacing-10);
 		padding-bottom: var(--spacing-3);
 		box-sizing: border-box;
-		/* Nascondiamo l'overflow orizzontale della sezione per evitare scrollbar,
-		   consentendo comunque lo spazio necessario per le ombre */
 		overflow: hidden;
 	}
 
-	.archetype-section__container {
-		width: 100%;
+	.section-title {
+		font-size: var(--text-m);
+		font-weight: 400;
+		color: var(--content-primary);
+		text-align: center;
+		margin: 0 0 var(--spacing-6) 0;
 		max-width: var(--spacing-17);
-		margin: 0 auto;
+	}
+
+	.cards-row {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
+		gap: var(--spacing-4);
 		justify-content: center;
+		align-items: flex-end;
+		flex-wrap: wrap;
+		padding-inline: var(--spacing-4);
+		box-sizing: border-box;
 	}
 </style>

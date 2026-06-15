@@ -1,26 +1,26 @@
 <script>
-	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
+	import TeamCard from '$lib/components/ui/TeamCard.svelte';
 	import { horizontalCarousel } from '$lib/actions/horizontalCarousel.js';
 	import { autoplay } from '$lib/actions/autoplay.js';
 
 	/**
 	 * @typedef {Object} Props
-	 * @property {string} [title] - Custom section title displayed above the carousel
-	 * @property {Array<{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', videoSrc: string }>} [items] - Custom items to display
-	 * @property {boolean} [clickable] - Whether cards link to their archetype page
+	 * @property {Array<{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', imageSrc: string }>} [items] - Custom items to display
 	 */
 
 	/** @type {Props} */
-	let { title = "", items = null, clickable = true } = $props();
+	let { items = undefined } = $props();
 
-	// Definiamo i 3 archetipi statici con i rispettivi tipi e sorgenti video di default
+	/** @type {{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', imageSrc: string }[]} */
 	const defaultItems = [
-		{ name: "Il favorito", type: "favorito", videoSrc: "/videos/favorito.mp4" },
-		{ name: "L'infortunato", type: "infortunato", videoSrc: "/videos/infortunato.mp4" },
-		{ name: "L'insoddisfatto", type: "insoddisfatto", videoSrc: "/videos/insoddisfatto.mp4" }
+		{ name: "Fang Ding",       type: "favorito",      imageSrc: "/images/athletes/ilia-malinin.png" },
+		{ name: "Chiara Fois",     type: "infortunato",   imageSrc: "/images/athletes/ilia-malinin.png" },
+		{ name: "Ilaria La Spada", type: "insoddisfatto", imageSrc: "/images/athletes/ilia-malinin.png" },
+		{ name: "Ziying Shao",     type: "favorito",      imageSrc: "/images/athletes/ilia-malinin.png" },
+		{ name: "Lucrezia Vallar", type: "infortunato",   imageSrc: "/images/athletes/ilia-malinin.png" },
+		{ name: "David Zhou",      type: "insoddisfatto", imageSrc: "/images/athletes/ilia-malinin.png" }
 	];
 
-	// Commento solo il PERCHÉ: Deriva in modo reattivo l'array di card da visualizzare (default o custom da props)
 	const activeItems = $derived(items || defaultItems);
 
 	let activeIndex = $state(0);
@@ -66,14 +66,10 @@
 </script>
 
 <div
-	class="archetype-carousel-container"
+	class="team-carousel-container"
 	role="region"
-	aria-label="Archetype Showcase Carousel"
+	aria-label="Team Showcase Carousel"
 >
-	{#if title}
-		<h2 class="carousel-title">{title}</h2>
-	{/if}
-
 	<!-- Viewport che contiene la traccia scorrevole e ritaglia lo spazio orizzontale -->
 	<div class="carousel-viewport">
 		<div
@@ -84,7 +80,7 @@
 			role="group"
 			aria-label="Carousel Track"
 		>
-			{#each activeItems as archetype, i (archetype.name)}
+			{#each activeItems as member, i (member.name)}
 				<div
 					class="carousel-item"
 					role="group"
@@ -92,20 +88,18 @@
 					onmouseenter={i === activeIndex ? () => { isHovered = true; } : null}
 					onmouseleave={i === activeIndex ? () => { isHovered = false; } : null}
 				>
-					<ArchetypeCard
-						name={archetype.name}
-						videoSrc={archetype.videoSrc}
-						imageSrc={archetype.imageSrc}
-						type={archetype.type}
-						isPlaying={i === activeIndex}
-						{clickable}
+					<TeamCard
+						name={member.name}
+						imageSrc={member.imageSrc}
+						type={member.type}
+						clickable={false}
 					/>
 					<!-- Overlay invisibile cliccabile per selezionare le card non attive -->
 					{#if i !== activeIndex}
 						<button
 							class="card-overlay"
 							onclick={() => selectIndex(i)}
-							aria-label="Visualizza {archetype.name}"
+							aria-label="Visualizza {member.name}"
 						></button>
 					{/if}
 				</div>
@@ -116,7 +110,7 @@
 	<!-- Dot Navigation: barra arrotondata con ombra e opacità al 40% -->
 	<div class="dots-navigation-container">
 		<div class="glass-effect dots-pill">
-			{#each activeItems as archetype, i}
+			{#each activeItems as _, i}
 				<button
 					class="dot-button"
 					class:active={i === activeIndex}
@@ -136,7 +130,7 @@
 </div>
 
 <style>
-	.archetype-carousel-container {
+	.team-carousel-container {
 		width: 100%;
 		display: flex;
 		flex-direction: column;
@@ -145,15 +139,6 @@
 		overflow: visible;
 		padding: var(--spacing-2) 0;
 		outline: none;
-	}
-
-	.carousel-title {
-		font-size: var(--text-m);
-		font-weight: 400;
-		color: var(--content-primary);
-		text-align: center;
-		/* Commento solo il PERCHÉ: Fornisce la spaziatura coerente prima dell'area delle card */
-		margin: 0 0 var(--spacing-6) 0;
 	}
 
 	.carousel-viewport {
@@ -207,14 +192,14 @@
 		display: flex;
 		gap: var(--spacing-2);
 		padding: var(--spacing-2) var(--spacing-4);
-		border-radius: 9999px; /* rounded-full */
+		border-radius: 9999px;
 	}
 
 	.dot-button {
 		width: 10px;
 		height: 10px;
 		border-radius: 50%;
-		background-color: var(--neutral-400); /* token per dot non selezionato */
+		background-color: var(--neutral-400);
 		border: none;
 		padding: 0;
 		cursor: pointer;
@@ -243,7 +228,7 @@
 		height: 100%;
 		width: 0%;
 		border-radius: 9999px;
-		background-color: var(--content-primary); /* token per dot selezionato */
+		background-color: var(--content-primary);
 		pointer-events: none;
 	}
 </style>

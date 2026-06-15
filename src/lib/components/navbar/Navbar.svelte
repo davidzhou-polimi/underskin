@@ -3,8 +3,7 @@
 	import { scroll } from '$lib/stores/scroll.svelte.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { narrative } from '$lib/stores/narrative.svelte.js';
-
+	import { navbarSlide } from '$lib/actions/navbarSlide.js';
 	let {
 		hideThreshold = 50,
 		showThreshold = 150,
@@ -14,9 +13,8 @@
 
 	let hidden = $state(false);
 
-	// Commento solo il PERCHÉ: Assicura che la barra si adegui immediatamente al comportamento richiesto e si nasconda al cambio di sezione attiva.
+	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta (hideByDefault cambia quando page.url.pathname cambia nel layout).
 	$effect(() => {
-		const _active = narrative.activeSection;
 		hidden = hideByDefault;
 	});
 
@@ -252,8 +250,8 @@
 
 <!-- svelte-ignore a11y_no_redundant_roles -->
 <header
-	class:hidden
 	class="navbar"
+	use:navbarSlide={{ hidden }}
 	role="banner"
 	onmouseenter={() => {
 		isHovered = true;
@@ -295,17 +293,7 @@
 		z-index: 10;
 		pointer-events: none;
 		background: transparent;
-		transform: translateY(0);
-		/* Transizione per l'ingresso (veloce) */
-		transition: transform var(--transition-duration-normal) var(--easing-out);
 		will-change: transform;
-	}
-
-	.navbar.hidden {
-		/* Transizione per l'uscita (lenta) */
-		transition-duration: var(--transition-duration-slow);
-		transition-timing-function: var(--easing-in);
-		transform: translateY(-100%);
 	}
 
 	.navbar__inner {

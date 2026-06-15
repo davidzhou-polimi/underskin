@@ -16,6 +16,7 @@
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE INTERATTIVO
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
+    import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
     // 2. CONFIGURAZIONE DEI COLORI VIOLA PER L'INSODDISFATTO
     const GRADIENT_CONFIG = {
@@ -54,7 +55,7 @@
 
 <InteractiveGradient config={activeConfig} />
 
-<main id="insoddisfatto-profile-page">
+<main id="insoddisfatto-profile-page" use:trackScrollProgress>
     <HeroSection 
         theme="insoddisfatto" 
         title="L'INSODDISFATTO" 

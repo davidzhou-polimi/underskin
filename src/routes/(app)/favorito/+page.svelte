@@ -16,6 +16,7 @@
     
     // 1. IMPORTA IL COMPONENTE DEL GRADIENTE INTERATTIVO
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
+    import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
     // 2. CONFIGURAZIONE DEI COLORI AZZURRI PER IL FAVORITO
     const GRADIENT_CONFIG = {
@@ -54,7 +55,7 @@
 
 <InteractiveGradient config={activeConfig} />
 
-<main id="favorito-profile-page">
+<main id="favorito-profile-page" use:trackScrollProgress>
     <HeroSection 
         theme="favorito" 
         title="IL FAVORITO" 
