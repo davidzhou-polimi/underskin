@@ -274,7 +274,8 @@
 	}
 
 	.circle-container.left-side.is-final {
-		transform: translateX(-80px) scale(1.5) !important;
+		/* Commento solo il PERCHÉ: allinea la traslazione finale del cerchio sinistro al nuovo posizionamento bilanciato e centrato nella viewport */
+		transform: translateX(calc(-1 * var(--spacing-5))) scale(1.5) !important;
 		opacity: 1 !important;
 	}
 
@@ -388,7 +389,8 @@
 
 	.text-panel {
 		position: absolute;
-		left: calc(50% + 20px);
+		/* Commento solo il PERCHÉ: sposta il punto di partenza del pannello di testo a destra per bilanciare geometricamente il cerchio sinistro ingrandito */
+		left: calc(50% + var(--spacing-7));
 		width: 480px;
 		height: 300px;
 		display: flex;
