@@ -16,12 +16,12 @@
 	 *   isActive?: boolean
 	 * }}
 	 */
-	let { 
-		name = "nome e cognome", 
+	let {
+		name = "nome e cognome",
 		number = "0N",
 		context = "",
 		quote = "testo citazione",
-		axis = 'Y', 
+		axis = 'Y',
 		imageSrc = "",
 		type = 'favorito',
 		duration = 1.0,
@@ -29,19 +29,13 @@
 	} = $props();
 
 	const handleCardEnter = () => {
-		if (isActive) {
-			tooltip.show('Click', 'semplice', 'pointer');
-		}
+		if (isActive) tooltip.show('Click', 'semplice', 'pointer');
 	};
 
 	const handleCardLeave = () => {
-		if (isActive) {
-			tooltip.hide();
-		}
+		if (isActive) tooltip.hide();
 	};
 
-	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
-	// Usiamo scale cromatiche specifiche per differenziare i toni del retro e dei testi
 	const ARCHETYPE_COLORS = {
 		favorito: {
 			brand: 'var(--archetipi-favorito)',
@@ -76,66 +70,59 @@
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
 </script>
 
-<div 
-	class="athlete-card-container" 
-	use:flipCard={{ axis, duration }} 
+<div
+	class="athlete-card-container"
+	use:flipCard={{ axis, duration }}
 	use:hoverLift
-	on:mouseenter={handleCardEnter}
-	on:mouseleave={handleCardLeave}
+	onmouseenter={handleCardEnter}
+	onmouseleave={handleCardLeave}
 >
 	<div class="card-inner">
-		
+
 		<!-- FRONT -->
 		<div class="card-face card-front" style="--text-primary: {colorTextPrimary};">
-			<!-- Glass background (ghiaccio) -->
-			<div class="glass-effect background-glass"></div>
-			
-			<!-- Video/Image container -->
+			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
+				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
+			</svg>
+
 			<div class="media-container">
 				{#if imageSrc}
 					<img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
 				{/if}
 			</div>
-			
-			<!-- Color overlay (mix-blend-mode) -->
+
 			<div class="overlay-brand" style="background-color: {colorBrand};"></div>
-			
-			<!-- Upper gradient (Sfumatura superiore) -->
 			<div class="decal-top" style="--gradient-start: {colorBrandBack};"></div>
 
-			<!-- Name -->
 			<div class="name-front">
 				<p>{name}</p>
 			</div>
 		</div>
 
 		<!-- BACK -->
-		<div class={`card-face card-back ${rotateClass}`} style="--text-primary: {colorTextPrimary}; --text-secondary: {colorTextSecondary};">
-			<!-- Glass background (ghiaccio) -->
-			<div class="glass-effect background-glass"></div>
+		<div class="card-face card-back {rotateClass}" style="--text-primary: {colorTextPrimary}; --text-secondary: {colorTextSecondary};">
+			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
+				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
+			</svg>
 
-			<!-- Dynamic Brand Gradient Background Inset -->
 			<div class="background-inset-back" style="background: linear-gradient(to bottom, {colorBrandBack} 0%, {colorBrandBackEnd} 50%, {colorBrandBackEnd} 100%);"></div>
 
-			<!-- Back content container -->
 			<div class="back-content">
 				<div class="back-text name-back">
 					<p>{name}</p>
 				</div>
 				<div class="info-retro">
 					{#if context}
-						<p class="back-text context-text">
-							{context}
-						</p>
+						<p class="back-text context-text">{context}</p>
 					{/if}
 					{#if quote}
 						<div class="back-text quote-container">
 							<svg class="quote-icon" width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path d="M4.032 4.896V5.184C4.992 5.28 5.832 5.664 6.552 6.336C7.272 6.96 7.632 7.752 7.632 8.712C7.632 9.624 7.29599 10.44 6.62399 11.16C5.95199 11.88 5.04 12.24 3.888 12.24C2.784 12.24 1.848 11.736 1.08 10.728C0.360002 9.72 0 8.472 0 6.984C0 5.496 0.648 3.96 1.944 2.376C3.288 0.792002 4.632 0 5.976 0C6.408 0 6.62399 0.0720005 6.62399 0.216002C6.62399 0.360003 6.528 0.432003 6.336 0.432003C6.144 0.432003 5.784 0.792004 5.256 1.512C4.44 2.568 4.032 3.696 4.032 4.896ZM14.328 4.896V5.184C15.288 5.28 16.128 5.664 16.848 6.336C17.568 6.96 17.928 7.752 17.928 8.712C17.928 9.624 17.592 10.44 16.92 11.16C16.296 11.88 15.408 12.24 14.256 12.24C13.152 12.24 12.216 11.736 11.448 10.728C10.68 9.72 10.296 8.472 10.296 6.984C10.296 5.496 10.968 3.96 12.312 2.376C13.656 0.792002 15 0 16.344 0C16.728 0 16.92 0.0720005 16.92 0.216002C16.92 0.360003 16.872 0.432003 16.776 0.432003C16.488 0.432003 16.08 0.792004 15.552 1.512C14.736 2.616 14.328 3.744 14.328 4.896Z" fill="currentColor"/>
 							</svg>
-							<p class="quote-text">
-								{quote}
-							</p>
+							<p class="quote-text">{quote}</p>
 						</div>
 					{/if}
 				</div>
@@ -165,10 +152,6 @@
 		will-change: transform;
 	}
 
-	/* .athlete-card-container:hover .card-inner {
-		box-shadow: 0px 16px 32px 0px rgba(0, 0, 0, 0.28);
-	} */
-
 	.card-face {
 		position: absolute;
 		inset: 0;
@@ -192,29 +175,41 @@
 		transform: rotateX(180deg);
 	}
 
-	.background-glass {
+	/* SVG glass background */
+	.glass-svg-bg {
 		position: absolute;
 		inset: 0;
-		opacity: 0.5;
-		transition: background 0.3s ease;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
 	}
 
-	.athlete-card-container:hover .background-glass {
-		background-color: rgb(from var(--neutral-100) r g b / 0.7);
+	.glass-glow {
+		fill: rgb(from var(--neutral-100) r g b / 0.3);
+		filter: blur(8px);
 	}
 
+	.glass-surface {
+		fill: rgb(from var(--neutral-100) r g b / 0.6);
+		stroke: rgb(from var(--neutral-50) r g b / 0.4);
+		stroke-width: 1;
+		transition: fill 0.3s ease;
+	}
 
+	.athlete-card-container:hover .glass-surface {
+		fill: rgb(from var(--neutral-100) r g b / 0.78);
+	}
 
 	/* FRONT STYLES */
 	.media-container {
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
+		top: 15px;
+		right: 14px;
+		bottom: 14px;
 		left: 14px;
 		border-radius: var(--radius-s);
 		overflow: hidden;
-		background-color: var(--neutral-200); /* Fallback style */
+		background-color: var(--neutral-200);
 	}
 
 	.athlete-image {
@@ -226,9 +221,9 @@
 
 	.overlay-brand {
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
+		top: 15px;
+		right: 14px;
+		bottom: 14px;
 		left: 14px;
 		mix-blend-mode: color;
 		border-radius: var(--radius-s);
@@ -267,9 +262,9 @@
 	/* BACK STYLES */
 	.background-inset-back {
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
+		top: 15px;
+		right: 14px;
+		bottom: 14px;
 		left: 14px;
 		border-radius: var(--radius-s);
 	}
@@ -336,7 +331,7 @@
 	}
 
 	.quote-text {
-		font-size: 1.25rem; /* 20px from Figma spec */
+		font-size: 1.25rem;
 		line-height: normal;
 		font-style: italic;
 		margin: 0;

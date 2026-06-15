@@ -1,5 +1,6 @@
 <script>
 	import { hoverLift } from '$lib/actions/hoverLift.js';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
@@ -66,18 +67,21 @@
 
 {#if clickable}
 	<!-- Trasformato in link semantico per delegare la navigazione a SvelteKit e supportare l'accessibilità -->
-	<a href="/{type}" 
-		class="archetype-card-container" 
-		class:is-horizontal={horizontal} 
+	<a href="/{type}"
+		class="archetype-card-container"
+		class:is-horizontal={horizontal}
 		use:hoverLift
-		onmouseenter={() => { isHovered = true; }}
-		onmouseleave={() => { isHovered = false; }}
+		onmouseenter={() => { isHovered = true; tooltip.show('Esplora', 'semplice', 'pointer'); }}
+		onmouseleave={() => { isHovered = false; tooltip.hide(); }}
 		role="presentation"
 	>
 		<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-			<!-- Sfondo glassato ad effetto ghiaccio -->
-			<div class="glass-effect background-glass"></div>
-			
+			<!-- SVG glass background -->
+			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
+				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
+			</svg>
+
 			<!-- Contenitore video/media dell'archetipo -->
 			<div class="media-container">
 				{#if imageSrc}
@@ -86,10 +90,10 @@
 					<video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
 				{/if}
 			</div>
-			
+
 			<!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
 			<div class="overlay-brand" style="background-color: {colorBrand};"></div>
-			
+
 			<!-- Nome dell'atleta in sovrapposizione frontale -->
 			<div class="name-front">
 				<p>{name}</p>
@@ -97,18 +101,21 @@
 		</div>
 	</a>
 {:else}
-	<div 
-		class="archetype-card-container non-clickable" 
-		class:is-horizontal={horizontal} 
+	<div
+		class="archetype-card-container non-clickable"
+		class:is-horizontal={horizontal}
 		use:hoverLift
 		onmouseenter={() => { isHovered = true; }}
 		onmouseleave={() => { isHovered = false; }}
 		role="presentation"
 	>
 		<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-			<!-- Sfondo glassato ad effetto ghiaccio -->
-			<div class="glass-effect background-glass"></div>
-			
+			<!-- SVG glass background -->
+			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
+				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
+			</svg>
+
 			<!-- Contenitore video/media dell'archetipo -->
 			<div class="media-container">
 				{#if imageSrc}
@@ -117,10 +124,10 @@
 					<video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
 				{/if}
 			</div>
-			
+
 			<!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
 			<div class="overlay-brand" style="background-color: {colorBrand};"></div>
-			
+
 			<!-- Nome dell'atleta in sovrapposizione frontale -->
 			<div class="name-front">
 				<p>{name}</p>
@@ -156,15 +163,28 @@
 		overflow: hidden;
 	}
 
-	.background-glass {
+	.glass-svg-bg {
 		position: absolute;
 		inset: 0;
-		opacity: 0.5;
-		transition: background 0.3s ease;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
 	}
 
-	.archetype-card-container:hover .background-glass {
-		background-color: rgb(from var(--neutral-100) r g b / 0.7);
+	.glass-glow {
+		fill: rgb(from var(--neutral-100) r g b / 0.3);
+		filter: blur(8px);
+	}
+
+	.glass-surface {
+		fill: rgb(from var(--neutral-100) r g b / 0.6);
+		stroke: rgb(from var(--neutral-50) r g b / 0.4);
+		stroke-width: 1;
+		transition: fill 0.3s ease;
+	}
+
+	.archetype-card-container:hover .glass-surface {
+		fill: rgb(from var(--neutral-100) r g b / 0.78);
 	}
 
 	.media-container {
@@ -184,6 +204,7 @@
 		height: 100%;
 		object-fit: cover;
 		pointer-events: none;
+		transform: scale(1.05);
 	}
 
 	.overlay-brand {
