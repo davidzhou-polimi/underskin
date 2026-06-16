@@ -1,0 +1,95 @@
+/**
+ * Colori combinati dei tre archetipi, bilanciati per evitare la predominanza cromatica dell'arancione.
+ * Usato nelle pagine che mostrano tutti e tre gli archetipi (home, about).
+ */
+export const TOTAL_COLORS = [
+	'var(--azzurro-200)',
+	'var(--viola-600)',
+	'var(--arancione-200)',
+	'var(--archetipi-favorito)',
+	'var(--viola-200)',
+	'var(--arancione-600)',
+	'var(--azzurro-600)',
+	'var(--archetipi-insoddisfatto)',
+	'var(--archetipi-infortunato)'
+];
+
+/**
+ * Gradient a 2 stati per le pagine archetype: copertura piena nella hero, ridotta nel corpo.
+ * @param {string[]} baseColors Palette cromatica dell'archetipo (3 token CSS)
+ */
+export function createArchetypeGradientConfig(baseColors) {
+	let scrollY = $state(0);
+	let innerHeight = $state(0);
+
+	const baseConfig = { colors: baseColors, coverage: 1.0 };
+
+	let activeConfig = $derived(
+		scrollY > innerHeight / 1.5 ? { ...baseConfig, coverage: 0.3 } : baseConfig
+	);
+
+	return {
+		get scrollY() {
+			return scrollY;
+		},
+		set scrollY(v) {
+			scrollY = v;
+		},
+		get innerHeight() {
+			return innerHeight;
+		},
+		set innerHeight(v) {
+			innerHeight = v;
+		},
+		get activeConfig() {
+			return activeConfig;
+		}
+	};
+}
+
+/**
+ * Gradient a 3 stati per home e about: copertura iniziale → ridotta → piena con effetto footer.
+ * @param {string[]} [colors] Palette cromatica (default: TOTAL_COLORS)
+ */
+export function createFullPageGradientConfig(colors = TOTAL_COLORS) {
+	let scrollY = $state(0);
+	let innerHeight = $state(0);
+
+	let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
+	let isNearPageBottom = $derived(
+		typeof document !== 'undefined' &&
+			scrollY > document.documentElement.scrollHeight - innerHeight * 1.8
+	);
+
+	let activeConfig = $derived(
+		isNearPageBottom
+			? {
+					colors,
+					speed: 2.2,
+					coverage: 1.0,
+					focusCenter: [0.5, -0.1],
+					focusRadius: [1.4, 1.0]
+				}
+			: isPastFirstViewport
+				? { colors, coverage: 0.35, speed: 0.6 }
+				: { colors, coverage: 0.5, speed: 0.8 }
+	);
+
+	return {
+		get scrollY() {
+			return scrollY;
+		},
+		set scrollY(v) {
+			scrollY = v;
+		},
+		get innerHeight() {
+			return innerHeight;
+		},
+		set innerHeight(v) {
+			innerHeight = v;
+		},
+		get activeConfig() {
+			return activeConfig;
+		}
+	};
+}
