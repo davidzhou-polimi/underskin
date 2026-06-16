@@ -25,7 +25,6 @@ function getCardTransform(diff, radius) {
 	const absDiff = Math.abs(diff);
 	const angle = diff * ANGLE_STEP * (Math.PI / 180);
 	const x = radius * Math.sin(angle);
-	// Stesso raggio del cerchio SVG (R_nav = navWidth * 0.694) → distanza arco→card uguale per tutte le card
 	const arcR = (typeof window !== 'undefined' ? window.innerWidth : 1200) * 0.694;
 	const y = arcR * (1 - Math.cos(angle));
 	const rotation = diff * ANGLE_STEP;
@@ -54,48 +53,75 @@ export function carousel(node, params = {}) {
 	/**
 	 * @param {number} index - Target active index
 	 * @param {boolean} animate
+	 * @param {number} direction - +1 next, -1 prev; used to pick the wrap entry side
 	 */
-	function updateLayout(index, animate = true) {
+	function updateLayout(index, animate = true, direction = 0) {
 		const cards = node.querySelectorAll('.carousel-item');
 		const radius = getRadius(node.offsetWidth);
+
+		// Capture OLD activeIndex here — prevDiff must use the previous position.
+		// (activeIndex is updated at the end of this function)
+		const prevIndex = activeIndex;
 
 		cards.forEach((card, i) => {
 			let currentDiff = i - index;
 			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
 			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
 
-			let prevDiff = i - activeIndex;
+			let prevDiff = i - prevIndex;
 			if (prevDiff > itemsCount / 2) prevDiff -= itemsCount;
 			else if (prevDiff < -itemsCount / 2) prevDiff += itemsCount;
 
-			const { x, y, rotation, scale, opacity, zIndex, pointerEvents } =
-				getCardTransform(currentDiff, radius);
+			const target = getCardTransform(currentDiff, radius);
 
+			// isWrap is true when the shortest-path diff jumps by more than one step,
+			// meaning the card must cross from one side of the arc to the other.
 			const isWrap = animate && Math.abs(currentDiff - prevDiff) > 1.5;
 
 			ctx.add(() => {
-				gsap.set(card, { zIndex });
+				gsap.set(card, { zIndex: target.zIndex });
 
-				if (animate && !isWrap) {
+				if (!animate) {
+					// Initial layout — no animation, just place cards.
+					gsap.killTweensOf(card);
+					gsap.set(card, {
+						x: target.x, y: target.y,
+						rotation: target.rotation, scale: target.scale,
+						opacity: target.opacity, pointerEvents: target.pointerEvents
+					});
+				} else if (!isWrap) {
+					// Normal transition — animate from current GSAP position to target.
 					gsap.to(card, {
-						x,
-						y,
-						rotation,
-						scale,
-						opacity,
-						pointerEvents,
-						duration: 0.6,
-						ease: 'power2.out',
-						overwrite: 'auto'
+						x: target.x, y: target.y,
+						rotation: target.rotation, scale: target.scale,
+						opacity: target.opacity, pointerEvents: target.pointerEvents,
+						duration: 0.6, ease: 'power2.out',
+						overwrite: true
 					});
 				} else {
+					// Wrap transition: the card must jump sides.
+					// Place it off-screen on the INCOMING side (right for next, left for prev),
+					// using target.y so the card is already at the correct arc height.
+					// This way, even if the animation is interrupted, y is never wrong.
+					const startDiff = direction >= 0 ? itemsCount : -itemsCount;
+					const start = getCardTransform(startDiff, radius);
+
 					gsap.killTweensOf(card);
-					gsap.set(card, { x, y, rotation, scale, pointerEvents });
-					if (isWrap) {
-						gsap.fromTo(card, { opacity: 0 }, { opacity, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
-					} else {
-						gsap.set(card, { opacity });
-					}
+					gsap.set(card, {
+						x: start.x,
+						y: target.y,          // correct arc height from the start
+						rotation: start.rotation,
+						scale: target.scale,
+						opacity: 0,
+						pointerEvents: 'none'
+					});
+					gsap.to(card, {
+						x: target.x, y: target.y,
+						rotation: target.rotation, scale: target.scale,
+						opacity: target.opacity, pointerEvents: target.pointerEvents,
+						duration: 0.6, ease: 'power2.out',
+						overwrite: true
+					});
 				}
 			});
 		});
@@ -111,10 +137,19 @@ export function carousel(node, params = {}) {
 	return {
 		/** @param {CarouselParams} newParams */
 		update(newParams) {
-			if (newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount) {
-				activeIndex = newParams.activeIndex ?? 0;
-				itemsCount = newParams.itemsCount ?? 0;
-				updateLayout(activeIndex, true);
+			const newIndex = newParams.activeIndex ?? activeIndex;
+			const newCount = newParams.itemsCount ?? itemsCount;
+
+			if (newIndex !== activeIndex || newCount !== itemsCount) {
+				// Compute direction from the OLD activeIndex BEFORE anything is updated.
+				let diffDir = newIndex - activeIndex;
+				if (diffDir > itemsCount / 2) diffDir -= itemsCount;
+				else if (diffDir < -itemsCount / 2) diffDir += itemsCount;
+				const direction = diffDir >= 0 ? 1 : -1;
+
+				itemsCount = newCount;
+				// Do NOT update activeIndex here — updateLayout reads it as prevIndex.
+				updateLayout(newIndex, true, direction);
 			}
 		},
 		destroy() {
