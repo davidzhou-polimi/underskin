@@ -33,13 +33,6 @@
         z-index: 9999;
         will-change: transform;
         width: max-content;
-        opacity: 0;
-        transition: opacity var(--transition-duration-fast) var(--easing-in);
-    }
-
-    .cursor-tooltip-wrapper.is-visible {
-        opacity: 1;
-        transition: opacity var(--transition-duration-fast) var(--easing-out);
     }
 
     .mod-semplice {
@@ -56,6 +49,13 @@
         padding: var(--spacing-2) var(--spacing-3) !important;
         border-radius: var(--radius-s) !important;
         box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
+        opacity: 0;
+        transition: opacity var(--transition-duration-fast) var(--easing-in);
+    }
+
+    .cursor-tooltip-wrapper.is-visible .tooltip-glass-override {
+        opacity: 1;
+        transition: opacity var(--transition-duration-fast) var(--easing-out);
     }
 
     .mod-semplice .tooltip-glass-override {
