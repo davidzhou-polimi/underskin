@@ -51,7 +51,7 @@
                 { opacity: 1, y: 0 },
                 {
                     opacity: 0,
-                    y: theme === 'insoddisfatto' ? -80 : -50,
+                    y: -50,
                     scrollTrigger: {
                         trigger: sec,
                         start: 'top top',
@@ -116,7 +116,7 @@
         white-space: normal;
         word-wrap: break-word;
         max-width: 100%;
-        color: var(--background-primary); 
+        color: var(--content-dark-primary); 
         line-height: 1.1;
     }
 </style>

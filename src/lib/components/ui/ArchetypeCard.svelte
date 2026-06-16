@@ -43,20 +43,19 @@
 		}
 	});
 
-	// Mappiamo i colori specifici per l'overlay dell'archetipo, usando i toni -700 per il brand
-	// e i rispettivi toni coordinati del tema per i testi.
+	// Commento solo il PERCHÉ: il testo in primo piano deve usare il token di contenuto scuro per garantire leggibilità e correttezza semantica, mentre var(--background-primary) è riservato esclusivamente a sfondi.
 	const ARCHETYPE_COLORS = {
 		favorito: {
 			brand: 'var(--azzurro-700)',
-			textPrimary: 'var(--background-primary)'
+			textPrimary: 'var(--content-dark-primary)'
         },
 		infortunato: {
 			brand: 'var(--arancione-700)',
-			textPrimary: 'var(--background-primary)'
+			textPrimary: 'var(--content-dark-primary)'
 		},
 		insoddisfatto: {
 			brand: 'var(--viola-700)',
-			textPrimary: 'var(--background-primary)'
+			textPrimary: 'var(--content-dark-primary)'
 		}
 	};
 

@@ -69,7 +69,7 @@
 	.title {
 		text-align: center;
 		max-width: 90%;
-		line-height: 1.2;
+		line-height: 1;
 	}
 
 	.my-archetypes-color {
