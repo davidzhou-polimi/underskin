@@ -46,7 +46,11 @@
         },
     };
 
-    let meta = $derived(PAGE_META[page.url.pathname] ?? PAGE_META["/"]);
+    let meta = $derived(
+        page.error
+            ? { title: "Errore · UnderSkin", description: "" }
+            : (PAGE_META[page.url.pathname] ?? PAGE_META["/"])
+    );
 </script>
 
 <svelte:head>

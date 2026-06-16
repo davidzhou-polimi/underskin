@@ -5,6 +5,8 @@
     import Navbar from "$lib/components/navbar/Navbar.svelte";
 
     // Configurazione del gradiente per la pagina di errore (colori unificati della Home)
+    let statusCode = $state(page.status);
+
     const ERROR_GRADIENT = {
         colors: [
             "var(--azzurro-200)",             // Chiaro - Favorito
@@ -21,29 +23,33 @@
     };
 </script>
 
-<svelte:head>
-    <title>{$page.status} · UnderSkin</title>
-</svelte:head>
-
 <InteractiveGradient config={ERROR_GRADIENT} />
 
 <Navbar />
 
 <main id="error-page">
     <div class="error-container">
-        <!-- Commento solo il PERCHÉ: Il codice di stato e il sottotitolo ereditano lo stile Rethink Sans pesante del footer -->
-        <h1 class="error-code">{$page.status}</h1>
-        
-        <!-- Commento solo il PERCHÉ: Messaggio poetico personalizzato visualizzato in evidenza -->
-        <p class="error-message">
-            Hai trovato una sfumatura della performance che non abbiamo ancora catalogato.<br />Evidentemente c'è ancora molto da scrivere.
-        </p>
+        <h1 class="error-code">{statusCode}</h1>
 
-        <div class="action-container">
-            <Button href="/" ariaLabel="Torna alla narrazione">
-                Torna alla narrazione
-            </Button>
-        </div>
+        {#if statusCode === 404}
+            <p class="error-message">
+                Hai trovato una sfumatura della performance che non abbiamo ancora catalogato.<br />Evidentemente c'è ancora molto da scrivere.
+            </p>
+            <div class="action-container">
+                <Button href="/" ariaLabel="Torna alla narrazione">
+                    Torna alla narrazione
+                </Button>
+            </div>
+        {:else}
+            <p class="error-message">
+                Il nostro sistema ha ceduto sotto pressione. Ci prendiamo un momento per recuperare le energie, riprova tra poco.
+            </p>
+            <div class="action-container">
+                <Button onclick={() => location.reload()} ariaLabel="Riprova ora">
+                    Riprova ora
+                </Button>
+            </div>
+        {/if}
     </div>
 </main>
 
@@ -70,6 +76,13 @@
         align-items: center;
         gap: var(--spacing-4);
         margin-top: var(--spacing-6);
+        transition: opacity 150ms ease-out;
+    }
+
+    @starting-style {
+        .error-container {
+            opacity: 0;
+        }
     }
 
     .error-code {
