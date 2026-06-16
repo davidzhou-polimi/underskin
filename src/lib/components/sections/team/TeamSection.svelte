@@ -18,7 +18,7 @@
 >
 	<div class="team-section__container">
 		{#if title}
-			<h3 class="section-intro-heading">{title}</h3>
+			<h3 class="section-title">{title}</h3>
 		{/if}
 		<TeamCarousel />
 	</div>
@@ -50,7 +50,7 @@
 		justify-content: center;
 	}
 
-	.section-intro-heading {
+	.section-title {
 		margin-bottom: var(--spacing-6);
         text-align: center;
 	}

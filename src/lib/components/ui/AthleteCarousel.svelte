@@ -11,6 +11,12 @@
 	 */
 	let { type = 'favorito' } = $props();
 
+	const PLURAL_TYPES = {
+		favorito: 'favoriti',
+		infortunato: 'infortunati',
+		insoddisfatto: 'insoddisfatti'
+	};
+
 	let activeIndex = $state(0);
 
 	let filteredAthletes = $derived(
@@ -96,7 +102,7 @@
 <div
 	class="carousel-container"
 	role="region"
-	aria-label="Athlete Showcase Carousel"
+	aria-label="Visualizzatore atleti {PLURAL_TYPES[type] ?? ''}"
 >
 	<div
 		class="carousel-track"
@@ -111,6 +117,7 @@
 				class="carousel-item"
 				onmouseenter={i === activeIndex ? () => tooltip.show('Click', 'semplice', 'pointer') : null}
 				onmouseleave={i === activeIndex ? () => tooltip.hide() : null}
+				role="none"
 			>
 				<AthleteCard
 					name={athlete.name}

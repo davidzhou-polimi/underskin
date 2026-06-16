@@ -61,7 +61,21 @@
 	let rotateClass = $derived(axis === 'X' ? 'rotate-x' : 'rotate-y');
 </script>
 
-<div class="athlete-card-container" use:flipCard={{ axis, duration }} use:hoverLift>
+<div
+	class="athlete-card-container"
+	use:flipCard={{ axis, duration }}
+	use:hoverLift
+	role="button"
+	tabindex="0"
+	aria-label="Card di {name}, clicca per girarla e leggere la citazione"
+	onkeydown={(e) => {
+		if (e.key === ' ' || e.key === 'Enter') {
+			e.preventDefault();
+			// Attiva programmaticamente l'azione di click gestita dal plugin flipCard
+			e.currentTarget.click();
+		}
+	}}
+>
 	<div class="card-inner">
 		
 		<!-- FRONT -->

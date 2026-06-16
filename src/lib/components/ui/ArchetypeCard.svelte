@@ -72,7 +72,6 @@
     use:hoverLift
     onmouseenter={() => { isHovered = true; tooltip.show('Esplora', 'semplice', 'pointer'); }}
     onmouseleave={() => { isHovered = false; tooltip.hide(); }}
-    role="presentation"
 >
     <div class="card-inner" style="--text-primary: {colorTextPrimary};">
         <!-- Sfondo glassato ad effetto ghiaccio -->
@@ -108,11 +107,6 @@
 		/* display: block e text-decoration: none servono a preservare il corretto layout box-model della card ed evitare sottolineature ereditate dai link del browser */
 		display: block;
 		text-decoration: none;
-	}
-
-	.archetype-card-container.non-clickable {
-		/* Commento solo il PERCHÉ: Rimuove l'indicazione di interattività sul puntatore per elementi informativi statici */
-		cursor: default;
 	}
 
 	.card-inner {

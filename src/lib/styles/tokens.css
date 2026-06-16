@@ -1,38 +1,7 @@
-
 @import "./tokens/colors.css";
 @import "./tokens/spacing.css";
 @import "./tokens/radius.css";
 @import "./tokens/typography.css";
-/* ==========================================================================
-   Utility Globali: Testo con Gradiente (Statico o Animato)
-   ========================================================================== */
-
-/* 1. Versione STATICA: Il testo ha la sfumatura ma NON si muove */
-.gradient-text {
-    background: linear-gradient(
-        120deg,
-        var(--gradient-c1, #8035D2),
-        var(--gradient-c2, #6A96DF),
-        var(--gradient-c3, #D86146)
-    );
-    
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* 2. Versione ANIMATA: Aggiunge il movimento infinito */
-.animate-gradient-text {
-    background-size: 300% 100%;
-    animation: global-shift-gradient 6s linear infinite;
-}
-
-/* Animazione unica riutilizzabile */
-@keyframes global-shift-gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
 @import "./tokens/motion.css";
 
 /* ==========================================================================
@@ -84,6 +53,3 @@
 	-webkit-backdrop-filter: blur(8px);
 	border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);
 }
-
-
-

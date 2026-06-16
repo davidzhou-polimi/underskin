@@ -66,6 +66,7 @@
 		text-align: center;
 		margin: 0 0 var(--spacing-6) 0;
 		max-width: var(--spacing-17);
+        margin-bottom: var(--spacing-6);
 	}
 
 	.cards-row {
@@ -77,9 +78,5 @@
 		flex-wrap: wrap;
 		padding-inline: var(--spacing-4);
 		box-sizing: border-box;
-	}
-
-	.section-intro-heading {
-		margin-bottom: var(--spacing-6);
 	}
 </style>

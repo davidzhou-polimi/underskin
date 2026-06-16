@@ -100,12 +100,6 @@
         height: 100vh;
         overflow: hidden;
     }
-    .circles-layer {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        pointer-events: none;
-    }
     .text-container {
         position: absolute;
         inset: 0;
