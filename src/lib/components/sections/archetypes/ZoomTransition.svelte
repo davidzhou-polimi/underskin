@@ -94,7 +94,8 @@
 
     .zoom-text {
         font-size: var(--text-3xl); /* Dimensione calibrata sul viewBox dell'SVG */
-        font-weight: 1000;
+        /* Commento solo il PERCHÉ: allinea il testo zoom dell'SVG con il peso massimo (black) definito globalmente */
+        font-weight: var(--text-black);
         line-height: 1.1;
     }
 

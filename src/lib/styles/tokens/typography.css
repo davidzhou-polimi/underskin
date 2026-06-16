@@ -34,54 +34,69 @@
 	--text-2xl: 8rem;      /* 128px */
 	--text-3xl: 12.5rem;   /* 200px */
 
+    	/* ============================================================
+	   TYPE WEIGHTS
+	   ============================================================ */
+    --text-regular: 400;
+    --text-medium: 500;
+    --text-semibold: 600;
+    --text-bold: 700;
+    --text-extrabold: 800;
+    --text-black: 1000;
+
+
 	/* ============================================================
 	   TEXT STYLES
 	   La variante mobile sovrascrive gli stessi token in @media
 	   ============================================================ */
 	--text-caption-size:      var(--text-s);
-	--text-caption-weight:    400;
+	--text-caption-weight:    var(--text-regular);
 
 	--text-body-size:         var(--text-l);
-	--text-body-weight:       400;
+	--text-body-weight:       var(--text-regular);
 
     /* Per titoli o testi molto grandi */
 	--text-title-size:        var(--text-2xl);
-	--text-title-weight:      800;
+	--text-title-weight:      var(--text-extrabold);
 
 	--text-important-size:    var(--text-xl);
-	--text-important-weight:  700;
+	--text-important-weight:  var(--text-bold);
 
 	--text-service-size:      var(--text-2xs);
-	--text-service-weight:    500;
+	--text-service-weight:    var(--text-regular);
 
 	--text-card-front-size:   var(--text-m);
-	--text-card-front-weight: 700;
+	--text-card-front-weight: var(--text-bold);
 
     --text-card-back-context-size:   var(--text-2xs);
-    --text-card-back-context-weight: 400;
+    --text-card-back-context-weight: var(--text-regular);
 
     --text-card-back-quote-size:   var(--text-xs);
-    --text-card-back-quote-weight: 400;
+    --text-card-back-quote-weight: var(--text-regular);
 
     /* Solo per testo "UnderSkin" nel footer */
 	--text-footer-size:       var(--text-3xl);
-	--text-footer-weight:     1000;
+	--text-footer-weight:     var(--text-black);
 
 	--text-intro-card-size:   var(--text-2xs);
-	--text-intro-card-weight: 700;
+	--text-intro-card-weight: var(--text-bold);
 
 	/* Solo per la barra di navigazione e logo */
 	--text-nav-size:          var(--text-2xs);
-	--text-nav-weight:        600;
-	--text-nav-active-weight: 700;
+	--text-nav-weight:        var(--text-semibold);
+	--text-nav-active-weight: var(--text-bold);
 
 	--text-logo-size:         var(--text-m);
-	--text-logo-weight:       800;
+	--text-logo-weight:       var(--text-extrabold);
+
+    --text-button-size:       var(--text-2xs);
+    --text-button-weight:     var(--text-medium);
 }
 
 html,
 body {
 	font-family: var(--font-family-base);
+	color: var(--content-primary);
 	overscroll-behavior: none; /* Disattiva lo scroll bounce elastico nativo e la comparsa di bordi bianchi in fase di trascinamento */
 }
 
@@ -94,8 +109,7 @@ h1 {
 	margin: 0;
 	font-size: var(--text-title-size);         /* 8rem / 128px */
 	font-weight: var(--text-title-weight);      /* 800 */
-	line-height: 1.1;
-	color: var(--content-primary);
+	line-height: 1;
 }
 
 h2 {
@@ -103,7 +117,6 @@ h2 {
 	font-size: var(--text-important-size);      /* 3.5rem / 56px */
 	font-weight: var(--text-important-weight);  /* 700 */
 	line-height: 1.2;
-	color: var(--content-primary);
 }
 
 h3 {
@@ -111,7 +124,6 @@ h3 {
 	font-size: var(--text-body-size);           /* 2.5rem / 40px */
 	font-weight: var(--text-body-weight);       /* 400 */
 	line-height: 1.25;
-	color: var(--content-primary);
 }
 
 h4 {
@@ -119,15 +131,10 @@ h4 {
 	font-size: var(--text-caption-size);        /* 1.5rem / 24px */
 	font-weight: var(--text-caption-weight);    /* 400 */
 	line-height: 1.4;
-	color: var(--content-primary);
 }
 
 h5 {
 	margin: 0;
-	font-size: var(--text-service-size);        /* 1rem / 16px */
-	font-weight: var(--text-service-weight);    /* 500 */
-	line-height: 1.4;
-	color: var(--content-primary);
 }
 
 h6 {

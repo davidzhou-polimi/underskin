@@ -9,9 +9,11 @@
 <style>
     .nav-logo {
         font-family: 'Rethink Sans', sans-serif;
-        font-size: 35px;
+        /* Commento solo il PERCHÉ: utilizza il token di dimensione standard per il logo della barra di navigazione */
+        font-size: var(--text-logo-size);
         font-style: normal;
-        font-weight: 800; /* ExtraBold */
+        /* Commento solo il PERCHÉ: allinea il peso del logo con il token tipografico del brand */
+        font-weight: var(--text-logo-weight);
         line-height: normal;
         color: var(--content-primary);
         text-decoration: none;

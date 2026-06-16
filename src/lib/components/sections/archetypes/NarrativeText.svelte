@@ -98,7 +98,8 @@
 	.highlighted-keyword {
 		position: relative;
 		display: inline;
-		font-weight: 700;
+		/* Commento solo il PERCHÉ: allinea l'evidenziazione delle parole chiave con il peso bold globale */
+		font-weight: var(--text-bold);
 		padding-bottom: 6px;
 	}
 

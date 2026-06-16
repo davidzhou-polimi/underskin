@@ -144,7 +144,8 @@
     .circle-description {
         font-family: var(--font-family-base);
         font-size: var(--text-caption-size);
-        font-weight: 700;
+        /* Commento solo il PERCHÉ: allinea la descrizione dello stage al peso bold globale */
+        font-weight: var(--text-bold);
         fill: var(--content-primary);
         will-change: opacity;
     }

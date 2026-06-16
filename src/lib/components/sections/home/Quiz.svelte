@@ -330,7 +330,8 @@
 		z-index: 2;
 		text-align: center;
 		font-family: var(--font-family-base, sans-serif);
-		font-weight: 700;
+		/* Commento solo il PERCHÉ: allinea il peso del font del testo overlay al token bold globale */
+		font-weight: var(--text-bold);
 	}
 
 	.animate-gradient-text {
@@ -414,7 +415,8 @@
 	}
 
 	.strong-focus {
-		font-weight: 700;
+		/* Commento solo il PERCHÉ: allinea il peso del font evidenziato al token bold globale */
+		font-weight: var(--text-bold);
 	}
 
 	.quote-wrapper {

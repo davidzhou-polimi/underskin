@@ -271,7 +271,8 @@
 	.subtitle {
 		font-family: var(--font-family-base);
 		font-size: var(--text-s);
-        font-weight: 400;
+        /* Commento solo il PERCHÉ: allinea il testo descrittivo secondario al peso regular globale */
+        font-weight: var(--text-regular);
 		color: var(--neutral-500);
 		margin-top: var(--spacing-2);
 		margin-bottom: var(--spacing-0);
@@ -294,7 +295,8 @@
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-size: 300% 100%;
-		font-weight: 700;
+		/* Commento solo il PERCHÉ: allinea il testo di game over con il peso bold globale */
+		font-weight: var(--text-bold);
 		animation: global-shift-gradient 8s linear infinite;
 		display: inline-block;
 	}
@@ -355,9 +357,10 @@
 		position: relative;
 		z-index: 2;
 		font-family: var(--font-family-base);
-		font-size: 5.5rem; /* Utilizza il token tipografico --text-xl (3.5rem / 56px) */
-		font-weight: 800;
-		color: var(--background-primary);
+		font-size: 5.5rem;
+		/* Commento solo il PERCHÉ: allinea la percentuale di precisione del gioco con il peso extrabold globale */
+		font-weight: var(--text-extrabold);
+		color: color-mix(in srgb, var(--content-dark-primary) 90%, transparent);
 		animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 	}
 

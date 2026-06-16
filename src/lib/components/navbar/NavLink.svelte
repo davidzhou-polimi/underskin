@@ -9,9 +9,11 @@
 <style>
     .nav-link {
         font-family: 'Rethink Sans', sans-serif;
-        font-size: 16px;
+        /* Commento solo il PERCHÉ: utilizza il token di dimensione standard per la barra di navigazione */
+        font-size: var(--text-nav-size);
         font-style: normal;
-        font-weight: 600; /* SemiBold */
+        /* Commento solo il PERCHÉ: utilizza il token specifico per la barra di navigazione */
+        font-weight: var(--text-nav-weight);
         line-height: 1.5;
         letter-spacing: -0.264px;
         color: var(--content-primary);

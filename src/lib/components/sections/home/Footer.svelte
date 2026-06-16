@@ -86,7 +86,8 @@
     .brand-text {
         font-family: "Rethink Sans", Arial, sans-serif;
         font-size: 500px; 
-        font-weight: 1000;
+        /* Commento solo il PERCHÉ: utilizza il token di peso specifico predisposto per il footer del brand */
+        font-weight: var(--text-footer-weight);
         fill: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
         letter-spacing: -0.02em;
     }

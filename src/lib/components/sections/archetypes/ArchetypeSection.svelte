@@ -61,7 +61,8 @@
 
 	.section-title {
 		font-size: var(--text-m);
-		font-weight: 400;
+		/* Commento solo il PERCHÉ: allinea il peso del titolo della sezione con il peso regular globale */
+		font-weight: var(--text-regular);
 		color: var(--content-primary);
 		text-align: center;
 		margin: 0 0 var(--spacing-6) 0;

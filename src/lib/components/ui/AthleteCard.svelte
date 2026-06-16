@@ -329,7 +329,8 @@
 	}
 
 	.quote-text {
-		font-size: 1.25rem; /* 20px from Figma spec */
+		/* Commento solo il PERCHÉ: utilizza il token specifico per la dimensione del testo di citazione nel retro della card */
+		font-size: var(--text-card-back-quote-size);
 		line-height: normal;
 		font-style: italic;
 		margin: 0;
