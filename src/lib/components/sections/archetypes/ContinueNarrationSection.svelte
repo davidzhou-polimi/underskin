@@ -118,13 +118,14 @@
 		display: flex;
 		justify-content: center;
 		width: 100%;
+		margin-top: var(--spacing-10);
 	}
 
 	.pill-button {
 		color: var(--content-primary);
 		font-family: inherit;
 		font-size: var(--text-nav-size);
-		font-weight: var(--text-nav-active-weight);
+		font-weight: 400;
 		border-radius: 9999px;
 		padding: var(--spacing-2) var(--spacing-6);
 		cursor: pointer;

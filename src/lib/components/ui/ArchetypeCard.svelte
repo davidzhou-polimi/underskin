@@ -76,12 +76,7 @@
 		onclick={() => tooltip.hide()}
 		role="presentation"
 	>
-		<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-			<!-- SVG glass background -->
-			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
-				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
-			</svg>
+		<div class="card-inner glass-effect" style="--text-primary: {colorTextPrimary};">
 
 			<!-- Contenitore video/media dell'archetipo -->
 			<div class="media-container">
@@ -110,12 +105,7 @@
 		onmouseleave={() => { isHovered = false; }}
 		role="presentation"
 	>
-		<div class="card-inner" style="--text-primary: {colorTextPrimary};">
-			<!-- SVG glass background -->
-			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
-				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
-			</svg>
+		<div class="card-inner glass-effect" style="--text-primary: {colorTextPrimary};">
 
 			<!-- Contenitore video/media dell'archetipo -->
 			<div class="media-container">
@@ -164,28 +154,8 @@
 		overflow: hidden;
 	}
 
-	.glass-svg-bg {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-	}
-
-	.glass-glow {
-		fill: rgb(from var(--neutral-100) r g b / 0.3);
-		filter: blur(8px);
-	}
-
-	.glass-surface {
-		fill: rgb(from var(--neutral-100) r g b / 0.6);
-		stroke: rgb(from var(--neutral-50) r g b / 0.4);
-		stroke-width: 1;
-		transition: fill 0.3s ease;
-	}
-
-	.archetype-card-container:hover .glass-surface {
-		fill: rgb(from var(--neutral-100) r g b / 0.78);
+	.archetype-card-container:hover .card-inner {
+		background-color: rgb(from var(--neutral-100) r g b / 0.78);
 	}
 
 	.media-container {
