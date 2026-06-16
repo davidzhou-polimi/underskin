@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Figma__get_screenshot",
+      "Bash(curl -s -o /tmp/figma_cursor.png \"https://www.figma.com/api/mcp/asset/03e6395a-20f3-45c3-9620-b71014c3c96d\")"
+    ]
+  }
+}

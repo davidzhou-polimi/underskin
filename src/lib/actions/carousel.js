@@ -22,11 +22,13 @@ function getRadius(containerWidth) {
  * @param {number} radius
  */
 function getCardTransform(diff, radius) {
+	const absDiff = Math.abs(diff);
 	const angle = diff * ANGLE_STEP * (Math.PI / 180);
 	const x = radius * Math.sin(angle);
-	const y = radius * (1 - Math.cos(angle));
+	// Stesso raggio del cerchio SVG (R_nav = navWidth * 0.694) → distanza arco→card uguale per tutte le card
+	const arcR = (typeof window !== 'undefined' ? window.innerWidth : 1200) * 0.694;
+	const y = arcR * (1 - Math.cos(angle));
 	const rotation = diff * ANGLE_STEP;
-	const absDiff = Math.abs(diff);
 	return {
 		x,
 		y,

@@ -80,11 +80,7 @@
 	<div class="card-inner">
 
 		<!-- FRONT -->
-		<div class="card-face card-front" style="--text-primary: {colorTextPrimary};">
-			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
-				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
-			</svg>
+		<div class="card-face card-front" style="--text-primary: {colorTextPrimary}; background-color: rgb(from var(--neutral-100) r g b / 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);">
 
 			<div class="media-container">
 				{#if imageSrc}
@@ -101,11 +97,7 @@
 		</div>
 
 		<!-- BACK -->
-		<div class="card-face card-back {rotateClass}" style="--text-primary: {colorTextPrimary}; --text-secondary: {colorTextSecondary};">
-			<svg class="glass-svg-bg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-				<rect class="glass-glow" width="100%" height="100%" rx="32"/>
-				<rect class="glass-surface" width="100%" height="100%" rx="32"/>
-			</svg>
+		<div class="card-face card-back {rotateClass}" style="--text-primary: {colorTextPrimary}; --text-secondary: {colorTextSecondary}; background-color: rgb(from var(--neutral-100) r g b / 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);">
 
 			<div class="background-inset-back" style="background: linear-gradient(to bottom, {colorBrandBack} 0%, {colorBrandBackEnd} 50%, {colorBrandBackEnd} 100%);"></div>
 
@@ -173,31 +165,6 @@
 
 	.card-back.rotate-x {
 		transform: rotateX(180deg);
-	}
-
-	/* SVG glass background */
-	.glass-svg-bg {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-	}
-
-	.glass-glow {
-		fill: rgb(from var(--neutral-100) r g b / 0.3);
-		filter: blur(8px);
-	}
-
-	.glass-surface {
-		fill: rgb(from var(--neutral-100) r g b / 0.6);
-		stroke: rgb(from var(--neutral-50) r g b / 0.4);
-		stroke-width: 1;
-		transition: fill 0.3s ease;
-	}
-
-	.athlete-card-container:hover .glass-surface {
-		fill: rgb(from var(--neutral-100) r g b / 0.78);
 	}
 
 	/* FRONT STYLES */

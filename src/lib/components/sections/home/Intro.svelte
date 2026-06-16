@@ -48,7 +48,7 @@
 		<p class="reveal-line">1 vita di sacrifici</p>
 		<p class="reveal-line">4 anni di preparazione</p>
 		<div class="reveal-line final-phrase">
-			<span>Tutto per soli</span>
+			<span class="tutto-per-soli">Tutto per soli</span>
 			<span class="break-line gradient-text animate-gradient-text dynamic-archetypes">
 				120 secondi di performance
 			</span>
@@ -107,6 +107,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+	}
+
+	.tutto-per-soli {
+		font-size: 40px;
+		font-weight: 400;
 	}
 
 	.break-line {
