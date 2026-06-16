@@ -1,5 +1,6 @@
 <script>
 	import ArchetypeCard from '$lib/components/ui/ArchetypeCard.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { goto } from '$app/navigation';
 
@@ -58,14 +59,12 @@
 
 		<!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
 		<div class="action-container">
-			<button 
-				type="button" 
-				class="glass-effect pill-button" 
+			<Button 
 				onclick={handleButtonClick}
-				aria-label="Torna alla narrazione"
+				ariaLabel="Torna alla narrazione"
 			>
 				Torna alla narrazione
-			</button>
+			</Button>
 		</div>
 	</div>
 </section>
@@ -114,22 +113,6 @@
 		display: flex;
 		justify-content: center;
 		width: 100%;
-	}
-
-	.pill-button {
-		color: var(--content-primary);
-		font-family: inherit;
-		font-size: var(--text-nav-size);
-		font-weight: var(--text-nav-active-weight);
-		border-radius: 9999px;
-		padding: var(--spacing-2) var(--spacing-6);
-		cursor: pointer;
-		transition: background-color var(--transition-duration-normal) var(--easing-standard),
-					transform var(--transition-duration-normal) var(--easing-standard);
-	}
-
-	.pill-button:hover {
-		background-color: rgb(from var(--neutral-100) r g b / 0.8);
 	}
 
 	/* Responsive per schermi più piccoli */
