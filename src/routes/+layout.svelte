@@ -10,6 +10,13 @@
 
     let tooltipState = $derived(tooltip.current);
 
+    // Nasconde il tooltip ad ogni cambio di rotta: onmouseleave non si attiva
+    // quando il componente viene smontato durante la navigazione.
+    $effect(() => {
+        page.url.pathname;
+        tooltip.hide();
+    });
+
     /** @type {Record<string, {title: string, description: string}>} */
     const PAGE_META = {
         "/": {
@@ -56,13 +63,11 @@
 >
     {@render children()}
 
-    {#if tooltipState.visible && tooltipState.text}
-        <CursorTooltip
-            visible={true}
-            text={tooltipState.text}
-            type={tooltipState.type}
-            x={tooltipState.x}
-            y={tooltipState.y}
-        />
-    {/if}
+    <CursorTooltip
+        visible={tooltipState.visible}
+        text={tooltipState.text}
+        type={tooltipState.type}
+        x={tooltipState.x}
+        y={tooltipState.y}
+    />
 </div>

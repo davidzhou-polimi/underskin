@@ -116,7 +116,7 @@
 			<div
 				class="carousel-item"
 				onmouseenter={i === activeIndex ? () => tooltip.show('Click', 'semplice', 'pointer') : null}
-				onmouseleave={i === activeIndex ? () => tooltip.hide() : null}
+				onmouseleave={() => tooltip.hide()}
 				role="none"
 			>
 				<AthleteCard

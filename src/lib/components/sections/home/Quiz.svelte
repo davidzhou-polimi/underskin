@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 	import { quizAnimation } from '$lib/actions/home/quizAnimation.js';
-	import CursorTooltip from '$lib/components/ui/CursorTooltip.svelte';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 
 	/**
@@ -25,9 +25,6 @@
 	// Stati reattivi (Rune Svelte 5)
 	let quizState = $state('choosing'); // 'choosing' | 'animating' | 'results'
 	let textStep = $state(1);           // 1: Primo blocco di testo, 2: Citazione Adrian Yung
-	let isHovering = $state(false);
-	let mouseX = $state(0);
-	let mouseY = $state(0);
 	/** Permette allo scroll di passare quando l'utente ha finito gli step e naviga via */
 	let canLeave = $state(false);
 
@@ -52,13 +49,8 @@
 		return () => window.removeEventListener('wheel', preventScrollDuringQuiz);
 	});
 
-	/**
-	 * @param {MouseEvent} event
-	 */
-	function handleMouseMove(event) {
-		mouseX = event.clientX;
-		mouseY = event.clientY;
-	}
+	// Nasconde il tooltip quando quizState cambia mentre il mouse è ancora nell'area
+	$effect(() => { if (quizState !== 'choosing') tooltip.hide(); });
 
 	/**
 	 * @param {WheelEvent} e
@@ -133,9 +125,8 @@
 	class="quiz-wrapper"
 	aria-label="Quiz interattivo tra mente e fisico"
 	onwheel={handleVirtualScroll}
-	onmousemove={handleMouseMove}
-	onmouseenter={() => isHovering = true}
-	onmouseleave={() => isHovering = false}
+	onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
+	onmouseleave={() => tooltip.hide()}
 	use:trackSection={{ id: 'quiz' }}
 	use:quizAnimation={{
 		quizState,
@@ -204,9 +195,6 @@
 		</div>
 	</div>
 
-	{#if isHovering && quizState === 'choosing'}
-		<CursorTooltip visible={true} text="Scegli" type="semplice" x={mouseX} y={mouseY} />
-	{/if}
 </section>
 
 <style>

@@ -1,25 +1,22 @@
 <script>
-
-    // Riceve le proprietà reattive dallo store globale di Lucrezia
-    let { 
-        visible = false, 
-        text = '', 
-        type = 'semplice', 
-        x = 0, 
-        y = 0 
+    let {
+        visible = false,
+        text = '',
+        type = 'semplice',
+        x = 0,
+        y = 0
     } = $props();
 
-    // Offset per distanziare la card satinata dalla punta del mouse
-    const OFFSET_X = 16; 
+    const OFFSET_X = 16;
     const OFFSET_Y = 16;
 </script>
 
-<div 
-    class="cursor-tooltip-wrapper" 
+<div
+    class="cursor-tooltip-wrapper"
+    class:is-visible={visible}
     class:mod-paragrafo={type === 'paragrafo'}
     class:mod-semplice={type === 'semplice'}
-    style:left="{x + OFFSET_X}px"
-    style:top="{y + OFFSET_Y}px"
+    style="--x: {x + OFFSET_X}px; --y: {y + OFFSET_Y}px"
 >
     <div class="glass-effect tooltip-glass-override">
         <span class="tooltip-text-content">{text}</span>
@@ -29,30 +26,35 @@
 <style>
     .cursor-tooltip-wrapper {
         position: fixed;
-        pointer-events: none; /* Impedisce sfarfallii al movimento del mouse */
-        z-index: 9999; /* Sta sopra a tutto il resto del sito */
-        will-change: left, top; /* Ottimizza le performance di spostamento */
-        width: max-content
+        top: 0;
+        left: 0;
+        transform: translate(var(--x), var(--y));
+        pointer-events: none;
+        z-index: 9999;
+        will-change: transform;
+        width: max-content;
+        opacity: 0;
+        transition: opacity var(--transition-duration-fast) var(--easing-in);
     }
 
-    /* Variante 1: Cursore in modalità Semplice */
+    .cursor-tooltip-wrapper.is-visible {
+        opacity: 1;
+        transition: opacity var(--transition-duration-fast) var(--easing-out);
+    }
+
     .mod-semplice {
         max-width: 260px;
     }
 
-    /* Variante 2: Cursore in modalità Paragrafo (usato nella tua sezione) */
     .mod-paragrafo {
-        max-width: 400px; /* Diamo il giusto spazio alla spiegazione clinica */
+        max-width: 400px;
     }
 
-    /* Forza il componente di Chiara ad adattarsi perfettamente alle dimensioni del Tooltip */
     .tooltip-glass-override {
         width: 100% !important;
         height: auto !important;
         padding: var(--spacing-2) var(--spacing-3) !important;
         border-radius: var(--radius-s) !important;
-        
-        /* Ombra morbida a doppia diffusione che simula una luce naturale e premium */
         box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
     }
 
@@ -67,6 +69,6 @@
         font-weight: var(--text-service-weight);
         color: var(--content-primary, #ffffff);
         line-height: 1.4;
-        white-space: pre-line; /* Riconosce gli andata a capo (\n) nei testi */
+        white-space: pre-line;
     }
 </style>
