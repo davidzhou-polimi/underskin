@@ -66,11 +66,6 @@
 
 <svelte:window bind:scrollY bind:innerHeight />
 
-<svelte:head>
-	<title>About - UnderSkin</title>
-	<meta name="description" content="Chi siamo e la filosofia dietro il progetto UnderSkin." />
-</svelte:head>
-
 <InteractiveGradient config={activeConfig} />
 
 <main id="about" use:trackScrollProgress>

@@ -44,14 +44,6 @@
     );
 </script>
 
-<svelte:head>
-    <title>Infortunato - UnderSkin</title>
-    <meta 
-        name="description" 
-        content="Analisi dell'archetipo dell'Infortunato: calo delle prestazioni in situazioni ad alta pressione, dinamiche di ansia e blocco dell'automatismo psicomotorio." 
-    />
-</svelte:head>
-
 <svelte:window bind:scrollY bind:innerHeight />
 
 <InteractiveGradient config={activeConfig} />
@@ -61,9 +53,6 @@
         theme="infortunato" 
         title="L'INFORTUNATO" 
         sectionId="infortunato-hero"
-        bg="var(--arancione-900)"
-        blob1="var(--arancione-500)"
-        blob2="var(--arancione-700)"
         textShadow="none"
     />
 

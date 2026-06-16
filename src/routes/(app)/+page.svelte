@@ -95,12 +95,7 @@
     }
 </script>
 
-<svelte:window
-    bind:scrollY
-    bind:innerHeight
-    onwheel={handlePreventScroll}
-    ontouchmove={handlePreventScroll}
-/>
+<svelte:window bind:scrollY bind:innerHeight onwheel={handlePreventScroll} ontouchmove={handlePreventScroll} />
 
 <InteractiveGradient config={activeConfig} />
 

@@ -43,14 +43,6 @@
     );
 </script>
 
-<svelte:head>
-    <title>Favorito - UnderSkin</title>
-    <meta 
-        name="description" 
-        content="Analisi dell'archetipo dell'Favorito: quando vincere diventa l'unico risultato accettabile, la pressione psicologica cresce fino a trasformarsi in Fear of Failure e Choking Under Pressure." 
-    />
-</svelte:head>
-
 <svelte:window bind:scrollY bind:innerHeight />
 
 <InteractiveGradient config={activeConfig} />

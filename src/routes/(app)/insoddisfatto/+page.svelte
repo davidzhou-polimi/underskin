@@ -43,14 +43,6 @@
     );
 </script>
 
-<svelte:head>
-    <title>Insoddisfatto - UnderSkin</title>
-    <meta 
-        name="description" 
-        content="Analisi dell'archetipo dell'Insoddisfatto: perfezionismo opprimente, il paradosso dell'argento, pensiero controfattuale e incapacità di godere dei traguardi raggiunti." 
-    />
-</svelte:head>
-
 <svelte:window bind:scrollY bind:innerHeight />
 
 <InteractiveGradient config={activeConfig} />
@@ -60,7 +52,7 @@
         theme="insoddisfatto" 
         title="L'INSODDISFATTO" 
         sectionId="insoddisfatto-hero"
-        textShadow="0 4px 40px rgba(128, 53, 210, 0.2)"
+        textShadow="none"
     />
 
     <PerfectionGame />
