@@ -3,6 +3,7 @@
 	import { carousel } from '$lib/actions/carousel.js';
 	import athletesData from '$lib/data/athletes.json';
 	import { gsap } from 'gsap';
+	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
@@ -138,8 +139,6 @@
 
 	// ─── Custom drag cursor (fullscreen, attivo solo quando la sezione è visibile) ──
 
-	let cursorX = $state(0);
-	let cursorY = $state(0);
 	let sectionActive = $state(false);
 	let isOverCard = $state(false);
 	let isDragging = $state(false);
@@ -161,11 +160,16 @@
 
 		/** @param {MouseEvent} e */
 		function onMove(e) {
-			cursorX = e.clientX;
-			cursorY = e.clientY;
 			const t = /** @type {Element} */ (e.target);
 			isOverCard = t.closest?.('.athlete-card-container') !== null ||
 			             t.closest?.('.card-overlay') !== null;
+			if (sectionActive) {
+				if (isOverCard) {
+					tooltip.show('Click', 'semplice', 'pointer');
+				} else {
+					tooltip.show('← • →', 'semplice', 'none');
+				}
+			}
 			if (isDragging && !isOverCard) {
 				const delta = e.clientX - dragLastX;
 				if (Math.abs(delta) > DRAG_THRESHOLD) {
@@ -197,15 +201,12 @@
 		};
 	});
 
-	// Applica cursor:none al body quando la sezione è attiva
 	$effect(() => {
-		if (sectionActive) {
-			document.body.classList.add('underskin-carousel-active');
-		} else {
-			document.body.classList.remove('underskin-carousel-active');
+		if (!sectionActive) {
+			tooltip.hide();
 			isDragging = false;
 		}
-		return () => document.body.classList.remove('underskin-carousel-active');
+		return () => tooltip.hide();
 	});
 </script>
 
@@ -244,25 +245,6 @@
 			</div>
 		{/each}
 	</div>
-
-	<!-- Cursore drag custom: visibile su tutto lo schermo quando la sezione è attiva e non si è sulle card -->
-	{#if sectionActive && !isOverCard}
-		<div
-			class="drag-cursor"
-			class:drag-cursor--active={isDragging}
-			style="left:{cursorX}px; top:{cursorY}px;"
-			aria-hidden="true"
-		>
-			<svg width="80" height="24" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<!-- Freccia sinistra -->
-				<path d="M14 12H2M2 12L8 6M2 12L8 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				<!-- Pallino centrale -->
-				<circle cx="40" cy="12" r="3.5" fill="currentColor"/>
-				<!-- Freccia destra -->
-				<path d="M66 12H78M78 12L72 6M78 12L72 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-			</svg>
-		</div>
-	{/if}
 
 	<!-- Navigation: SVG uses full-bleed CSS transform so the arc exits the full section width -->
 	<div class="carousel-navigation">
@@ -312,26 +294,6 @@
 		padding: var(--spacing-2) 0;
 		outline: none;
 	}
-
-	.drag-cursor {
-		position: fixed;
-		pointer-events: none;
-		z-index: 9999;
-		transform: translate(-50%, -50%);
-		color: var(--content-primary);
-		opacity: 0.85;
-		transition: opacity 0.15s ease, transform 0.1s ease;
-	}
-
-	.drag-cursor--active {
-		opacity: 1;
-		transform: translate(-50%, -50%) scale(0.9);
-	}
-
-	/* Nasconde il cursore di sistema su tutto lo schermo quando la sezione carousel è centrata */
-	:global(body.underskin-carousel-active) { cursor: none; }
-	:global(body.underskin-carousel-active .athlete-card-container),
-	:global(body.underskin-carousel-active .card-overlay) { cursor: pointer; }
 
 	.carousel-track {
 		width: 100%;

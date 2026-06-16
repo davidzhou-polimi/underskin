@@ -1,7 +1,6 @@
 <script>
 	import { flipCard } from '$lib/actions/flipCard.js';
 	import { hoverLift } from '$lib/actions/hoverLift.js';
-	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
 	 * @type {{
@@ -28,13 +27,6 @@
 		isActive = false
 	} = $props();
 
-	const handleCardEnter = () => {
-		if (isActive) tooltip.show('Click', 'semplice', 'pointer');
-	};
-
-	const handleCardLeave = () => {
-		if (isActive) tooltip.hide();
-	};
 
 	const ARCHETYPE_COLORS = {
 		favorito: {
@@ -74,8 +66,6 @@
 	class="athlete-card-container"
 	use:flipCard={{ axis, duration }}
 	use:hoverLift
-	onmouseenter={handleCardEnter}
-	onmouseleave={handleCardLeave}
 >
 	<div class="card-inner">
 

@@ -73,6 +73,7 @@
 		use:hoverLift
 		onmouseenter={() => { isHovered = true; tooltip.show('Esplora', 'semplice', 'pointer'); }}
 		onmouseleave={() => { isHovered = false; tooltip.hide(); }}
+		onclick={() => tooltip.hide()}
 		role="presentation"
 	>
 		<div class="card-inner" style="--text-primary: {colorTextPrimary};">
