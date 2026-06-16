@@ -1,5 +1,5 @@
 <script>
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
     import Button from "$lib/components/ui/Button.svelte";
     import Navbar from "$lib/components/navbar/Navbar.svelte";
