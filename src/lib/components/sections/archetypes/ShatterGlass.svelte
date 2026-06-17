@@ -128,6 +128,15 @@
     height: 100vh;
     z-index: 9;
     will-change: opacity;
+
+    /* Per evitare un taglio netto all'inizio dello scroll dell'effetto ghiaccio */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 20vh);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 20vh);
+  }
+
+  .whole-glass-plate :global(.glass-effect) {
+    /* Rimuove la linea di contorno rigida per consentire una transizione fluida dello sfondo sfocato */
+    border: none !important;
   }
 
   .full-plate {
