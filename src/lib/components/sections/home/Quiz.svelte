@@ -265,8 +265,6 @@
 	}
 
 	.circle-container.left-side.is-final {
-		/* Commento solo il PERCHÉ: allinea la traslazione finale del cerchio sinistro al nuovo posizionamento bilanciato e centrato nella viewport */
-		transform: translateX(calc(-1 * var(--spacing-5))) scale(1.5) !important;
 		opacity: 1 !important;
 	}
 
@@ -280,7 +278,6 @@
 	}
 
 	.circle-container.right-side.is-hidden-final {
-		transform: translateX(500px) !important;
 		opacity: 0 !important;
 		pointer-events: none;
 	}

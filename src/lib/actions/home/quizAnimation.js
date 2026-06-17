@@ -99,6 +99,13 @@ export function quizAnimation(node, params) {
 		onStateChange('animating');
 		lockScroll();
 
+		// Calcola lo spostamento Y necessario a centrare il quiz-body nella viewport
+		// una volta che il titolo sparisce: attualmente il flex centra titolo + quiz-body
+		// insieme, quindi il quiz-body risulta sotto il centro ottico del viewport.
+		const quizBody = node.querySelector('.quiz-body');
+		const bodyBounds = quizBody.getBoundingClientRect();
+		const yShift = Math.round(window.innerHeight / 2 - (bodyBounds.top + bodyBounds.height / 2));
+
 		activeTimeline = gsap.timeline({
 			onComplete: () => {
 				quizState = 'results';
@@ -106,12 +113,17 @@ export function quizAnimation(node, params) {
 			}
 		});
 
-		// fade out del titolo (sempre)
+		// fade out del titolo + quiz-body sale al centro del viewport in sincronia
 		activeTimeline.to(node.querySelector('.quiz-title-wrap'), {
 			opacity: 0,
 			y: -60,
 			duration: 0.5,
 			ease: 'power2.in'
+		}, 0);
+		activeTimeline.to(quizBody, {
+			y: yShift,
+			duration: 0.6,
+			ease: 'power2.inOut'
 		}, 0);
 
 		if (side === 'mentale') {
