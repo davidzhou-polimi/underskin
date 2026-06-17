@@ -27,9 +27,9 @@
 
 			<div class="text-block text-block-next">
 				<h4 class="caption">
-					UnderSkin nasce per scollare l'etichetta dell'eroismo a tutti i costi e guardare sotto la
-					superficie della performance d'élite. Vogliamo dare voce a ciò che normalmente non si vede: le
-					aspettative schiaccianti, il peso psicologico del "quasi", la ricostruzione di un'identità
+					UnderSkin nasce per andare oltre il mito dell'atleta invincibile. Per scavare sotto la pelle
+					della performance d'élite e dare spazio a ciò che raramente viene raccontato: la pressione delle
+					aspettative, il peso psicologico del "quasi", le cadute silenziose e la lenta ricostruzione di sé
 					dopo il dolore.
 				</h4>
 			</div>
