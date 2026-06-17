@@ -42,7 +42,7 @@
             </div>
         {:else}
             <p class="error-message">
-                Il nostro sistema ha ceduto sotto pressione. Ci prendiamo un momento per recuperare le energie, riprova tra poco.
+                Il nostro sistema ha ceduto sotto pressione.<br />Ci prendiamo un momento per recuperare le energie, riprova tra poco.
             </p>
             <div class="action-container">
                 <Button onclick={() => location.reload()} ariaLabel="Riprova ora">
