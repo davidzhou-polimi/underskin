@@ -7,7 +7,7 @@
 	let {
 		hideThreshold = 50,
 		showThreshold = 150,
-		autoHideDelay = 3000,
+		autoHideDelay = 2000,
 		hideByDefault = false
 	} = $props();
 

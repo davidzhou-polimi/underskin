@@ -7,7 +7,8 @@
 	--transition-duration-slow:   500ms;
 
 	/* Curve di Easing Standardizzate (Motion Identity) */
-	--easing-standard: ease;   /* Per Hover, cambi colore, dissolvenze */
-	--easing-out:      ease-out;      /* Per Reveal (ingresso a schermo) */
+	--easing-standard: ease;        /* Per Hover, cambi colore, dissolvenze */
+	--easing-out:      ease-out;    /* Per Reveal (ingresso a schermo) */
 	--easing-in:       ease-in;     /* Per Hide (uscita dallo schermo) */
+	--easing-in-out:   ease-in-out; /* Per transizioni simmetriche (hover scale, toggle) */
 }
