@@ -107,7 +107,12 @@ export function quizAnimation(node, params) {
 		});
 
 		// fade out del titolo (sempre)
-		activeTimeline.to(node.querySelector('.quiz-title-wrap'), { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' }, 0);
+		activeTimeline.to(node.querySelector('.quiz-title-wrap'), {
+			opacity: 0,
+			y: -60,
+			duration: 0.5,
+			ease: 'power2.in'
+		}, 0);
 
 		if (side === 'mentale') {
 			// --- SCENARIO A: l'utente seleziona mentale ---

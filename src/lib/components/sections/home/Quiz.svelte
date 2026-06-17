@@ -125,8 +125,6 @@
 	class="quiz-wrapper"
 	aria-label="Quiz interattivo tra mente e fisico"
 	onwheel={handleVirtualScroll}
-	onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
-	onmouseleave={() => tooltip.hide()}
 	use:trackSection={{ id: 'quiz' }}
 	use:quizAnimation={{
 		quizState,
@@ -141,16 +139,21 @@
 		}
 	}}
 >
-	<div class="quiz-title-wrap" class:hidden={quizState !== 'choosing'}>
+	<div class="quiz-title-wrap">
 		<h2 class="quiz-title">
 			<span class="title-line">Quando tutto si decide in pochi istanti,<br> cosa pesa davvero di più?</span>
 		</h2>
 	</div>
 
 	<div class="quiz-body" class:centered-layout={quizState === 'choosing'} class:results-layout={quizState === 'results'}>
-		
+
 		<div class="circle-container left-side" class:is-final={quizState === 'results'}>
-			<button class="interactive-circle-btn" disabled={quizState !== 'choosing'}>
+			<button
+				class="interactive-circle-btn"
+				disabled={quizState !== 'choosing'}
+				onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
+				onmouseleave={() => tooltip.hide()}
+			>
 				<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
 					<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
 				</svg>
@@ -162,7 +165,12 @@
 		</div>
 
 		<div class="circle-container right-side" class:is-hidden-final={quizState === 'results'}>
-			<button class="interactive-circle-btn" disabled={quizState !== 'choosing'}>
+			<button
+				class="interactive-circle-btn"
+				disabled={quizState !== 'choosing'}
+				onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
+				onmouseleave={() => tooltip.hide()}
+			>
 				<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
 					<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
 				</svg>
@@ -213,9 +221,9 @@
 	.quiz-title-wrap {
 		text-align: center;
 		margin-bottom: var(--spacing-8);
+		overflow: hidden;
 		z-index: 10;
 		opacity: 1;
-		transition: opacity 0.3s ease;
 	}
 
 	.quiz-title {
@@ -254,7 +262,6 @@
 		align-items: center;
 		justify-content: center;
 		opacity: 0;
-		will-change: transform, opacity;
 	}
 
 	.circle-container.left-side.is-final {
@@ -290,10 +297,17 @@
 		align-items: center;
 		justify-content: center;
 		outline: none;
+		/* clip-path rende l'area interattiva e visiva circolare (pointer-events seguono il clip) */
+		clip-path: circle(50%);
+		transition: transform var(--transition-duration-normal) var(--easing-out);
 	}
 
 	.interactive-circle-btn:disabled {
 		cursor: default;
+	}
+
+	.centered-layout .interactive-circle-btn:not(:disabled):hover {
+		transform: scale(1.06);
 	}
 
 	.target-circle-svg {
@@ -329,7 +343,7 @@
 
 		font-size: var(--text-l, 1.5rem);
 		color: var(--content-primary);
-		text-transform: lowercase;
+		text-transform: capitalize;
 		transition: color 0.3s ease, background-image 0.3s ease;
 		background-size: 200% auto;
 		background-clip: text;
