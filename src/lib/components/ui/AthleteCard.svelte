@@ -11,7 +11,8 @@
 	 *   axis?: 'X' | 'Y',
 	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   duration?: number
+	 *   duration?: number,
+	 *   active?: boolean
 	 * }}
 	 */
 	let {
@@ -22,7 +23,8 @@
 		axis = 'Y',
 		imageSrc = "",
 		type = 'favorito',
-		duration = 1.0
+		duration = 1.0,
+		active = true
 	} = $props();
 
 	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
@@ -63,7 +65,7 @@
 
 <div
 	class="athlete-card-container"
-	use:flipCard={{ axis, duration }}
+	use:flipCard={{ axis, duration, active }}
 	use:hoverLift
 	role="button"
 	tabindex="0"

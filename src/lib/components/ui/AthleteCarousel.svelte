@@ -126,6 +126,7 @@
 					quote={athlete.quote}
 					type={athlete.type}
 					number={"0" + (i + 1)}
+					active={i === activeIndex}
 				/>
 				{#if i !== activeIndex}
 					<button

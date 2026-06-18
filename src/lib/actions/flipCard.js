@@ -6,6 +6,7 @@ import gsap from 'gsap';
  * @property {string} [innerSelector]
  * @property {string} [textSelector]
  * @property {number} [duration]
+ * @property {boolean} [active]
  */
 
 /**
@@ -17,7 +18,8 @@ export function flipCard(node, params = {}) {
 		axis = 'Y', 
 		innerSelector = '.card-inner', 
 		textSelector = '.back-text',
-		duration = 1.0
+		duration = 1.0,
+		active = true
 	} = params;
 
 	const innerCard = node.querySelector(innerSelector);
@@ -96,6 +98,12 @@ export function flipCard(node, params = {}) {
 		update(newParams) {
 			axis = newParams.axis ?? 'Y';
 			duration = newParams.duration ?? 1.0;
+
+			// Ripristina lo stato iniziale per evitare che la card rimanga sul retro quando l'utente seleziona un altro atleta
+			if (newParams.active === false && isFlipped) {
+				isFlipped = false;
+				flipToFront();
+			}
 		},
 		destroy() {
 			node.removeEventListener('click', onClick);
