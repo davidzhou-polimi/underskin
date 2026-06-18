@@ -40,6 +40,7 @@
 			});
 		} else {
 			videoElement.pause();
+			videoElement.currentTime = 0;
 		}
 	});
 
