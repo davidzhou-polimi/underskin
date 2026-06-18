@@ -189,4 +189,9 @@
 		/* Adattiamo la larghezza del testo al nuovo contenitore orizzontale */
 		width: calc(100% - 28px);
 	}
+
+	.archetype-card-container.is-horizontal .athlete-video,
+	.archetype-card-container.is-horizontal .athlete-image {
+		transform: scale(1.2);
+	}
 </style>
