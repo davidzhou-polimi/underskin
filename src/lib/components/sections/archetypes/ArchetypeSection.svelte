@@ -19,9 +19,9 @@
     /** @type {{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', videoSrc?: string, imageSrc?: string }[]} */
     const defaultItems = [
         {
-            name: "L'insoddisfatto",
-            type: "insoddisfatto",
-            videoSrc: "/videos/insoddisfatto.webm",
+            name: "Il favorito",
+            type: "favorito",
+            videoSrc: "/videos/favorito.webm",
         },
         {
             name: "L'infortunato",
@@ -29,9 +29,9 @@
             videoSrc: "/videos/infortunato.webm",
         },
         {
-            name: "Il favorito",
-            type: "favorito",
-            videoSrc: "/videos/favorito.webm",
+            name: "L'insoddisfatto",
+            type: "insoddisfatto",
+            videoSrc: "/videos/insoddisfatto.webm",
         },
     ];
 

@@ -31,9 +31,9 @@
 	const links = [
 		{ label: 'Home', sectionId: 'hero', path: '/' },
 		{ label: 'About', sectionId: 'about', path: '/about' },
-		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
 		{ label: 'Favorito', sectionId: 'favorito-profile-page', path: '/favorito' },
-		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: '/infortunato' }
+		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: '/infortunato' },
+		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
 	];
 
 	/**
