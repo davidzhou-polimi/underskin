@@ -47,11 +47,13 @@
 		isDragging || inertiaVelocity !== 0 || Math.abs(displayedIndex - targetIndex) > 0.001
 	);
 
-	// Commento solo il PERCHÉ: azzeriamo l'hover e nascondiamo il tooltip non appena il carosello entra in movimento per evitare che rimangano appesi durante lo scorrimento
+	// Commento solo il PERCHÉ: azzeriamo l'hover al movimento del carosello, ma nascondiamo il tooltip solo se il movimento non è guidato dal drag manuale dell'utente
 	$effect(() => {
 		if (isMoving) {
 			hoveredIndex = null;
-			tooltip.hide();
+			if (!isDragging) {
+				tooltip.hide();
+			}
 		}
 	});
 
