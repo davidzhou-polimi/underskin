@@ -62,7 +62,7 @@
         font-weight: var(--text-button-weight);
         border: none;
         border-radius: 9999px;
-        padding: var(--spacing-2) var(--spacing-6);
+        padding: var(--spacing-2) var(--spacing-4);
         cursor: pointer;
         /* Transizione fluida limitata al colore di sfondo per evitare oscillazioni verticali indesiderate dell'elemento */
         transition: background-color var(--transition-duration-normal) var(--easing-standard);
