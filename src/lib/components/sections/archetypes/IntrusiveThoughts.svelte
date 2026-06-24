@@ -111,6 +111,7 @@
    * Ripristina tutti i pensieri allo stato iniziale coperto/interattivo per consentire la riesecuzione dello scroll
    */
   function resetThoughts() {
+    if (hasCompletedOnce) return;
     thoughts.forEach(t => t.isScattered = false);
     isIntroDone = false;
   }
@@ -148,7 +149,7 @@
   });
 </script>
 
-<section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts }}>
+<section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts, hasCompletedOnce }}>
   
   <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
     <h3 class="main-sentence">

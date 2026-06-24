@@ -22,6 +22,7 @@ if (typeof window !== 'undefined') {
  * @property {Thought[]} thoughts - Array di pensieri intrusivi
  * @property {(val: boolean) => void} onIntroChange - Callback per notificare il cambiamento di stato dell'intro
  * @property {() => void} onReset - Callback per reimpostare i pensieri
+ * @property {boolean} [hasCompletedOnce] - Indica se l'interazione è già stata completata con successo
  */
 
 /**
@@ -35,6 +36,7 @@ if (typeof window !== 'undefined') {
  */
 export function thoughtsIntro(node, params) {
   const { thoughts, onIntroChange, onReset } = params;
+  let hasCompletedOnce = params.hasCompletedOnce ?? false;
 
   // Utilizzo del context per isolare le istanze e garantire un revert pulito in caso di distruzione del DOM
   const ctx = gsap.context(() => {
@@ -91,6 +93,9 @@ export function thoughtsIntro(node, params) {
       trigger: node,
       start: 'top 75%',
       onEnter: () => {
+        // Se l'utente ha già disperso tutti i pensieri, non attiviamo più l'entrata degli stessi
+        if (hasCompletedOnce) return;
+
         // Se l'intro è già stata completata, si blocca l'esecuzione per evitare di scatenare un loop di snap
         if (introCompleted) return;
 
@@ -153,6 +158,9 @@ export function thoughtsIntro(node, params) {
       trigger: node,
       start: 'top 95%',
       onLeaveBack: () => {
+        // Se l'utente ha già disperso tutti i pensieri, preserviamo lo stato sparso ed evitiamo il reset
+        if (hasCompletedOnce) return;
+
         introCompleted = false;
 
         // La timeline attiva viene interrotta istantaneamente per impedire la chiamata tardiva al callback di completezza
@@ -192,6 +200,13 @@ export function thoughtsIntro(node, params) {
   }, node);
 
   return {
+    /**
+     * Sincronizza lo stato dell'azione quando le proprietà reattive in Svelte cambiano
+     * @param {ThoughtsIntroParams} newParams
+     */
+    update(newParams) {
+      hasCompletedOnce = newParams.hasCompletedOnce ?? false;
+    },
     destroy() {
       // Revert di GSAP per rimuovere tutti i gestori ed evitare leak di memoria
       ctx.revert();

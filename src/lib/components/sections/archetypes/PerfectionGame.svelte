@@ -1,23 +1,16 @@
 <script>
 	import { perfectionGameAction } from '$lib/actions/archetypes/perfectionGame.js';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-	import { onMount, onDestroy } from 'svelte';
+	import { perfectionIntro } from '$lib/actions/archetypes/perfectionIntro.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
-
-	if (typeof window !== 'undefined') {
-		gsap.registerPlugin(ScrollTrigger);
-	}
 
 	// Svelte 5 Runes: la pallina parte già attiva e in movimento per default
 	let isPlaying = $state(true);
 	let attempts = $state(0);
-	let isScrollLocked = $state(false);
 	
 	/** @type {number | null} */
 	let accuracy = $state(null);
 
-	// Riferimento al container nel DOM per agganciare ScrollTrigger e gestire l'allineamento
+	// Riferimento al container nel DOM per attivare l'animazione al suo ingresso in viewport
 	/** @type {HTMLElement | undefined} */
 	let container = $state();
 
@@ -34,83 +27,112 @@
 					: "La perfezione è un'illusione."
 	);
 
-	/** @type {ScrollTrigger | null} */
-	let scrollTriggerInstance = null;
+	// Tracciamento reattivo dello stato dell'intro e completamento per lo scroll lock
+	let isIntroDone = $state(false);
+	let hasCompletedOnce = $state(false);
 
-	onMount(() => {
-		if (container) {
-			// Rileva quando la sezione raggiunge la sommità dello schermo per agganciare il blocco
-			scrollTriggerInstance = ScrollTrigger.create({
-				trigger: container,
-				start: 'top top',
-				onEnter: () => {
-					if (attempts === 0) {
-						// Centra a schermo intero in modo morbido e attiva il lock
-						container?.scrollIntoView({ behavior: 'smooth' });
-						isScrollLocked = true;
-					}
-				},
-				onLeaveBack: () => {
-					// Quando si risale oltre la cima della sezione, rilasciamo temporaneamente lo scroll
-					isScrollLocked = false;
-				}
-			});
-		}
-	});
-
-	onDestroy(() => {
-		if (scrollTriggerInstance) {
-			scrollTriggerInstance.kill();
-		}
-	});
-
-	// Rimuove o applica i listener di blocco dello scroll in base allo stato del gioco.
-	// Consente sempre di risalire verso l'alto se e.deltaY < 0 o touchDeltaY < 0.
 	$effect(() => {
-		if (isScrollLocked && attempts === 0) {
-			let touchStartY = 0;
+		if (attempts > 0) {
+			hasCompletedOnce = true;
+		}
+	});
 
-			/** @param {WheelEvent} e */
-			const preventDefault = (e) => {
-				// Consente il pinch-to-zoom su trackpad
-				if (e.ctrlKey) return;
+	// Il blocco si attiva solo se l'intro è completata e l'utente non ha mai giocato
+	const shouldLock = $derived(isIntroDone && !hasCompletedOnce);
 
-				// Consente lo scroll verso l'alto per ritornare su
-				if (e.deltaY < 0) return;
+	let hasLocked = false;
+	let touchStart = 0;
 
-				e.preventDefault();
-			};
+	/**
+	 * Blocca lo scorrimento verso il basso da tastiera/rotella
+	 * @param {WheelEvent} event
+	 */
+	function preventScrollDown(event) {
+		if (event.ctrlKey) return;
+		if (event.deltaY > 0) {
+			event.preventDefault();
+		}
+	}
 
-			/** @param {TouchEvent} e */
-			const handleTouchStart = (e) => {
-				touchStartY = e.touches[0].clientY;
-			};
+	/**
+	 * Registra l'inizio del tocco su touch screen
+	 * @param {TouchEvent} event
+	 */
+	function handleTouchStart(event) {
+		if (event.touches.length > 0) {
+			touchStart = event.touches[0].clientY;
+		}
+	}
 
-			/** @param {TouchEvent} e */
-			const handleTouchMove = (e) => {
-				// Consente lo zoom multitouch su dispositivi mobile
-				if (e.touches && e.touches.length > 1) return;
+	/**
+	 * Blocca i gesti touch verticali orientati verso il basso
+	 * @param {TouchEvent} event
+	 */
+	function handleTouchMove(event) {
+		if (event.touches.length > 1) return;
+		if (event.touches.length > 0) {
+			const touchCurrent = event.touches[0].clientY;
+			const diffY = touchStart - touchCurrent;
+			if (diffY > 0) {
+				event.preventDefault();
+			}
+		}
+	}
 
-				const touchCurrentY = e.touches[0].clientY;
-				const touchDeltaY = touchStartY - touchCurrentY;
+	/**
+	 * Impedisce l'uso dei tasti di navigazione orientati verso il basso
+	 * @param {KeyboardEvent} event
+	 */
+	function preventKeysDown(event) {
+		const keysToBlock = ['ArrowDown', 'PageDown', 'End'];
+		if (keysToBlock.includes(event.key)) {
+			event.preventDefault();
+		}
+	}
 
-				// Blocca lo scroll solo se l'utente tenta di andare verso il basso
-				if (touchDeltaY > 0) {
-					e.preventDefault();
-				}
-			};
-
-			window.addEventListener('wheel', preventDefault, { passive: false });
+	// Gestione dei listener dello scroll lock legati reattivamente a shouldLock
+	$effect(() => {
+		if (shouldLock) {
+			window.addEventListener('wheel', preventScrollDown, { passive: false });
 			window.addEventListener('touchstart', handleTouchStart, { passive: true });
 			window.addEventListener('touchmove', handleTouchMove, { passive: false });
+			window.addEventListener('keydown', preventKeysDown, { passive: false });
 
-			return () => {
-				window.removeEventListener('wheel', preventDefault);
-				window.removeEventListener('touchstart', handleTouchStart);
-				window.removeEventListener('touchmove', handleTouchMove);
-			};
+			// Allinea lo schermo al centro della sezione solo una volta all'avvio del blocco
+			if (!hasLocked && container) {
+				hasLocked = true;
+				container.scrollIntoView({ behavior: 'smooth' });
+			}
+		} else {
+			window.removeEventListener('wheel', preventScrollDown);
+			window.removeEventListener('touchstart', handleTouchStart);
+			window.removeEventListener('touchmove', handleTouchMove);
+			window.removeEventListener('keydown', preventKeysDown);
+			hasLocked = false;
 		}
+
+		return () => {
+			window.removeEventListener('wheel', preventScrollDown);
+			window.removeEventListener('touchstart', handleTouchStart);
+			window.removeEventListener('touchmove', handleTouchMove);
+			window.removeEventListener('keydown', preventKeysDown);
+		};
 	});
+
+	/**
+	 * Callback invocata dall'azione Svelte al variare dell'intro
+	 * @param {boolean} val
+	 */
+	function handleIntroChange(val) {
+		isIntroDone = val;
+	}
+
+	/**
+	 * Callback invocata dall'azione Svelte in fase di reset
+	 */
+	function handleReset() {
+		isIntroDone = false;
+	}
 
 	/**
 	 * Gestisce l'avvio e l'arresto del gioco, aggiornando lo stato
@@ -121,8 +143,6 @@
 
 		if (isPlaying) {
 			isPlaying = false;
-			// Il primo tentativo sblocca istantaneamente lo scroll consentendo all'utente di proseguire
-			isScrollLocked = false;
 		} else {
 			accuracy = null;
 			isPlaying = true;
@@ -147,16 +167,10 @@
 	}
 
 	/**
-	 * Permette l'interazione tramite la barra spaziatrice e previene lo scroll da tastiera se bloccato
+	 * Permette l'interazione tramite la barra spaziatrice
 	 * @param {KeyboardEvent} event
 	 */
 	function handleKeydown(event) {
-		const keysToBlock = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'];
-		if (isScrollLocked && attempts === 0 && keysToBlock.includes(event.code)) {
-			event.preventDefault();
-			return;
-		}
-
 		if (event.code === 'Space') {
 			event.preventDefault();
 			toggleGame();
@@ -166,7 +180,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="perfection-container" bind:this={container}>
+<section class="perfection-container" bind:this={container} use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset }}>
 	
 	<div class="header-text">
 		<h2 class="title">Quanto è difficile la perfezione?</h2>
