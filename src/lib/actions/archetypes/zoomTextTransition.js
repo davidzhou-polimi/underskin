@@ -29,7 +29,8 @@ export function zoomTextTransition(node) {
 		attr: { viewBox: '0 0 1000 400' }
 	});
 	gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 30 });
-	gsap.set(nextContent, { opacity: 0 });
+	// Impedisce il rendering e l'interazione con l'intera sezione finché lo zoom non è completato
+	gsap.set(nextContent, { autoAlpha: 0 });
 
 	// Differisce la creazione dello ScrollTrigger al prossimo frame di rendering,
 	// garantendo che tutti i pin-spacer a monte (es. ShatterGlass) siano già nel DOM
@@ -72,7 +73,8 @@ export function zoomTextTransition(node) {
 			  
 			  // 3. Dissolvenza in ingresso della sezione successiva dentro lo zero
 			  .to(nextContent, { 
-					opacity: 1, 
+					// Rende l'elemento visibile all'inizio del tween e ne anima la comparsa fluida
+					autoAlpha: 1, 
 					duration: 0.8,
 					ease: 'power1.out'
 			  }, '-=0.6');

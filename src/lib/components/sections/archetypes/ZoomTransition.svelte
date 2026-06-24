@@ -110,5 +110,7 @@
         z-index: 2;
         background-color: var(--background-primary);
         overflow: visible;
+        /* Rende la sezione e tutti i suoi figli invisibili e non interattivi finché non inizia la dissolvenza */
+        visibility: hidden;
     }
 </style>
