@@ -60,6 +60,8 @@
         background-color: transparent;
         font-family: var(--font-family-base);
         z-index: 5;
+        /* Avvicina la sezione a quella precedente sovrapponendo i margini vuoti in modo trasparente per migliorare la fluidità visiva dello scroll */
+        margin-top: -25vh;
     }
 
     .intro-container {
