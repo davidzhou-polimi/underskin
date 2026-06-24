@@ -1,7 +1,7 @@
 <script>
 	import AboutSection from '$lib/components/sections/about/About.svelte';
-	import TeamSection from '$lib/components/sections/team/TeamSection.svelte';
-	import Footer from '$lib/components/sections/home/Footer.svelte';
+	import TeamSection from '$lib/components/sections/about/TeamSection.svelte';
+	import Footer from '$lib/components/sections/Footer.svelte';
 	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 	import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 	import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';

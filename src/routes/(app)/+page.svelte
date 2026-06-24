@@ -16,7 +16,7 @@
     import Outro from '$lib/components/sections/home/Outro.svelte';
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
-    import Footer from '$lib/components/sections/home/Footer.svelte';
+    import Footer from '$lib/components/sections/Footer.svelte';
     import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
     import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
     import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
