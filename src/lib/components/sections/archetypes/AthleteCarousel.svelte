@@ -444,15 +444,22 @@
 			aria-hidden="true"
 			use:carouselDots={{ activeIndex: displayedIndex, itemsCount: filteredAthletes.length, cx: cx_nav, cy: cy_nav, radius: R_nav, hoveredIndex, isDragging }}
 		>
+			<defs>
+				<!-- Gradiente verticale per sfumare l'arco man mano che scende verso il fondo del viewport -->
+				<linearGradient id="arc-fade-gradient" x1="0" y1="20" x2="0" y2="250" gradientUnits="userSpaceOnUse">
+					<stop offset="0%" stop-color="var(--content-primary)" stop-opacity="0.7" />
+					<stop offset="100%" stop-color="var(--content-primary)" stop-opacity="0" />
+				</linearGradient>
+			</defs>
+
 			<!-- Dotted arc path — equator points are off-screen, arc exits container on both sides -->
 			<path
 				d={arcPath}
-				stroke="var(--content-primary)"
+				stroke="url(#arc-fade-gradient)"
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-dasharray="0.1 8"
 				fill="none"
-				opacity="0.7"
 				style="pointer-events: none;"
 			/>
 
@@ -545,7 +552,8 @@
 
 	.carousel-navigation {
 		width: 100%;
-		overflow: hidden;
+		/* overflow visible consente al tracciato dell'arco e dei dot di uscire dal box se necessario */
+		overflow: visible;
 		margin-top: var(--spacing-1);
 		position: relative;
 		height: 120px;

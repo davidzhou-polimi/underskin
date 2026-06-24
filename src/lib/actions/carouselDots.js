@@ -47,14 +47,16 @@ export function carouselDots(node, params = {}) {
 
 			const absDiff = Math.abs(targetDiff);
 			
-			// Commento solo il PERCHÉ: calcoliamo l'opacità in base alla distanza dal centro per sfumare l'evidenziazione in sincronia con il carosello
-			let targetOpacity = 0.5;
+			// Commento solo il PERCHÉ: calcoliamo l'opacità in base alla distanza dal centro in modo speculare alla visibilità delle card per nascondere i dot non visibili
+			let targetOpacity = 0;
 			if (absDiff < 1) {
 				targetOpacity = 1.0 - absDiff * 0.5;
+			} else if (absDiff < 2) {
+				targetOpacity = (2.0 - absDiff) * 0.5;
 			}
 
 			// Se il dot è in hover, forziamo l'opacità massima
-			if (i === hoveredIndex) {
+			if (i === hoveredIndex && absDiff < 2) {
 				targetOpacity = 1.0;
 			}
 
@@ -64,7 +66,8 @@ export function carouselDots(node, params = {}) {
 				x: radius * Math.sin(angle),
 				y: -radius * Math.cos(angle),
 				opacity: targetOpacity,
-				fill: 'var(--content-primary)'
+				fill: 'var(--content-primary)',
+				pointerEvents: targetOpacity > 0 ? 'auto' : 'none'
 			});
 		});
 	}
@@ -105,17 +108,21 @@ export function carouselDots(node, params = {}) {
 					let diff = index - activeIndex;
 					if (diff > itemsCount / 2) diff -= itemsCount;
 					else if (diff < -itemsCount / 2) diff += itemsCount;
-					const isActive = Math.abs(diff) === 0;
+					const absDiff = Math.abs(diff);
+					const isActive = absDiff === 0;
 					if (isActive && !highlight) return;
 
 					// Determiniamo l'opacità di destinazione in base alla distanza
-					let baseOpacity = 0.5;
-					if (Math.abs(diff) < 1) {
-						baseOpacity = 1.0 - Math.abs(diff) * 0.5;
+					let baseOpacity = 0;
+					if (absDiff < 1) {
+						baseOpacity = 1.0 - absDiff * 0.5;
+					} else if (absDiff < 2) {
+						baseOpacity = (2.0 - absDiff) * 0.5;
 					}
 
 					gsap.to(dot, {
-						opacity: highlight || isActive ? 1.0 : baseOpacity,
+						opacity: (highlight && absDiff < 2) || isActive ? 1.0 : baseOpacity,
+						pointerEvents: (highlight && absDiff < 2) || isActive || baseOpacity > 0 ? 'auto' : 'none',
 						duration: 0.25,
 						ease: 'power2.out',
 						overwrite: 'auto'
