@@ -32,10 +32,9 @@
         <p class="first-text">Alcuni casi a</p>
         
         <svg class="zoom-svg" viewBox="0 0 1000 400" width="100%" height="100%">
-            <text class="zoom-text" x="50%" text-anchor="middle" style:fill={textColor}>
-                <tspan x="50%" dy="180">Milano Cortina</tspan>
-                <tspan x="50%" dy="220" class="year-text">2026</tspan>
-            </text>
+            <g class="zoom-content">
+                <text class="zoom-text" x="500" text-anchor="middle" style:fill={textColor}><tspan x="500" dy="180">Milano Cortina</tspan><tspan x="500" dy="220" class="year-text">2026</tspan></text>
+            </g>
         </svg>
     </div>
 
