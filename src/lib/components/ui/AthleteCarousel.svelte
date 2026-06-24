@@ -1,6 +1,7 @@
 <script>
 	import AthleteCard from '$lib/components/ui/AthleteCard.svelte';
 	import { carousel } from '$lib/actions/carousel.js';
+	import { carouselDots } from '$lib/actions/carouselDots.js';
 	import athletesData from '$lib/data/athletes.json';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
@@ -18,6 +19,14 @@
 	};
 
 	let activeIndex = $state(0);
+	let isFlipped = $state(false);
+
+	// Reset flip state when user slides to another athlete
+	$effect(() => {
+		if (activeIndex !== undefined) {
+			isFlipped = false;
+		}
+	});
 
 	let filteredAthletes = $derived(
 		/** @type {any} */ (athletesData.filter(athlete => athlete.type === type))
@@ -29,6 +38,8 @@
 
 	// navWidth = full viewport width (SVG is positioned full-bleed via CSS transform)
 	let navWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 800);
+	// We bind to the container width to match the card positioning radius exactly
+	let containerWidth = $state(800);
 
 	$effect(() => {
 		const onResize = () => { navWidth = window.innerWidth; };
@@ -36,8 +47,10 @@
 		return () => window.removeEventListener('resize', onResize);
 	});
 
-	// Arc path: big circle that exits the viewport on both sides
-	const R_nav = $derived(navWidth * 0.694);
+	// The arc radius for navigation dots must match the cards' rotation radius for horizontal alignment
+	const R_card = $derived(containerWidth * (containerWidth < 768 ? 0.8 : 1.4));
+	// Subtracting the vertical offset between card centers and dots to align their circle centers
+	const R_nav = $derived(Math.max(80, R_card - 288));
 	const cx_nav = $derived(navWidth / 2);
 	const cy_nav = $derived(NAV_HEIGHT * 0.17 + R_nav);
 
@@ -47,21 +60,6 @@
 	);
 
 	const svgViewBox = $derived(`0 0 ${navWidth} ${NAV_HEIGHT}`);
-
-	// Spaziatura in gradi tra i dot lungo la circonferenza dell'arco
-	const DOT_SPACING_ANGLE = 17.15;
-
-	/**
-	 * Position on the arc for a given angular diff (-1, 0, +1).
-	 * @param {number} diff
-	 */
-	function getDotPos(diff) {
-		const angle = diff * DOT_SPACING_ANGLE * (Math.PI / 180);
-		return {
-			x: cx_nav + R_nav * Math.sin(angle),
-			y: cy_nav - R_nav * Math.cos(angle)
-		};
-	}
 
 	// ─── Navigation ───────────────────────────────────────────────────────────
 
@@ -101,6 +99,7 @@
 
 <div
 	class="carousel-container"
+	bind:clientWidth={containerWidth}
 	role="region"
 	aria-label="Visualizzatore atleti {PLURAL_TYPES[type] ?? ''}"
 >
@@ -115,8 +114,14 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={i === activeIndex ? () => tooltip.show('Click', 'semplice', 'pointer') : null}
+				onmouseenter={i === activeIndex && !isFlipped ? () => tooltip.show("Scopri", "semplice", "pointer") : null}
 				onmouseleave={() => tooltip.hide()}
+				onclick={i === activeIndex ? () => {
+					isFlipped = !isFlipped;
+					if (isFlipped) {
+						tooltip.hide();
+					}
+				} : null}
 				role="none"
 			>
 				<AthleteCard
@@ -146,6 +151,7 @@
 			viewBox={svgViewBox}
 			xmlns="http://www.w3.org/2000/svg"
 			aria-hidden="true"
+			use:carouselDots={{ activeIndex, itemsCount: filteredAthletes.length, cx: cx_nav, cy: cy_nav, radius: R_nav }}
 		>
 			<!-- Dotted arc path — equator points are off-screen, arc exits container on both sides -->
 			<path
@@ -159,12 +165,12 @@
 				style="pointer-events: none;"
 			/>
 
-			<!-- 3 static decorative dots — one under each visible card, on the arc -->
-			{#each [-1, 0, 1] as diff}
-				{@const pt = getDotPos(diff)}
+			<!-- One dot per card — positioned and animated by carouselDots action -->
+			{#each filteredAthletes as _}
 				<circle
-					cx={pt.x}
-					cy={pt.y}
+					class="carousel-dot"
+					cx={cx_nav}
+					cy={cy_nav}
 					r="6"
 					fill="var(--content-primary)"
 					style="pointer-events: none;"

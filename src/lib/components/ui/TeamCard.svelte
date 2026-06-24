@@ -103,12 +103,14 @@
 	}
 
 	.media-container {
+		/* Commento solo il PERCHÉ: utilizziamo il token di padding per permettere la regolazione dello spessore del bordo glass tramite design system */
 		position: absolute;
-		top: 15px;
-		right: 14px;
-		bottom: 14px;
-		left: 14px;
-		border-radius: var(--radius-s);
+		top: var(--card-glass-padding);
+		right: var(--card-glass-padding);
+		bottom: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		/* Commento solo il PERCHÉ: calcoliamo il radius per essere concentrico al bordo esterno in base al padding corrente */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		overflow: hidden;
 		background-color: var(--neutral-200);
 	}
@@ -121,21 +123,24 @@
 	}
 
 	.overlay-brand {
+		/* Commento solo il PERCHÉ: utilizziamo lo stesso padding dinamico del media-container per far coincidere perfettamente l'overlay colore */
 		position: absolute;
-		top: 15px;
-		right: 14px;
-		bottom: 14px;
-		left: 14px;
+		top: var(--card-glass-padding);
+		right: var(--card-glass-padding);
+		bottom: var(--card-glass-padding);
+		left: var(--card-glass-padding);
 		mix-blend-mode: color;
-		border-radius: var(--radius-s);
+		/* Commento solo il PERCHÉ: applichiamo lo stesso radius concentrico calcolato per allinearsi al media-container */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		pointer-events: none;
 	}
 
 	.name-front {
+		/* Commento solo il PERCHÉ: calcoliamo posizionamento e larghezza dinamici per allineare il testo del nome con i bordi del media-container */
 		position: absolute;
-		top: 15px;
-		left: 14px;
-		width: 329px;
+		top: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		width: calc(100% - (2 * var(--card-glass-padding)));
 		height: 91px;
 		display: flex;
 		flex-direction: column;
@@ -158,7 +163,7 @@
 	}
 
 	.team-card-container.is-horizontal .name-front {
-		/* Adattiamo la larghezza del testo al nuovo contenitore orizzontale */
-		width: calc(100% - 28px);
+		/* Commento solo il PERCHÉ: calcoliamo la larghezza in base al padding per allineare correttamente il nome anche in modalità orizzontale */
+		width: calc(100% - (2 * var(--card-glass-padding)));
 	}
 </style>

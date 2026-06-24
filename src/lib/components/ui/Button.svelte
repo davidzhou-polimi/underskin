@@ -62,18 +62,13 @@
         font-weight: var(--text-button-weight);
         border: none;
         border-radius: 9999px;
-        padding: var(--spacing-2) var(--spacing-6);
+        padding: var(--spacing-2) var(--spacing-4);
         cursor: pointer;
-        transition: background-color var(--transition-duration-normal) var(--easing-standard),
-                    transform var(--transition-duration-normal) var(--easing-standard);
+        /* Transizione fluida limitata al colore di sfondo per evitare oscillazioni verticali indesiderate dell'elemento */
+        transition: background-color var(--transition-duration-normal) var(--easing-standard);
     }
 
     .pill-button:hover {
         background-color: rgb(from var(--neutral-100) r g b / 0.8);
-        transform: translateY(-1px);
-    }
-
-    .pill-button:active {
-        transform: translateY(0);
     }
 </style>

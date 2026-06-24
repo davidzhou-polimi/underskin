@@ -202,12 +202,14 @@
 
 	/* FRONT STYLES */
 	.media-container {
+		/* Commento solo il PERCHÉ: utilizziamo il token di padding per permettere la regolazione dello spessore del bordo glass tramite design system */
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
-		left: 14px;
-		border-radius: var(--radius-s);
+		top: var(--card-glass-padding); 
+		right: var(--card-glass-padding); 
+		bottom: var(--card-glass-padding); 
+		left: var(--card-glass-padding);
+		/* Commento solo il PERCHÉ: calcoliamo il radius per essere concentrico al bordo esterno in base al padding corrente */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		overflow: hidden;
 		background-color: var(--neutral-200); /* Fallback style */
 	}
@@ -220,32 +222,37 @@
 	}
 
 	.overlay-brand {
+		/* Commento solo il PERCHÉ: utilizziamo lo stesso padding dinamico del media-container per far coincidere perfettamente l'overlay colore */
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
-		left: 14px;
+		top: var(--card-glass-padding); 
+		right: var(--card-glass-padding); 
+		bottom: var(--card-glass-padding); 
+		left: var(--card-glass-padding);
 		mix-blend-mode: color;
-		border-radius: var(--radius-s);
+		/* Commento solo il PERCHÉ: applichiamo lo stesso radius concentrico calcolato per allinearsi al media-container */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		pointer-events: none;
 	}
 
 	.decal-top {
+		/* Commento solo il PERCHÉ: calcoliamo larghezza e insets in base al padding per mantenere l'allineamento con il media-container sottostante */
 		position: absolute;
-		top: 15px;
-		left: 14px;
-		width: 329px;
+		top: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		width: calc(100% - (2 * var(--card-glass-padding)));
 		height: 111px;
 		pointer-events: none;
 		background: linear-gradient(to bottom, var(--gradient-start) 0%, transparent 100%);
-		border-radius: var(--radius-s) var(--radius-s) 0 0;
+		/* Commento solo il PERCHÉ: adattiamo il radius superiore concentrico per allinearsi alla curvatura del media-container */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding)) calc(var(--radius-m) - var(--card-glass-padding)) 0 0;
 	}
 
 	.name-front {
+		/* Commento solo il PERCHÉ: calcoliamo posizionamento e larghezza dinamici per allineare il testo del nome con i bordi del media-container */
 		position: absolute;
-		top: 15px;
-		left: 14px;
-		width: 329px;
+		top: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		width: calc(100% - (2 * var(--card-glass-padding)));
 		height: 91px;
 		display: flex;
 		flex-direction: column;
@@ -261,20 +268,23 @@
 
 	/* BACK STYLES */
 	.background-inset-back {
+		/* Commento solo il PERCHÉ: posizioniamo l'inserto del retro usando il padding dinamico in modo che abbia lo stesso "bordo" glass del fronte */
 		position: absolute;
-		top: 15px; 
-		right: 14px; 
-		bottom: 14px; 
-		left: 14px;
-		border-radius: var(--radius-s);
+		top: var(--card-glass-padding); 
+		right: var(--card-glass-padding); 
+		bottom: var(--card-glass-padding); 
+		left: var(--card-glass-padding);
+		/* Commento solo il PERCHÉ: manteniamo la forma concentrica anche per lo sfondo posteriore */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 	}
 
 	.back-content {
+		/* Commento solo il PERCHÉ: calcoliamo dimensioni e insets del contenitore posteriore basandoci sul padding del glass background per evitare overflow */
 		position: absolute;
-		top: 15px;
-		left: 14px;
-		width: 329px;
-		height: 432px;
+		top: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		width: calc(100% - (2 * var(--card-glass-padding)));
+		height: calc(100% - (2 * var(--card-glass-padding)));
 		display: flex;
 		flex-direction: column;
 		align-items: center;

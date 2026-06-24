@@ -20,4 +20,7 @@
 	--spacing-15: 30rem;       /* 480px */
 	--spacing-16: 46rem;       /* 736px */
 	--spacing-17: 62rem;       /* 992px */
+
+	/* CARD GLASS BORDER/PADDING: Ridotto a var(--spacing-1) per diminuire lo spessore dell'effetto glass */
+	--card-glass-padding: 0.75rem;       /* 12px */
 }
