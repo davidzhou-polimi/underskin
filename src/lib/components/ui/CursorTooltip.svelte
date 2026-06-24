@@ -18,7 +18,7 @@
     style="--x: {x}px; --y: {y}px"
 >
     <div class="glass-effect tooltip-glass-override">
-        <span class="tooltip-text-content">{text}</span>
+        <span class="tooltip-text-content">{@html text}</span>
     </div>
 </div>
 

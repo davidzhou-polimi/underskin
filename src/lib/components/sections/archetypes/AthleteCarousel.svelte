@@ -47,20 +47,23 @@
 		isDragging || inertiaVelocity !== 0 || Math.abs(displayedIndex - targetIndex) > 0.001
 	);
 
-	// Commento solo il PERCHÉ: azzeriamo l'hover al movimento del carosello, ma nascondiamo il tooltip solo se il movimento non è guidato dal drag manuale dell'utente
-	$effect(() => {
-		if (isMoving) {
-			hoveredIndex = null;
-			if (!isDragging) {
-				tooltip.hide();
-			}
-		}
-	});
-
 	// Reset flip state when user slides to another athlete
 	$effect(() => {
 		if (activeIndex !== undefined) {
 			isFlipped = false;
+		}
+	});
+
+	// Stato per tracciare se il mouse è posizionato all'interno della zona di drag
+	let isMouseOverDragZone = $state(false);
+
+	// Commento solo il PERCHÉ: azzeriamo l'hover al movimento del carosello, ma nascondiamo il tooltip solo se non siamo nella dragzone e non stiamo trascinando
+	$effect(() => {
+		if (isMoving) {
+			hoveredIndex = null;
+			if (!isDragging && !isMouseOverDragZone) {
+				tooltip.hide();
+			}
 		}
 	});
 
@@ -185,6 +188,15 @@
 		`M ${cx_nav - R_nav},${cy_nav} A ${R_nav},${R_nav} 0 0 1 ${cx_nav + R_nav},${cy_nav}`
 	);
 
+	// Tracciato che delimita l'intera area interattiva sottostante l'arco per consentire il drag,
+	// con un gap di 20px rispetto all'arco per separare visivamente e funzionalmente i controlli.
+	const dragZonePath = $derived(
+		`M ${cx_nav - R_nav},${cy_nav + 20} ` +
+		`A ${R_nav},${R_nav} 0 0 1 ${cx_nav + R_nav},${cy_nav + 20} ` +
+		`L ${navWidth},400 ` +
+		`L 0,400 Z`
+	);
+
 	const svgViewBox = $derived(`0 0 ${navWidth} ${NAV_HEIGHT}`);
 
 	/** @type {gsap.core.Tween | null} */
@@ -281,32 +293,16 @@
 	let dragStartX = 0;
 	let dragStartTarget = 0;
 
-	// Posizione dinamica del bordo inferiore della navigation per piazzare il drag-zone
-	let navOffsetTop = $state(0);
-	let navOffsetHeight = $state(120);
-	/** @type {HTMLElement | null} */
-	let navEl = $state(null);
-	$effect(() => {
-		if (!navEl) return;
-		const el = navEl; // narrow: el è HTMLElement, non null/undefined
-		const update = () => {
-			navOffsetTop = el.offsetTop;
-			navOffsetHeight = el.offsetHeight;
-		};
-		update();
-		window.addEventListener('resize', update);
-		return () => window.removeEventListener('resize', update);
-	});
-	const navBottom = $derived(navOffsetTop + navOffsetHeight);
-
 	/** @param {MouseEvent} e */
 	function handleNavMouseEnter(e) {
+		isMouseOverDragZone = true;
 		// Commento solo il perché: aggiorniamo la posizione all'istante dell'enter per evitare glitch grafici con coordinate obsolete
 		tooltip.updatePosition(e.clientX, e.clientY);
 		tooltip.show('← • →', 'semplice', 'none', true);
 	}
 
 	function handleNavMouseLeave() {
+		isMouseOverDragZone = false;
 		if (!isDragging) tooltip.hide();
 	}
 
@@ -375,7 +371,11 @@
 			// Restart autoplay timer fresh after drag is completed
 			autoplayTween?.restart();
 			if (hoveredIndex !== null) autoplayTween?.pause();
-			tooltip.hide();
+			
+			// Commento solo il PERCHÉ: nascondiamo il tooltip al mouseup solo se l'utente ha rilasciato il mouse all'esterno della drag zone
+			if (!isMouseOverDragZone) {
+				tooltip.hide();
+			}
 		}
 
 		window.addEventListener('mousemove', onWindowMouseMove);
@@ -435,10 +435,7 @@
 	</div>
 
 	<!-- Navigation: SVG uses full-bleed CSS transform so the arc exits the full section width -->
-	<div
-		class="carousel-navigation"
-		bind:this={navEl}
-	>
+	<div class="carousel-navigation">
 		<svg
 			class="svg-track"
 			viewBox={svgViewBox}
@@ -453,6 +450,21 @@
 					<stop offset="100%" stop-color="var(--content-primary)" stop-opacity="0" />
 				</linearGradient>
 			</defs>
+
+			<!-- Area interattiva di drag posizionata prima dei pallini nel DOM dell'SVG per non coprirli -->
+			<path
+				d={dragZonePath}
+				class="svg-drag-path"
+				onmouseenter={handleNavMouseEnter}
+				onmouseleave={handleNavMouseLeave}
+				onmousedown={handleNavMouseDown}
+				role="slider"
+				aria-label="Trascina per navigare gli atleti"
+				aria-valuenow={activeIndex + 1}
+				aria-valuemin={1}
+				aria-valuemax={filteredAthletes.length}
+				tabindex="-1"
+			/>
 
 			<!-- Dotted arc path — equator points are off-screen, arc exits container on both sides -->
 			<path
@@ -485,23 +497,6 @@
 			{/each}
 		</svg>
 	</div>
-
-	<!-- Drag zone: area invisibile sotto l'arco che si estende fino al fondo del container.
-	     Il cursore è sempre sotto i dot/arco, quindi il tooltip non li copre mai. -->
-	<div
-		class="drag-zone"
-		class:is-dragging={isDragging}
-		role="slider"
-		aria-label="Trascina per navigare gli atleti"
-		aria-valuenow={activeIndex + 1}
-		aria-valuemin={1}
-		aria-valuemax={filteredAthletes.length}
-		tabindex="-1"
-		style="top: {navBottom}px"
-		onmouseenter={handleNavMouseEnter}
-		onmouseleave={handleNavMouseLeave}
-		onmousedown={handleNavMouseDown}
-	></div>
 </div>
 
 <style>
@@ -561,17 +556,11 @@
 		height: 120px;
 	}
 
-	/* Zona di drag: assoluta, dalla fine della navigation fino al fondo del container.
-	   Invisibile ma interattiva — il tooltip appare qui, mai sopra l'arco.
-	   Il top è impostato inline con JS per essere sempre sotto la navigation. */
-	.drag-zone {
-		position: absolute;
-		top: 0; /* sovrascritto inline con navBottom */
-		bottom: 0;
-		left: 0;
-		right: 0;
-		min-height: 60px;
+	.svg-drag-path {
+		fill: transparent;
 		cursor: none;
+		pointer-events: auto;
+		outline: none;
 	}
 
 	.svg-track {
