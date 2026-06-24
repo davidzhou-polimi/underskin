@@ -20,6 +20,7 @@ function resolveColor(cssVar) {
  * @property {number} [cy]      - SVG y of the dot arc circle center
  * @property {number} [radius]  - Dot arc circle radius (R_nav)
  * @property {number|null} [hoveredIndex]
+ * @property {boolean} [isDragging]
  */
 
 /**
@@ -140,7 +141,7 @@ export function carouselDots(node, params = {}) {
 	updateLayout(false);
 
 	return {
-		/** @param {CarouselDotsParams} newParams */
+		/** @param {CarouselDotsParams & { isDragging?: boolean }} newParams */
 		update(newParams) {
 			const indexChanged =
 				newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount;
@@ -160,7 +161,10 @@ export function carouselDots(node, params = {}) {
 			radius = newParams.radius ?? radius;
 			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
 
-			if (indexChanged) updateLayout(true);
+			if (indexChanged) {
+				const isDragging = newParams.isDragging ?? false;
+				updateLayout(!isDragging);
+			}
 			else if (geomChanged) updateLayout(false);
 			else if (hoverChanged) {
 				// Animate only the two dots that actually change: the one losing highlight and the one gaining it

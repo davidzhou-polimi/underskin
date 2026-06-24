@@ -5,7 +5,8 @@ let state = $state({
     type: 'semplice', // 'semplice' o 'paragrafo'
     x: 0,
     y: 0,
-    cursor: 'default'
+    cursor: 'default',
+    centered: false
 });
 
 export const tooltip = {
@@ -25,17 +26,20 @@ export const tooltip = {
      * @param {string} text
      * @param {'semplice' | 'paragrafo'} type
      * @param {string} cursor
+     * @param {boolean} [centered] - Se true, il centro del tooltip coincide con il cursore
      */
-    show(text, type = 'semplice', cursor = 'pointer') {
+    show(text, type = 'semplice', cursor = 'pointer', centered = false) {
         state.text = text;
         state.type = type;
         state.visible = true;
         state.cursor = cursor;
+        state.centered = centered;
     },
     
     // Funzione per nasconderlo
     hide() {
         state.visible = false;
         state.cursor = 'default';
+        state.centered = false;
     }
 };

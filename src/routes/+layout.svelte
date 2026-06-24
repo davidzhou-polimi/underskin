@@ -73,5 +73,6 @@
         type={tooltipState.type}
         x={tooltipState.x}
         y={tooltipState.y}
+        centered={tooltipState.centered}
     />
 </div>

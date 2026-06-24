@@ -7,6 +7,7 @@ const ANGLE_STEP = 18; // degrees between adjacent card positions
  * @property {number} [activeIndex]
  * @property {number} [itemsCount]
  * @property {number|null} [hoveredIndex]
+ * @property {boolean} [isDragging]
  */
 
 /**
@@ -53,11 +54,18 @@ export function carousel(node, params = {}) {
 			else if (prevDiff < -itemsCount / 2) prevDiff += itemsCount;
 
 			const absDiff = Math.abs(targetDiff);
-			// Lateral card gets full opacity when hovered directly or when its dot is hovered
 			const isHovered = hoveredIndex === i;
-			const targetOpacity = absDiff === 0 ? 1 : absDiff === 1 ? (isHovered ? 1 : 0.85) : 0;
-			const targetZIndex = 10 - absDiff;
-			const targetPointerEvents = absDiff <= 1 ? 'auto' : 'none';
+			
+			// Interpolate opacity continuously based on distance to prevent card flickering
+			let targetOpacity = 0;
+			if (absDiff < 1) {
+				targetOpacity = 1 - absDiff * (1 - (isHovered ? 1 : 0.85));
+			} else if (absDiff < 2) {
+				targetOpacity = (2 - absDiff) * (isHovered ? 1 : 0.85);
+			}
+
+			const targetZIndex = Math.round(10 - absDiff);
+			const targetPointerEvents = absDiff <= 1.2 ? 'auto' : 'none';
 
 			// Kill existing proxy tween so we start from current animated position
 			proxyTweens.get(card)?.kill();
@@ -135,7 +143,7 @@ export function carousel(node, params = {}) {
 	window.addEventListener('resize', onResize);
 
 	return {
-		/** @param {CarouselParams} newParams */
+		/** @param {CarouselParams & { isDragging?: boolean }} newParams */
 		update(newParams) {
 			const indexChanged = newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount;
 			const hoverChanged = newParams.hoveredIndex !== hoveredIndex;
@@ -148,7 +156,8 @@ export function carousel(node, params = {}) {
 				// Update itemsCount first; keep activeIndex at old value so prevDiff is correct
 				itemsCount = newParams.itemsCount ?? itemsCount;
 				const newIndex = newParams.activeIndex ?? activeIndex;
-				updateLayout(newIndex, true);
+				const isDragging = newParams.isDragging ?? false;
+				updateLayout(newIndex, !isDragging);
 				// activeIndex is set to newIndex at the end of updateLayout
 			} else if (hoverChanged) {
 				// Animate only the two lateral cards that actually change opacity

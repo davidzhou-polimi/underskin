@@ -4,11 +4,9 @@
         text = '',
         type = 'semplice',
         x = 0,
-        y = 0
+        y = 0,
+        centered = false
     } = $props();
-
-    const OFFSET_X = 16;
-    const OFFSET_Y = 16;
 </script>
 
 <div
@@ -16,7 +14,8 @@
     class:is-visible={visible}
     class:mod-paragrafo={type === 'paragrafo'}
     class:mod-semplice={type === 'semplice'}
-    style="--x: {x + OFFSET_X}px; --y: {y + OFFSET_Y}px"
+    class:mod-centered={centered}
+    style="--x: {x}px; --y: {y}px"
 >
     <div class="glass-effect tooltip-glass-override">
         <span class="tooltip-text-content">{text}</span>
@@ -28,11 +27,17 @@
         position: fixed;
         top: 0;
         left: 0;
-        transform: translate(var(--x), var(--y));
+        /* Default: tooltip accanto al cursore, offset di 16px */
+        transform: translate(calc(var(--x) + 16px), calc(var(--y) + 16px));
         pointer-events: none;
         z-index: 9999;
         will-change: transform;
         width: max-content;
+    }
+
+    /* Centered: il centro geometrico del tooltip coincide con il cursore */
+    .cursor-tooltip-wrapper.mod-centered {
+        transform: translate(calc(var(--x) - 50%), calc(var(--y) - 50%));
     }
 
     .mod-semplice {
