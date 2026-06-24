@@ -4,6 +4,8 @@
 	import { carouselDots } from '$lib/actions/carouselDots.js';
 	import athletesData from '$lib/data/athletes.json';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { gsap } from 'gsap';
+	import { onMount } from 'svelte';
 
 	/**
 	 * @type {{
@@ -35,37 +37,42 @@
 	/* Sincronizzato con l'intervallo di 3.5s di TeamCarousel per coerenza visiva globale */
 	const AUTOPLAY_INTERVAL = 3500; // ms
 
-	$effect(() => {
-		// Pause while any card or dot is hovered
-		if (hoveredIndex !== null) return;
+	/** @type {gsap.core.Tween | null} */
+	let autoplayTween = null;
 
-		// Tracking activeIndex ensures the timer resets on manual navigation.
+	onMount(() => {
+		// GSAP sospende i tween basati su rAF quando la tab va in background,
+		// riprendendo esattamente dal punto di pausa al ritorno — nessun tick accumulato.
+		autoplayTween = gsap.to({}, {
+			duration: AUTOPLAY_INTERVAL / 1000,
+			repeat: -1,
+			ease: 'none',
+			onRepeat: () => next()
+		});
+
+		return () => autoplayTween?.kill();
+	});
+
+	// Pausa/ripresa del tween in base all'hover — mantiene il tempo residuo
+	$effect(() => {
+		if (!autoplayTween) return;
+		if (hoveredIndex !== null) {
+			autoplayTween.pause();
+		} else {
+			autoplayTween.play();
+		}
+	});
+
+	// Reset del timer solo in caso di navigazione manuale (click dot / frecce)
+	$effect(() => {
+		// Registriamo activeIndex come dipendenza reattiva
 		// eslint-disable-next-line no-unused-expressions
 		activeIndex;
-
-		let id = setInterval(() => {
-			// Browser throttles setInterval in background tabs and can fire multiple
-			// accumulated ticks at once on return — skip them all while hidden.
-			if (!document.hidden) next();
-		}, AUTOPLAY_INTERVAL);
-
-		// When the tab becomes visible again, reset the timer from scratch
-		// to avoid the accumulated tick debt causing a burst of rapid slides.
-		function onVisibilityChange() {
-			if (!document.hidden) {
-				clearInterval(id);
-				id = setInterval(() => {
-					if (!document.hidden) next();
-				}, AUTOPLAY_INTERVAL);
-			}
+		if (autoplayTween) {
+			autoplayTween.restart();
+			// Se l'utente naviga manualmente mentre è in hover, teniamo la pausa
+			if (hoveredIndex !== null) autoplayTween.pause();
 		}
-
-		document.addEventListener('visibilitychange', onVisibilityChange);
-
-		return () => {
-			clearInterval(id);
-			document.removeEventListener('visibilitychange', onVisibilityChange);
-		};
 	});
 
 	let filteredAthletes = $derived(
