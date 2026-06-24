@@ -12,24 +12,21 @@ if (typeof window !== 'undefined') {
  */
 export function zoomTextTransition(node) {
 	const firstText = node.querySelector('.first-text');
-	const zoomContent = node.querySelector('.zoom-content');
+	const zoomSvg = node.querySelector('.zoom-svg');
 	const nextContent = node.querySelector('.next-section-content');
 
-	if (!zoomContent || !firstText || !nextContent) return;
+	if (!zoomSvg || !firstText || !nextContent) return;
 
 	/** @type {gsap.Context | null} */
 	let ctx = null;
 	let rafId = 0;
 
 	// Stato visivo nascosto impostato immediatamente per prevenire flash durante il frame di attesa
-	gsap.set(zoomContent, { 
-		transformOrigin: '42.9% 85%',
-		transformBox: 'view-box',
-		scale: 1, 
+	gsap.set(zoomSvg, { 
 		opacity: 0, 
 		filter: 'blur(15px)',
 		y: 20,
-		force3D: false
+		attr: { viewBox: '0 0 1000 400' }
 	});
 	gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 30 });
 	gsap.set(nextContent, { opacity: 0 });
@@ -56,13 +53,13 @@ export function zoomTextTransition(node) {
 			
 			// 1. Comparsa iniziale sincronizzata
 			tl.to(firstText, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 })
-			  .to(zoomContent, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 }, '<')
+			  .to(zoomSvg, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 }, '<')
 			  
-			  // 2. Zoom cinematografico super-nitido (essendo SVG rimarrà vettoriale)
-			  .to(zoomContent, { 
-					scale: 20, 
+			  // 2. Zoom cinematografico super-nitido tramite animazione del viewBox nativo
+			  .to(zoomSvg, { 
+					attr: { viewBox: '418 331 50 20' },
 					duration: 2, 
-					ease: 'power2.in' 
+					ease: 'power2.out' 
 			  }, '+=0.1')
 			  
 			  // Scomparsa contemporanea del testo di intro
@@ -76,9 +73,9 @@ export function zoomTextTransition(node) {
 			  // 3. Dissolvenza in ingresso della sezione successiva dentro lo zero
 			  .to(nextContent, { 
 					opacity: 1, 
-					duration: 1.2,
+					duration: 0.8,
 					ease: 'power1.out'
-			  }, '-=0.8');
+			  }, '-=0.6');
 		});
 	});
 
