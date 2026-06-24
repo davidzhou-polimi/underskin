@@ -1,5 +1,6 @@
 <script>
-	import { hoverLift } from '$lib/actions/hoverLift.js';
+	// Tracciamo lo stato hover locale per controllare il glass effect
+	let isHovered = $state(false);
 
 	/**
 	 * @type {{
@@ -16,15 +17,12 @@
 		horizontal = false
 	} = $props();
 
-	// Tracciamo lo stato hover locale per controllare il glass effect
-	let isHovered = $state(false);
-
 	// Commento solo il PERCHÉ: il testo in primo piano deve usare il token di contenuto scuro per garantire leggibilità e correttezza semantica, mentre var(--background-primary) è riservato esclusivamente a sfondi.
 	const TEAM_COLORS = {
 		favorito: {
 			brand: 'var(--azzurro-700)',
 			textPrimary: 'var(--content-dark-primary)'
-        },
+		},
 		infortunato: {
 			brand: 'var(--arancione-700)',
 			textPrimary: 'var(--content-dark-primary)'
@@ -43,7 +41,6 @@
 <div
     class="team-card-container non-clickable"
     class:is-horizontal={horizontal}
-    use:hoverLift
     onmouseenter={() => { isHovered = true; }}
     onmouseleave={() => { isHovered = false; }}
     role="presentation"
