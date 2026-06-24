@@ -35,7 +35,29 @@ export function shatterGlass(node, params = { fragments: [] }) {
 					opacity: 1,
 					scrollTrigger: {
 						trigger: node,
-						start: 'top 80%',
+						/* Commento solo il PERCHÉ: allunga la transizione a metà schermo (50%) per renderla estremamente progressiva */
+						start: 'top 50%',
+						end: 'top top',
+						scrub: true
+					}
+				}
+			);
+
+			// Anima in parallelo il raggio di sfocatura (blur) del backdrop-filter
+			// Commento solo il PERCHÉ: riducendo il raggio di sfocatura man mano che si sale, 
+			// aggiriamo il bug dei browser che rende visibile il bordo netto del filtro di sfondo
+			gsap.fromTo(
+				'.whole-glass-plate .glass-effect',
+				{
+					backdropFilter: 'blur(0px)',
+					webkitBackdropFilter: 'blur(0px)'
+				},
+				{
+					backdropFilter: 'blur(8px)',
+					webkitBackdropFilter: 'blur(8px)',
+					scrollTrigger: {
+						trigger: node,
+						start: 'top 50%',
 						end: 'top top',
 						scrub: true
 					}
@@ -48,7 +70,9 @@ export function shatterGlass(node, params = { fragments: [] }) {
 					trigger: node,
 					start: 'top top',
 					end: '+=200%',
-					scrub: 1,
+					/* Commento solo il PERCHÉ: imposta scrub a true per sincronizzare istantaneamente l'animazione di rottura 
+					   con il movimento dello scrollbar, prevenendo sfasamenti o lag grafici quando si risale velocemente */
+					scrub: true,
 					pin: true
 				}
 			});
