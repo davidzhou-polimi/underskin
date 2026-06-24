@@ -99,7 +99,7 @@
 	}
 
 	.team-card-container:hover .background-glass {
-		background-color: rgb(from var(--neutral-100) r g b / 0.7);
+		background-color: rgb(from var(--neutral-100) r g b / 0.8);
 	}
 
 	.media-container {
