@@ -1,5 +1,5 @@
 <script>
-	import Navbar from '$lib/components/navbar/Navbar.svelte';
+	import Navbar from '$lib/components/ui/Navbar.svelte';
 	import { narrative } from '$lib/stores/narrative.svelte.js';
 	import { page } from '$app/state';
 

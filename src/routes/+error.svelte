@@ -2,7 +2,7 @@
     import { page } from "$app/state";
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
     import Button from "$lib/components/ui/Button.svelte";
-    import Navbar from "$lib/components/navbar/Navbar.svelte";
+    import Navbar from "$lib/components/ui/Navbar.svelte";
 
     // Configurazione del gradiente per la pagina di errore (colori unificati della Home)
     let statusCode = $state(page.status);
