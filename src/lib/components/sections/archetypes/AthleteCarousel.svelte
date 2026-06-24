@@ -39,13 +39,33 @@
 		// Pause while any card or dot is hovered
 		if (hoveredIndex !== null) return;
 
-		// Reading activeIndex as a dependency resets the timer on manual navigation,
-		// so autoplay doesn't fire immediately after a user-driven slide change.
+		// Tracking activeIndex ensures the timer resets on manual navigation.
 		// eslint-disable-next-line no-unused-expressions
 		activeIndex;
 
-		const id = setInterval(() => next(), AUTOPLAY_INTERVAL);
-		return () => clearInterval(id);
+		let id = setInterval(() => {
+			// Browser throttles setInterval in background tabs and can fire multiple
+			// accumulated ticks at once on return — skip them all while hidden.
+			if (!document.hidden) next();
+		}, AUTOPLAY_INTERVAL);
+
+		// When the tab becomes visible again, reset the timer from scratch
+		// to avoid the accumulated tick debt causing a burst of rapid slides.
+		function onVisibilityChange() {
+			if (!document.hidden) {
+				clearInterval(id);
+				id = setInterval(() => {
+					if (!document.hidden) next();
+				}, AUTOPLAY_INTERVAL);
+			}
+		}
+
+		document.addEventListener('visibilitychange', onVisibilityChange);
+
+		return () => {
+			clearInterval(id);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+		};
 	});
 
 	let filteredAthletes = $derived(
