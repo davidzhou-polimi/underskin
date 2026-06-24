@@ -90,7 +90,7 @@
 	--text-logo-weight:       var(--text-extrabold);
 
     --text-button-size:       var(--text-2xs);
-    --text-button-weight:     var(--text-medium);
+    --text-button-weight:     var(--text-regular);
 }
 
 html,
