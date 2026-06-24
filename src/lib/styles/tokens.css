@@ -61,3 +61,60 @@
 	-moz-user-select: none;
 	user-select: none;
 }
+
+/* ==========================================================================
+   Scrollbar Personalizzata Premium (Dinamica per Archetipo)
+   ========================================================================== */
+
+:root {
+	/* Colore di default del brand per pagine comuni (home, about, etc.) */
+	--scrollbar-color: var(--azzurro-500);
+}
+
+/* Commento solo il PERCHÉ: il selettore moderno :has() rileva l'ID della pagina dell'archetipo nel DOM 
+   e sovrascrive la variabile colore a livello radice, consentendo alla scrollbar nativa di ereditarla */
+:root:has(#favorito-profile-page) {
+	--scrollbar-color: var(--archetipi-favorito);
+}
+
+:root:has(#infortunato-profile-page) {
+	--scrollbar-color: var(--archetipi-infortunato);
+}
+
+:root:has(#insoddisfatto-profile-page) {
+	--scrollbar-color: var(--archetipi-insoddisfatto);
+}
+
+/* Configurazione standard per Firefox */
+html {
+	scrollbar-width: thin;
+	/* Commento solo il PERCHÉ: adatta il colore in modo che sia sempre miscelato e coordinato all'archetipo corrente */
+	scrollbar-color: color-mix(in srgb, var(--scrollbar-color) 35%, transparent) transparent;
+}
+
+/* Configurazione per motori WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px; /* Gestisce anche l'eventuale scroll orizzontale */
+}
+
+::-webkit-scrollbar-track {
+	background: transparent; /* Mantiene lo sfondo trasparente per evitare tagli grafici netti */
+}
+
+::-webkit-scrollbar-thumb {
+	/* Commento solo il PERCHÉ: l'uso della trasparenza abbinato al colore dinamico dell'archetipo 
+	   garantisce che il cursore sia morbido, integrato e cromaticamente intonato alla pagina */
+	background-color: color-mix(in srgb, var(--scrollbar-color) 30%, transparent);
+	/* Commento solo il PERCHÉ: la combinazione di bordo trasparente e padding-box 
+	   crea un effetto "floating pill" distaccato dai bordi dello schermo, molto elegante */
+	border: 2px solid transparent;
+	background-clip: padding-box;
+	border-radius: var(--radius-pill, 100px);
+	transition: background-color 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	/* Commento solo il PERCHÉ: incrementa l'opacità al passaggio del mouse per fornire un feedback visivo immediato, vibrante e intonato */
+	background-color: color-mix(in srgb, var(--scrollbar-color) 75%, transparent);
+}
