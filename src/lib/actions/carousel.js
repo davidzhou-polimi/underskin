@@ -17,29 +17,9 @@ function getRadius(containerWidth) {
 }
 
 /**
- * Computes the GSAP target properties for a card at a given angular diff
- * @param {number} diff - Integer distance from active index (circular)
- * @param {number} radius
- */
-function getCardTransform(diff, radius) {
-	const angle = diff * ANGLE_STEP * (Math.PI / 180);
-	const x = radius * Math.sin(angle);
-	const y = radius * (1 - Math.cos(angle));
-	const rotation = diff * ANGLE_STEP;
-	const absDiff = Math.abs(diff);
-	return {
-		x,
-		y,
-		rotation,
-		scale: 1,
-		opacity: absDiff === 0 ? 1 : absDiff === 1 ? 0.85 : 0,
-		zIndex: 10 - absDiff,
-		pointerEvents: absDiff <= 1 ? 'auto' : 'none'
-	};
-}
-
-/**
- * Svelte action that positions carousel items along a circular arc using GSAP
+ * Svelte action that positions carousel items along a circular arc using GSAP.
+ * Cards follow the arc exactly during animation by tweening the angle (diff)
+ * instead of x/y coordinates directly.
  * @param {HTMLElement} node - The carousel track container
  * @param {CarouselParams} params
  */
@@ -48,6 +28,10 @@ export function carousel(node, params = {}) {
 	let itemsCount = params.itemsCount ?? 0;
 
 	const ctx = gsap.context(() => {}, node);
+
+	// Per-card proxy objects { diff } and their running tweens
+	const cardProxies = new Map();
+	const proxyTweens = new Map();
 
 	/**
 	 * @param {number} index - Target active index
@@ -58,43 +42,83 @@ export function carousel(node, params = {}) {
 		const radius = getRadius(node.offsetWidth);
 
 		cards.forEach((card, i) => {
-			let currentDiff = i - index;
-			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
-			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
+			let targetDiff = i - index;
+			if (targetDiff > itemsCount / 2) targetDiff -= itemsCount;
+			else if (targetDiff < -itemsCount / 2) targetDiff += itemsCount;
 
 			let prevDiff = i - activeIndex;
 			if (prevDiff > itemsCount / 2) prevDiff -= itemsCount;
 			else if (prevDiff < -itemsCount / 2) prevDiff += itemsCount;
 
-			const { x, y, rotation, scale, opacity, zIndex, pointerEvents } =
-				getCardTransform(currentDiff, radius);
+			const absDiff = Math.abs(targetDiff);
+			const targetOpacity = absDiff === 0 ? 1 : absDiff === 1 ? 0.85 : 0;
+			const targetZIndex = 10 - absDiff;
+			const targetPointerEvents = absDiff <= 1 ? 'auto' : 'none';
 
-			const isWrap = animate && Math.abs(currentDiff - prevDiff) > 1.5;
+			// Kill existing proxy tween so we start from current animated position
+			proxyTweens.get(card)?.kill();
 
 			ctx.add(() => {
-				gsap.set(card, { zIndex });
+				gsap.set(card, { zIndex: targetZIndex, pointerEvents: targetPointerEvents });
 
-				if (animate && !isWrap) {
-					gsap.to(card, {
-						x,
-						y,
-						rotation,
-						scale,
-						opacity,
-						pointerEvents,
-						duration: 0.6,
-						ease: 'power2.out',
-						overwrite: 'auto'
+				if (!animate) {
+					const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
+					gsap.set(card, {
+						x: radius * Math.sin(angle),
+						y: radius * (1 - Math.cos(angle)),
+						rotation: targetDiff * ANGLE_STEP,
+						scale: 1,
+						opacity: targetOpacity
 					});
-				} else {
-					gsap.killTweensOf(card);
-					gsap.set(card, { x, y, rotation, scale, pointerEvents });
-					if (isWrap) {
-						gsap.fromTo(card, { opacity: 0 }, { opacity, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
-					} else {
-						gsap.set(card, { opacity });
-					}
+					const proxy = cardProxies.get(card) ?? { diff: targetDiff };
+					proxy.diff = targetDiff;
+					cardProxies.set(card, proxy);
+					return;
 				}
+
+				const isWrap = Math.abs(targetDiff - prevDiff) > 1.5;
+
+				if (isWrap) {
+					const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
+					gsap.killTweensOf(card);
+					gsap.set(card, {
+						x: radius * Math.sin(angle),
+						y: radius * (1 - Math.cos(angle)),
+						rotation: targetDiff * ANGLE_STEP,
+						scale: 1,
+						opacity: 0
+					});
+					const proxy = cardProxies.get(card) ?? { diff: targetDiff };
+					proxy.diff = targetDiff;
+					cardProxies.set(card, proxy);
+					gsap.fromTo(card, { opacity: 0 }, { opacity: targetOpacity, duration: 0.6, ease: 'power2.out' });
+					return;
+				}
+
+				// Arc-following: tween the diff angle, compute x/y/rotation per frame
+				let proxy = cardProxies.get(card);
+				if (!proxy) {
+					proxy = { diff: prevDiff };
+					cardProxies.set(card, proxy);
+				}
+
+				const tween = gsap.to(proxy, {
+					diff: targetDiff,
+					duration: 0.6,
+					ease: 'power2.out',
+					onUpdate() {
+						const angle = proxy.diff * ANGLE_STEP * (Math.PI / 180);
+						gsap.set(card, {
+							x: radius * Math.sin(angle),
+							y: radius * (1 - Math.cos(angle)),
+							rotation: proxy.diff * ANGLE_STEP
+						});
+					}
+				});
+				proxyTweens.set(card, tween);
+
+				// Opacity animated independently (doesn't need to follow the arc)
+				gsap.to(card, { opacity: targetOpacity, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
 			});
 		});
 
@@ -110,13 +134,16 @@ export function carousel(node, params = {}) {
 		/** @param {CarouselParams} newParams */
 		update(newParams) {
 			if (newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount) {
-				activeIndex = newParams.activeIndex ?? 0;
-				itemsCount = newParams.itemsCount ?? 0;
-				updateLayout(activeIndex, true);
+				// Update itemsCount first; keep activeIndex at old value so prevDiff is correct
+				itemsCount = newParams.itemsCount ?? itemsCount;
+				const newIndex = newParams.activeIndex ?? activeIndex;
+				updateLayout(newIndex, true);
+				// activeIndex is set to newIndex at the end of updateLayout
 			}
 		},
 		destroy() {
 			window.removeEventListener('resize', onResize);
+			proxyTweens.forEach(t => t.kill());
 			ctx.revert();
 		}
 	};
