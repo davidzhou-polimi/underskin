@@ -83,7 +83,6 @@
         font-weight: var(--text-caption-weight);
         color: var(--content-primary);
         margin-bottom: var(--spacing-4);
-        letter-spacing: 0.05em;
     }
 
     /* Stili per l'SVG e il testo vettoriale */

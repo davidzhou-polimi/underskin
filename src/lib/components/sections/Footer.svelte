@@ -89,7 +89,7 @@
         /* Commento solo il PERCHÉ: utilizza il token di peso specifico predisposto per il footer del brand */
         font-weight: var(--text-footer-weight);
         fill: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
-        letter-spacing: -0.02em;
+        /* Rimossa la spaziatura negativa per allinearla a quella naturale del logo della navbar */
     }
 
     /* Commento solo il PERCHÉ: Distribuisce le note informative toccando i medesimi margini. */
@@ -104,7 +104,8 @@
         /* Usando un valore negativo (es. -30px), tiri su i testi sotto 
            andando a mangiare lo spazio vuoto lasciato dall'SVG. 
            Puoi aumentarlo a -40px o diminuirlo a -15px finché non è perfetto per te! */
-        margin-block-start: -30px;
+        /* Adattato a -25px per compensare il cambio di aspect ratio dovuto alla nuova spaziatura */
+        margin-block-start: -25px;
     }
 
     .footer-text {
