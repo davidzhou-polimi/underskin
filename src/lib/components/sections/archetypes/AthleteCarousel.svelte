@@ -30,6 +30,24 @@
 		}
 	});
 
+	// ─── Autoplay ─────────────────────────────────────────────────────────────
+
+	/* Sincronizzato con l'intervallo di 3.5s di TeamCarousel per coerenza visiva globale */
+	const AUTOPLAY_INTERVAL = 3500; // ms
+
+	$effect(() => {
+		// Pause while any card or dot is hovered
+		if (hoveredIndex !== null) return;
+
+		// Reading activeIndex as a dependency resets the timer on manual navigation,
+		// so autoplay doesn't fire immediately after a user-driven slide change.
+		// eslint-disable-next-line no-unused-expressions
+		activeIndex;
+
+		const id = setInterval(() => next(), AUTOPLAY_INTERVAL);
+		return () => clearInterval(id);
+	});
+
 	let filteredAthletes = $derived(
 		/** @type {any} */ (athletesData.filter(athlete => athlete.type === type))
 	);
