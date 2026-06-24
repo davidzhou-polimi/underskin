@@ -3,12 +3,23 @@ import { gsap } from 'gsap';
 const ANGLE_STEP = 18; // degrees — must match carousel.js
 
 /**
+ * Resolves a CSS custom property to its actual computed color value.
+ * GSAP cannot interpolate between CSS variable strings — it needs real RGB/hex values.
+ * @param {string} cssVar - e.g. '--content-primary'
+ * @returns {string}
+ */
+function resolveColor(cssVar) {
+	return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+}
+
+/**
  * @typedef {Object} CarouselDotsParams
  * @property {number} [activeIndex]
  * @property {number} [itemsCount]
  * @property {number} [cx]      - SVG x of the dot arc circle center
  * @property {number} [cy]      - SVG y of the dot arc circle center
  * @property {number} [radius]  - Dot arc circle radius (R_nav)
+ * @property {number|null} [hoveredIndex]
  */
 
 /**
@@ -29,7 +40,8 @@ export function carouselDots(node, params = {}) {
 		itemsCount = 0,
 		cx = 0,
 		cy = 0,
-		radius = 0
+		radius = 0,
+		hoveredIndex = null
 	} = params;
 
 	// Per-dot proxy objects { diff } and their running tweens
@@ -51,8 +63,10 @@ export function carouselDots(node, params = {}) {
 			const targetOpacity = 1;
 
 			const absDiff = Math.abs(targetDiff);
-			// Active dot gets the primary content color, side dots get a lower contrast neutral token.
-			const targetColor = absDiff === 0 ? 'var(--content-primary)' : 'var(--neutral-500)';
+			// Active dot or hovered dot gets the primary content color
+			const targetColor = absDiff === 0 || i === hoveredIndex
+				? resolveColor('--content-primary')
+				: resolveColor('--neutral-500');
 
 			const prevProxy = dotProxies.get(dot);
 			const prevDiff = prevProxy?.diff ?? targetDiff;
@@ -134,15 +148,43 @@ export function carouselDots(node, params = {}) {
 				newParams.cx !== cx ||
 				newParams.cy !== cy ||
 				newParams.radius !== radius;
+			const hoverChanged = newParams.hoveredIndex !== hoveredIndex;
+
+			// Capture previous hover before updating state
+			const prevHoveredIndex = hoveredIndex;
 
 			activeIndex = newParams.activeIndex ?? activeIndex;
 			itemsCount = newParams.itemsCount ?? itemsCount;
 			cx = newParams.cx ?? cx;
 			cy = newParams.cy ?? cy;
 			radius = newParams.radius ?? radius;
+			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
 
 			if (indexChanged) updateLayout(true);
 			else if (geomChanged) updateLayout(false);
+			else if (hoverChanged) {
+				// Animate only the two dots that actually change: the one losing highlight and the one gaining it
+				const dots = node.querySelectorAll('.carousel-dot');
+				const animateDot = (/** @type {number | null} */ index, /** @type {boolean} */ highlight) => {
+					if (index === null) return;
+					const dot = dots[index];
+					if (!dot) return;
+					let diff = index - activeIndex;
+					if (diff > itemsCount / 2) diff -= itemsCount;
+					else if (diff < -itemsCount / 2) diff += itemsCount;
+					const isActive = Math.abs(diff) === 0;
+					// Don't dim the active dot even when un-hovering
+					if (isActive && !highlight) return;
+					gsap.to(dot, {
+						fill: highlight || isActive ? resolveColor('--content-primary') : resolveColor('--neutral-500'),
+						duration: 0.25,
+						ease: 'power2.out',
+						overwrite: 'auto'
+					});
+				};
+				animateDot(prevHoveredIndex, false);
+				animateDot(hoveredIndex, true);
+			}
 		},
 		destroy() {
 			proxyTweens.forEach(t => t.kill());

@@ -20,6 +20,8 @@
 
 	let activeIndex = $state(0);
 	let isFlipped = $state(false);
+	/** @type {number | null} */
+	let hoveredIndex = $state(null);
 
 	// Reset flip state when user slides to another athlete
 	$effect(() => {
@@ -105,7 +107,7 @@
 >
 	<div
 		class="carousel-track"
-		use:carousel={{ activeIndex, itemsCount: filteredAthletes.length }}
+		use:carousel={{ activeIndex, itemsCount: filteredAthletes.length, hoveredIndex }}
 		ontouchstart={handleTouchStart}
 		ontouchend={handleTouchEnd}
 		role="group"
@@ -114,8 +116,8 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={i === activeIndex && !isFlipped ? () => tooltip.show("Scopri", "semplice", "pointer") : null}
-				onmouseleave={() => tooltip.hide()}
+				onmouseenter={i === activeIndex && !isFlipped ? () => { tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }}
+				onmouseleave={() => { tooltip.hide(); hoveredIndex = null; }}
 				onclick={i === activeIndex ? () => {
 					isFlipped = !isFlipped;
 					if (isFlipped) {
@@ -151,7 +153,7 @@
 			viewBox={svgViewBox}
 			xmlns="http://www.w3.org/2000/svg"
 			aria-hidden="true"
-			use:carouselDots={{ activeIndex, itemsCount: filteredAthletes.length, cx: cx_nav, cy: cy_nav, radius: R_nav }}
+			use:carouselDots={{ activeIndex, itemsCount: filteredAthletes.length, cx: cx_nav, cy: cy_nav, radius: R_nav, hoveredIndex }}
 		>
 			<!-- Dotted arc path — equator points are off-screen, arc exits container on both sides -->
 			<path
@@ -166,14 +168,21 @@
 			/>
 
 			<!-- One dot per card — positioned and animated by carouselDots action -->
-			{#each filteredAthletes as _}
+			{#each filteredAthletes as athlete, i (athlete.name)}
 				<circle
 					class="carousel-dot"
 					cx={cx_nav}
 					cy={cy_nav}
 					r="6"
 					fill="var(--content-primary)"
-					style="pointer-events: none;"
+					style="cursor: pointer;"
+					onclick={() => selectIndex(i)}
+					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectIndex(i); }}
+					onmouseenter={() => { hoveredIndex = i; }}
+					onmouseleave={() => { hoveredIndex = null; }}
+					role="button"
+					tabindex="0"
+					aria-label="Vai all'atleta {athlete.name}"
 				/>
 			{/each}
 		</svg>
@@ -242,5 +251,10 @@
 		left: 50%;
 		transform: translateX(-50vw);
 		overflow: visible;
+	}
+
+	/* Remove browser focus ring from SVG dots — they have a custom hover highlight */
+	:global(.carousel-dot:focus) {
+		outline: none;
 	}
 </style>

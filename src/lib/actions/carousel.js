@@ -6,6 +6,7 @@ const ANGLE_STEP = 18; // degrees between adjacent card positions
  * @typedef {Object} CarouselParams
  * @property {number} [activeIndex]
  * @property {number} [itemsCount]
+ * @property {number|null} [hoveredIndex]
  */
 
 /**
@@ -26,41 +27,13 @@ function getRadius(containerWidth) {
 export function carousel(node, params = {}) {
 	let activeIndex = params.activeIndex ?? 0;
 	let itemsCount = params.itemsCount ?? 0;
+	let hoveredIndex = params.hoveredIndex ?? null;
 
 	const ctx = gsap.context(() => {}, node);
 
 	// Per-card proxy objects { diff } and their running tweens
 	const cardProxies = new Map();
 	const proxyTweens = new Map();
-
-	// Gestione dell'hover per portare l'opacità a 1 sulle carte laterali
-	const cards = node.querySelectorAll('.carousel-item');
-	/** @type {Array<{card: Element, enterHandler: () => void, leaveHandler: () => void}>} */
-	const hoverListeners = [];
-
-	cards.forEach((card, i) => {
-		const enterHandler = () => {
-			let currentDiff = i - activeIndex;
-			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
-			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
-			if (Math.abs(currentDiff) === 1) {
-				gsap.to(card, { opacity: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
-			}
-		};
-
-		const leaveHandler = () => {
-			let currentDiff = i - activeIndex;
-			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
-			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
-			if (Math.abs(currentDiff) === 1) {
-				gsap.to(card, { opacity: 0.85, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
-			}
-		};
-
-		card.addEventListener('mouseenter', enterHandler);
-		card.addEventListener('mouseleave', leaveHandler);
-		hoverListeners.push({ card, enterHandler, leaveHandler });
-	});
 
 	/**
 	 * @param {number} index - Target active index
@@ -80,7 +53,9 @@ export function carousel(node, params = {}) {
 			else if (prevDiff < -itemsCount / 2) prevDiff += itemsCount;
 
 			const absDiff = Math.abs(targetDiff);
-			const targetOpacity = absDiff === 0 ? 1 : absDiff === 1 ? 0.85 : 0;
+			// Lateral card gets full opacity when hovered directly or when its dot is hovered
+			const isHovered = hoveredIndex === i;
+			const targetOpacity = absDiff === 0 ? 1 : absDiff === 1 ? (isHovered ? 1 : 0.85) : 0;
 			const targetZIndex = 10 - absDiff;
 			const targetPointerEvents = absDiff <= 1 ? 'auto' : 'none';
 
@@ -162,21 +137,40 @@ export function carousel(node, params = {}) {
 	return {
 		/** @param {CarouselParams} newParams */
 		update(newParams) {
-			if (newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount) {
+			const indexChanged = newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount;
+			const hoverChanged = newParams.hoveredIndex !== hoveredIndex;
+
+			// Capture previous hover before updating state
+			const prevHoveredIndex = hoveredIndex;
+			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
+
+			if (indexChanged) {
 				// Update itemsCount first; keep activeIndex at old value so prevDiff is correct
 				itemsCount = newParams.itemsCount ?? itemsCount;
 				const newIndex = newParams.activeIndex ?? activeIndex;
 				updateLayout(newIndex, true);
 				// activeIndex is set to newIndex at the end of updateLayout
+			} else if (hoverChanged) {
+				// Animate only the two lateral cards that actually change opacity
+				const cards = node.querySelectorAll('.carousel-item');
+				const animateCard = (/** @type {number | null} */ index, /** @type {boolean} */ highlight) => {
+					if (index === null) return;
+					const card = cards[index];
+					if (!card) return;
+					let diff = index - activeIndex;
+					if (diff > itemsCount / 2) diff -= itemsCount;
+					else if (diff < -itemsCount / 2) diff += itemsCount;
+					// Only lateral cards (diff ±1) participate in hover opacity
+					if (Math.abs(diff) !== 1) return;
+					gsap.to(card, { opacity: highlight ? 1 : 0.85, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
+				};
+				animateCard(prevHoveredIndex, false);
+				animateCard(hoveredIndex, true);
 			}
 		},
 		destroy() {
 			window.removeEventListener('resize', onResize);
 			proxyTweens.forEach(t => t.kill());
-			hoverListeners.forEach(({ card, enterHandler, leaveHandler }) => {
-				card.removeEventListener('mouseenter', enterHandler);
-				card.removeEventListener('mouseleave', leaveHandler);
-			});
 			ctx.revert();
 		}
 	};
