@@ -103,6 +103,7 @@ export function quizAnimation(node, params) {
 		// una volta che il titolo sparisce: attualmente il flex centra titolo + quiz-body
 		// insieme, quindi il quiz-body risulta sotto il centro ottico del viewport.
 		const quizBody = node.querySelector('.quiz-body');
+		if (!quizBody) return;
 		const bodyBounds = quizBody.getBoundingClientRect();
 		const yShift = Math.round(window.innerHeight / 2 - (bodyBounds.top + bodyBounds.height / 2));
 
@@ -191,4 +192,27 @@ export function quizAnimation(node, params) {
 			if (activeTimeline) activeTimeline.kill();
 		}
 	};
+}
+
+/**
+ * Anima la transizione tra lo step 1 e lo step 2 del quiz.
+ * @param {number} targetStep - Lo step di destinazione (1 o 2)
+ * @param {Object} callbacks
+ * @param {() => void} callbacks.onStepChange - Callback per aggiornare lo stato di Svelte nel momento esatto tra le due animazioni
+ */
+export function animateQuizStep(targetStep, { onStepChange }) {
+	// Commento solo il PERCHÉ: gsap.timeline orchestra l'animazione sequenziale (fade-out del vecchio step, cambio stato Svelte tramite callback, fade-in del nuovo step con sfocatura)
+	if (targetStep === 2) {
+		gsap.set('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)' });
+		gsap.timeline()
+			.to('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
+			.add(() => { onStepChange(); })
+			.to('.step-2', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+	} else if (targetStep === 1) {
+		gsap.set('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)' });
+		gsap.timeline()
+			.to('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
+			.add(() => { onStepChange(); })
+			.to('.step-1', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+	}
 }

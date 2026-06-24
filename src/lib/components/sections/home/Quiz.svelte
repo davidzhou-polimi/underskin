@@ -1,8 +1,7 @@
 <script>
-	import { gsap } from 'gsap';
 	import { onMount } from 'svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
-	import { quizAnimation } from '$lib/actions/home/quizAnimation.js';
+	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 
@@ -82,13 +81,10 @@
 			// Scroll verso il basso
 			e.preventDefault();
 			if (textStep === 1) {
-				// Imposta lo stato iniziale su step-2 mentre è ancora hidden,
-				// così quando il DOM lo rende visibile non fa un flash
-				gsap.set('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)' });
-				gsap.timeline()
-					.to('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
-					.add(() => { textStep = 2; }) // aggiorna solo dopo che step-1 è uscito
-					.to('.step-2', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+				// Commento solo il PERCHÉ: delega l'animazione di transizione tra step di testo all'helper esterno per rimuovere GSAP dal componente
+				animateQuizStep(2, {
+					onStepChange: () => { textStep = 2; }
+				});
 			} else if (textStep === 2) {
 				// Apre il gate: il listener non-passivo non bloccherà più lo scroll
 				canLeave = true;
@@ -104,11 +100,10 @@
 				e.preventDefault();
 				// Richiude il gate se l'utente torna indietro alla prima scritta
 				canLeave = false;
-				gsap.set('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)' });
-				gsap.timeline()
-					.to('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
-					.add(() => { textStep = 1; })
-					.to('.step-1', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
+				// Commento solo il PERCHÉ: delega l'animazione all'helper esterno per rispettare la separazione architetturale di GSAP
+				animateQuizStep(1, {
+					onStepChange: () => { textStep = 1; }
+				});
 			} else if (textStep === 1) {
 				// Scroll up dalla prima scritta → torna all'intro
 				// preventScrollDuringQuiz già lascia passare questo evento

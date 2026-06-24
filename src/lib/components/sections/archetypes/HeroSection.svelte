@@ -3,18 +3,11 @@
      * Assunzioni per questo componente unificato:
      * 1. Sostituisce i tre file Hero specifici in un unico componente riutilizzabile.
      * 2. Gestisce reattivamente sfondi e testi tramite le rune di Svelte 5.
-     * 3. Tutte le animazioni GSAP e ScrollTrigger sono isolate nel context ed eseguono il cleanup su distruzione del componente.
+     * 3. Tutte le animazioni GSAP e ScrollTrigger sono isolate in Svelte Actions dedicate.
      */
 
-    import { onMount } from 'svelte';
-    import { gsap } from 'gsap';
-    import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-
     import { trackSection } from '$lib/actions/trackSection.js';
-
-    if (typeof window !== 'undefined') {
-        gsap.registerPlugin(ScrollTrigger);
-    }
+    import { heroParallax } from '$lib/actions/archetypes/heroParallax.js';
 
     /**
      * @typedef {Object} Props
@@ -32,38 +25,8 @@
         theme = 'favorito'
     } = $props();
 
-    /** @type {HTMLHeadingElement | null} */
-    let blobText = null;
     /** @type {HTMLElement | null} */
-    let sectionRef = null;
-
-    onMount(() => {
-        if (!blobText || !sectionRef) return;
-
-        const txt = blobText;
-        const sec = sectionRef;
-
-        gsap.set(txt, { opacity: 1 });
-
-        const ctx = gsap.context(() => {
-            // Dissolvenza e parallasse verticale del titolo durante lo scroll (MANTENUTO)
-            gsap.fromTo(txt,
-                { opacity: 1, y: 0 },
-                {
-                    opacity: 0,
-                    y: -50,
-                    scrollTrigger: {
-                        trigger: sec,
-                        start: 'top top',
-                        end: 'bottom 50%',
-                        scrub: true
-                    }
-                }
-            );
-        });
-
-        return () => ctx.revert();
-    });
+    let sectionRef = $state(null);
 </script>
 
 <section 
@@ -74,12 +37,12 @@
     use:trackSection={{ id: sectionId }}
 >
     <div class="sticky-viewport">
-    
-        
         <div class="text-container">
-            <h1 bind:this={blobText} class="blob-text" style:text-shadow={textShadow}>
-                {title}
-            </h1>
+            {#if sectionRef}
+                <h1 use:heroParallax={{ trigger: sectionRef }} class="blob-text" style:text-shadow={textShadow}>
+                    {title}
+                </h1>
+            {/if}
         </div>
     </div>
 </section>

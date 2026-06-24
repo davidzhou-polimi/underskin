@@ -1,47 +1,11 @@
 <script>
-	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import { trackSection } from '$lib/actions/trackSection.js';
-
-	let contentWrapper;
-
-	onMount(() => {
-		gsap.registerPlugin(ScrollTrigger);
-
-		// Impostiamo lo stato iniziale del testo (sfocato e traslato verso il basso)
-		gsap.set('.perf-quote', {
-			opacity: 0,
-			filter: 'blur(15px)',
-			y: 20
-		});
-
-		// Attiviamo l'animazione quando la sezione entra in vista
-		const st = gsap.to('.perf-quote', {
-			opacity: 1,
-			filter: 'blur(0px)',
-			y: 0,
-			duration: 1.2,
-			ease: 'power2.out',
-			scrollTrigger: {
-				trigger: '#performance',
-				start: 'top 75%',
-				toggleActions: 'play none none reverse'
-			}
-		});
-
-		return () => {
-			if (st.scrollTrigger) {
-				st.scrollTrigger.kill();
-			}
-			st.kill();
-		};
-	});
+	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
 </script>
 
 <section id="performance" class="performance-section" use:trackSection>
-	<div class="perf-content" bind:this={contentWrapper}>
-		<blockquote class="perf-quote">
+	<div class="perf-content">
+		<blockquote class="perf-quote" use:performanceReveal={{ triggerId: '#performance' }}>
 			La performance non consuma solo il corpo: <br />
 			modella
 			<span class="gradient-text animate-gradient-text my-archetypes-color"> identità, abitudini e ossessioni</span>.<br />
