@@ -42,9 +42,9 @@
         allArchetypes.filter((item) => item.type !== archetype),
     );
 
-    // Reindirizziamo alla rotta radice per consentire all'utente di selezionare un altro percorso o rivedere l'intro
+    // Reindirizziamo alla rotta radice passando un parametro di query per innescare la transizione automatica verso l'outro
     const handleButtonClick = () => {
-        goto("/");
+        goto("/?fromArchetype=true");
     };
 </script>
 
