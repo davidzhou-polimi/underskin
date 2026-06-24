@@ -1,5 +1,5 @@
 <script>
-	import AthleteCarousel from '$lib/components/ui/AthleteCarousel.svelte';
+	import AthleteCarousel from '$lib/components/sections/archetypes/AthleteCarousel.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 
 	/**

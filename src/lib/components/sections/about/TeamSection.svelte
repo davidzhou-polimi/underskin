@@ -1,5 +1,5 @@
 <script>
-	import TeamCarousel from '$lib/components/ui/TeamCarousel.svelte';
+	import TeamCarousel from '$lib/components/sections/about/TeamCarousel.svelte';
 	import { trackSection } from '$lib/actions/trackSection.js';
 
 	/**

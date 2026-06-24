@@ -107,19 +107,19 @@
         >
             {#each activeItems as member, i (member.name)}
                 <div
-                    class="carousel-item"
-                    role="group"
-                    aria-roledescription="card"
-                    onmouseenter={i === activeIndex
-                        ? () => {
-                              isHovered = true;
-                          }
-                        : null}
-                    onmouseleave={i === activeIndex
-                        ? () => {
-                              isHovered = false;
-                          }
-                        : null}
+                     class="carousel-item"
+                     role="group"
+                     aria-roledescription="card"
+                     onmouseenter={i === activeIndex
+                         ? () => {
+                               isHovered = true;
+                           }
+                         : null}
+                     onmouseleave={i === activeIndex
+                         ? () => {
+                               isHovered = false;
+                           }
+                         : null}
                 >
                     <TeamCard
                         name={member.name}
