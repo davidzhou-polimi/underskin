@@ -57,7 +57,7 @@ export function zoomTextTransition(node) {
 			  
 			  // 2. Zoom cinematografico super-nitido tramite animazione del viewBox nativo
 			  .to(zoomSvg, { 
-					attr: { viewBox: '418 331 50 20' },
+					attr: { viewBox: '418 333 50 20' },
 					duration: 2, 
 					ease: 'power2.out' 
 			  }, '+=0.1')
