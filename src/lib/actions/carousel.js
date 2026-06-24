@@ -33,6 +33,35 @@ export function carousel(node, params = {}) {
 	const cardProxies = new Map();
 	const proxyTweens = new Map();
 
+	// Gestione dell'hover per portare l'opacità a 1 sulle carte laterali
+	const cards = node.querySelectorAll('.carousel-item');
+	/** @type {Array<{card: Element, enterHandler: () => void, leaveHandler: () => void}>} */
+	const hoverListeners = [];
+
+	cards.forEach((card, i) => {
+		const enterHandler = () => {
+			let currentDiff = i - activeIndex;
+			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
+			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
+			if (Math.abs(currentDiff) === 1) {
+				gsap.to(card, { opacity: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+			}
+		};
+
+		const leaveHandler = () => {
+			let currentDiff = i - activeIndex;
+			if (currentDiff > itemsCount / 2) currentDiff -= itemsCount;
+			else if (currentDiff < -itemsCount / 2) currentDiff += itemsCount;
+			if (Math.abs(currentDiff) === 1) {
+				gsap.to(card, { opacity: 0.85, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+			}
+		};
+
+		card.addEventListener('mouseenter', enterHandler);
+		card.addEventListener('mouseleave', leaveHandler);
+		hoverListeners.push({ card, enterHandler, leaveHandler });
+	});
+
 	/**
 	 * @param {number} index - Target active index
 	 * @param {boolean} animate
@@ -144,6 +173,10 @@ export function carousel(node, params = {}) {
 		destroy() {
 			window.removeEventListener('resize', onResize);
 			proxyTweens.forEach(t => t.kill());
+			hoverListeners.forEach(({ card, enterHandler, leaveHandler }) => {
+				card.removeEventListener('mouseenter', enterHandler);
+				card.removeEventListener('mouseleave', leaveHandler);
+			});
 			ctx.revert();
 		}
 	};

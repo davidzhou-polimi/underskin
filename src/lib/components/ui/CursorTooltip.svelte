@@ -46,7 +46,7 @@
     .tooltip-glass-override {
         width: 100% !important;
         height: auto !important;
-        padding: var(--spacing-2) var(--spacing-3) !important;
+        padding: var(--spacing-2) var(--spacing-4) !important;
         border-radius: var(--radius-s) !important;
         box-shadow: 0 4px 20px rgba(7, 30, 69, 0.04), 0 12px 30px rgba(7, 30, 69, 0.08) !important;
         opacity: 0;
