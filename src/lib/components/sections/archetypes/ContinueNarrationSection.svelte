@@ -66,6 +66,7 @@
                         type={item.type}
                         videoSrc={item.videoSrc}
                         horizontal={true}
+                        showTooltip={false}
                     />
                 {/each}
             </div>

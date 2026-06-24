@@ -10,7 +10,8 @@
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
 	 *   isPlaying?: boolean,
 	 *   horizontal?: boolean,
-	 *   clickable?: boolean
+	 *   clickable?: boolean,
+	 *   showTooltip?: boolean
 	 * }}
 	 */
 	let { 
@@ -20,7 +21,8 @@
 		type = 'favorito',
 		isPlaying = false,
 		horizontal = false,
-		clickable = true
+		clickable = true,
+		showTooltip = true
 	} = $props();
 
 	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
@@ -49,7 +51,7 @@
 		favorito: {
 			brand: 'var(--azzurro-700)',
 			textPrimary: 'var(--content-dark-primary)'
-        },
+		},
 		infortunato: {
 			brand: 'var(--arancione-700)',
 			textPrimary: 'var(--content-dark-primary)'
@@ -70,8 +72,8 @@
     class="archetype-card-container"
     class:is-horizontal={horizontal}
     use:hoverLift
-    onmouseenter={() => { isHovered = true; tooltip.show('Esplora', 'semplice', 'pointer'); }}
-    onmouseleave={() => { isHovered = false; tooltip.hide(); }}
+    onmouseenter={() => { isHovered = true; if (showTooltip) tooltip.show('Esplora', 'semplice', 'pointer'); }}
+    onmouseleave={() => { isHovered = false; if (showTooltip) tooltip.hide(); }}
 >
     <div class="card-inner" style="--text-primary: {colorTextPrimary};">
         <!-- Sfondo glassato ad effetto ghiaccio -->
