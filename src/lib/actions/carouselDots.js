@@ -47,8 +47,12 @@ export function carouselDots(node, params = {}) {
 			if (targetDiff > itemsCount / 2) targetDiff -= itemsCount;
 			else if (targetDiff < -itemsCount / 2) targetDiff += itemsCount;
 
+			// All navigation dots should be fully visible and opaque.
+			const targetOpacity = 1;
+
 			const absDiff = Math.abs(targetDiff);
-			const targetOpacity = absDiff === 0 ? 1 : absDiff === 1 ? 0.5 : 0;
+			// Active dot gets the primary content color, side dots get a lower contrast neutral token.
+			const targetColor = absDiff === 0 ? 'var(--content-primary)' : 'var(--neutral-500)';
 
 			const prevProxy = dotProxies.get(dot);
 			const prevDiff = prevProxy?.diff ?? targetDiff;
@@ -61,7 +65,8 @@ export function carouselDots(node, params = {}) {
 				gsap.set(dot, {
 					x: radius * Math.sin(angle),
 					y: -radius * Math.cos(angle),
-					opacity: targetOpacity
+					opacity: targetOpacity,
+					fill: targetColor
 				});
 				const proxy = prevProxy ?? { diff: targetDiff };
 				proxy.diff = targetDiff;
@@ -76,7 +81,8 @@ export function carouselDots(node, params = {}) {
 				gsap.set(dot, {
 					x: radius * Math.sin(angle),
 					y: -radius * Math.cos(angle),
-					opacity: 0
+					opacity: 0,
+					fill: targetColor
 				});
 				const proxy = prevProxy ?? { diff: targetDiff };
 				proxy.diff = targetDiff;
@@ -106,8 +112,14 @@ export function carouselDots(node, params = {}) {
 			});
 			proxyTweens.set(dot, tween);
 
-			// Opacity animated independently
-			gsap.to(dot, { opacity: targetOpacity, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
+			// Opacity and color/fill animated independently
+			gsap.to(dot, {
+				opacity: targetOpacity,
+				fill: targetColor,
+				duration: 0.6,
+				ease: 'power2.out',
+				overwrite: 'auto'
+			});
 		});
 	}
 
