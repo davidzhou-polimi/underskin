@@ -40,6 +40,6 @@ export const tooltip = {
     hide() {
         state.visible = false;
         state.cursor = 'default';
-        state.centered = false;
+        // Commento solo il perché: non resettiamo centered qui per evitare che il tooltip salti di posizione durante il fade-out
     }
 };

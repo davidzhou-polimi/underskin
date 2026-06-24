@@ -297,7 +297,10 @@
 	});
 	const navBottom = $derived(navOffsetTop + navOffsetHeight);
 
-	function handleNavMouseEnter() {
+	/** @param {MouseEvent} e */
+	function handleNavMouseEnter(e) {
+		// Commento solo il perché: aggiorniamo la posizione all'istante dell'enter per evitare glitch grafici con coordinate obsolete
+		tooltip.updatePosition(e.clientX, e.clientY);
 		tooltip.show('← →', 'semplice', 'none', true);
 	}
 
@@ -399,7 +402,7 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? () => { tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
+				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
 				onmouseleave={() => { tooltip.hide(); hoveredIndex = null; }}
 				onclick={i === activeIndex && !isMoving ? () => {
 					isFlipped = !isFlipped;
