@@ -54,19 +54,21 @@
     use:trackSection={{ id: "continue-narration" }}
 >
     <div class="continue-container">
-        <!-- Titolo della sezione con stile tipografico grande coordinato -->
-        <h3 class="continue-title">Continua la narrazione</h3>
+        <div class="center-content">
+            <!-- Titolo della sezione con stile tipografico grande coordinato -->
+            <h3 class="continue-title">Continua a esplorare</h3>
 
-        <!-- Contenitore delle due card visualizzate in orizzontale -->
-        <div class="cards-grid">
-            {#each filteredArchetypes as item (item.name)}
-                <ArchetypeCard
-                    name={item.name}
-                    type={item.type}
-                    videoSrc={item.videoSrc}
-                    horizontal={true}
-                />
-            {/each}
+            <!-- Contenitore delle due card visualizzate in orizzontale -->
+            <div class="cards-grid">
+                {#each filteredArchetypes as item (item.name)}
+                    <ArchetypeCard
+                        name={item.name}
+                        type={item.type}
+                        videoSrc={item.videoSrc}
+                        horizontal={true}
+                    />
+                {/each}
+            </div>
         </div>
 
         <!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
@@ -98,16 +100,29 @@
     .continue-container {
         width: 100%;
         max-width: var(--spacing-17);
+        /* Commento solo il perché: forza il contenitore ad occupare l'altezza visibile al netto dei padding */
+        min-height: calc(100vh - (var(--spacing-10) * 2));
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         padding-inline: var(--spacing-2);
         box-sizing: border-box;
     }
 
+    .center-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        /* Commento solo il perché: distribuisce lo spazio extra per centrare verticalmente il blocco principale */
+        flex-grow: 1;
+        width: 100%;
+    }
+
     .continue-title {
+        margin-top: var(--spacing-3);
         margin-bottom: var(--spacing-6);
     }
 
@@ -118,7 +133,6 @@
         align-items: center;
         gap: var(--spacing-4);
         width: 100%;
-        margin-bottom: var(--spacing-8);
     }
 
     .action-container {

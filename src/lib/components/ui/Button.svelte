@@ -60,9 +60,11 @@
         font-family: inherit;
         font-size: var(--text-button-size);
         font-weight: var(--text-button-weight);
+        /* Commento solo il perché: garantisce consistenza visiva dell'altezza rispetto ai tooltip che hanno la stessa altezza di riga */
+        line-height: 1.4;
         border: none;
         border-radius: 9999px;
-        padding: var(--spacing-2) var(--spacing-4);
+        padding: var(--spacing-2) var(--spacing-6);
         cursor: pointer;
         /* Transizione fluida limitata al colore di sfondo per evitare oscillazioni verticali indesiderate dell'elemento */
         transition: background-color var(--transition-duration-normal) var(--easing-standard);
