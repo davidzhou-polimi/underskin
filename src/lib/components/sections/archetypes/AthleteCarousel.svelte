@@ -115,30 +115,11 @@
 				// Synchronize targetIndex during slide to avoid jumps when slide ends
 				targetIndex = displayedIndex;
 			} else {
-				// State 3: Settling / Static state. Snap targetIndex to nearest card and lerp displayedIndex
+				// State 3: Settling / Static state. Snap targetIndex to nearest card using GSAP settling transition
 				if (inertiaVelocity !== 0) {
 					inertiaVelocity = 0;
-					targetIndex = Math.round(displayedIndex);
-					targetIndex = wrapIndex(targetIndex, len);
-				}
-
-				let diff = targetIndex - displayedIndex;
-				if (len > 0) {
-					const halfLen = len / 2;
-					if (diff > halfLen) {
-						displayedIndex += len;
-						diff -= len;
-					} else if (diff < -halfLen) {
-						displayedIndex -= len;
-						diff += len;
-					}
-				}
-
-				if (Math.abs(diff) < 0.001) {
-					displayedIndex = targetIndex;
-				} else {
-					const step = Math.sign(diff) * Math.min(Math.abs(diff), MAX_VELOCITY);
-					displayedIndex += step;
+					const snapTarget = wrapIndex(Math.round(displayedIndex), len);
+					navigateTo(snapTarget);
 				}
 			}
 		};
@@ -204,11 +185,8 @@
 
 	const svgViewBox = $derived(`0 0 ${navWidth} ${NAV_HEIGHT}`);
 
-	// ─── Navigation ───────────────────────────────────────────────────────────
-
-	function next() {
-		targetIndex = (targetIndex + 1) % filteredAthletes.length;
-	}
+	/** @type {gsap.core.Tween | null} */
+	let navigationTween = null;
 
 	/**
 	 * Helper to handle negative modulo correctly
@@ -219,13 +197,56 @@
 		return ((val % max) + max) % max;
 	}
 
+	/** @param {number} target */
+	function navigateTo(target) {
+		if (autoplayTween) autoplayTween.pause();
+
+		const len = filteredAthletes.length;
+		if (len === 0) return;
+
+		// Commento solo il PERCHÉ: allineiamo gli indici sul percorso circolare più breve per evitare rotazioni inverse complete
+		let diff = target - displayedIndex;
+		const halfLen = len / 2;
+		if (diff > halfLen) {
+			displayedIndex += len;
+		} else if (diff < -halfLen) {
+			displayedIndex -= len;
+		}
+
+		navigationTween?.kill();
+
+		const proxy = { val: displayedIndex };
+		navigationTween = gsap.to(proxy, {
+			val: target,
+			duration: 0.6,
+			ease: 'power2.out',
+			onUpdate: () => {
+				displayedIndex = proxy.val;
+			},
+			onComplete: () => {
+				displayedIndex = wrapIndex(displayedIndex, len);
+				targetIndex = displayedIndex;
+				navigationTween = null;
+				if (autoplayTween && hoveredIndex === null) {
+					autoplayTween.play();
+				}
+			}
+		});
+	}
+
+	// ─── Navigation ───────────────────────────────────────────────────────────
+
+	function next() {
+		navigateTo(wrapIndex(targetIndex + 1, filteredAthletes.length));
+	}
+
 	function prev() {
-		targetIndex = wrapIndex(targetIndex - 1, filteredAthletes.length);
+		navigateTo(wrapIndex(targetIndex - 1, filteredAthletes.length));
 	}
 
 	/** @param {number} index */
 	function selectIndex(index) {
-		targetIndex = index;
+		navigateTo(index);
 	}
 
 	// ─── Touch ────────────────────────────────────────────────────────────────
@@ -287,6 +308,8 @@
 	/** @param {MouseEvent} e */
 	function handleNavMouseDown(e) {
 		isDragging = true;
+		navigationTween?.kill();
+		navigationTween = null;
 		dragStartX = e.clientX;
 		dragStartTarget = targetIndex;
 		dragVelocity = 0;
@@ -337,6 +360,12 @@
 				velocityPerFrame = Math.sign(velocityPerFrame) * MAX_INERTIA_SPEED;
 			}
 			inertiaVelocity = velocityPerFrame;
+
+			// Commento solo il PERCHÉ: se la velocità di rilascio è sotto soglia, agganciamo immediatamente la card più vicina usando la transizione fluida navigateTo
+			if (Math.abs(inertiaVelocity) <= 0.005) {
+				const len = filteredAthletes.length;
+				navigateTo(wrapIndex(Math.round(displayedIndex), len));
+			}
 
 			// Restart autoplay timer fresh after drag is completed
 			autoplayTween?.restart();

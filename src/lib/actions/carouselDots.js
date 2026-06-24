@@ -3,16 +3,6 @@ import { gsap } from 'gsap';
 const ANGLE_STEP = 18; // degrees — must match carousel.js
 
 /**
- * Resolves a CSS custom property to its actual computed color value.
- * GSAP cannot interpolate between CSS variable strings — it needs real RGB/hex values.
- * @param {string} cssVar - e.g. '--content-primary'
- * @returns {string}
- */
-function resolveColor(cssVar) {
-	return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
-}
-
-/**
  * @typedef {Object} CarouselDotsParams
  * @property {number} [activeIndex]
  * @property {number} [itemsCount]
@@ -45,14 +35,9 @@ export function carouselDots(node, params = {}) {
 		hoveredIndex = null
 	} = params;
 
-	// Per-dot proxy objects { diff } and their running tweens
-	const dotProxies = new Map();
-	const proxyTweens = new Map();
-
 	/**
-	 * @param {boolean} animate
 	 */
-	function updateLayout(animate = true) {
+	function updateLayout() {
 		const dots = node.querySelectorAll('.carousel-dot');
 
 		dots.forEach((dot, i) => {
@@ -60,88 +45,34 @@ export function carouselDots(node, params = {}) {
 			if (targetDiff > itemsCount / 2) targetDiff -= itemsCount;
 			else if (targetDiff < -itemsCount / 2) targetDiff += itemsCount;
 
-			// All navigation dots should be fully visible and opaque.
-			const targetOpacity = 1;
-
 			const absDiff = Math.abs(targetDiff);
-			// Active dot or hovered dot gets the primary content color
-			const targetColor = absDiff === 0 || i === hoveredIndex
-				? resolveColor('--content-primary')
-				: resolveColor('--neutral-500');
-
-			const prevProxy = dotProxies.get(dot);
-			const prevDiff = prevProxy?.diff ?? targetDiff;
-
-			// Kill existing proxy tween so we start from current animated position
-			proxyTweens.get(dot)?.kill();
-
-			if (!animate) {
-				const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
-				gsap.set(dot, {
-					x: radius * Math.sin(angle),
-					y: -radius * Math.cos(angle),
-					opacity: targetOpacity,
-					fill: targetColor
-				});
-				const proxy = prevProxy ?? { diff: targetDiff };
-				proxy.diff = targetDiff;
-				dotProxies.set(dot, proxy);
-				return;
+			
+			// Commento solo il PERCHÉ: calcoliamo l'opacità in base alla distanza dal centro per sfumare l'evidenziazione in sincronia con il carosello
+			let targetOpacity = 0.5;
+			if (absDiff < 1) {
+				targetOpacity = 1.0 - absDiff * 0.5;
 			}
 
-			const isWrap = Math.abs(targetDiff - prevDiff) > 1.5;
-
-			if (isWrap) {
-				const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
-				gsap.set(dot, {
-					x: radius * Math.sin(angle),
-					y: -radius * Math.cos(angle),
-					opacity: 0,
-					fill: targetColor
-				});
-				const proxy = prevProxy ?? { diff: targetDiff };
-				proxy.diff = targetDiff;
-				dotProxies.set(dot, proxy);
-				gsap.to(dot, { opacity: targetOpacity, duration: 0.6, ease: 'power2.out' });
-				return;
+			// Se il dot è in hover, forziamo l'opacità massima
+			if (i === hoveredIndex) {
+				targetOpacity = 1.0;
 			}
 
-			// Arc-following: tween diff, compute dot position per frame
-			let proxy = prevProxy;
-			if (!proxy) {
-				proxy = { diff: prevDiff };
-				dotProxies.set(dot, proxy);
-			}
-
-			const tween = gsap.to(proxy, {
-				diff: targetDiff,
-				duration: 0.6,
-				ease: 'power2.out',
-				onUpdate() {
-					const angle = proxy.diff * ANGLE_STEP * (Math.PI / 180);
-					gsap.set(dot, {
-						x: radius * Math.sin(angle),
-						y: -radius * Math.cos(angle)
-					});
-				}
-			});
-			proxyTweens.set(dot, tween);
-
-			// Opacity and color/fill animated independently
-			gsap.to(dot, {
+			// Commento solo il PERCHÉ: posizioniamo istantaneamente i dot e aggiorniamo l'opacità usando variabili CSS native per massimizzare le prestazioni
+			const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
+			gsap.set(dot, {
+				x: radius * Math.sin(angle),
+				y: -radius * Math.cos(angle),
 				opacity: targetOpacity,
-				fill: targetColor,
-				duration: 0.6,
-				ease: 'power2.out',
-				overwrite: 'auto'
+				fill: 'var(--content-primary)'
 			});
 		});
 	}
 
-	updateLayout(false);
+	updateLayout();
 
 	return {
-		/** @param {CarouselDotsParams & { isDragging?: boolean }} newParams */
+		/** @param {CarouselDotsParams} newParams */
 		update(newParams) {
 			const indexChanged =
 				newParams.activeIndex !== activeIndex || newParams.itemsCount !== itemsCount;
@@ -161,13 +92,11 @@ export function carouselDots(node, params = {}) {
 			radius = newParams.radius ?? radius;
 			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
 
-			if (indexChanged) {
-				const isDragging = newParams.isDragging ?? false;
-				updateLayout(!isDragging);
+			if (indexChanged || geomChanged) {
+				updateLayout();
 			}
-			else if (geomChanged) updateLayout(false);
 			else if (hoverChanged) {
-				// Animate only the two dots that actually change: the one losing highlight and the one gaining it
+				// Commento solo il PERCHÉ: animiamo l'opacità del dot al variare dello stato hover dell'utente
 				const dots = node.querySelectorAll('.carousel-dot');
 				const animateDot = (/** @type {number | null} */ index, /** @type {boolean} */ highlight) => {
 					if (index === null) return;
@@ -177,10 +106,16 @@ export function carouselDots(node, params = {}) {
 					if (diff > itemsCount / 2) diff -= itemsCount;
 					else if (diff < -itemsCount / 2) diff += itemsCount;
 					const isActive = Math.abs(diff) === 0;
-					// Don't dim the active dot even when un-hovering
 					if (isActive && !highlight) return;
+
+					// Determiniamo l'opacità di destinazione in base alla distanza
+					let baseOpacity = 0.5;
+					if (Math.abs(diff) < 1) {
+						baseOpacity = 1.0 - Math.abs(diff) * 0.5;
+					}
+
 					gsap.to(dot, {
-						fill: highlight || isActive ? resolveColor('--content-primary') : resolveColor('--neutral-500'),
+						opacity: highlight || isActive ? 1.0 : baseOpacity,
 						duration: 0.25,
 						ease: 'power2.out',
 						overwrite: 'auto'
@@ -190,8 +125,6 @@ export function carouselDots(node, params = {}) {
 				animateDot(hoveredIndex, true);
 			}
 		},
-		destroy() {
-			proxyTweens.forEach(t => t.kill());
-		}
+		destroy() {}
 	};
 }
