@@ -19,6 +19,14 @@
 	};
 
 	let activeIndex = $state(0);
+	let isFlipped = $state(false);
+
+	// Reset flip state when user slides to another athlete
+	$effect(() => {
+		if (activeIndex !== undefined) {
+			isFlipped = false;
+		}
+	});
 
 	let filteredAthletes = $derived(
 		/** @type {any} */ (athletesData.filter(athlete => athlete.type === type))
@@ -106,8 +114,14 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={i === activeIndex ? () => tooltip.show('Flip', 'semplice', 'pointer') : null}
+				onmouseenter={i === activeIndex && !isFlipped ? () => tooltip.show("Scopri", "semplice", "pointer") : null}
 				onmouseleave={() => tooltip.hide()}
+				onclick={i === activeIndex ? () => {
+					isFlipped = !isFlipped;
+					if (isFlipped) {
+						tooltip.hide();
+					}
+				} : null}
 				role="none"
 			>
 				<AthleteCard
