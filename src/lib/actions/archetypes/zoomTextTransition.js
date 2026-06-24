@@ -41,7 +41,7 @@ export function zoomTextTransition(node) {
 				scrollTrigger: {
 					trigger: node,
 					start: 'top top',    
-					end: '+=180%',       
+					end: '+=250%',       
 					pin: true,           
 					scrub: 1,            
 					anticipatePin: 1
@@ -77,7 +77,11 @@ export function zoomTextTransition(node) {
 					autoAlpha: 1, 
 					duration: 0.8,
 					ease: 'power1.out'
-			  }, '-=0.6');
+			  }, '-=0.6')
+			  
+			  // 4. Buffer di riposo (resting state) per dare stabilità alla sezione una volta rivelata
+			  // Evita che uno scroll brusco o l'inerzia dello scroll superino immediatamente la sezione
+			  .to({}, { duration: 2.2 });
 		});
 	});
 
