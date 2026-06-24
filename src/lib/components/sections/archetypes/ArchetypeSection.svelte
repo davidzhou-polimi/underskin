@@ -11,7 +11,7 @@
 
     /** @type {Props} */
     let {
-        title = "Esplora gli archetipi",
+        title = "Conosci gli archetipi",
         items = undefined,
         clickable = true,
     } = $props();
