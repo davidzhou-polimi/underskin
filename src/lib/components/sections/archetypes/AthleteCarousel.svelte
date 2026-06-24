@@ -303,7 +303,7 @@
 	function handleNavMouseEnter(e) {
 		// Commento solo il perché: aggiorniamo la posizione all'istante dell'enter per evitare glitch grafici con coordinate obsolete
 		tooltip.updatePosition(e.clientX, e.clientY);
-		tooltip.show('← →', 'semplice', 'none', true);
+		tooltip.show('← • →', 'semplice', 'none', true);
 	}
 
 	function handleNavMouseLeave() {
@@ -405,7 +405,7 @@
 			<div
 				class="carousel-item"
 				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
-				onmouseleave={() => { tooltip.hide(); hoveredIndex = null; }}
+				onmouseleave={() => { if (!isDragging) tooltip.hide(); hoveredIndex = null; }}
 				onclick={i === activeIndex && !isMoving ? () => {
 					isFlipped = !isFlipped;
 					if (isFlipped) {
