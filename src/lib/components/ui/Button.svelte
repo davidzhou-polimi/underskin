@@ -67,10 +67,10 @@
         padding: var(--spacing-2) var(--spacing-6);
         cursor: pointer;
         /* Transizione fluida limitata al colore di sfondo per evitare oscillazioni verticali indesiderate dell'elemento */
-        transition: background-color var(--transition-duration-normal) var(--easing-standard);
+        transition: background-color var(--transition-duration-fast) var(--easing-out);
     }
 
     .pill-button:hover {
-        background-color: rgb(from var(--neutral-100) r g b / 0.8);
+        background-color: rgb(from var(--neutral-100) r g b / 0.95);
     }
 </style>
