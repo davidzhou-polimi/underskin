@@ -43,6 +43,18 @@
 			: 0
 	);
 
+	const isMoving = $derived(
+		isDragging || inertiaVelocity !== 0 || Math.abs(displayedIndex - targetIndex) > 0.001
+	);
+
+	// Commento solo il PERCHÉ: azzeriamo l'hover e nascondiamo il tooltip non appena il carosello entra in movimento per evitare che rimangano appesi durante lo scorrimento
+	$effect(() => {
+		if (isMoving) {
+			hoveredIndex = null;
+			tooltip.hide();
+		}
+	});
+
 	// Reset flip state when user slides to another athlete
 	$effect(() => {
 		if (activeIndex !== undefined) {
@@ -358,9 +370,9 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={i === activeIndex && !isFlipped ? () => { tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }}
+				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? () => { tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
 				onmouseleave={() => { tooltip.hide(); hoveredIndex = null; }}
-				onclick={i === activeIndex ? () => {
+				onclick={i === activeIndex && !isMoving ? () => {
 					isFlipped = !isFlipped;
 					if (isFlipped) {
 						tooltip.hide();
@@ -375,7 +387,7 @@
 					quote={athlete.quote}
 					type={athlete.type}
 					number={"0" + (i + 1)}
-					active={i === activeIndex}
+					active={i === activeIndex && !isMoving}
 				/>
 				{#if i !== activeIndex}
 					<button

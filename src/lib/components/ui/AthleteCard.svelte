@@ -66,7 +66,7 @@
 <div
 	class="athlete-card-container"
 	use:flipCard={{ axis, duration, active }}
-	use:hoverLift
+	use:hoverLift={{ disabled: !active }}
 	role="button"
 	tabindex="0"
 	aria-label="Card di {name}, clicca per girarla e leggere la citazione"
