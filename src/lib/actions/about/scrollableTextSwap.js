@@ -16,6 +16,7 @@ export function scrollableTextSwap(node) {
 
 	if (!currentElement || !nextElement) return;
 
+	// Commento solo il PERCHÉ: gsap.context incapsula tutti i tween e lo ScrollTrigger con pin per consentire un ripristino pulito all'unmount del componente
 	const ctx = gsap.context(() => {
 		// Configurazione iniziale dello stato orizzontale degli elementi
 		gsap.set(nextElement, { xPercent: 100, opacity: 0 });

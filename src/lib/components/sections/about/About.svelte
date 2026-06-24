@@ -1,5 +1,5 @@
 <script>
-	import { scrollableTextSwap } from '$lib/actions/aboutScrollAnimation.js';
+	import { scrollableTextSwap } from '$lib/actions/about/scrollableTextSwap.js';
 </script>
 
 <section id="about-section">
