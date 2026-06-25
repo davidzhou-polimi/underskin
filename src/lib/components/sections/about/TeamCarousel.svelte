@@ -174,13 +174,18 @@
         align-items: center;
         position: relative;
         overflow: visible;
-        padding: var(--spacing-2) 0;
+        /* Commento solo il PERCHÉ: azzera il padding verticale del contenitore per consentire 
+           ai margini del titolo e della dot navigation di definire una spaziatura simmetrica 
+           ed equidistante di var(--spacing-5) attorno alle card */
+        padding: 0;
         outline: none;
     }
 
     .carousel-viewport {
         width: 100%;
-        height: 520px;
+        /* Commento solo il PERCHÉ: impostato a 390px per far coincidere l'altezza del viewport 
+           con l'altezza reale delle card (387px), eliminando spazi verticali fittizi */
+        height: 390px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -203,8 +208,10 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: 357px;
-        height: 461px;
+        /* Commento solo il PERCHÉ: ridotto da 357x461px a 300x387px (mantenendo la proporzione di aspetto originale) 
+           per rendere il carosello più compatto ed evitare la vicinanza eccessiva ai margini dello schermo */
+        width: 300px;
+        height: 387px;
         will-change: transform, opacity;
     }
 
@@ -221,6 +228,8 @@
 
     /* DOTS NAVIGATION STYLES */
     .dots-navigation-container {
+        /* Commento solo il PERCHÉ: imposta la spaziatura superiore a var(--spacing-6) (48px) 
+           per fornire maggiore respiro visivo tra le carte e la dot navigation, mantenendo la perfetta simmetria con il titolo superiore */
         margin-top: var(--spacing-6);
         z-index: 10;
     }

@@ -7,14 +7,16 @@
 	 *   name?: string,
 	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
-	 *   horizontal?: boolean
+	 *   horizontal?: boolean,
+	 *   clickable?: boolean
 	 * }}
 	 */
 	let {
 		name = "nome e cognome",
 		imageSrc = "",
 		type = 'favorito',
-		horizontal = false
+		horizontal = false,
+		clickable = true
 	} = $props();
 
 	// Commento solo il PERCHÉ: il testo in primo piano deve usare il token di contenuto scuro per garantire leggibilità e correttezza semantica, mentre var(--background-primary) è riservato esclusivamente a sfondi.
@@ -39,7 +41,8 @@
 </script>
 
 <div
-    class="team-card-container non-clickable"
+    class="team-card-container"
+    class:non-clickable={!clickable}
     class:is-horizontal={horizontal}
     onmouseenter={() => { isHovered = true; }}
     onmouseleave={() => { isHovered = false; }}
@@ -64,8 +67,8 @@
 
 <style>
 	.team-card-container {
-		width: 357px;
-		height: 461px;
+		width: 100%;
+		height: 100%;
 		position: relative;
 		cursor: pointer;
 		will-change: transform;

@@ -31,10 +31,10 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100vh;
-		margin-top: -15vh;
 		width: 100%;
-		padding-top: var(--spacing-10);
-		padding-bottom: var(--spacing-3);
+		/* Commento solo il PERCHÉ: utilizza un padding simmetrico sopra e sotto per garantire 
+		   che il flex container sia perfettamente centrato in verticale sullo schermo */
+		padding: var(--spacing-6) 0;
 		box-sizing: border-box;
 		/* Nascondiamo l'overflow orizzontale della sezione per evitare scrollbar,
 		   consentendo comunque lo spazio necessario per le ombre */
@@ -51,7 +51,14 @@
 	}
 
 	.section-title {
+		/* Commento solo il PERCHÉ: allinea la dimensione del titolo con "Conosci gli archetipi" della homepage 
+		   utilizzando il token --text-m (2rem) ed il peso regular */
+		font-size: var(--text-m);
+		font-weight: var(--text-regular);
+		color: var(--content-primary);
+		/* Commento solo il PERCHÉ: imposta la spaziatura inferiore a var(--spacing-6) (48px) 
+		   per renderla perfettamente equidistante e simmetrica alla spaziatura superiore dei dots */
 		margin-bottom: var(--spacing-6);
-        text-align: center;
+		text-align: center;
 	}
 </style>
