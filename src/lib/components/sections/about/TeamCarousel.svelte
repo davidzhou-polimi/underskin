@@ -21,7 +21,7 @@
         {
             name: "Chiara Fois",
             type: "infortunato",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/chiara-fois.webp",
         },
         {
             name: "Ilaria La Spada",
