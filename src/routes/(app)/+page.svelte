@@ -27,7 +27,7 @@
     let isLocked = $state(false);
     let quizExpanded = $state(false);
 
-    const gradient = createFullPageGradientConfig();
+    const gradient = createFullPageGradientConfig(undefined, true);
 
 
 

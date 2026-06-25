@@ -51,11 +51,11 @@ export function createArchetypeGradientConfig(baseColors) {
  * Gradient a 3 stati per home e about: copertura iniziale → ridotta → piena con effetto footer.
  * @param {string[]} [colors] Palette cromatica (default: TOTAL_COLORS)
  */
-export function createFullPageGradientConfig(colors = TOTAL_COLORS) {
+export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = false) {
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
 
-	let isInIntroSection = $derived(scrollY < innerHeight * 0.95);
+	let isInIntroSection = $derived(hasIntro && scrollY < innerHeight * 0.95);
 	let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
 	let isNearPageBottom = $derived(
 		typeof document !== 'undefined' &&
