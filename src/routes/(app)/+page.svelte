@@ -20,7 +20,7 @@
     import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
     import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
     import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
-    import { onMount } from 'svelte';
+    import { cinematicScroll } from '$lib/actions/cinematicScroll.js';
 
     // Stati reattivi per la gestione del blocco interattivo del Quiz
     let isLocked = $state(false);
@@ -28,35 +28,7 @@
 
     const gradient = createFullPageGradientConfig();
 
-    onMount(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('fromArchetype') === 'true') {
-            // Seleziona la sezione degli archetipi e l'outro per coordinare il viaggio visivo dell'utente
-            const archetypesSection = document.getElementById('archetypes');
-            const outroSection = document.querySelector('.outro-scroll-container');
 
-            if (archetypesSection && outroSection) {
-                // Commento solo il PERCHÉ: utilizza un micro-timeout per assicurarsi che il posizionamento avvenga
-                // dopo che SvelteKit ha completato la navigazione e il posizionamento dello scroll nativo
-                setTimeout(() => {
-                    // Posiziona istantaneamente l'utente alla griglia delle card
-                    archetypesSection.scrollIntoView({ behavior: 'instant' });
-
-                    // Commento solo il PERCHÉ: attende un secondo per mostrare all'utente le card di provenienza,
-                    // dopodiché avvia uno scorrimento morbido e cinematico verso la sezione di chiusura (outro)
-                    setTimeout(() => {
-                        outroSection.scrollIntoView({ behavior: 'smooth' });
-
-                        // Commento solo il PERCHÉ: rimuove il parametro dall'URL per evitare la riesecuzione
-                        // della transizione automatica nel caso in cui l'utente ricarichi manualmente la pagina
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('fromArchetype');
-                        window.history.replaceState({}, '', url.toString());
-                    }, 500);
-                }, 50);
-            }
-        }
-    });
 
     /**
      * Intercetta e blocca i tentativi di scroll quando il quiz è attivo,
@@ -76,7 +48,7 @@
 
 <InteractiveGradient config={gradient.activeConfig} />
 
-<main class="page-flow" use:trackScrollProgress>
+<main class="page-flow" use:trackScrollProgress use:cinematicScroll>
     <Intro />
     <Quiz
         lockScroll={() => isLocked = true}
