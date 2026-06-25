@@ -55,6 +55,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS) {
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
 
+	let isInIntroSection = $derived(scrollY < innerHeight * 0.95);
 	let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
 	let isNearPageBottom = $derived(
 		typeof document !== 'undefined' &&
@@ -70,19 +71,19 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS) {
 					focusCenter: [0.5, -0.1],
 					focusRadius: [1.4, 1.0]
 				}
-			: isPastFirstViewport
-				? { colors, coverage: 0.35, speed: 0.6 }
-				: {
-						/* Commento solo il PERCHÉ: imposta un gradiente iniziale ad altissima intensità e velocità 
-						   per l'apertura della pagina (Hero), emulando il comportamento vibrante del footer, 
-						   ma con il posizionamento centrato ed esteso (focusCenter [0.5, 0.5], focusRadius 2.0) 
-						   ripreso da HeroSection per coprire l'intera sezione uniformemente. */
+			: isInIntroSection
+				? {
+						/* Commento solo il PERCHÉ: imposta un gradiente focalizzato con raggio stretto
+						   al centro per l'IntroSection, per allinearsi visivamente con i cerchi concentrici animati. */
 						colors,
-						speed: 2.2,
 						coverage: 1.0,
+						speed: 1.0,
 						focusCenter: [0.5, 0.5],
-						focusRadius: 2.0
+						focusRadius: [0.25, 0.25]
 					}
+				: isPastFirstViewport
+					? { colors, coverage: 0.35, speed: 0.6 }
+					: { colors, coverage: 0.5, speed: 0.8 }
 	);
 
 	return {
