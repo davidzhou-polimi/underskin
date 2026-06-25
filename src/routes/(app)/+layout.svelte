@@ -19,7 +19,7 @@
 	});
 </script>
 
-<!-- hideByDefault calcolato direttamente dall'URL: corretto sia in SSR che in hydration, evita flash visibile→nascosta sulle pagine archetipo -->
-<Navbar hideByDefault={['favorito', 'insoddisfatto', 'infortunato'].some(s => page.url.pathname.startsWith('/' + s))} />
+<!-- hideByDefault impostato a true per nascondere di default la navbar su tutte le pagine -->
+<Navbar hideByDefault={true} />
 
 {@render children()}
