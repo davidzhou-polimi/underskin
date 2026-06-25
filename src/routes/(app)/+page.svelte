@@ -9,6 +9,7 @@
      */
 
     // Importazione dei componenti strutturali del flusso di pagina
+    import IntroSection from '$lib/components/sections/home/IntroSection.svelte';
     import Preface from '$lib/components/sections/home/Preface.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
@@ -26,7 +27,7 @@
     let isLocked = $state(false);
     let quizExpanded = $state(false);
 
-    const gradient = createFullPageGradientConfig();
+    const gradient = createFullPageGradientConfig(undefined, true);
 
 
 
@@ -49,6 +50,7 @@
 <InteractiveGradient config={gradient.activeConfig} />
 
 <main class="page-flow" use:trackScrollProgress use:cinematicScroll>
+    <IntroSection />
     <Preface />
     <Quiz
         lockScroll={() => isLocked = true}
