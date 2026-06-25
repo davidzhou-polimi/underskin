@@ -93,7 +93,9 @@ export function perfectionIntro(node, params) {
 
 				onReset();
 
-				gsap.killTweensOf([headerText, targetCircle, blobWrapper]);
+				// Commento solo il PERCHÉ: uccide i tween degli altri elementi e solo la proprietà opacity di blobWrapper per evitare di distruggere il tween di oscillazione x/scale del gioco
+				gsap.killTweensOf([headerText, targetCircle]);
+				gsap.killTweensOf(blobWrapper, 'opacity');
 
 				// Ripristina istantaneamente lo stato iniziale nascosto
 				gsap.set([headerText, targetCircle, blobWrapper], { opacity: 0 });

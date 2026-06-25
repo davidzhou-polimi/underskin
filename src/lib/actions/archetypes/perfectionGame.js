@@ -42,14 +42,17 @@ export function perfectionGameAction(node, options = {}) {
 			}
 		});
 
-		// Attiva l'oscillazione del blob solo quando la sezione entra in viewport per ottimizzare le risorse
+		// Commento solo il PERCHÉ: mantiene in esecuzione l'oscillazione solo quando la sezione è visibile a schermo, gestendo correttamente anche il ripristino o lo scroll iniziale.
 		ScrollTrigger.create({
 			trigger: options.triggerElement,
 			start: 'top 80%',
-			once: true,
-			onEnter: () => {
-				if (isPlaying && tween) {
-					tween.play();
+			onToggle: (self) => {
+				if (tween) {
+					if (self.isActive && isPlaying) {
+						tween.play();
+					} else {
+						tween.pause();
+					}
 				}
 			}
 		});
