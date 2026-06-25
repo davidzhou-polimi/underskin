@@ -41,7 +41,7 @@
         {
             name: "David Zhou",
             type: "insoddisfatto",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/david-zhou.webp",
         },
     ];
 
