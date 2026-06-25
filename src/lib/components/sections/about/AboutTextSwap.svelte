@@ -4,23 +4,30 @@
 
 <section class="about-text-swap" use:scrollableTextSwap>
 	<div class="text-container">
+		<!-- Primo Blocco di Testo -->
 		<div class="text-block text-block-current">
-			<h4 class="caption">
-				Le Olimpiadi Milano Cortina 2026 sono un sistema di misurazione millimetrica: <br />centesimi di
-				secondo, punteggi decimali, medaglieri rigidi.
-			</h4>
-			<h4 class="caption gradient-animated">
-				Ma cosa succede quando riduciamo un essere umano a un puro dato oggettivo?
-			</h4>
+			<p class="about-narrative-text">
+				Le Olimpiadi Milano Cortina 2026 sono un sistema<br />
+				di misurazione millimetrica: centesimi di secondo,<br />
+				punteggi decimali, medaglieri rigidi.
+				<br /><br />
+				Ma cosa succede quando riduciamo un essere<br />
+				umano a un <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">puro dato oggettivo</span>?
+			</p>
 		</div>
 
+		<!-- Secondo Blocco di Testo -->
 		<div class="text-block text-block-next">
-			<h4 class="caption">
-				UnderSkin nasce per andare oltre il mito dell'atleta invincibile. Per scavare sotto la pelle
-				della performance d'élite e dare spazio a ciò che raramente viene raccontato: la pressione delle
-				aspettative, il peso psicologico del "quasi", le cadute silenziose e la lenta ricostruzione di sé
-				dopo il dolore.
-			</h4>
+			<p class="about-narrative-text">
+				UnderSkin nasce per scavare sotto la superficie<br />
+				della performance d'élite, per andare <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">oltre il mito</span><br />
+				intramontabile dell'atleta invincibile.
+				<br /><br />
+				Vogliamo dare voce a tutto ciò che normalmente<br />
+				non si vede: la pressione delle aspettative, il peso<br />
+				psicologico del "quasi", il corpo che cede e la lenta<br />
+				<span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">ricostruzione di sé</span>.
+			</p>
 		</div>
 	</div>
 </section>
@@ -29,7 +36,7 @@
 	.about-text-swap {
 		position: relative;
 		width: 100%;
-		/* height: 100vh e display: block sono essenziali per il pinning di GSAP ScrollTrigger */
+		/* height: 100vh e display: block sono fondamentali per consentire il pinning di GSAP ScrollTrigger */
 		height: 100vh;
 		display: block;
 		padding: 0;
@@ -47,12 +54,24 @@
 	}
 
 	.text-block {
-		/* Posizionamento assoluto per sovrapporre i blocchi al centro ed eseguire la transizione */
+		/* Posizionamento assoluto per sovrapporre i due blocchi ed eseguire la transizione incrociata */
 		position: absolute;
-		width: 100%;
-		max-width: 70%;
-		padding: 0 var(--spacing-4);
-		text-align: center;
+		/* Commento solo il PERCHÉ: centra in modo assoluto e impeccabile l'elemento sia in orizzontale 
+		   che in verticale senza utilizzare le proprietà di `transform` (che andrebbero in conflitto 
+		   con le animazioni `xPercent` di GSAP nell'Action) */
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		margin: auto;
+		height: fit-content;
+		/* Commento solo il PERCHÉ: contrae il contenitore sulla larghezza reale della riga di testo più lunga, 
+		   permettendo a `margin: auto` di centrare matematicamente l'intero blocco sullo schermo */
+		width: fit-content;
+		/* Commento solo il PERCHÉ: imposta la larghezza massima di lettura ideale (circa 70 caratteri) 
+		   per creare un blocco tipografico compatto ed elegantemente centrato sullo schermo */
+		max-width: var(--spacing-17);
+		padding: 0 var(--spacing-6);
 		will-change: transform, opacity;
 	}
 
@@ -64,35 +83,33 @@
 		z-index: 0;
 	}
 
-	.caption {
-		text-align: center;
-		margin: var(--spacing-4) 0;
+	.about-narrative-text {
+		font-family: var(--font-family-base);
+		/* Commento solo il PERCHÉ: utilizza il token di dimensione media (2rem) come NarrativeText 
+		   per elevare l'importanza visiva del testo rispetto a un normale paragrafo di servizio */
+		font-size: var(--text-m);
+		font-weight: var(--text-body-weight);
 		line-height: 1.5;
+		color: var(--content-primary);
+		/* Commento solo il PERCHÉ: allinea il testo a sinistra (bandiera) per un aspetto editoriale premium, 
+		   mentre il blocco genitore rimane centrato sullo schermo */
+		text-align: left;
+		margin: 0;
 	}
 
-	.gradient-animated {
-		background: linear-gradient(
-			120deg,
-			var(--archetipi-favorito),
-			var(--archetipi-insoddisfatto),
-			var(--archetipi-infortunato)
-		);
-		background-size: 300% 100%;
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
-		animation: global-shift-gradient 6s linear infinite;
+	.highlighted-keyword {
+		position: relative;
+		display: inline;
+		/* Commento solo il PERCHÉ: utilizza il peso grassetto definito per attirare l'attenzione 
+		   sulle parole chiave principali durante la lettura */
+		font-weight: var(--text-bold);
 	}
 
-	@keyframes global-shift-gradient {
-		0% {
-			background-position: 0% center;
-		}
-		50% {
-			background-position: 100% center;
-		}
-		100% {
-			background-position: 0% center;
-		}
+	.about-theme-color {
+		/* Commento solo il PERCHÉ: unisce i colori primari di tutti e tre gli archetipi 
+		   per simboleggiare l'anima corale della pagina About all'interno del gradiente animato */
+		--gradient-c1: var(--archetipi-favorito);
+		--gradient-c2: var(--archetipi-insoddisfatto);
+		--gradient-c3: var(--archetipi-infortunato);
 	}
 </style>
