@@ -30,9 +30,9 @@
             : (page.url.pathname in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (page.url.pathname)] : PAGE_META["/"])
     );
 
-    // Determiniamo l'URL assoluto dell'immagine per la condivisione social dinamico a runtime
-    let ogImageUrl = $derived(`${page.url.origin}/images/og/share.png`);
-    let ogUrl = $derived(page.url.href);
+    // Determiniamo l'URL relativo dell'immagine per la condivisione social
+    const ogImageUrl = "/images/og/share.png";
+    let ogUrl = $derived(page.url.pathname);
 </script>
 
 <svelte:head>
