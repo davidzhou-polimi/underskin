@@ -72,7 +72,17 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS) {
 				}
 			: isPastFirstViewport
 				? { colors, coverage: 0.35, speed: 0.6 }
-				: { colors, coverage: 0.5, speed: 0.8 }
+				: {
+						/* Commento solo il PERCHÉ: imposta un gradiente iniziale ad altissima intensità e velocità 
+						   per l'apertura della pagina (Hero), emulando il comportamento vibrante del footer, 
+						   ma con il posizionamento centrato ed esteso (focusCenter [0.5, 0.5], focusRadius 2.0) 
+						   ripreso da HeroSection per coprire l'intera sezione uniformemente. */
+						colors,
+						speed: 2.2,
+						coverage: 1.0,
+						focusCenter: [0.5, 0.5],
+						focusRadius: 2.0
+					}
 	);
 
 	return {

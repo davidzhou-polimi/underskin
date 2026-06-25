@@ -1,7 +1,7 @@
 <section class="about-hero">
 	<h1 class="title">
 		L'atleta dietro la <br />
-		<span class="gradient-text animate-gradient-text my-archetypes-color">performance</span>
+		performance
 	</h1>
 </section>
 
@@ -20,13 +20,12 @@
 	.title {
 		text-align: center;
 		max-width: 90%;
-		line-height: 1;
-	}
-
-	.my-archetypes-color {
-		/* Collega i tre archetipi principali al gradiente animato globale */
-		--gradient-c1: var(--archetipi-favorito);
-		--gradient-c2: var(--archetipi-insoddisfatto);
-		--gradient-c3: var(--archetipi-infortunato);
+		line-height: 1.05;
+		/* Commento solo il PERCHÉ: imposta una dimensione intermedia personalizzata di 7rem 
+		   per ridurre leggermente l'ingombro visivo del titolo principale su schermi desktop */
+		font-size: 7rem; /* token approssimativo */
+		/* Commento solo il PERCHÉ: utilizza il token di colore bianco ghiaccio del brand 
+		   per creare un contrasto ottimale sullo sfondo scuro animato */
+		color: var(--neutral-50);
 	}
 </style>
