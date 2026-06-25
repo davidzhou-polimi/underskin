@@ -9,7 +9,7 @@
      */
 
     // Importazione dei componenti strutturali del flusso di pagina
-    import Intro from '$lib/components/sections/home/Intro.svelte';
+    import Preface from '$lib/components/sections/home/Preface.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
     import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
@@ -49,7 +49,7 @@
 <InteractiveGradient config={gradient.activeConfig} />
 
 <main class="page-flow" use:trackScrollProgress use:cinematicScroll>
-    <Intro />
+    <Preface />
     <Quiz
         lockScroll={() => isLocked = true}
         unlockScroll={() => isLocked = false}
