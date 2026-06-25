@@ -8,7 +8,7 @@
 	 */
 
 	/** @type {Props} */
-	let { title = "Conosci il team" } = $props();
+	let { title = "Il nostro team!" } = $props();
 </script>
 
 <section
