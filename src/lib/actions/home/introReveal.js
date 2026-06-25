@@ -29,7 +29,7 @@ export function introReveal(node) {
 		tl.from(
 			node.querySelector('.scroll-hint-content'),
 			{ opacity: 0, y: 12, duration: 0.8 },
-			'+=1.8'
+			'+=0'
 		);
 
 		// Commento solo il PERCHÉ: Crea un rimbalzo continuo per la freccia dell'invito allo scroll
@@ -39,7 +39,7 @@ export function introReveal(node) {
 			yoyo: true,
 			duration: 0.9,
 			ease: 'sine.inOut',
-			delay: 4.5
+			// delay: 4.5
 		});
 
 		// Commento solo il PERCHÉ: Dissolve gli elementi dell'intro quando si scende e li fa ricomparire quando si torna in cima
