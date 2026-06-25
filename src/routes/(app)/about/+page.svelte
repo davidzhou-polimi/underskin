@@ -1,5 +1,7 @@
 <script>
-	import AboutSection from '$lib/components/sections/about/About.svelte';
+	import AboutHero from '$lib/components/sections/about/AboutHero.svelte';
+	import AboutTextSwap from '$lib/components/sections/about/AboutTextSwap.svelte';
+	import AboutStatement from '$lib/components/sections/about/AboutStatement.svelte';
 	import TeamSection from '$lib/components/sections/about/TeamSection.svelte';
 	import Footer from '$lib/components/sections/Footer.svelte';
 	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
@@ -14,7 +16,9 @@
 <InteractiveGradient config={gradient.activeConfig} />
 
 <main id="about" use:trackScrollProgress>
-	<AboutSection />
+	<AboutHero />
+	<AboutTextSwap />
+	<AboutStatement />
 	<TeamSection />
 	<Footer />
 </main>
