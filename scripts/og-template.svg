@@ -1,0 +1,24 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Carichiamo il font del brand direttamente -->
+    <style>
+      @font-face {
+        font-family: 'Rethink Sans';
+        src: url('{FONT_PATH}') format('truetype');
+        font-weight: 800;
+        font-style: normal;
+      }
+    </style>
+  </defs>
+
+  <!-- L'immagine di sfondo reale bg-share.png viene applicata via Sharp composite -->
+
+  <!-- Titolo UnderSkin regolato a y="362" per un bilanciamento ottico impeccabile -->
+  <text x="600" y="362" 
+        font-family="Rethink Sans, sans-serif" 
+        font-size="120px" 
+        font-weight="800" 
+        letter-spacing="-2px"
+        fill="#f1fafd" 
+        text-anchor="middle">{TITLE}</text>
+</svg>
