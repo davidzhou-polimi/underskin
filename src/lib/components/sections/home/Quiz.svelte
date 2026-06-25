@@ -189,7 +189,13 @@
 				<div class="quote-wrapper">
 					<img src={quoteIconSrc} alt="" role="presentation" class="quote-icon" />
 					<p class="quote-content">
-						At this level, it’s probably 70% mental and 30% physical. [...] <br />I’ve had races where I was confident and performed incredibly well, and others where negativity took over and everything fell apart. Learning to control that is the real challenge.
+						At this level, it’s probably 70% mental<br />
+						and 30% physical. [...]<br />
+						I’ve had races where I was confident<br />
+						and performed incredibly well, and<br />
+						others where negativity took over<br />
+						and everything fell apart. Learning to<br />
+						control that is the real challenge.
 					</p>
 					<span class="quote-author">— Adrian Yung, sci alpino</span>
 				</div>
@@ -335,7 +341,8 @@
 
 		font-size: var(--text-l, 1.5rem);
 		color: var(--content-primary);
-		text-transform: capitalize;
+		/* Commento solo il PERCHÉ: mantiene il testo minuscolo fin da subito per coerenza visiva con le etichette delle percentuali */
+		text-transform: none;
 		transition: color 0.3s ease, background-image 0.3s ease;
 		background-size: 200% auto;
 		background-clip: text;
@@ -380,8 +387,8 @@
 
 	.text-panel {
 		position: absolute;
-		/* Commento solo il PERCHÉ: sposta il punto di partenza del pannello di testo a destra per bilanciare geometricamente il cerchio sinistro ingrandito */
-		left: calc(50% + var(--spacing-7));
+		/* Commento solo il PERCHÉ: sposta ulteriormente il pannello di testo a destra per distanziarlo dal cerchio sinistro ingrandito ed evitare sovrapposizioni visive */
+		left: calc(50% + var(--spacing-10));
 		width: 480px;
 		height: 300px;
 		display: flex;
