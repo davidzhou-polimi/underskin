@@ -8,8 +8,8 @@ if (typeof window !== 'undefined') {
 /**
  * Action per l'effetto parallasse e dissolvenza del titolo nella Hero.
  * @param {HTMLElement} node - L'elemento del titolo da animare.
- * @param {Object} params - I parametri dell'animazione.
- * @param {HTMLElement} params.trigger - L'elemento contenitore (la sezione) che fa da trigger per lo scroll.
+ * @param {Object} [params] - I parametri dell'animazione.
+ * @param {HTMLElement | null} [params.trigger] - L'elemento contenitore (la sezione) che fa da trigger per lo scroll.
  */
 export function heroParallax(node, params = {}) {
 	const triggerElement = params.trigger;
