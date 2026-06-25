@@ -2,13 +2,13 @@
     import { trailCanvas } from "$lib/actions/home/trailCanvas.js";
     import { trackSection } from "$lib/actions/trackSection.js";
     import { scrollReveal } from "$lib/actions/scrollReveal.js";
-    import { introPin } from "$lib/actions/home/introPin.js";
+    import { prefacePin } from "$lib/actions/home/prefacePin.js";
 
     /** @type {any} */
     let canvasAction = null;
 
     /**
-     * Gestisce l'inizializzazione del canvas di sfondo
+     * Gestisce l'inizializzazione del canvas di sfondo.
      * @param {HTMLCanvasElement} node
      */
     function bindCanvas(node) {
@@ -33,10 +33,10 @@
 </script>
 
 <section
-    id="intro-text"
-    class="intro-section"
-    use:introPin={{ end: "+=1000%" }}
-    use:trackSection={{ id: "intro-text" }}
+    id="preface-text"
+    class="preface-section"
+    use:prefacePin={{ end: "+=1000%" }}
+    use:trackSection={{ id: "preface-text" }}
 >
     <div class="canvas-layer">
         <canvas use:bindCanvas></canvas>
@@ -59,7 +59,7 @@
 </section>
 
 <style>
-    .intro-section {
+    .preface-section {
         position: relative;
         width: 100%;
         height: 100vh;
