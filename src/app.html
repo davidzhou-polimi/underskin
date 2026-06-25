@@ -4,6 +4,12 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<script>
+			// Commento solo il PERCHÉ: disabilita il ripristino automatico dello scroll del browser prima del rendering per evitare salti visivi al refresh
+			if ('scrollRestoration' in history) {
+				history.scrollRestoration = 'manual';
+			}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

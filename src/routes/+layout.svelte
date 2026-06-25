@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
     import "modern-normalize/modern-normalize.css";
     import "$lib/styles/tokens.css";
     import favicon from "$lib/assets/favicon.svg";
@@ -9,6 +10,11 @@
     let { children } = $props();
 
     let tooltipState = $derived(tooltip.current);
+
+    // Commento solo il PERCHÉ: assicura che il client si posizioni in cima alla pagina ad ogni caricamento iniziale o refresh completo
+    onMount(() => {
+        window.scrollTo(0, 0);
+    });
 
     // Nasconde il tooltip ad ogni cambio di rotta: onmouseleave non si attiva
     // quando il componente viene smontato durante la navigazione.
