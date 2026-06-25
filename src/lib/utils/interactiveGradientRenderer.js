@@ -33,7 +33,7 @@ import * as THREE from 'three';
 /** @type {Required<GradientConfig>} */
 export const DEFAULT_CONFIG = {
 	colors: null,
-	speed: 1.0,
+	speed: 0.6,
 	waveFrequency: 0.8,
 	waveAmplitude: [1.4, 0.18],
 	coverage: 0.5,

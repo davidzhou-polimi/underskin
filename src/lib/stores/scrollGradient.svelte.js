@@ -89,7 +89,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 							   ma con il posizionamento centrato ed esteso (focusCenter [0.5, 0.5], focusRadius 2.0) 
 							   ripreso da HeroSection per coprire l'intera sezione uniformemente. */
 							colors,
-							speed: 2.2,
+							speed: 0.6,
 							coverage: 1.0,
 							focusCenter: [0.5, 0.5],
 							focusRadius: 2.0
