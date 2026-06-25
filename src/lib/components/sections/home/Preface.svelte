@@ -105,6 +105,13 @@
         line-height: 1.4;
     }
 
+    /* Commento solo il PERCHÉ: nasconde le scritte successive alla prima a livello CSS statico, evitando che si sovrappongano all'avvio prima del caricamento di JS/GSAP */
+    .reveal-line:not(:first-child) {
+        opacity: 0;
+        filter: blur(15px);
+        transform: translateY(20px);
+    }
+
     .final-phrase {
         display: flex;
         flex-direction: column;
