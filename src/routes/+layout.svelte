@@ -30,10 +30,9 @@
             : (page.url.pathname in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (page.url.pathname)] : PAGE_META["/"])
     );
 
-    // Determiniamo l'URL assoluto dell'immagine per la condivisione social
-    const DOMAIN = "https://underskin.it"; // Da aggiornare con il dominio di produzione reale
-    const ogImageUrl = `${DOMAIN}/images/og/share.png`;
-    let ogUrl = $derived(`${DOMAIN}${page.url.pathname}`);
+    // Determiniamo l'URL assoluto dell'immagine per la condivisione social dinamico a runtime
+    let ogImageUrl = $derived(`${page.url.origin}/images/og/share.png`);
+    let ogUrl = $derived(page.url.href);
 </script>
 
 <svelte:head>
