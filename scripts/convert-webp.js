@@ -62,6 +62,8 @@ async function convertImages() {
 				}
 
 				await sharp(sourcePath)
+					// Orient the image based on EXIF metadata (crucial for smartphone/camera uploads)
+					.rotate()
 					.webp({ quality: 85 })
 					.toFile(targetPath);
 				
