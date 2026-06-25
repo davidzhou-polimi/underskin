@@ -388,7 +388,9 @@
 	.text-panel {
 		position: absolute;
 		/* Commento solo il PERCHÉ: sposta ulteriormente il pannello di testo a destra per distanziarlo dal cerchio sinistro ingrandito ed evitare sovrapposizioni visive */
-		left: calc(50% + var(--spacing-10));
+		left: calc(50% + var(--spacing-9));
+		/* Commento solo il PERCHÉ: centra perfettamente il pannello di testo (altezza 300px) sull'asse verticale rispetto al quiz-body (altezza 380px) */
+		top: 40px;
 		width: 480px;
 		height: 300px;
 		display: flex;
