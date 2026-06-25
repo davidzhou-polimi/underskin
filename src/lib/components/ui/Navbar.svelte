@@ -79,10 +79,10 @@
 	};
 
 	/**
-	 * Gestione dello scorrimento programmatico per il logo (torna a inizio pagina se siamo sulla home)
+	 * Gestione dello scorrimento programmatico o navigazione per il logo (torna a inizio pagina se siamo sulla home, altrimenti naviga su /)
 	 * @param {MouseEvent} e
 	 */
-	const handleLogoClick = (e) => {
+	const handleLogoClick = async (e) => {
 		const currentPath = page.url.pathname;
 		if (currentPath === '/') {
 			e.preventDefault();
@@ -92,6 +92,8 @@
 			} else {
 				window.scrollTo({ top: 0, behavior: 'smooth' });
 			}
+		} else {
+			await goto('/');
 		}
 	};
 
@@ -227,23 +229,22 @@
 </script>
 
 {#snippet logo()}
-	<a class="logo-nav" href="/" onclick={handleLogoClick} aria-label="UnderSkin home">
+	<button class="logo-nav" onclick={handleLogoClick} aria-label="UnderSkin home">
 		{logoLabel}
-	</a>
+	</button>
 {/snippet}
 
 {#snippet menu()}
 	<div class="link-nav">
 		{#each links as link}
 			{@const isActive = getIsActive(link)}
-			<a
-				href={link.path}
+			<button
 				class="link-nav__item"
 				class:link-nav__item--active={isActive}
 				onclick={(e) => handleNavClick(e, link)}
 			>
 				{link.label}
-			</a>
+			</button>
 		{/each}
 	</div>
 {/snippet}
@@ -317,6 +318,13 @@
 		color: var(--content-light-primary);
 		text-decoration: none;
 		transition: color var(--transition-duration-fast) var(--easing-standard);
+		/* Commento solo il PERCHÉ: Applica il reset visivo per i pulsanti nativi mantenendo l'aspetto del logo originale */
+		background: transparent;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: inherit;
+		text-align: inherit;
 	}
 
 	.logo-nav:hover,

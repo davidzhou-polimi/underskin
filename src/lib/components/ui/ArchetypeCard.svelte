@@ -1,6 +1,7 @@
 <script>
 	import { hoverLift } from '$lib/actions/hoverLift.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { goto } from '$app/navigation';
 
 	/**
 	 * @type {{
@@ -65,13 +66,24 @@
 	let colors = $derived(ARCHETYPE_COLORS[type] ?? ARCHETYPE_COLORS.favorito);
 	let colorBrand = $derived(colors.brand);
 	let colorTextPrimary = $derived(colors.textPrimary);
+
+	/**
+	 * Gestisce il click per navigare programmaticamente verso il profilo dell'archetipo
+	 */
+	const handleCardClick = async () => {
+		// Commento solo il PERCHÉ: eseguiamo la navigazione programmatica solo se la card è configurata come cliccabile
+		if (clickable) {
+			await goto(`/${type}`);
+		}
+	};
 </script>
 
-<!-- Trasformato in link semantico per delegare la navigazione a SvelteKit e supportare l'accessibilità -->
-<a href="/{type}"
+<!-- Sostituito tag <a> con <button> per evitare l'anteprima dell'URL nativa nel browser -->
+<button
     class="archetype-card-container"
     class:is-horizontal={horizontal}
     use:hoverLift
+    onclick={handleCardClick}
     onmouseenter={() => { isHovered = true; if (showTooltip) tooltip.show('Esplora', 'semplice', 'pointer'); }}
     onmouseleave={() => { isHovered = false; if (showTooltip) tooltip.hide(); }}
 >
@@ -96,7 +108,7 @@
             <span>{name}</span>
         </div>
     </div>
-</a>
+</button>
 
 <style>
 	.archetype-card-container {
@@ -109,6 +121,13 @@
 		/* display: block e text-decoration: none servono a preservare il corretto layout box-model della card ed evitare sottolineature ereditate dai link del browser */
 		display: block;
 		text-decoration: none;
+		/* Commento solo il PERCHÉ: applica il reset visivo per bottoni in modo che la card mantenga l'aspetto e l'allineamento del design originale */
+		background: transparent;
+		border: none;
+		padding: 0;
+		text-align: inherit;
+		font-family: inherit;
+		color: inherit;
 	}
 
 	.card-inner {

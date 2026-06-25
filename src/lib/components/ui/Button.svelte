@@ -1,18 +1,20 @@
 <script>
+    import { goto } from '$app/navigation';
+
     /**
      * SVELTE 5 - COMPONENTE PULSANTE RIUTILIZZABILE (UI)
      * Assunzioni:
-     * 1. Supporta la navigazione diretta (tag <a>) se viene fornita la proprietà `href`.
-     * 2. Altrimenti, renderizza un tag <button> standard.
+     * 1. Utilizza sempre un tag <button> per evitare l'anteprima dell'URL nativa nei browser.
+     * 2. Se viene fornito un `href`, la navigazione viene effettuata programmaticamente tramite `goto()`.
      * 3. Integra l'effetto vetro globale tramite la classe `.glass-effect`.
      */
 
     /**
      * @typedef {Object} Props
-     * @property {string} [href] - URL di destinazione (se presente, renderizza un tag <a>)
+     * @property {string} [href] - URL di destinazione per la navigazione programmatica
      * @property {'button' | 'submit' | 'reset'} [type] - Tipo del pulsante (default 'button')
      * @property {string} [ariaLabel] - Descrizione accessibile del pulsante
-     * @property {import('svelte/elements').MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>} [onclick] - Callback per l'evento click
+     * @property {import('svelte/elements').MouseEventHandler<HTMLButtonElement>} [onclick] - Callback per l'evento click
      * @property {import('svelte').Snippet} [children] - Elementi figli per il testo o icone
      */
 
@@ -24,31 +26,30 @@
         onclick = () => {},
         children
     } = $props();
+
+    /**
+     * Gestisce il click sul pulsante eseguendo la navigazione se href è definito
+     * @param {any} event
+     */
+    const handleClick = async (event) => {
+        // Commento solo il PERCHÉ: eseguiamo prima il gestore onclick passato come prop, consentendogli di annullare la navigazione se necessario, poi procediamo con goto().
+        onclick(event);
+        if (href && !event.defaultPrevented) {
+            await goto(href);
+        }
+    };
 </script>
 
-{#if href}
-    <a 
-        {href} 
-        class="glass-effect pill-button" 
-        aria-label={ariaLabel}
-        {onclick}
-    >
-        {#if children}
-            {@render children()}
-        {/if}
-    </a>
-{:else}
-    <button 
-        {type} 
-        class="glass-effect pill-button" 
-        aria-label={ariaLabel}
-        {onclick}
-    >
-        {#if children}
-            {@render children()}
-        {/if}
-    </button>
-{/if}
+<button 
+    {type} 
+    class="glass-effect pill-button" 
+    aria-label={ariaLabel}
+    onclick={handleClick}
+>
+    {#if children}
+        {@render children()}
+    {/if}
+</button>
 
 <style>
     /* Commento solo il PERCHÉ: Applica lo stile traslucido del design di UnderSkin ereditando la classe globale .glass-effect */
@@ -74,3 +75,4 @@
         background-color: rgb(from var(--neutral-100) r g b / 0.95);
     }
 </style>
+
