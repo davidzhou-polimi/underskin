@@ -4,7 +4,7 @@
 
 <section class="intro-section" use:introReveal>
 	<svg class="circles-svg" viewBox="0 0 800 800" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-		<circle class="intro-circle" cx="400" cy="400" r="275"
+		<circle class="intro-circle circle-inner" cx="400" cy="400" r="275"
 			fill="none"
 			stroke="var(--content-primary)"
 			stroke-opacity="0.38"
@@ -12,7 +12,7 @@
 			stroke-dasharray="0 11"
 			stroke-linecap="round"
 		/>
-		<circle class="intro-circle" cx="400" cy="400" r="445"
+		<circle class="intro-circle circle-middle" cx="400" cy="400" r="445"
 			fill="none"
 			stroke="var(--content-primary)"
 			stroke-opacity="0.24"
@@ -20,7 +20,7 @@
 			stroke-dasharray="0 11"
 			stroke-linecap="round"
 		/>
-		<circle class="intro-circle" cx="400" cy="400" r="630"
+		<circle class="intro-circle circle-outer" cx="400" cy="400" r="630"
 			fill="none"
 			stroke="var(--content-primary)"
 			stroke-opacity="0.13"
@@ -53,6 +53,8 @@
 		justify-content: center;
 		background: transparent;
 		overflow: hidden;
+		perspective: 1200px;
+		transform-style: preserve-3d;
 	}
 
 	.circles-svg {
@@ -62,6 +64,8 @@
 		height: 100%;
 		pointer-events: none;
 		overflow: visible;
+		transform-style: preserve-3d;
+		will-change: transform;
 	}
 
 	.intro-title {
@@ -73,6 +77,8 @@
 		font-weight: var(--text-title-weight);
 		color: var(--content-primary);
 		line-height: 1;
+		transform-style: preserve-3d;
+		will-change: transform;
 	}
 
 	.scroll-hint {

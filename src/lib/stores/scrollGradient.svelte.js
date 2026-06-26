@@ -79,7 +79,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 						   al centro per l'IntroSection, per allinearsi visivamente con i cerchi concentrici animati. */
 						colors,
 						coverage: 1.0,
-						speed: 1.0,
+						speed: 1.1,
 						focusCenter: [0.5, 0.5],
 						focusRadius: [0.25, 0.25]
 					}
