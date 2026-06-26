@@ -16,13 +16,15 @@ export const TOTAL_COLORS = [
 
 /**
  * Gradient a 2 stati per le pagine archetype: copertura piena nella hero, ridotta nel corpo.
- * @param {string[]} baseColors Palette cromatica dell'archetipo (3 token CSS)
+ * @param {string[] | (() => string[])} baseColors Palette cromatica dell'archetipo o getter reattivo
  */
 export function createArchetypeGradientConfig(baseColors) {
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
 
-	const baseConfig = { colors: baseColors, coverage: 1.0 };
+	// Commento solo il PERCHÉ: supportiamo la risoluzione dinamica dei colori tramite funzione getter per mantenere intatta la reattività Svelte 5
+	const resolvedColors = $derived(typeof baseColors === 'function' ? baseColors() : baseColors);
+	const baseConfig = $derived({ colors: resolvedColors, coverage: 1.0 });
 
 	let activeConfig = $derived(
 		scrollY > innerHeight / 1.5 ? { ...baseConfig, coverage: 0.3 } : baseConfig

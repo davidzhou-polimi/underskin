@@ -121,10 +121,9 @@
 	/** @type {Props} */
 	let { archetype, uniqueSection } = $props();
 
-	// Commento solo il PERCHÉ: catturiamo il valore iniziale di archetype per instanziare la configurazione statica ed evitare il warning del compilatore Svelte 5
-	const initialArchetype = archetype;
-	const config = ARCHETYPE_CONFIG[initialArchetype];
-	const gradient = createArchetypeGradientConfig(config.colors);
+	// Commento solo il PERCHÉ: deriviamo reattivamente la configurazione in base all'archetipo corrente e passiamo un getter allo store del gradiente per mantenere intatta la reattività
+	const config = $derived(ARCHETYPE_CONFIG[archetype]);
+	const gradient = createArchetypeGradientConfig(() => config.colors);
 </script>
 
 <svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} />
