@@ -344,7 +344,9 @@ const fsSource = `
 			-u_scroll_x * u_scroll_x_parallax,
 			-u_scroll_y * u_scroll_y_parallax
 		);
-		vec2 warped_uv = domainWarp((warped_by_mouse_uv + scroll_uv_offset) * aspect, scaled_time, mouse_attraction);
+		// Commento solo il PERCHÉ: applica uno shift alle coordinate dello sfondo nella direzione del mouse per creare un parallasse 3D continuo rispetto agli elementi anteriori
+		vec2 mouse_parallax_offset = (u_mouse - 0.5) * 0.06;
+		vec2 warped_uv = domainWarp((warped_by_mouse_uv + scroll_uv_offset - mouse_parallax_offset) * aspect, scaled_time, mouse_attraction);
 
 		// 4. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
 		// Cap force magnitude to avoid UV tearing at high splat densities.
@@ -378,7 +380,9 @@ const fsSource = `
 		shape_mask = mix(0.05, 1.0, shape_mask);
 
 		// Focus area: attenuate gradient outside a configurable elliptical region
-		vec2 focus_offset = ((uv - u_focus.xy) * aspect) / max(u_focus.zw, vec2(0.0001));
+		// Commento solo il PERCHÉ: trasla leggermente il centro del gradiente (spotlight) assecondando il mouse per allinearlo alla prospettiva 3D
+		vec2 shifted_focus = u_focus.xy + (u_mouse - 0.5) * 0.04;
+		vec2 focus_offset = ((uv - shifted_focus) * aspect) / max(u_focus.zw, vec2(0.0001));
 		float focus_dist = length(focus_offset);
 		float focus_weight = 1.0 - smoothstep(0.5, 1.0, focus_dist);
 		shape_mask *= mix(0.0, 1.0, focus_weight);
