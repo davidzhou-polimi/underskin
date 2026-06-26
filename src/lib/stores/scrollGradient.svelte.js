@@ -27,7 +27,7 @@ export function createArchetypeGradientConfig(baseColors) {
 	const baseConfig = $derived({ colors: resolvedColors, coverage: 1.0 });
 
 	let activeConfig = $derived(
-		scrollY > innerHeight / 1.5 ? { ...baseConfig, coverage: 0.3 } : baseConfig
+		scrollY > 100 ? { ...baseConfig, coverage: 0.3 } : baseConfig
 	);
 
 	return {
