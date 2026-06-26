@@ -4,15 +4,7 @@
 
 <section class="intro-section" use:introReveal>
 	<svg class="circles-svg" viewBox="0 0 800 800" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-		<circle class="intro-circle circle-inner" cx="400" cy="400" r="275"
-			fill="none"
-			stroke="var(--content-primary)"
-			stroke-opacity="0.38"
-			stroke-width="2"
-			stroke-dasharray="0 11"
-			stroke-linecap="round"
-		/>
-		<circle class="intro-circle circle-middle" cx="400" cy="400" r="445"
+		<circle class="intro-circle circle-inner" cx="400" cy="400" r="270"
 			fill="none"
 			stroke="var(--content-primary)"
 			stroke-opacity="0.24"
@@ -20,10 +12,18 @@
 			stroke-dasharray="0 11"
 			stroke-linecap="round"
 		/>
+		<circle class="intro-circle circle-middle" cx="400" cy="400" r="440"
+			fill="none"
+			stroke="var(--content-primary)"
+			stroke-opacity="0.32"
+			stroke-width="2"
+			stroke-dasharray="0 11"
+			stroke-linecap="round"
+		/>
 		<circle class="intro-circle circle-outer" cx="400" cy="400" r="630"
 			fill="none"
 			stroke="var(--content-primary)"
-			stroke-opacity="0.13"
+			stroke-opacity="0.16"
 			stroke-width="2"
 			stroke-dasharray="0 11"
 			stroke-linecap="round"
@@ -34,10 +34,11 @@
 
 	<div class="scroll-hint" aria-label="Scorri per iniziare">
 		<div class="scroll-hint-content">
-			<span class="scroll-label">Scorri per iniziare</span>
-			<svg class="scroll-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-				<path d="M12 5v14M5 12l7 7 7-7" stroke="var(--content-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+			<svg class="scroll-mouse-svg" viewBox="0 0 24 36" width="26" height="39" aria-hidden="true">
+				<rect x="4" y="3" width="16" height="26" rx="8" fill="none" stroke="var(--content-light-secondary)" stroke-width="1.2" stroke-opacity="0.75" />
+				<line class="mouse-wheel" x1="12" y1="10" x2="12" y2="14" stroke="var(--content-light-secondary)" stroke-width="1.2" stroke-linecap="round" />
 			</svg>
+			<span class="scroll-label">Scorri per iniziare</span>
 		</div>
 	</div>
 </section>
@@ -95,15 +96,16 @@
 		align-items: center;
 		gap: var(--spacing-1);
 	}
-
 	.scroll-label {
 		font-family: var(--font-family-base);
 		font-size: var(--text-service-size);
 		font-weight: var(--text-service-weight);
-		color: var(--content-secondary);
+		color: var(--content-light-secondary);
+        opacity: 0.8;
 	}
 
-	.scroll-arrow {
+
+	.scroll-mouse-svg {
 		display: block;
 		opacity: 0.6;
 	}

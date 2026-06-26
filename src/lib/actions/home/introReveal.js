@@ -38,14 +38,39 @@ export function introReveal(node) {
 			'+=0'
 		);
 
-		// Commento solo il PERCHÉ: Crea un rimbalzo continuo per la freccia dell'invito allo scroll
-		gsap.to(node.querySelector('.scroll-arrow'), {
-			y: 7,
-			repeat: -1,
-			yoyo: true,
-			duration: 0.9,
-			ease: 'sine.inOut'
-		});
+		// Commento solo il PERCHÉ: Riproduce il gesto dello scrolling della rotellina tramite una timeline sinusoidale con pausa ritmica
+		const mouseWheel = node.querySelector('.mouse-wheel');
+		if (mouseWheel) {
+			const wheelTl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 });
+			wheelTl.fromTo(mouseWheel,
+				{ y: 0 },
+				{ y: 8, duration: 1.2, ease: 'sine.inOut' }
+			);
+			wheelTl.fromTo(mouseWheel,
+				{ opacity: 0 },
+				{ opacity: 1, duration: 0.4, ease: 'sine.inOut' },
+				0
+			);
+			wheelTl.to(mouseWheel,
+				{ opacity: 0, duration: 0.4, ease: 'sine.inOut' },
+				0.8
+			);
+		}
+
+		// Commento solo il PERCHÉ: Crea una pulsazione sinusoidale sulla label che dura esattamente il doppio del ciclo del mouse (3.6s complessivi) per evitare sfarfallii e rendere il ritmo calmo ed elegante
+		const scrollLabel = node.querySelector('.scroll-label');
+		if (scrollLabel) {
+			gsap.fromTo(scrollLabel,
+				{ opacity: 0.6 },
+				{
+					opacity: 0.3,
+					duration: 1.8,
+					repeat: -1,
+					yoyo: true,
+					ease: 'sine.inOut'
+				}
+			);
+		}
 
 		// Commento solo il PERCHÉ: Crea una rotazione continua e sfasata dei cerchi per generare un dinamismo geometrico e cinetico tridimensionale
 		const innerCircle = node.querySelector('.circle-inner');
