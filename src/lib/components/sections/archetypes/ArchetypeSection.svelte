@@ -1,6 +1,7 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import { trackSection } from "$lib/actions/trackSection.js";
+    import { staggerReveal } from "$lib/actions/staggerReveal.js";
 
     /**
      * @typedef {Object} Props
@@ -47,7 +48,7 @@
         <h3 class="section-title">{title}</h3>
     {/if}
 
-    <div class="cards-row">
+    <div class="cards-row" use:staggerReveal>
         {#each activeItems as archetype (archetype.name)}
             <ArchetypeCard
                 name={archetype.name}
