@@ -53,14 +53,12 @@
 	// Stato per tracciare se il mouse è posizionato all'interno della zona di drag
 	let isMouseOverDragZone = $state(false);
 
-	// Commento solo il PERCHÉ: azzeriamo l'hover al movimento del carosello, ma nascondiamo il tooltip solo se non siamo nella dragzone e non stiamo trascinando
+	// Commento solo il PERCHÉ: l'$effect gestisce solo lo stato interno hoveredIndex.
+	// Il ciclo di vita del tooltip è completamente delegato agli handler mouse
+	// (handleNavMouseEnter/Leave, onWindowMouseUp) — nessuna chiamata a tooltip qui
+	// evita interferenze con tooltip aperti da altri componenti durante l'autoplay.
 	$effect(() => {
-		if (isMoving) {
-			hoveredIndex = null;
-			if (!motion.isDragging && !isMouseOverDragZone) {
-				tooltip.hide();
-			}
-		}
+		if (isMoving) hoveredIndex = null;
 	});
 
 	// ─── Autoplay ─────────────────────────────────────────────────────────────
