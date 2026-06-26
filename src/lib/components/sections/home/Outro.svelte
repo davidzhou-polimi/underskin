@@ -1,8 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { outroReveal } from '$lib/actions/home/outroReveal.js';
 
 	const stages = [
 		{ target: 34, lines: ['soffre di ansia o depressione'] },
@@ -11,156 +8,12 @@
 		{ target: 36, lines: ['soffre di disturbi del sonno'] },
 		{ target: 53, lines: ['soffre di solitudine'] }
 	];
-
-	/** @type {SVGCircleElement | null} */
-	let revealCircleEl = null;
-	/** @type {SVGTextElement | null} */
-	let percentageTextEl = null;
-	/** @type {SVGTextElement | null} */
-	let descriptionTextEl = null;
-	/** @type {HTMLElement | null} */
-	let sectionEl = null;
-
-	// Reactive flags — drive tooltip/click eligibility in the template
-	let scrollPhaseComplete = $state(false);
-	let currentIndex = $state(-1);
-
-	let isAnimating = false;
-	let currentValue = 0;
-
-	// True only while there are still click-stages left
-	const hasMoreStages = $derived(scrollPhaseComplete && currentIndex < stages.length - 1);
-
-	/** @param {string[]} lines */
-	function updateDescription(lines) {
-		if (!descriptionTextEl) return;
-		descriptionTextEl.innerHTML = '';
-		lines.forEach((line, i) => {
-			const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-			tspan.setAttribute('x', '235.5');
-			tspan.setAttribute('dy', i === 0 ? '0' : '1.3em');
-			tspan.textContent = line;
-			descriptionTextEl?.appendChild(tspan);
-		});
-	}
-
-	/** Snap bar to stage-0 target, reveal description, enable click mode */
-	function activateScrollStage() {
-		const t = stages[0].target;
-		if (percentageTextEl) percentageTextEl.textContent = `${t}%`;
-		if (revealCircleEl) revealCircleEl.setAttribute('stroke-dasharray', `${t} ${100 - t}`);
-		currentValue = t;
-		currentIndex = 0;
-		scrollPhaseComplete = true;
-		updateDescription(stages[0].lines);
-		if (descriptionTextEl) gsap.to(descriptionTextEl, { opacity: 1, duration: 0.3 });
-	}
-
-	/** User scrolled back — hand control back to the scrub tween */
-	function resetScrollStage() {
-		scrollPhaseComplete = false;
-		currentIndex = -1;
-		currentValue = 0;
-		if (descriptionTextEl) gsap.set(descriptionTextEl, { opacity: 0 });
-		tooltip.hide();
-	}
-
-	/** @param {number} stageIndex */
-	function animateToStage(stageIndex) {
-		if (isAnimating) return;
-		isAnimating = true;
-
-		const stage = stages[stageIndex];
-		const fromValue = currentValue;
-
-		gsap.to(descriptionTextEl, {
-			opacity: 0,
-			duration: 0.3,
-			onComplete: () => {
-				updateDescription(stage.lines);
-				if (descriptionTextEl) gsap.to(descriptionTextEl, { opacity: 1, duration: 0.3 });
-			}
-		});
-
-		const obj = { value: fromValue };
-		gsap.to(obj, {
-			value: stage.target,
-			duration: 1.2,
-			ease: 'power1.out',
-			onUpdate() {
-				if (percentageTextEl) percentageTextEl.textContent = `${Math.round(obj.value)}%`;
-				if (revealCircleEl) {
-					revealCircleEl.setAttribute(
-						'stroke-dasharray',
-						`${obj.value.toFixed(2)} ${(100 - obj.value).toFixed(2)}`
-					);
-				}
-			},
-			onComplete() {
-				currentValue = stage.target;
-				currentIndex = stageIndex;
-				isAnimating = false;
-				// Ultimo stadio: rimuovi cursore e tooltip immediatamente
-				if (stageIndex === stages.length - 1) tooltip.hide();
-			}
-		});
-	}
-
-	function handleClick() {
-		if (!hasMoreStages || isAnimating) return;
-		animateToStage(currentIndex + 1);
-	}
-
-	onMount(() => {
-		gsap.registerPlugin(ScrollTrigger);
-
-		if (percentageTextEl) percentageTextEl.textContent = '0%';
-		if (revealCircleEl) revealCircleEl.setAttribute('stroke-dasharray', '0 100');
-		if (descriptionTextEl) gsap.set(descriptionTextEl, { opacity: 0 });
-
-		// Object whose .value is scrubbed by scroll from 0 → stages[0].target
-		const scrollObj = { value: 0 };
-
-		const scrollAnimation = gsap.to(scrollObj, {
-			value: stages[0].target,
-			ease: 'none',
-			onUpdate() {
-				const v = scrollObj.value;
-				if (percentageTextEl) percentageTextEl.textContent = `${Math.round(v)}%`;
-				if (revealCircleEl) {
-					revealCircleEl.setAttribute(
-						'stroke-dasharray',
-						`${v.toFixed(2)} ${(100 - v).toFixed(2)}`
-					);
-				}
-			},
-			scrollTrigger: {
-				trigger: sectionEl,
-				start: 'top bottom', // animazione parte appena la sezione entra dal basso
-				end: 'top top',      // finisce quando il cerchio è al centro = scene sticky
-				scrub: 0.8,
-				onUpdate(self) {
-					// Commento solo il PERCHÉ: l'uso di progress garantisce che la transizione allo stato interattivo avvenga istantaneamente non appena il cerchio si è completato, evitando la scarsa reattività o i ritardi dei callback onLeave sui dispositivi reali.
-					if (self.progress >= 0.99) {
-						if (!scrollPhaseComplete) activateScrollStage();
-					} else {
-						if (scrollPhaseComplete) resetScrollStage();
-					}
-				}
-			}
-		});
-
-		return () => {
-			if (scrollAnimation.scrollTrigger) scrollAnimation.scrollTrigger.kill();
-			scrollAnimation.kill();
-		};
-	});
 </script>
 
 <section
-	bind:this={sectionEl}
 	id="outro"
 	class="outro-scroll-container"
+	use:outroReveal={{ stages }}
 >
 	<div class="scene">
 		<h2 class="podium-title">
@@ -172,10 +25,6 @@
 			role="button"
 			tabindex="0"
 			aria-label="Avanza alla statistica successiva"
-			onclick={handleClick}
-			onkeydown={(e) => e.key === 'Enter' && handleClick()}
-			onmouseenter={() => { if (hasMoreStages) tooltip.show('Click', 'semplice', 'pointer'); }}
-			onmouseleave={() => tooltip.hide()}
 		>
 			<svg
 				class="dotted-circle"
@@ -216,7 +65,7 @@
 
 				<!-- Cerchio di avanzamento colorato -->
 				<circle
-					bind:this={revealCircleEl}
+					class="reveal-circle"
 					cx="235.5"
 					cy="235.5"
 					r="230"
@@ -231,7 +80,6 @@
 
 				<!-- Percentuale centrale -->
 				<text
-					bind:this={percentageTextEl}
 					class="circle-percentage"
 					x="235.5"
 					y="225"
@@ -241,7 +89,6 @@
 
 				<!-- Descrizione sotto la percentuale -->
 				<text
-					bind:this={descriptionTextEl}
 					class="circle-description"
 					x="235.5"
 					y="300"
