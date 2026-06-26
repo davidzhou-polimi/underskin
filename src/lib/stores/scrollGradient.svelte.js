@@ -57,8 +57,8 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
 
-	let isInIntroSection = $derived(hasIntro && scrollY < innerHeight * 0.95);
-	let isPastFirstViewport = $derived(scrollY > innerHeight / 1.5);
+	let isInIntroSection = $derived(hasIntro && scrollY < 100);
+	let isPastFirstViewport = $derived(scrollY > 100);
 	let isNearPageBottom = $derived(
 		typeof document !== 'undefined' &&
 			scrollY > document.documentElement.scrollHeight - innerHeight * 1.8
