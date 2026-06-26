@@ -10,7 +10,8 @@
 				Le Olimpiadi Milano Cortina 2026 sono un sistema<br />
 				di misurazione millimetrica: centesimi di secondo,<br />
 				punteggi decimali, medaglieri rigidi.
-				<br /><br />
+			</p>
+			<p class="about-narrative-text">
 				Ma cosa succede quando riduciamo un essere<br />
 				umano a un <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">puro dato oggettivo</span>?
 			</p>
@@ -22,7 +23,8 @@
 				UnderSkin nasce per scavare sotto la superficie<br />
 				della performance d'élite, per andare <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">oltre il mito</span><br />
 				intramontabile dell'atleta invincibile.
-				<br /><br />
+			</p>
+			<p class="about-narrative-text">
 				Vogliamo dare voce a tutto ciò che normalmente<br />
 				non si vede: la pressione delle aspettative, il peso<br />
 				psicologico del "quasi", il corpo che cede e la lenta<br />
@@ -73,6 +75,11 @@
 		max-width: var(--spacing-17);
 		padding: 0 var(--spacing-6);
 		will-change: transform, opacity;
+		
+		/* Nuovo layout per separare i paragrafi in modo armonico e coerente col resto del sito */
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-4);
 	}
 
 	.text-block-current {
