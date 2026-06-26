@@ -16,7 +16,7 @@
         {
             name: "Fang Ding",
             type: "favorito",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/fang-ding.webp",
         },
         {
             name: "Chiara Fois",
@@ -36,7 +36,7 @@
         {
             name: "Lucrezia Vallar",
             type: "infortunato",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/lucrezia-vallar.webp",
         },
         {
             name: "David Zhou",
