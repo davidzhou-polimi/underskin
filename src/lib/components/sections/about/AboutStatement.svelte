@@ -12,8 +12,8 @@
 			use:performanceReveal={{ triggerId: '#about-statement' }}
 		>
 			Riconoscere l'atleta dietro il dato è un 
-			<span class="gradient-text animate-gradient-text my-archetypes-color">atto di empatia</span>.<br />
-			Il primo passo verso una cultura dello sport più umana.
+			<span class="gradient-text animate-gradient-text my-archetypes-color">atto di empatia</span>,<br />
+			il primo passo verso una cultura dello sport più umana.
 		</blockquote>
 	</div>
 </section>

@@ -84,7 +84,7 @@
 					},
 					{
 						type: 'text',
-						content: ' e perdita di fiducia.'
+						content: ' e la perdita di fiducia.'
 					}
 				],
 				[
