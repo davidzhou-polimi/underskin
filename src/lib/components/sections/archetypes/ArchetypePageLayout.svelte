@@ -80,7 +80,7 @@
 						type: 'keyword',
 						content: 'kinesiophobia',
 						tooltip:
-							'Ansia della prestazione legata al timore di non riuscire a raggiungere un determinato obiettivo.'
+							'Paura persistente del movimento o del ritorno all’attività sportiva dopo un infortunio, alimentata dal timore di provare dolore o di subire una nuova lesione.'
 					},
 					{
 						type: 'text',
@@ -96,7 +96,7 @@
 						type: 'keyword',
 						content: 'reset mentale',
 						tooltip:
-							"Improvviso calo delle prestazioni in situazioni ad alta pressione. L'ansia interferisce con l'esecuzione automatica di competenze consolidate."
+							'Processo di rielaborazione che permette all’atleta di interrompere i meccanismi mentali legati all’infortunio e recuperare fiducia nelle proprie capacità.'
 					},
 					{
 						type: 'text',
