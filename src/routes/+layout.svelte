@@ -72,3 +72,14 @@
         centered={tooltipState.centered}
     />
 </div>
+
+<style>
+    /* Lo stile globale del body vive nel layout radice (presente su ogni rotta):
+       altrimenti lo sfondo verrebbe scaricato uscendo dalla home, lasciando bianche le pagine interne. */
+    :global(body) {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: var(--background-primary);
+    }
+</style>

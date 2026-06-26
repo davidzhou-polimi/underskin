@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { scroll } from '$lib/stores/scroll.svelte.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { navbarSlide } from '$lib/actions/navbarSlide.js';
@@ -103,14 +102,10 @@
 	 * @returns {boolean}
 	 */
 	const getIsActive = (link) => {
-		const currentPath = page.url.pathname;
-		if (link.path === '/') {
-			return currentPath === '/' && (scroll.activeSection === 'hero' || !scroll.activeSection);
-		}
-		if (link.path.startsWith('/#')) {
-			return currentPath === '/' && scroll.activeSection === link.sectionId;
-		}
-		return currentPath === link.path;
+		// Commento solo il PERCHÉ: l'evidenziazione segue la rotta corrente. La home non traccia sotto-sezioni,
+		// quindi non deve dipendere da scroll.activeSection, che resta valorizzato (e stantio) dalle pagine
+		// con trackSection e provocherebbe un'evidenziazione errata al rientro nella home.
+		return page.url.pathname === link.path;
 	};
 
 	onMount(() => {

@@ -35,6 +35,9 @@ export function carouselDots(node, params = {}) {
 		hoveredIndex = null
 	} = params;
 
+	// Gestiamo il ciclo di vita dei tween tramite un contesto dedicato per garantire il cleanup corretto.
+	const ctx = gsap.context(() => {}, node);
+
 	/**
 	 */
 	function updateLayout() {
@@ -62,12 +65,14 @@ export function carouselDots(node, params = {}) {
 
 			// Commento solo il PERCHÉ: posizioniamo istantaneamente i dot e aggiorniamo l'opacità usando variabili CSS native per massimizzare le prestazioni
 			const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
-			gsap.set(dot, {
-				x: radius * Math.sin(angle),
-				y: -radius * Math.cos(angle),
-				opacity: targetOpacity,
-				fill: 'var(--content-primary)',
-				pointerEvents: targetOpacity > 0 ? 'auto' : 'none'
+			ctx.add(() => {
+				gsap.set(dot, {
+					x: radius * Math.sin(angle),
+					y: -radius * Math.cos(angle),
+					opacity: targetOpacity,
+					fill: 'var(--content-primary)',
+					pointerEvents: targetOpacity > 0 ? 'auto' : 'none'
+				});
 			});
 		});
 	}
@@ -120,18 +125,22 @@ export function carouselDots(node, params = {}) {
 						baseOpacity = (2.0 - absDiff) * 0.5;
 					}
 
-					gsap.to(dot, {
-						opacity: (highlight && absDiff < 2) || isActive ? 1.0 : baseOpacity,
-						pointerEvents: (highlight && absDiff < 2) || isActive || baseOpacity > 0 ? 'auto' : 'none',
-						duration: 0.25,
-						ease: 'power2.out',
-						overwrite: 'auto'
+					ctx.add(() => {
+						gsap.to(dot, {
+							opacity: (highlight && absDiff < 2) || isActive ? 1.0 : baseOpacity,
+							pointerEvents: (highlight && absDiff < 2) || isActive || baseOpacity > 0 ? 'auto' : 'none',
+							duration: 0.25,
+							ease: 'power2.out',
+							overwrite: 'auto'
+						});
 					});
 				};
 				animateDot(prevHoveredIndex, false);
 				animateDot(hoveredIndex, true);
 			}
 		},
-		destroy() {}
+		destroy() {
+			ctx.revert();
+		}
 	};
 }

@@ -67,12 +67,13 @@ export function miniTrailCanvas(node, options = {}) {
 			});
 		}
 
-		for (const p of points) {
+		for (let i = 0; i < points.length; i++) {
+			const p = points[i];
 			const dist = Math.sqrt((p.x - size / 2) ** 2 + (p.y - size / 2) ** 2);
 			if (dist < size * 0.48) {
 				const dx = (p.x - size / 2) / dist;
 				const dy = (p.y - size / 2) / dist;
-				const wobble = Math.sin(wobbleTime + points.indexOf(p) * 0.3) * 5;
+				const wobble = Math.sin(wobbleTime + i * 0.3) * 5;
 				p.x += dx * 4 + wobble * 0.15;
 				p.y += dy * 4 + wobble * 0.15;
 			}

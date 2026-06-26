@@ -105,6 +105,16 @@ export function trailCanvas(node) {
     // 播放（带循环）
     let isPlaying = false;
     let loopId = null;
+    /** @type {number | null} */
+    let drawId = null;
+
+    // I token --trail-* sono statici: li risolviamo in RGB una sola volta qui,
+    // così il loop di draw evita getComputedStyle + regex per ogni segmento ad ogni frame.
+    const readToken = (/** @type {string} */ name, /** @type {string} */ fallback) =>
+        (typeof window !== 'undefined' && getComputedStyle(document.documentElement).getPropertyValue(name).trim()) || fallback;
+    const trailStartRgb = hexToRgb(readToken('--trail-start', '#6a96df'));
+    const trailMidRgb = hexToRgb(readToken('--trail-mid', '#9b59b6'));
+    const trailEndRgb = hexToRgb(readToken('--trail-end', '#ff7556'));
 
     function playIntro() {
         // 重置状态
@@ -264,14 +274,10 @@ export function trailCanvas(node) {
                     midY + sin45 * (currentWidth * 0.5)
                 );
 
-                const trailStart = (typeof window !== 'undefined' && getComputedStyle(document.documentElement).getPropertyValue('--trail-start').trim()) || '#6a96df';
-                const trailMid = (typeof window !== 'undefined' && getComputedStyle(document.documentElement).getPropertyValue('--trail-mid').trim()) || '#9b59b6';
-                const trailEnd = (typeof window !== 'undefined' && getComputedStyle(document.documentElement).getPropertyValue('--trail-end').trim()) || '#ff7556';
-
-                grad.addColorStop(0, `rgba(${hexToRgb(trailStart)}, 0)`);
-                grad.addColorStop(0.3, `rgba(${hexToRgb(trailStart)}, ${finalAlpha})`);
-                grad.addColorStop(0.7, `rgba(${hexToRgb(trailMid)}, ${finalAlpha * 0.9})`);
-                grad.addColorStop(1.0, `rgba(${hexToRgb(trailEnd)}, ${finalAlpha * 0.95})`);
+                grad.addColorStop(0, `rgba(${trailStartRgb}, 0)`);
+                grad.addColorStop(0.3, `rgba(${trailStartRgb}, ${finalAlpha})`);
+                grad.addColorStop(0.7, `rgba(${trailMidRgb}, ${finalAlpha * 0.9})`);
+                grad.addColorStop(1.0, `rgba(${trailEndRgb}, ${finalAlpha * 0.95})`);
 
                 ctx.beginPath();
                 ctx.moveTo(p1.x, p1.y);
@@ -291,7 +297,7 @@ export function trailCanvas(node) {
 
         // 只有在初始化后才绘制
         if (!isInitialized) {
-            requestAnimationFrame(draw);
+            drawId = requestAnimationFrame(draw);
             return;
         }
 
@@ -320,7 +326,7 @@ export function trailCanvas(node) {
 
         drawNoise();
 
-        requestAnimationFrame(draw);
+        drawId = requestAnimationFrame(draw);
     }
 
     /**
@@ -341,6 +347,7 @@ export function trailCanvas(node) {
                 window.removeEventListener('resize', resizeCanvas);
             }
             if (loopId) cancelAnimationFrame(loopId);
+            if (drawId) cancelAnimationFrame(drawId);
             tl.kill();
             gsap.killTweensOf(stateCCW);
             gsap.killTweensOf(stateCW);

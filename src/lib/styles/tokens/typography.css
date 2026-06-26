@@ -83,7 +83,7 @@
 
 	/* Solo per la barra di navigazione e logo */
 	--text-nav-size:          var(--text-2xs);
-	--text-nav-weight:        var(--text-semibold);
+	--text-nav-weight:        var(--text-medium);
 	--text-nav-active-weight: var(--text-bold);
 
 	--text-logo-size:         var(--text-m);

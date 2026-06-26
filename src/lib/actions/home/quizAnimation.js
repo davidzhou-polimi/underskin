@@ -95,6 +95,11 @@ export function quizAnimation(node, params) {
 	function triggerSelectionAnimation(side) {
 		if (quizState !== 'choosing') return;
 
+		// Commento solo il PERCHÉ: verifichiamo la presenza del quiz-body PRIMA di mutare lo stato e bloccare lo scroll,
+		// così un'uscita anticipata non lascia la pagina bloccata senza la corrispondente unlockScroll().
+		const quizBody = node.querySelector('.quiz-body');
+		if (!quizBody) return;
+
 		quizState = 'animating';
 		onStateChange('animating');
 		lockScroll();
@@ -102,8 +107,6 @@ export function quizAnimation(node, params) {
 		// Calcola lo spostamento Y necessario a centrare il quiz-body nella viewport
 		// una volta che il titolo sparisce: attualmente il flex centra titolo + quiz-body
 		// insieme, quindi il quiz-body risulta sotto il centro ottico del viewport.
-		const quizBody = node.querySelector('.quiz-body');
-		if (!quizBody) return;
 		const bodyBounds = quizBody.getBoundingClientRect();
 		const yShift = Math.round(window.innerHeight / 2 - (bodyBounds.top + bodyBounds.height / 2));
 

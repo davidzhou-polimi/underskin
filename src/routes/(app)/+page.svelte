@@ -74,11 +74,4 @@
         min-height: 100vh;
         background: transparent;
     }
-
-    :global(body) {
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        background-color: var(--background-primary);
-    }
 </style>
