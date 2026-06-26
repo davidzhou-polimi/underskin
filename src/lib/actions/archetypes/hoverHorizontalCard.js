@@ -20,20 +20,37 @@ export function hoverHorizontalCard(node, params = {}) {
 
 		ctx.add(() => {
 			if (nameEl) {
+				// Commento solo il PERCHÉ: muoviamo il testo verso l'alto con un movimento fluido e ampio
 				gsap.to(nameEl, {
-					yPercent: -140,
+					yPercent: -130,
+					scale: 0.95,
+					duration: 0.6,
+					ease: 'power3.out',
+					overwrite: 'auto'
+				});
+				// Commento solo il PERCHÉ: facciamo svanire l'opacità rapidamente (0.25s) in modo che la scritta sia completamente invisibile prima di essere tagliata dal bordo superiore (overflow-hidden)
+				gsap.to(nameEl, {
 					opacity: 0,
-					duration: 0.4,
-					ease: 'power2.inOut',
+					duration: 0.25,
+					ease: 'power1.out',
 					overwrite: 'auto'
 				});
 			}
 			if (decalEl) {
+				// Commento solo il PERCHÉ: muoviamo il gradiente superiore verso l'alto in modo asincrono
 				gsap.to(decalEl, {
-					yPercent: -140,
+					yPercent: -130,
+					duration: 0.6,
+					ease: 'power3.out',
+					delay: 0.08,
+					overwrite: 'auto'
+				});
+				// Commento solo il PERCHÉ: facciamo svanire il gradiente rapidamente per evitare tagli netti sulla cornice superiore
+				gsap.to(decalEl, {
 					opacity: 0,
-					duration: 0.4,
-					ease: 'power2.inOut',
+					duration: 0.3,
+					ease: 'power1.out',
+					delay: 0.08,
 					overwrite: 'auto'
 				});
 			}
@@ -45,21 +62,23 @@ export function hoverHorizontalCard(node, params = {}) {
 		if (!enabled) return;
 
 		ctx.add(() => {
-			if (nameEl) {
-				gsap.to(nameEl, {
-					yPercent: 0,
-					opacity: 1,
-					duration: 0.4,
-					ease: 'power2.inOut',
-					overwrite: 'auto'
-				});
-			}
 			if (decalEl) {
 				gsap.to(decalEl, {
 					yPercent: 0,
 					opacity: 1,
-					duration: 0.4,
-					ease: 'power2.inOut',
+					duration: 0.5,
+					ease: 'power3.out',
+					overwrite: 'auto'
+				});
+			}
+			if (nameEl) {
+				gsap.to(nameEl, {
+					yPercent: 0,
+					scale: 1,
+					opacity: 1,
+					duration: 0.5,
+					ease: 'power3.out',
+					delay: 0.05,
 					overwrite: 'auto'
 				});
 			}
