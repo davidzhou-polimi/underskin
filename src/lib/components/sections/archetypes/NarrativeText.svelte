@@ -102,6 +102,7 @@
 		color: var(--content-primary);
 		text-align: left;
 		margin: 0;
+		white-space: pre-line;
 	}
 
 	.highlighted-keyword {

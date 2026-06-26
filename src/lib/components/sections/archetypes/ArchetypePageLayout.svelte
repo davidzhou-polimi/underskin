@@ -34,7 +34,7 @@
 				[
 					{
 						type: 'text',
-						content: "Quando l'aspettativa esterna si fa insostenibile, la pressione cresce fino a diventare "
+						content: "Quando l'aspettativa esterna si fa insostenibile,\nla pressione cresce fino a diventare "
 					},
 					{
 						type: 'keyword',
@@ -50,7 +50,7 @@
 				[
 					{
 						type: 'text',
-						content: 'Il bisogno ossessivo di essere perfetti porta spesso al '
+						content: 'Il bisogno ossessivo di essere perfetti porta spesso\nal '
 					},
 					{
 						type: 'keyword',
@@ -60,7 +60,7 @@
 					},
 					{
 						type: 'text',
-						content: ": un blocco in cui la mente ostacola ciò che l'allenamento aveva reso naturale."
+						content: ": un blocco in cui la mente\nostacola ciò che l'allenamento aveva reso naturale."
 					}
 				]
 			]
@@ -74,7 +74,7 @@
 				[
 					{
 						type: 'text',
-						content: 'Dopo il recupero, molti atleti convivono con la '
+						content: 'Dopo il recupero, molti atleti convivono con\nla '
 					},
 					{
 						type: 'keyword',
@@ -90,7 +90,7 @@
 				[
 					{
 						type: 'text',
-						content: 'Tornare davvero in campo significa affrontare un processo di '
+						content: 'Tornare davvero in campo significa affrontare\nun processo di '
 					},
 					{
 						type: 'keyword',
@@ -100,7 +100,7 @@
 					},
 					{
 						type: 'text',
-						content: ': smettendo di competere con il ricordo del dolore.'
+						content: ': smettendo di \ncompetere con il ricordo del dolore.'
 					}
 				]
 			]
@@ -115,7 +115,7 @@
 					{
 						type: 'text',
 						content:
-							"A volte il podio non basta. Chi arriva più vicino all'oro è spesso quello che fa più fatica ad accettare il risultato, intrappolato dal "
+							"A volte il podio non basta. Chi arriva più vicino all'oro\nè spesso quello che fa più fatica ad accettare\nil risultato, intrappolato dal "
 					},
 					{
 						type: 'keyword',
@@ -141,7 +141,7 @@
 					},
 					{
 						type: 'text',
-						content: ': la mente continua a guardare ciò che è mancato, cancellando quello che è stato raggiunto.'
+						content: ': la mente\ncontinua a guardare ciò che è mancato, cancellando\nquello che è stato raggiunto.'
 					}
 				]
 			]
