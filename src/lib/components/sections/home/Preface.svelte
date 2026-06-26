@@ -1,6 +1,5 @@
 <script>
     import { trailCanvas } from "$lib/actions/home/trailCanvas.js";
-    import { trackSection } from "$lib/actions/trackSection.js";
     import { scrollReveal } from "$lib/actions/scrollReveal.js";
     import { prefacePin } from "$lib/actions/home/prefacePin.js";
 
@@ -36,7 +35,6 @@
     id="preface-text"
     class="preface-section"
     use:prefacePin={{ end: "+=1000%" }}
-    use:trackSection={{ id: "preface-text" }}
 >
     <div class="canvas-layer">
         <canvas use:bindCanvas></canvas>

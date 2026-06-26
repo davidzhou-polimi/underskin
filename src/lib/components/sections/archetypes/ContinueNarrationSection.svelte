@@ -1,7 +1,6 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import Button from "$lib/components/ui/Button.svelte";
-    import { trackSection } from "$lib/actions/trackSection.js";
     import { goto } from "$app/navigation";
 
     /**
@@ -51,7 +50,6 @@
 <section
     id="continue-narration"
     class="continue-section"
-    use:trackSection={{ id: "continue-narration" }}
 >
     <div class="continue-container">
         <div class="center-content">

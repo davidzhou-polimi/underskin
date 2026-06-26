@@ -1,6 +1,5 @@
 <script>
 	import AthleteCarousel from '$lib/components/sections/archetypes/AthleteCarousel.svelte';
-	import { trackSection } from '$lib/actions/trackSection.js';
 
 	/**
 	 * @type {{
@@ -13,7 +12,6 @@
 <section 
 	id="hero" 
 	class="athlete-section" 
-	use:trackSection={{ id: 'hero' }}
 >
 	<div class="athlete-section__container">
 		<AthleteCarousel {type} />

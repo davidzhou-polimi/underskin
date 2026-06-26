@@ -1,6 +1,5 @@
 <script>
     import { zoomTextTransition } from '$lib/actions/archetypes/zoomTextTransition.js';
-    import { trackSection } from '$lib/actions/trackSection.js';
 
     /**
      * @typedef {Object} Props
@@ -26,7 +25,7 @@
     let textColor = $derived(themeColors[theme] || 'var(--azzurro-600)');
 </script>
 
-<section id="zoom-transition" class="zoom-section" use:trackSection use:zoomTextTransition>
+<section id="zoom-transition" class="zoom-section" use:zoomTextTransition>
     
     <div class="intro-container">
         <p class="first-text">Alcuni casi a</p>

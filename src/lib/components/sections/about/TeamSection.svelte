@@ -1,6 +1,5 @@
 <script>
 	import TeamCarousel from '$lib/components/sections/about/TeamCarousel.svelte';
-	import { trackSection } from '$lib/actions/trackSection.js';
 
 	/**
 	 * @typedef {Object} Props
@@ -14,7 +13,6 @@
 <section
 	id="team"
 	class="team-section"
-	use:trackSection={{ id: 'team' }}
 >
 	<div class="team-section__container">
 		{#if title}

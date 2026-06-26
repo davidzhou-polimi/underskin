@@ -6,7 +6,6 @@
      * 3. Tutte le animazioni GSAP e ScrollTrigger sono isolate in Svelte Actions dedicate.
      */
 
-    import { trackSection } from '$lib/actions/trackSection.js';
     import { heroParallax } from '$lib/actions/archetypes/heroParallax.js';
 
     /**
@@ -34,7 +33,6 @@
     class="blob-section" 
     class:mod-insoddisfatto={theme === 'insoddisfatto'} 
     bind:this={sectionRef} 
-    use:trackSection={{ id: sectionId }}
 >
     <div class="sticky-viewport">
         <div class="text-container">

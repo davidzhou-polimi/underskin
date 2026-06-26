@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { Delaunay } from "d3-delaunay";
   import { shatterGlass } from "$lib/actions/archetypes/shatterGlass.js";
-  import { trackSection } from "$lib/actions/trackSection.js";
 
   const NUM_SHARDS = 30; // Ridotto leggermente per diminuire il carico sul DOM mantenendo l'effetto denso
   let windowWidth = 0;
@@ -59,7 +58,6 @@
 <div
   id="shatter"
   class="scroll-wrapper"
-  use:trackSection
   use:shatterGlass={{ fragments }}
 >
   <div class="sticky-container">

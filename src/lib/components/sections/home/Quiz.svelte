@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { trackSection } from '$lib/actions/trackSection.js';
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
@@ -120,7 +119,6 @@
 	class="quiz-wrapper"
 	aria-label="Quiz interattivo tra mente e fisico"
 	onwheel={handleVirtualScroll}
-	use:trackSection={{ id: 'quiz' }}
 	use:quizAnimation={{
 		quizState,
 		lockScroll,

@@ -102,9 +102,7 @@
 	 * @returns {boolean}
 	 */
 	const getIsActive = (link) => {
-		// Commento solo il PERCHÉ: l'evidenziazione segue la rotta corrente. La home non traccia sotto-sezioni,
-		// quindi non deve dipendere da scroll.activeSection, che resta valorizzato (e stantio) dalle pagine
-		// con trackSection e provocherebbe un'evidenziazione errata al rientro nella home.
+		// Commento solo il PERCHÉ: la navigazione è per-pagina, quindi l'evidenziazione segue la rotta corrente.
 		return page.url.pathname === link.path;
 	};
 

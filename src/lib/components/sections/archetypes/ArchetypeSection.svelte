@@ -1,6 +1,5 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
-    import { trackSection } from "$lib/actions/trackSection.js";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
 
     /**
@@ -42,7 +41,6 @@
 <section
     id="archetypes"
     class="archetype-section"
-    use:trackSection={{ id: "archetypes" }}
 >
     {#if title}
         <h3 class="section-title">{title}</h3>

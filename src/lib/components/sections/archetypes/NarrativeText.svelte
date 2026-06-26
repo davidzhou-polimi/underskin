@@ -3,10 +3,9 @@
 	 * Assunzioni per questo componente unificato:
 	 * 1. Sostituisce i componenti duplicati specifici gestendo dinamicamente testi e tooltip.
 	 * 2. Riceve come props l'ID della sezione, il tema del profilo e l'elenco dei segmenti testuali/keyword.
-	 * 3. Utilizza scrollReveal per l'ingresso graduale e trackSection per lo scrollytelling.
+	 * 3. Utilizza scrollReveal per l'ingresso graduale degli elementi.
 	 */
 
-	import { trackSection } from '$lib/actions/trackSection.js';
 	import { scrollReveal } from '$lib/actions/scrollReveal.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
@@ -35,7 +34,6 @@
 <section
 	id={sectionId}
 	class="narrative-section"
-	use:trackSection={{ id: sectionId }}
 >
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container" use:scrollReveal>

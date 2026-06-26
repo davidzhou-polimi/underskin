@@ -1,12 +1,10 @@
 <script>
-	import { trackSection } from '$lib/actions/trackSection.js';
 	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
 </script>
 
 <section 
 	id="about-statement" 
 	class="about-statement-section" 
-	use:trackSection
 >
 	<div class="statement-content">
 		<blockquote 

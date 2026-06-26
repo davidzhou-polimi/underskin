@@ -1,9 +1,8 @@
 <script>
-	import { trackSection } from '$lib/actions/trackSection.js';
 	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
 </script>
 
-<section id="performance" class="performance-section" use:trackSection>
+<section id="performance" class="performance-section">
 	<div class="perf-content">
 		<blockquote class="perf-quote" use:performanceReveal={{ triggerId: '#performance' }}>
 			La performance non consuma solo il corpo: <br />

@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-	import { trackSection } from '$lib/actions/trackSection.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	const stages = [
@@ -162,7 +161,6 @@
 	bind:this={sectionEl}
 	id="outro"
 	class="outro-scroll-container"
-	use:trackSection={{ id: 'outro' }}
 >
 	<div class="scene">
 		<h2 class="podium-title">
