@@ -343,8 +343,8 @@
 		text-transform: none;
 		transition: color 0.3s ease, background-image 0.3s ease;
 		background-size: 200% auto;
-		background-clip: text;
 		-webkit-background-clip: text;
+		background-clip: text;
 	}
 
 	.interactive-circle-btn:hover .animate-gradient-text {
@@ -466,8 +466,8 @@
 			var(--archetipi-favorito, #6A96DF)
 		);
 		background-size: 200% auto;
-		background-clip: text;
 		-webkit-background-clip: text;
+		background-clip: text;
 		animation: moveGradient 3s linear infinite;
 	}
 

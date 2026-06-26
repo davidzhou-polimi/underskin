@@ -133,8 +133,8 @@
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 20vh);
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 20vh);
     /* Forza la creazione di un layer di composizione hardware per applicare correttamente la maschera al filtro di sfondo */
-    transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    transform: translateZ(0);
     /* Rimuove la linea di contorno rigida per consentire una transizione fluida dello sfondo sfocato */
     border: none !important;
   }

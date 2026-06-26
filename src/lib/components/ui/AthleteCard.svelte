@@ -167,16 +167,16 @@
 	.card-face {
 		position: absolute;
 		inset: 0;
-		backface-visibility: hidden;
 		-webkit-backface-visibility: hidden;
+		backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
 		-webkit-font-smoothing: subpixel-antialiased;
 	}
 
 	.card-front {
-		user-select: none;
 		-webkit-user-select: none;
+		user-select: none;
 	}
 
 	.card-back.rotate-y {
