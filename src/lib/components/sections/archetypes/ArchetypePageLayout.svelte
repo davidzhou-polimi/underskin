@@ -137,7 +137,7 @@
 						type: 'keyword',
 						content: "paradosso dell'argento",
 						tooltip:
-							"Gli atleti con l'argento spesso sono meno soddisfatti di quelli con il bronzo, perché pensano alla vittoria mancata. \nLa soddisfazione dipende quindi più dal confronto mentale che dal risultato reale."
+							"Fenomeno psicologico per cui i medagliati d'argento risultano spesso meno soddisfatti di quelli di bronzo, essendo concentrati sulla vittoria mancata anziché sul traguardo raggiunto."
 					},
 					{
 						type: 'text',
