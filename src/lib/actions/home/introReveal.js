@@ -120,11 +120,11 @@ export function introReveal(node) {
 				const mouseX = ((e.clientX - rect.left) / width) * 2 - 1;
 				const mouseY = ((e.clientY - rect.top) / height) * 2 - 1;
 
-				// Il titolo (primo piano) si sposta in direzione opposta al mouse, con ampiezza ridotta per apparire "più pesante"
-				titleX(-mouseX * 15);
-				titleY(-mouseY * 15);
-				titleRotX(mouseY * 6);
-				titleRotY(-mouseX * 6);
+				// Il titolo (primo piano) si sposta in direzione opposta al mouse, con ampiezza ridotta del 30% per stabilità
+				titleX(-mouseX * 10.5);
+				titleY(-mouseY * 10.5);
+				titleRotX(mouseY * 4.2);
+				titleRotY(-mouseX * 4.2);
 
 				// I cerchi (sfondo) assecondano lo spostamento del mouse con ampiezza minore per profondità ottica
 				circlesX(mouseX * 8);
