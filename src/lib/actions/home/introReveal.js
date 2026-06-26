@@ -18,6 +18,22 @@ export function introReveal(node) {
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
+		// Commento solo il PERCHÉ: Anima la crescita del raggio della sfera gradiente da 0 a 0.25 all'avvio in sincrono con l'ingresso dei cerchi geometrici.
+		const canvas = /** @type {any} */ (document.querySelector('.interactive-gradient-canvas'));
+		const gradientRenderer = canvas?.__gradientRenderer;
+		if (gradientRenderer) {
+			const u = gradientRenderer.material.uniforms;
+			u.u_focus.value.z = 0.0;
+			u.u_focus.value.w = 0.0;
+			const proxy = gradientRenderer.getAnimatableState();
+			tl.to(proxy, {
+				focusRx: 0.25,
+				focusRy: 0.25,
+				duration: 1.8,
+				onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+			}, 0);
+		}
+
 		tl.from(node.querySelectorAll('.intro-circle'), {
 			opacity: 0,
 			scale: 0.7,

@@ -312,11 +312,15 @@ const fsSource = `
 
 	void main() {
 		vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
-		vec2 uv = v_uv;
+
+		// Commento solo il PERCHÉ: comprime le coordinate del pattern rispetto al raggio corrente (dividendo invece di moltiplicare) per mantenere l'intera gamma di colori visibile all'interno della sfera fin da quando è piccolissima.
+		float intro_scale = clamp(u_focus.z / 0.25, 0.01, 1.0);
+		vec2 uv = u_focus.xy + (v_uv - u_focus.xy) / intro_scale;
+
 		float scaled_time = u_time; // la moltiplicazione per speed avviene in JS (scaledTime += dt * u_speed)
 
 		// 1. Mouse gravitational UV warp based on velocity and direction
-		vec2 to_mouse = (u_mouse - uv) * aspect;
+		vec2 to_mouse = (u_mouse - v_uv) * aspect;
 		float mouse_dist = length(to_mouse);
 		float mouse_attraction = smoothstep(u_mouse_radius, 0.0, mouse_dist);
 
@@ -350,7 +354,7 @@ const fsSource = `
 
 		// 4. Splat field applied AFTER domain warp — displaces color-sampling UV directly.
 		// Cap force magnitude to avoid UV tearing at high splat densities.
-		vec2 splat_force = computeSplatField(uv);
+		vec2 splat_force = computeSplatField(v_uv);
 		float sf_len = length(splat_force);
 		splat_force *= min(1.0, 0.15 / max(sf_len, 0.0001));
 		warped_uv -= splat_force * aspect;
@@ -382,7 +386,7 @@ const fsSource = `
 		// Focus area: attenuate gradient outside a configurable elliptical region
 		// Commento solo il PERCHÉ: trasla leggermente il centro del gradiente (spotlight) assecondando il mouse per allinearlo alla prospettiva 3D
 		vec2 shifted_focus = u_focus.xy + (u_mouse - 0.5) * 0.027;
-		vec2 focus_offset = ((uv - shifted_focus) * aspect) / max(u_focus.zw, vec2(0.0001));
+		vec2 focus_offset = ((v_uv - shifted_focus) * aspect) / max(u_focus.zw, vec2(0.0001));
 		float focus_dist = length(focus_offset);
 		float focus_weight = 1.0 - smoothstep(0.5, 1.0, focus_dist);
 		shape_mask *= mix(0.0, 1.0, focus_weight);
@@ -390,7 +394,7 @@ const fsSource = `
 
 		// Riscala shape_mask in [0, 1] rispetto al picco atteso per questa coverage,
 		// così i blob mantengono piena intensità cromatica anche a coverage bassa.
-		// Il picco teorico di smoothstep(-1.2, 1.2, x + bias) con x in [-1,1] è
+		// Il picco teorico di smoothstep(-1.2, 1.2, x + bias) con x in [-1,1] &egrave;
 		// smoothstep(-1.2, 1.2, 1.0 + bias); lo approssimiamo con il soft-floor già applicato.
 		float expected_peak = mix(0.05, 1.0, smoothstep(-1.2, 1.2, 1.0 + coverage_bias));
 		expected_peak = max(expected_peak, 0.06); // evita divisione per zero a coverage≈0
