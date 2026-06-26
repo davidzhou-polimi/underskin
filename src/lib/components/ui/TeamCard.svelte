@@ -23,21 +23,25 @@
 	const TEAM_COLORS = {
 		favorito: {
 			brand: 'var(--azzurro-700)',
-			textPrimary: 'var(--content-dark-primary)'
+			textPrimary: 'var(--content-dark-primary)',
+			gradientStart: 'var(--azzurro-800)'
 		},
 		infortunato: {
 			brand: 'var(--arancione-700)',
-			textPrimary: 'var(--content-dark-primary)'
+			textPrimary: 'var(--content-dark-primary)',
+			gradientStart: 'var(--arancione-800)'
 		},
 		insoddisfatto: {
 			brand: 'var(--viola-700)',
-			textPrimary: 'var(--content-dark-primary)'
+			textPrimary: 'var(--content-dark-primary)',
+			gradientStart: 'var(--viola-800)'
 		}
 	};
 
 	let colors = $derived(TEAM_COLORS[type] ?? TEAM_COLORS.favorito);
 	let colorBrand = $derived(colors.brand);
 	let colorTextPrimary = $derived(colors.textPrimary);
+	let colorGradientStart = $derived(colors.gradientStart);
 </script>
 
 <div
@@ -58,6 +62,9 @@
         </div>
 
         <div class="overlay-brand" style="background-color: {colorBrand};"></div>
+
+        <!-- Upper gradient (Sfumatura superiore) -->
+        <div class="decal-top" style="--gradient-start: {colorGradientStart};"></div>
 
         <div class="name-front">
             <span>{name}</span>
@@ -133,6 +140,19 @@
 		/* Commento solo il PERCHÉ: applichiamo lo stesso radius concentrico calcolato per allinearsi al media-container */
 		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		pointer-events: none;
+	}
+
+	.decal-top {
+		/* Commento solo il PERCHÉ: calcoliamo larghezza e insets in base al padding per mantenere l'allineamento con il media-container sottostante */
+		position: absolute;
+		top: var(--card-glass-padding);
+		left: var(--card-glass-padding);
+		width: calc(100% - (2 * var(--card-glass-padding)));
+		height: 111px;
+		pointer-events: none;
+		background: linear-gradient(to bottom, var(--gradient-start) 0%, transparent 100%);
+		/* Commento solo il PERCHÉ: adattiamo il radius superiore concentrico per allinearsi alla curvatura del media-container */
+		border-radius: calc(var(--radius-m) - var(--card-glass-padding)) calc(var(--radius-m) - var(--card-glass-padding)) 0 0;
 	}
 
 	.name-front {
