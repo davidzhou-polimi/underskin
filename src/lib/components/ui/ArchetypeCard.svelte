@@ -1,5 +1,6 @@
 <script>
 	import { hoverLift } from '$lib/actions/hoverLift.js';
+	import { hoverHorizontalCard } from '$lib/actions/archetypes/hoverHorizontalCard.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { goto } from '$app/navigation';
 
@@ -87,6 +88,7 @@
     class="archetype-card-container"
     class:is-horizontal={horizontal}
     use:hoverLift
+    use:hoverHorizontalCard={{ enabled: horizontal }}
     onclick={handleCardClick}
     onmouseenter={() => { isHovered = true; if (showTooltip) tooltip.show('Esplora', 'semplice', 'pointer'); }}
     onmouseleave={() => { isHovered = false; if (showTooltip) tooltip.hide(); }}
@@ -102,17 +104,17 @@
             {:else if videoSrc}
                 <video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
             {/if}
-        </div>
-        
-        <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
-        <div class="overlay-brand" style="background-color: {colorBrand};"></div>
-        
-        <!-- Upper gradient (Sfumatura superiore) -->
-        <div class="decal-top" style="--gradient-start: {colorGradientStart};"></div>
 
-        <!-- Nome dell'atleta in sovrapposizione frontale -->
-        <div class="name-front">
-            <span>{name}</span>
+            <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
+            <div class="overlay-brand" style="background-color: {colorBrand};"></div>
+            
+            <!-- Upper gradient (Sfumatura superiore) -->
+            <div class="decal-top" style="--gradient-start: {colorGradientStart};"></div>
+
+            <!-- Nome dell'atleta in sovrapposizione frontale -->
+            <div class="name-front">
+                <span>{name}</span>
+            </div>
         </div>
     </div>
 </button>
@@ -179,38 +181,33 @@
 	}
 
 	.overlay-brand {
-		/* Commento solo il PERCHÉ: utilizziamo lo stesso padding dinamico del media-container per far coincidere perfettamente l'overlay colore */
+		/* Commento solo il PERCHÉ: occupiamo l'intera area del contenitore media per applicare uniformemente l'overlay di colore */
 		position: absolute;
-		top: var(--card-glass-padding); 
-		right: var(--card-glass-padding); 
-		bottom: var(--card-glass-padding); 
-		left: var(--card-glass-padding);
+		inset: 0;
 		mix-blend-mode: color;
-		/* Commento solo il PERCHÉ: applichiamo lo stesso radius concentrico calcolato per allinearsi al media-container */
-		border-radius: calc(var(--radius-m) - var(--card-glass-padding));
 		pointer-events: none;
 	}
 
 	.decal-top {
-		/* Commento solo il PERCHÉ: calcoliamo larghezza e insets in base al padding per mantenere l'allineamento con il media-container sottostante */
+		/* Commento solo il PERCHÉ: posizioniamo il gradiente ancorato al bordo superiore del media container */
 		position: absolute;
-		top: var(--card-glass-padding);
-		left: var(--card-glass-padding);
-		width: calc(100% - (2 * var(--card-glass-padding)));
+		top: 0;
+		left: 0;
+		width: 100%;
 		height: 111px;
 		pointer-events: none;
 		background: linear-gradient(to bottom, var(--gradient-start) 0%, transparent 100%);
-		/* Commento solo il PERCHÉ: adattiamo il radius superiore concentrico per allinearsi alla curvatura del media-container */
-		border-radius: calc(var(--radius-m) - var(--card-glass-padding)) calc(var(--radius-m) - var(--card-glass-padding)) 0 0;
+		/* Commento solo il PERCHÉ: ottimizziamo le performance di rendering hardware per le traslazioni GSAP */
+		will-change: transform, opacity;
 	}
 
 
 	.name-front {
-		/* Commento solo il PERCHÉ: calcoliamo posizionamento e larghezza dinamici per allineare il testo del nome con i bordi del media-container */
+		/* Commento solo il PERCHÉ: posizioniamo il testo del nome ancorato al bordo superiore del media container */
 		position: absolute;
-		top: var(--card-glass-padding);
-		left: var(--card-glass-padding);
-		width: calc(100% - (2 * var(--card-glass-padding)));
+		top: 0;
+		left: 0;
+		width: 100%;
 		height: 91px;
 		display: flex;
 		flex-direction: column;
@@ -222,6 +219,8 @@
 		word-break: break-word;
 		line-height: normal;
 		pointer-events: none;
+		/* Commento solo il PERCHÉ: ottimizziamo le performance di rendering hardware per le traslazioni GSAP */
+		will-change: transform, opacity;
 	}
 
 	/* ─── MODALITÀ ORIZZONTALE ────────────────────────────────────────────── */
@@ -230,11 +229,6 @@
 		width: 461px;
 		max-width: 100%;
 		height: 357px;
-	}
-
-	.archetype-card-container.is-horizontal .name-front {
-		/* Commento solo il PERCHÉ: calcoliamo la larghezza in base al padding per allineare correttamente il nome anche in modalità orizzontale */
-		width: calc(100% - (2 * var(--card-glass-padding)));
 	}
 
 	.archetype-card-container.is-horizontal .athlete-video,
