@@ -1,3 +1,7 @@
+/**
+ * @param {number} progress
+ * @returns {number}
+ */
 export function getClockwiseCircleMeasure(progress) {
     const normalizedProgress = Math.min(Math.max(progress, 0), 1);
 

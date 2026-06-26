@@ -104,6 +104,7 @@ export function trailCanvas(node) {
 
     // 播放（带循环）
     let isPlaying = false;
+    /** @type {number | null} */
     let loopId = null;
     /** @type {number | null} */
     let drawId = null;
@@ -182,13 +183,26 @@ export function trailCanvas(node) {
         }
     }
     
-    // 开始缩小动画（已禁用）
+    /**
+     * @param {number} [targetScale]
+     * @param {number} [duration]
+     * @param {(() => void) | undefined} [onComplete]
+     */
     function startShrink(targetScale = 0.5, duration = 2, onComplete) {
         // 缩小动画已移除，不做任何事
     }
 
-    // 绘制通用的单条流体线段
+    /**
+     * @param {{ x: number, y: number, origX?: number, origY?: number }[]} points
+     * @param {{ angle: number, globalAlpha: number }} state
+     * @param {number} startAngle
+     * @param {boolean} isClockwise
+     * @param {number} maxPoints
+     * @param {number} targetDuration
+     */
     function drawSingleTrail(points, state, startAngle, isClockwise, maxPoints, targetDuration) {
+        // Commento solo il PERCHÉ: il context canvas 2D deve essere valido per disegnare le linee, verifichiamo la sua presenza per evitare errori a runtime
+        if (!ctx) return;
         // 判断当前线条自己是否处于定格暂停阶段
         const isSelfPaused = tl && tl.paused() && tl.time() >= targetDuration && !scaleState.isShrinking;
         
@@ -226,8 +240,11 @@ export function trailCanvas(node) {
                 const ratio = i / (points.length - 1);
                 const waveOffset = isClockwise ? Math.PI : 0;
                 
-                const dx = points[i].origX - (node.width / 2);
-                const dy = points[i].origY - (node.height / 2);
+                // Commento solo il PERCHÉ: utilizziamo valori di fallback qualora origX o origY fossero undefined per il type checker
+                const origX = points[i].origX ?? points[i].x;
+                const origY = points[i].origY ?? points[i].y;
+                const dx = origX - (node.width / 2);
+                const dy = origY - (node.height / 2);
                 const angleAtPoint = Math.atan2(dy, dx);
                 
                 const wave = Math.sin(wobbleTime * 2 + ratio * Math.PI * 2 + waveOffset) * 6 * scaleState.scale;

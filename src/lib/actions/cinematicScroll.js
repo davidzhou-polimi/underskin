@@ -19,7 +19,9 @@ export function cinematicScroll(node) {
 	if (!archetypesSection || !outroSection) return;
 
 	let rafId = 0;
+	/** @type {gsap.core.Tween | null} */
 	let tween = null;
+	/** @type {ReturnType<typeof setTimeout> | null} */
 	let scrollTimeout = null;
 
 	// Utilizziamo requestAnimationFrame per assicurarci che la pagina sia montata e che lo scroll nativo iniziale sia terminato

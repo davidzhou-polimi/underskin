@@ -121,7 +121,9 @@
 	/** @type {Props} */
 	let { archetype, uniqueSection } = $props();
 
-	const config = ARCHETYPE_CONFIG[archetype];
+	// Commento solo il PERCHÉ: catturiamo il valore iniziale di archetype per instanziare la configurazione statica ed evitare il warning del compilatore Svelte 5
+	const initialArchetype = archetype;
+	const config = ARCHETYPE_CONFIG[initialArchetype];
 	const gradient = createArchetypeGradientConfig(config.colors);
 </script>
 

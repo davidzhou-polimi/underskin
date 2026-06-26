@@ -5,6 +5,7 @@ export function drawBorder(/** @type {HTMLElement} */ node, /** @type {{ clicked
 
 	if (!maskCircle) return;
 
+	/** @type {gsap.core.Timeline | null} */
 	let tl = null;
 
 	function playAnimation() {

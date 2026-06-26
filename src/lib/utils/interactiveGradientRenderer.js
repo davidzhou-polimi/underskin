@@ -5,11 +5,11 @@ import * as THREE from 'three';
  * @property {{ bg?: string, c1?: string, c2?: string, c3?: string } | { bg?: string, colors?: string[] } | string[] | null} [colors]
  * @property {number} [speed]            - Animation speed multiplier (default 1.0)
  * @property {number} [waveFrequency]    - Spatial frequency of noise blobs (lower = larger blobs)
- * @property {[number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
+ * @property {number[] | [number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
  * @property {number} [coverage]         - 0=sparse blobs, 1=full-screen wash
  * @property {number} [intensity]        - Opacity/saturation of the blobs (0=invisible, 1=full, default 1.0); independent from coverage
- * @property {[number, number]} [focusCenter]   - UV center of gradient concentration [x, y]
- * @property {number | [number, number]} [focusRadius] - Focus radius [rx, ry] or single value for circle
+ * @property {number[] | [number, number]} [focusCenter]   - UV center of gradient concentration [x, y]
+ * @property {number | number[] | [number, number]} [focusRadius] - Focus radius [rx, ry] or single value for circle
  * @property {number} [viscosity]        - Mouse follow lerp factor (lower = more viscous)
  * @property {number} [mouseRadius]      - Radius of mouse gravitational influence
  * @property {number} [mouseStrength]    - Max UV displacement from mouse
@@ -22,7 +22,7 @@ import * as THREE from 'three';
  * @property {number} [colorBlending]    - Color transition sharpness multiplier
  * @property {number} [shapeId]          - 0=fluid, 1=circle, 2=capsule
  * @property {number} [morphProgress]    - Shape morph 0.0–1.0
- * @property {[number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
+ * @property {number[] | [number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
  * @property {'depth' | 'none'} [scrollEffect] - Scroll interaction: 'depth' = NEAT-style infinite procedural scroll
  * @property {number} [scrollYDepth]     - Depth units traversed over full vertical scroll (higher = more dramatic morph)
  * @property {number} [scrollYParallax]  - Y parallax shift over full scroll in UV units (default 0.6 = 60% of screen height)
