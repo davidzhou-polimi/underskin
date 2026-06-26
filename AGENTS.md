@@ -60,6 +60,9 @@ I file in `src/lib/styles/tokens/` sono **read-only per default**.
 - Niente stili inline. Niente valori magici hardcoded.
 - Non ridefinire variabili CSS all'interno dei blocchi `<style>` dei componenti: consuma sempre quelle definite in `tokens/`.
 - I token sono disponibili globalmente via `tokens.css` – non reimportare singoli file di `tokens/` nei componenti.
+- Non aggiungere vendor prefix manualmente nei blocchi `<style>` – Autoprefixer li genera in fase di build.
+- Exception — stili inline: Autoprefixer non processa l'attributo `style="..."`.
+- Nei casi che richiedono prefissi manuali (scrollbar, stili inline, o altri contesti non coperti da Autoprefixer), posiziona sempre le varianti prefissate prima della proprietà standard.
 
 ---
 

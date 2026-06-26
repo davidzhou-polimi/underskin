@@ -129,8 +129,8 @@
             var(--archetipi-insoddisfatto),
             var(--archetipi-infortunato)
         );
-        -webkit-background-clip: text;
         background-clip: text;
+        color: var(--archetipi-favorito);
         -webkit-text-fill-color: transparent;
     }
 

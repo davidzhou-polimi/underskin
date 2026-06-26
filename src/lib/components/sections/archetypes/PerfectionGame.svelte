@@ -281,8 +281,8 @@
 			var(--gradient-c2),
 			var(--gradient-c3)
 		);
-		-webkit-background-clip: text;
 		background-clip: text;
+		color: var(--viola-600);
 		-webkit-text-fill-color: transparent;
 		background-size: 300% 100%;
 		/* Commento solo il PERCHÉ: allinea il testo di game over con il peso bold globale */

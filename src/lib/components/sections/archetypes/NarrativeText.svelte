@@ -120,8 +120,8 @@
 		--gradient-c3: var(--azzurro-600);
 
 		/* Permette di ritagliare lo sfondo seguendo precisamente il contorno delle lettere */
-		-webkit-background-clip: text;
 		background-clip: text;
+		color: var(--azzurro-600);
 		-webkit-text-fill-color: transparent;
 
 		background-size: 300% 100%;
@@ -133,8 +133,8 @@
 		--gradient-c3: var(--arancione-600);
 
 		/* Permette di ritagliare lo sfondo seguendo precisamente il contorno delle lettere */
-		-webkit-background-clip: text;
 		background-clip: text;
+		color: var(--arancione-600);
 		-webkit-text-fill-color: transparent;
 
 		background-size: 300% 100%;
@@ -146,8 +146,8 @@
 		--gradient-c3: var(--viola-600);
 
 		/* Permette di ritagliare lo sfondo seguendo precisamente il contorno delle lettere */
-		-webkit-background-clip: text;
 		background-clip: text;
+		color: var(--viola-600);
 		-webkit-text-fill-color: transparent;
 
 		background-size: 300% 100%;

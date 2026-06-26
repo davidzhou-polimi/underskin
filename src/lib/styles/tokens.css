@@ -23,8 +23,8 @@
 	);
 	
 	/* Maschera di testo per mostrare il gradiente sotto */
-	-webkit-background-clip: text;
 	background-clip: text;
+	color: var(--gradient-c2);
 	-webkit-text-fill-color: transparent;
 }
 
@@ -50,15 +50,12 @@
 
 .glass-effect {
 	background-color: rgb(from var(--neutral-100) r g b / 0.6);
-    -webkit-backdrop-filter: blur(8px);
 	backdrop-filter: blur(8px);
 	border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);
 }
 
 /* Impedisce la selezione del testo per evitare selezioni indesiderate durante le interazioni fluide e le transizioni del sito */
 * {
-	-webkit-user-select: none;
-	-moz-user-select: none;
 	user-select: none;
 }
 

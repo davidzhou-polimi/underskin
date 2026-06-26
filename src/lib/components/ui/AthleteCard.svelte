@@ -167,7 +167,6 @@
 	.card-face {
 		position: absolute;
 		inset: 0;
-		-webkit-backface-visibility: hidden;
 		backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
@@ -175,7 +174,6 @@
 	}
 
 	.card-front {
-		-webkit-user-select: none;
 		user-select: none;
 	}
 
