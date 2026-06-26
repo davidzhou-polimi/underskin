@@ -50,8 +50,8 @@
 
 .glass-effect {
 	background-color: rgb(from var(--neutral-100) r g b / 0.6);
+    -webkit-backdrop-filter: blur(8px);
 	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
 	border: 1px solid rgb(from var(--neutral-50) r g b / 0.4);
 }
 
