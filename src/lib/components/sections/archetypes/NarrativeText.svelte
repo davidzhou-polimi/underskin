@@ -20,14 +20,14 @@
 	 * @typedef {Object} Props
 	 * @property {string} sectionId - L'ID univoco per lo scrollytelling
 	 * @property {'favorito' | 'infortunato' | 'insoddisfatto'} theme - Tema grafico del profilo
-	 * @property {Segment[]} segments - Elenco strutturato di segmenti testuali
+	 * @property {Segment[][]} paragraphs - Elenco strutturato di paragrafi contenenti segmenti
 	 */
 
 	/** @type {Props} */
 	let {
 		sectionId,
 		theme,
-		segments = []
+		paragraphs = []
 	} = $props();
 </script>
 
@@ -37,24 +37,27 @@
 >
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container" use:scrollReveal>
-		<p class="narrative-text">
-			{#each segments as segment}
-				{#if segment.type === 'keyword'}
-					<span
-						class="highlighted-keyword gradient-text animate-gradient-text {theme}-color"
-						role="tooltip"
-						tabindex="-1"
-						onmouseenter={() => tooltip.show(segment.tooltip ?? '', 'paragrafo')}
-						onmouseleave={() => tooltip.hide()}
-					>
-						{segment.content}
-					</span>
-				{:else}
-					<!-- Utilizziamo @html per supportare tag di formattazione nativi come <br /> inseriti nel testo statico controllato -->
-					{@html segment.content}
-				{/if}
+		<div class="narrative-wrapper">
+			{#each paragraphs as paragraph}
+				<p class="narrative-text">
+					{#each paragraph as segment}
+						{#if segment.type === 'keyword'}
+							<span
+								class="highlighted-keyword gradient-text animate-gradient-text {theme}-color"
+								role="tooltip"
+								tabindex="-1"
+								onmouseenter={() => tooltip.show(segment.tooltip ?? '', 'paragrafo')}
+								onmouseleave={() => tooltip.hide()}
+							>
+								{segment.content}
+							</span>
+						{:else}
+							{segment.content}
+						{/if}
+					{/each}
+				</p>
 			{/each}
-		</p>
+		</div>
 	</div>
 </section>
 
@@ -81,16 +84,24 @@
 		margin: 0 auto;
 	}
 
-	/* Allineamento a sinistra (bandiera) ma blocco centrato orizzontalmente nello schermo */
+	/* Contenitore per allineare a sinistra tutti i paragrafi ma centrare l'intero blocco */
+	.narrative-wrapper {
+		width: fit-content;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-4);
+	}
+
+	/* Allineamento a sinistra (bandiera) per i singoli paragrafi */
 	.narrative-text {
 		font-family: var(--font-family-base);
 		font-size: var(--text-m);
 		font-weight: var(--text-body-weight);
 		line-height: 1.5;
 		color: var(--content-primary);
-		margin: 0 auto;
-		width: fit-content;
 		text-align: left;
+		margin: 0;
 	}
 
 	.highlighted-keyword {
