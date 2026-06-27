@@ -32,17 +32,27 @@ export function introReveal(node) {
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
-		// Commento solo il PERCHÉ: Anima la crescita del raggio della sfera gradiente da 0 a 0.25 all'avvio in sincrono con l'ingresso dei cerchi geometrici.
+		// Commento solo il PERCHÉ: Anima la crescita del raggio della sfera gradiente da 0 al raggio intro configurato, in sincrono con l'ingresso dei cerchi geometrici.
 		const canvas = /** @type {any} */ (document.querySelector('.interactive-gradient-canvas'));
 		const gradientRenderer = canvas?.__gradientRenderer;
+
+		// Commento solo il PERCHÉ: il raggio target dell'intro è letto dalla config dello store
+		// (unica fonte di verità) anziché hardcoded qui: così modificare focusRadius nello store
+		// ridimensiona davvero la sfera, senza essere sovrascritto dai tween di questa action.
+		const introRadius = () => {
+			const fr = gradientRenderer?.config?.focusRadius ?? 0.25;
+			return Array.isArray(fr) ? fr : [fr, fr];
+		};
+
 		if (gradientRenderer) {
 			const u = gradientRenderer.material.uniforms;
 			u.u_focus.value.z = 0.0;
 			u.u_focus.value.w = 0.0;
+			const [rx, ry] = introRadius();
 			const proxy = gradientRenderer.getAnimatableState();
 			tl.to(proxy, {
-				focusRx: 0.25,
-				focusRy: 0.25,
+				focusRx: rx,
+				focusRy: ry,
 				duration: 1.8,
 				onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
 			}, 0);
@@ -284,12 +294,13 @@ export function introReveal(node) {
 			const introTitle = node.querySelector('.intro-title');
 			const scrollHintEl = node.querySelector('.scroll-hint');
 
-			// Commento solo il PERCHÉ: Fa rientrare per primo il gradiente stringendolo al centro a raggio 0.25.
+			// Commento solo il PERCHÉ: Fa rientrare per primo il gradiente stringendolo al centro al raggio intro configurato.
 			if (gradientRenderer) {
+				const [rx, ry] = introRadius();
 				const proxy = gradientRenderer.getAnimatableState();
 				activeTimeline.to(proxy, {
-					focusRx: 0.25,
-					focusRy: 0.25,
+					focusRx: rx,
+					focusRy: ry,
 					coverage: 1.0,
 					duration: 0.8,
 					ease: 'power2.out',
