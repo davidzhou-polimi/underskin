@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 
 if (typeof window !== 'undefined') {
 	gsap.registerPlugin(ScrollTrigger);
@@ -36,13 +37,12 @@ export function introReveal(node) {
 		const canvas = /** @type {any} */ (document.querySelector('.interactive-gradient-canvas'));
 		const gradientRenderer = canvas?.__gradientRenderer;
 
-		// Commento solo il PERCHÉ: il raggio target dell'intro è letto dalla config dello store
-		// (unica fonte di verità) anziché hardcoded qui: così modificare focusRadius nello store
-		// ridimensiona davvero la sfera, senza essere sovrascritto dai tween di questa action.
-		const introRadius = () => {
-			const fr = gradientRenderer?.config?.focusRadius ?? 0.25;
-			return Array.isArray(fr) ? fr : [fr, fr];
-		};
+		// Commento solo il PERCHÉ: i raggi target sono letti dalle config (unica fonte di verità)
+		// anziché hardcoded qui: così modificare focusRadius nello store/DEFAULT_CONFIG ridimensiona
+		// davvero la sfera, senza essere sovrascritto dai tween di questa action.
+		/** @param {number | number[]} fr */
+		const toRxRy = (fr) => (Array.isArray(fr) ? [fr[0], fr[1]] : [fr, fr]);
+		const introRadius = () => toRxRy(gradientRenderer?.config?.focusRadius ?? 0.25);
 
 		if (gradientRenderer) {
 			const u = gradientRenderer.material.uniforms;
@@ -265,11 +265,14 @@ export function introReveal(node) {
 				}, 0);
 			}
 
+			// Commento solo il PERCHÉ: il raggio d'uscita coincide con lo stato hero/body, che lo store
+			// eredita da DEFAULT_CONFIG.focusRadius non specificandolo: lo leggiamo da lì invece di duplicarlo.
 			if (gradientRenderer) {
+				const [exitRx, exitRy] = toRxRy(DEFAULT_CONFIG.focusRadius);
 				const proxy = gradientRenderer.getAnimatableState();
 				activeTimeline.to(proxy, {
-					focusRx: 2.0,
-					focusRy: 2.0,
+					focusRx: exitRx,
+					focusRy: exitRy,
 					coverage: 0.35,
 					duration: 0.8,
 					ease: 'power2.inOut',
