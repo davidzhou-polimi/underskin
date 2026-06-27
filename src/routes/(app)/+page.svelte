@@ -23,41 +23,17 @@
     import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
     import { cinematicScroll } from '$lib/actions/cinematicScroll.js';
 
-    // Stati reattivi per la gestione del blocco interattivo del Quiz
-    let isLocked = $state(false);
-    let quizExpanded = $state(false);
-
     const gradient = createFullPageGradientConfig(undefined, true);
-
-
-
-    /**
-     * Intercetta e blocca i tentativi di scroll quando il quiz è attivo,
-     * consentendo il normale scorrimento se il quiz è espanso a schermo intero.
-     * @param {WheelEvent | TouchEvent} e - L'evento di input della finestra
-     */
-    function handlePreventScroll(e) {
-        if (quizExpanded) return;
-
-        if (isLocked && e.cancelable) {
-            e.preventDefault();
-        }
-    }
 </script>
 
-<svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} onwheel={handlePreventScroll} ontouchmove={handlePreventScroll} />
+<svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} />
 
 <InteractiveGradient config={gradient.activeConfig} />
 
 <main class="page-flow" use:trackScrollProgress use:cinematicScroll>
     <IntroSection />
     <Preface />
-    <Quiz
-        lockScroll={() => isLocked = true}
-        unlockScroll={() => isLocked = false}
-        onExpand={() => quizExpanded = true}
-        onCollapse={() => quizExpanded = false}
-    />
+    <Quiz />
     <Performance />
 	<ArchetypeSection />
     <Outro />

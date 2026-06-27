@@ -1,24 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
+	import { gsap } from 'gsap';
+	import { Observer } from 'gsap/dist/Observer';
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { lockScroll, unlockScroll, scrollTo } from '$lib/stores/lenis.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 
-	/**
-	 * @typedef {Object} QuizProps
-	 * @property {(() => void)} [lockScroll]
-	 * @property {(() => void)} [unlockScroll]
-	 * @property {(() => void)} [onExpand]
-	 * @property {(() => void)} [onCollapse]
-	 */
-
-	/** @type {QuizProps} */
-	let {
-		lockScroll = () => {},
-		unlockScroll = () => {},
-		onExpand = () => {},
-		onCollapse = () => {}
-	} = $props();
+	if (typeof window !== 'undefined') {
+		gsap.registerPlugin(Observer);
+	}
 
 	// Stati reattivi (Rune Svelte 5)
 	let quizState = $state('choosing'); // 'choosing' | 'animating' | 'results'
@@ -26,99 +17,67 @@
 	/** Permette allo scroll di passare quando l'utente ha finito gli step e naviga via */
 	let canLeave = $state(false);
 
-	/**
-	 * Listener wheel non-passivo montato via onMount: l'unico modo affidabile per
-	 * bloccare lo scroll anche quando ScrollTrigger usa listener propri sulla window.
-	 * passive: false è necessario per poter chiamare e.preventDefault().
-	 */
-	onMount(() => {
-		/**
-		 * @param {WheelEvent} e
-		 */
-		function preventScrollDuringQuiz(e) {
-			if ((quizState === 'animating' || quizState === 'results') && !canLeave) {
-				// Eccezione: scroll verso l'alto da textStep=1 in results → lascia passare,
-				// lo scroll naturale rilascerà il pin e tornerà all'intro
-				if (quizState === 'results' && textStep === 1 && e.deltaY < 0) return;
-				e.preventDefault();
-			}
+	/** @type {Observer | undefined} */
+	let quizObserver;
+
+	// Commento solo il PERCHÉ: durante animazione/risultati il lock è in Lenis (blocca lo smooth-wheel), ma
+	// con syncTouch:false il touch resta nativo: l'Observer con preventDefault — abilitato solo nel lock — è
+	// ciò che blocca davvero il touch e, con wheelSpeed -1, unifica la direzione di rotella e swipe.
+	function advance() {
+		if (quizState !== 'results') return;
+		if (textStep === 1) {
+			animateQuizStep(2, { onStepChange: () => { textStep = 2; } });
+		} else if (textStep === 2) {
+			// Gate aperto: si esce verso Performance con scroll morbido di Lenis
+			canLeave = true;
+			scrollTo('#performance');
 		}
-		window.addEventListener('wheel', preventScrollDuringQuiz, { passive: false });
-		return () => window.removeEventListener('wheel', preventScrollDuringQuiz);
+	}
+
+	function back() {
+		if (quizState !== 'results') return;
+		if (textStep === 2) {
+			animateQuizStep(1, { onStepChange: () => { textStep = 1; } });
+		} else if (textStep === 1) {
+			// Scroll up dalla prima scritta → sblocca così il pin si riavvolge verso l'intro
+			canLeave = true;
+		}
+	}
+
+	onMount(() => {
+		quizObserver = Observer.create({
+			target: window,
+			type: 'wheel,touch,pointer',
+			wheelSpeed: -1,
+			tolerance: 20,
+			preventDefault: true,
+			onUp: advance,
+			onDown: back
+		});
+		quizObserver.disable();
+		return () => quizObserver?.kill();
+	});
+
+	// Commento solo il PERCHÉ: il blocco scroll segue lo stato del quiz; canLeave apre il gate (uscita o ritorno
+	// all'intro). enable/disable dell'Observer è ciò che attiva/disattiva il preventDefault sul touch nativo.
+	$effect(() => {
+		if ((quizState === 'animating' || quizState === 'results') && !canLeave) {
+			lockScroll();
+			quizObserver?.enable();
+		} else {
+			unlockScroll();
+			quizObserver?.disable();
+		}
 	});
 
 	// Nasconde il tooltip quando quizState cambia mentre il mouse è ancora nell'area
 	$effect(() => { if (quizState !== 'choosing') tooltip.hide(); });
-
-	/**
-	 * @param {WheelEvent} e
-	 */
-	function handleSelectiveScroll(e) {
-		// Backup: il listener non-passivo in onMount è il primary blocker;
-		// questo copre i casi in cui svelte:window sia non-passivo e cancelable
-		const shouldBlock =
-			(quizState === 'choosing' && e.deltaY > 0) ||
-			((quizState === 'animating' || quizState === 'results') && !canLeave);
-		if (shouldBlock && e.cancelable) e.preventDefault();
-	}
-
-	$effect(() => {
-		if (quizState === 'results' || quizState === 'animating') {
-			onExpand();
-		} else {
-			onCollapse();
-		}
-	});
-
-	/**
-	 * @param {WheelEvent} e
-	 */
-	function handleVirtualScroll(e) {
-		if (quizState !== 'results') return;
-
-		if (e.deltaY > 20) {
-			// Scroll verso il basso
-			e.preventDefault();
-			if (textStep === 1) {
-				// Commento solo il PERCHÉ: delega l'animazione di transizione tra step di testo all'helper esterno per rimuovere GSAP dal componente
-				animateQuizStep(2, {
-					onStepChange: () => { textStep = 2; }
-				});
-			} else if (textStep === 2) {
-				// Apre il gate: il listener non-passivo non bloccherà più lo scroll
-				canLeave = true;
-				unlockScroll();
-				const nextSection = document.getElementById('performance');
-				if (nextSection) {
-					nextSection.scrollIntoView({ behavior: 'smooth' });
-				}
-			}
-		} else if (e.deltaY < -20) {
-			// Scroll verso l'alto
-			if (textStep === 2) {
-				e.preventDefault();
-				// Richiude il gate se l'utente torna indietro alla prima scritta
-				canLeave = false;
-				// Commento solo il PERCHÉ: delega l'animazione all'helper esterno per rispettare la separazione architetturale di GSAP
-				animateQuizStep(1, {
-					onStepChange: () => { textStep = 1; }
-				});
-			} else if (textStep === 1) {
-				// Scroll up dalla prima scritta → torna all'intro
-				// preventScrollDuringQuiz già lascia passare questo evento
-				canLeave = true; // per sicurezza, assicura che il gate sia aperto
-			}
-		}
-	}
 </script>
-
-<svelte:window onwheel={handleSelectiveScroll} />
 
 <section
 	id="cerchi-quiz"
 	class="quiz-wrapper"
 	aria-label="Quiz interattivo tra mente e fisico"
-	onwheel={handleVirtualScroll}
 	use:quizAnimation={{
 		quizState,
 		lockScroll,

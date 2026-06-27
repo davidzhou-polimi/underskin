@@ -3,6 +3,22 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { navbarSlide } from '$lib/actions/navbarSlide.js';
+	import { getLenis } from '$lib/stores/lenis.svelte.js';
+
+	/**
+	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
+	 * @param {number | HTMLElement} target
+	 */
+	function smoothScrollTo(target) {
+		const lenis = getLenis();
+		if (lenis) {
+			lenis.scrollTo(target);
+		} else if (typeof target === 'number') {
+			window.scrollTo({ top: target, behavior: 'smooth' });
+		} else {
+			target.scrollIntoView({ behavior: 'smooth' });
+		}
+	}
 	let {
 		hideThreshold = 50,
 		showThreshold = 150,
@@ -68,9 +84,9 @@
 		if (currentPath === link.path || (link.path === '/' && isHome) || (link.path.startsWith('/#') && isHome)) {
 			const target = document.getElementById(link.sectionId);
 			if (target) {
-				target.scrollIntoView({ behavior: 'smooth' });
+				smoothScrollTo(target);
 			} else {
-				window.scrollTo({ top: 0, behavior: 'smooth' });
+				smoothScrollTo(0);
 			}
 		} else {
 			await goto(link.path);
@@ -87,9 +103,9 @@
 			e.preventDefault();
 			const target = document.getElementById('hero');
 			if (target) {
-				target.scrollIntoView({ behavior: 'smooth' });
+				smoothScrollTo(target);
 			} else {
-				window.scrollTo({ top: 0, behavior: 'smooth' });
+				smoothScrollTo(0);
 			}
 		} else {
 			await goto('/');

@@ -1,6 +1,7 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
+    import { sectionPin } from "$lib/actions/sectionPin.js";
 
     /**
      * @typedef {Object} Props
@@ -41,6 +42,7 @@
 <section
     id="archetypes"
     class="archetype-section"
+    use:sectionPin
 >
     {#if title}
         <h3 class="section-title">{title}</h3>

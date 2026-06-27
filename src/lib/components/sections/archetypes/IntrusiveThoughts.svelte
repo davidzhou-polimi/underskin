@@ -48,65 +48,6 @@
     isIntroDone = val;
   }
 
-  // Utilizzato un let semplice anziché $state per evitare l'auto-tracking di Svelte 5 all'interno del blocco $effect
-  let hasLocked = false;
-  let touchStart = 0;
-
-  /**
-   * Blocca gli eventi wheel che spingono lo scroll verso il basso (deltaY > 0)
-   * @param {WheelEvent} event
-   */
-  function preventScrollDown(event) {
-    // Consente lo zoom nativo (il pinch-to-zoom su trackpad invia ctrlKey: true)
-    if (event.ctrlKey) return;
-
-    if (event.deltaY > 0) {
-      event.preventDefault();
-    }
-  }
-
-  /**
-   * Traccia l'inizio del tocco su dispositivi mobile
-   * @param {TouchEvent} event
-   */
-  function handleTouchStart(event) {
-    if (event.touches.length > 0) {
-      touchStart = event.touches[0].clientY;
-    }
-  }
-
-  /**
-   * Blocca i gesti touch verticali che causano uno scroll verso il basso (swipe verso l'alto)
-   * @param {TouchEvent} event
-   */
-  function handleTouchMove(event) {
-    // Consente lo zoom multitouch su dispositivi mobile
-    if (event.touches.length > 1) return;
-
-    if (event.touches.length > 0) {
-      const touchCurrent = event.touches[0].clientY;
-      const diffY = touchStart - touchCurrent;
-      if (diffY > 0) {
-        event.preventDefault();
-      }
-    }
-  }
-
-  /**
-   * Blocca la pressione di tasti di navigazione orientati verso il basso
-   * @param {KeyboardEvent} event
-   */
-  function preventKeysDown(event) {
-    const keysToBlock = ['ArrowDown', 'PageDown', ' '];
-    if (keysToBlock.includes(event.key)) {
-      // Consente lo scroll-up tramite Shift + Barra Spaziatrice
-      if (event.key === ' ' && event.shiftKey) {
-        return;
-      }
-      event.preventDefault();
-    }
-  }
-
   /**
    * Ripristina tutti i pensieri allo stato iniziale coperto/interattivo per consentire la riesecuzione dello scroll
    */
@@ -116,37 +57,8 @@
     isIntroDone = false;
   }
 
-  // Gestione reattiva dello scroll-lock monodirezionale e posizionamento della sezione
-  $effect(() => {
-    const shouldLock = isIntroDone && activeCount > 0 && !hasCompletedOnce;
-    
-    if (shouldLock) {
-      window.addEventListener('wheel', preventScrollDown, { passive: false });
-      window.addEventListener('touchstart', handleTouchStart, { passive: true });
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('keydown', preventKeysDown, { passive: false });
-      
-      // Allinea la sezione una sola volta all'avvio del blocco
-      if (!hasLocked) {
-        hasLocked = true;
-        container.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      window.removeEventListener('wheel', preventScrollDown);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('keydown', preventKeysDown);
-      hasLocked = false;
-    }
-
-    return () => {
-      // Rimozione completa dei listener in fase di distruzione del componente
-      window.removeEventListener('wheel', preventScrollDown);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('keydown', preventKeysDown);
-    };
-  });
+  // Commento solo il PERCHÉ: il blocco scroll (giù bloccato finché i pensieri non sono dispersi, su libero) è
+  // ora interamente gestito dall'action thoughtsIntro tramite lo store Lenis (lock direzionale in fase capture).
 </script>
 
 <section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts, hasCompletedOnce }}>

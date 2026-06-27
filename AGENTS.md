@@ -32,7 +32,13 @@ I file in `src/lib/styles/tokens/` sono **read-only per default**.
 ---
 
 ## Stack
-- SvelteKit 2 + Svelte 5 (runes) + GSAP 3
+- SvelteKit 2 + Svelte 5 (runes) + GSAP 3 (ScrollTrigger + Observer)
+- Smooth scroll: `lenis` — istanza singleton creata nel root layout ed esposta da
+  `stores/lenis.svelte.js`. Lenis è il motore di scroll globale (smooth wheel, `syncTouch:false`),
+  sincronizzato con ScrollTrigger via `gsap.ticker` + `lenis.on('scroll', ScrollTrigger.update)`.
+  Lock/scroll programmatici passano dalle helper dello store (`lockScroll`/`unlockScroll`/`scrollTo`,
+  e `lockScrollDown`/`unlockScrollDown` per il blocco direzionale dei giochini),
+  mai da `preventDefault`/`window.scrollTo`/`scrollIntoView` diretti.
 - Build: Vite 8 + `@sveltejs/adapter-static`
 - Reset CSS: `modern-normalize`
 - **ES6+ vanilla JS** – niente TypeScript, nessun file `.ts`

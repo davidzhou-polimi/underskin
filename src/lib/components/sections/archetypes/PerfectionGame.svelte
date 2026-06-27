@@ -37,87 +37,8 @@
 		}
 	});
 
-	// Il blocco si attiva solo se l'intro è completata e l'utente non ha mai giocato
-	const shouldLock = $derived(isIntroDone && !hasCompletedOnce);
-
-	let hasLocked = false;
-	let touchStart = 0;
-
-	/**
-	 * Blocca lo scorrimento verso il basso da tastiera/rotella
-	 * @param {WheelEvent} event
-	 */
-	function preventScrollDown(event) {
-		if (event.ctrlKey) return;
-		if (event.deltaY > 0) {
-			event.preventDefault();
-		}
-	}
-
-	/**
-	 * Registra l'inizio del tocco su touch screen
-	 * @param {TouchEvent} event
-	 */
-	function handleTouchStart(event) {
-		if (event.touches.length > 0) {
-			touchStart = event.touches[0].clientY;
-		}
-	}
-
-	/**
-	 * Blocca i gesti touch verticali orientati verso il basso
-	 * @param {TouchEvent} event
-	 */
-	function handleTouchMove(event) {
-		if (event.touches.length > 1) return;
-		if (event.touches.length > 0) {
-			const touchCurrent = event.touches[0].clientY;
-			const diffY = touchStart - touchCurrent;
-			if (diffY > 0) {
-				event.preventDefault();
-			}
-		}
-	}
-
-	/**
-	 * Impedisce l'uso dei tasti di navigazione orientati verso il basso
-	 * @param {KeyboardEvent} event
-	 */
-	function preventKeysDown(event) {
-		const keysToBlock = ['ArrowDown', 'PageDown', 'End'];
-		if (keysToBlock.includes(event.key)) {
-			event.preventDefault();
-		}
-	}
-
-	// Gestione dei listener dello scroll lock legati reattivamente a shouldLock
-	$effect(() => {
-		if (shouldLock) {
-			window.addEventListener('wheel', preventScrollDown, { passive: false });
-			window.addEventListener('touchstart', handleTouchStart, { passive: true });
-			window.addEventListener('touchmove', handleTouchMove, { passive: false });
-			window.addEventListener('keydown', preventKeysDown, { passive: false });
-
-			// Allinea lo schermo al centro della sezione solo una volta all'avvio del blocco
-			if (!hasLocked && container) {
-				hasLocked = true;
-				container.scrollIntoView({ behavior: 'smooth' });
-			}
-		} else {
-			window.removeEventListener('wheel', preventScrollDown);
-			window.removeEventListener('touchstart', handleTouchStart);
-			window.removeEventListener('touchmove', handleTouchMove);
-			window.removeEventListener('keydown', preventKeysDown);
-			hasLocked = false;
-		}
-
-		return () => {
-			window.removeEventListener('wheel', preventScrollDown);
-			window.removeEventListener('touchstart', handleTouchStart);
-			window.removeEventListener('touchmove', handleTouchMove);
-			window.removeEventListener('keydown', preventKeysDown);
-		};
-	});
+	// Commento solo il PERCHÉ: il blocco scroll (giù bloccato finché l'utente non gioca un tentativo, su libero)
+	// è ora interamente gestito dall'action perfectionIntro tramite lo store Lenis (lock direzionale in capture).
 
 	/**
 	 * Callback invocata dall'azione Svelte al variare dell'intro
@@ -180,7 +101,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="perfection-container" bind:this={container} use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset }}>
+<section class="perfection-container" bind:this={container} use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset, hasCompletedOnce }}>
 	
 	<div class="header-text">
 		<h2 class="title">Quanto è difficile la perfezione?</h2>

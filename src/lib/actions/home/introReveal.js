@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
+import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 
 if (typeof window !== 'undefined') {
 	gsap.registerPlugin(ScrollTrigger);
@@ -16,22 +17,25 @@ export function introReveal(node) {
 	/** @type {(() => void) | undefined} */
 	let handleMouseLeave;
 
-	/** @type {((e: WheelEvent) => void) | undefined} */
-	let handleWheel;
-	/** @type {((e: TouchEvent) => void) | undefined} */
-	let handleTouchStart;
-	/** @type {((e: TouchEvent) => void) | undefined} */
-	let handleTouchMove;
+	// Commento solo il PERCHÉ: quando si arriva da un archetipo il posizionamento lo gestisce cinematicScroll,
+	// quindi l'intro non deve bloccare lo scroll né attivarsi.
+	const fromArchetype =
+		typeof window !== 'undefined' &&
+		new URLSearchParams(window.location.search).get('fromArchetype') === 'true';
 
-	let isLocked = typeof window !== 'undefined' ? window.scrollY < 10 : true;
+	let isLocked = !fromArchetype && (typeof window !== 'undefined' ? window.scrollY < 10 : true);
 	let isTransitioning = false;
-	let startY = 0;
+	// L'uscita è abilitata solo quando l'animazione di entrata è completa (lo scroll-hint è comparso).
+	let introRevealed = false;
 
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
 
 	const ctx = gsap.context(() => {
-		const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+		const tl = gsap.timeline({
+			defaults: { ease: 'power2.out' },
+			onComplete: () => { introRevealed = true; }
+		});
 
 		// Commento solo il PERCHÉ: Anima la crescita del raggio della sfera gradiente da 0 al raggio intro configurato, in sincrono con l'ingresso dei cerchi geometrici.
 		const canvas = /** @type {any} */ (document.querySelector('.interactive-gradient-canvas'));
@@ -220,15 +224,20 @@ export function introReveal(node) {
 			if (isTransitioning) return;
 			isTransitioning = true;
 
+			// Difensivo: chiude la timeline d'entrata per evitare conflitti di tween con l'uscita.
+			tl.kill();
 			if (activeTimeline) activeTimeline.kill();
 
 			activeTimeline = gsap.timeline({
 				onComplete: () => {
-					isLocked = false;
 					isTransitioning = false;
 					isIntroActive = false;
-					// Commento solo il PERCHÉ: riposiziona la finestra a 105px per aggiornare lo store del gradiente e sbloccare lo scorrimento normale.
-					window.scrollTo(0, 105);
+					unlock();
+					// Commento solo il PERCHÉ: riposiziona a 105px per aggiornare lo store del gradiente e sbloccare
+					// lo scorrimento normale; force perché Lenis è appena ripartito e immediate evita lo scatto animato.
+					const lenis = getLenis();
+					if (lenis) lenis.scrollTo(105, { immediate: true, force: true });
+					else window.scrollTo(0, 105);
 				}
 			});
 
@@ -284,12 +293,15 @@ export function introReveal(node) {
 		function triggerEntry() {
 			if (isTransitioning) return;
 			isTransitioning = true;
+			// Finché l'entrata non è ricompletata, l'uscita resta gatata.
+			introRevealed = false;
 
 			if (activeTimeline) activeTimeline.kill();
 
 			activeTimeline = gsap.timeline({
 				onComplete: () => {
 					isTransitioning = false;
+					introRevealed = true;
 				}
 			});
 
@@ -355,49 +367,32 @@ export function introReveal(node) {
 			}
 		}
 
-		// Commento solo il PERCHÉ: intercetta lo scroll per bloccare la pagina in cima e attivare la dissolvenza centrata al primo movimento verso il basso.
-		/** @param {WheelEvent} e */
-		handleWheel = (e) => {
-			if (isLocked) {
-				if (e.cancelable) e.preventDefault();
-				if (e.deltaY > 0 && !isTransitioning) {
-					triggerExit();
-				}
-			}
-		};
+		// Commento solo il PERCHÉ: stesso meccanismo dei giochini — lock direzionale verso il basso in fase
+		// capture (niente lenis.stop(), che lascerebbe la scrollbar limitata al viewport e un blocco non
+		// affidabile). La callback rileva l'intento di scendere e fa partire l'uscita, ma solo dopo che lo
+		// scroll-hint è comparso (entrata completata). In cima alla pagina lo scroll-su è comunque inerte.
+		function lock() {
+			isLocked = true;
+			lockScrollDown(() => {
+				if (isLocked && introRevealed && !isTransitioning) triggerExit();
+			});
+		}
 
-		/** @param {TouchEvent} e */
-		handleTouchStart = (e) => {
-			if (e.touches.length > 0) {
-				startY = e.touches[0].clientY;
-			}
-		};
+		function unlock() {
+			isLocked = false;
+			unlockScrollDown();
+		}
 
-		/** @param {TouchEvent} e */
-		handleTouchMove = (e) => {
-			if (isLocked) {
-				if (e.cancelable) e.preventDefault();
-				if (!isTransitioning && e.touches.length > 0) {
-					const currentY = e.touches[0].clientY;
-					const diffY = startY - currentY;
-					if (diffY > 10) {
-						triggerExit();
-					}
-				}
-			}
-		};
-
-		window.addEventListener('wheel', handleWheel, { passive: false });
-		window.addEventListener('touchstart', handleTouchStart, { passive: true });
-		window.addEventListener('touchmove', handleTouchMove, { passive: false });
+		// Lo stato iniziale del lock dipende dalla posizione di scroll al mount (e non da fromArchetype).
+		if (isLocked) lock();
 
 		ScrollTrigger.create({
 			trigger: node,
 			start: 'top top',
 			end: 'top -10',
 			onEnterBack: () => {
-				isLocked = true;
 				isIntroActive = true;
+				lock();
 				triggerEntry();
 			}
 		});
@@ -407,9 +402,7 @@ export function introReveal(node) {
 		destroy() {
 			if (handleMouseMove) node.removeEventListener('mousemove', handleMouseMove);
 			if (handleMouseLeave) node.removeEventListener('mouseleave', handleMouseLeave);
-			if (handleWheel) window.removeEventListener('wheel', handleWheel);
-			if (handleTouchStart) window.removeEventListener('touchstart', handleTouchStart);
-			if (handleTouchMove) window.removeEventListener('touchmove', handleTouchMove);
+			unlockScrollDown();
 			ctx.revert();
 		}
 	};

@@ -1,9 +1,15 @@
-import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { getLenis } from '$lib/stores/lenis.svelte.js';
+
+// Commento solo il PERCHÉ: replica la curva power2.inOut di GSAP come easing per lenis.scrollTo, così la
+// transizione cinematica resta morbida e identica alla precedente implementazione basata su tween.
+/** @param {number} t */
+const easeInOutPower2 = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 /**
  * Svelte Action per gestire lo scorrimento cinematico e morbido dopo la provenienza da un archetipo.
- * Evita scatti e flash visivi coordinando il posizionamento istantaneo e lo scroll morbido con GSAP.
- * 
+ * Evita scatti e flash visivi coordinando il posizionamento istantaneo e lo scroll morbido con Lenis.
+ *
  * @param {HTMLElement} node - L'elemento a cui è applicata l'azione (il contenitore principale della pagina)
  */
 export function cinematicScroll(node) {
@@ -14,44 +20,44 @@ export function cinematicScroll(node) {
 
 	// Seleziona gli elementi necessari nel DOM per orchestrare lo scorrimento
 	const archetypesSection = document.getElementById('archetypes');
-	const outroSection = document.querySelector('.outro-scroll-container');
+	const outroSection = /** @type {HTMLElement | null} */ (document.querySelector('.outro-scroll-container'));
 
 	if (!archetypesSection || !outroSection) return;
 
 	let rafId = 0;
-	/** @type {gsap.core.Tween | null} */
-	let tween = null;
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let scrollTimeout = null;
 
-	// Utilizziamo requestAnimationFrame per assicurarci che la pagina sia montata e che lo scroll nativo iniziale sia terminato
+	// requestAnimationFrame assicura che la pagina sia montata e lo scroll iniziale terminato
 	rafId = requestAnimationFrame(() => {
-		// 1. Posiziona istantaneamente la finestra alla sezione archetipi
-		archetypesSection.scrollIntoView({ behavior: 'instant' });
+		// Commento solo il PERCHÉ: i pin di Preface/Quiz/#archetypes creano pin-spacer che allungano il
+		// documento di varie schermate. Senza refresh, l'offset di #archetypes è calcolato prima degli spacer
+		// e si atterra sul preface: forziamo il ricalcolo dei trigger PRIMA di posizionare.
+		ScrollTrigger.refresh();
 
-		// 2. Avvia lo scorrimento cinematico morbido dopo una pausa di 600ms
-		// Aumentiamo leggermente l'attesa per dare stabilità visiva prima del movimento
+		// 1. Posiziona istantaneamente la finestra alla sezione archetipi (force: anche se Lenis è fermo)
+		const lenis = getLenis();
+		// Commento solo il PERCHÉ: il ResizeObserver di Lenis è async, quindi dopo il refresh le sue dimensioni
+		// interne sono ancora stale e scrollTo clamperebbe corto (atterrando sul preface): resize() sincrono le aggiorna.
+		lenis?.resize();
+		if (lenis) lenis.scrollTo(archetypesSection, { immediate: true, force: true });
+		else archetypesSection.scrollIntoView({ behavior: 'instant' });
+
+		// 2. Avvia lo scorrimento cinematico morbido dopo una pausa di stabilità visiva
 		scrollTimeout = setTimeout(() => {
-			const targetY = outroSection.getBoundingClientRect().top + window.scrollY;
-			const scrollObj = { y: window.scrollY };
+			const clearParam = () => {
+				const url = new URL(window.location.href);
+				url.searchParams.delete('fromArchetype');
+				window.history.replaceState({}, '', url.toString());
+			};
 
-			// Commento solo il PERCHÉ: utilizziamo GSAP anziché lo scroll smooth nativo del browser poiché quest'ultimo
-			// tende ad essere scattoso ed ha un'accelerazione rigida non modificabile, mentre una curva 'power2.inOut'
-			// garantisce una transizione morbida, graduale e senza interruzioni visive.
-			tween = gsap.to(scrollObj, {
-				y: targetY,
-				duration: 1.8, // Esteso a 2.2 secondi per renderlo ancora più morbido ed elegante
-				ease: 'power2.inOut', // Decelerazione e accelerazione morbide
-				onUpdate: () => {
-					window.scrollTo(0, scrollObj.y);
-				},
-				onComplete: () => {
-					// Rimuove il parametro dall'URL per evitare la riesecuzione al ricaricamento della pagina
-					const url = new URL(window.location.href);
-					url.searchParams.delete('fromArchetype');
-					window.history.replaceState({}, '', url.toString());
-				}
-			});
+			const l = getLenis();
+			if (l) {
+				l.scrollTo(outroSection, { duration: 1.8, easing: easeInOutPower2, force: true, onComplete: clearParam });
+			} else {
+				outroSection.scrollIntoView({ behavior: 'smooth' });
+				clearParam();
+			}
 		}, 500);
 	});
 
@@ -59,9 +65,9 @@ export function cinematicScroll(node) {
 		destroy() {
 			cancelAnimationFrame(rafId);
 			if (scrollTimeout) clearTimeout(scrollTimeout);
-			if (tween) {
-				tween.kill();
-			}
+			// Interrompe un eventuale scrollTo in corso fissando la posizione attuale
+			const l = getLenis();
+			if (l) l.scrollTo(window.scrollY, { immediate: true });
 		}
 	};
 }

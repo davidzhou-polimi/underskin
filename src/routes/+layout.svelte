@@ -1,9 +1,17 @@
 <script>
     import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
+    import { afterNavigate } from '$app/navigation';
+    import Lenis from 'lenis';
+    import 'lenis/dist/lenis.css';
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+    import { Observer } from 'gsap/dist/Observer';
     import "modern-normalize/modern-normalize.css";
     import "$lib/styles/tokens.css";
     import favicon from "$lib/assets/favicon.svg";
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
+    import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
     import { PAGE_META, DEFAULT_META } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
@@ -12,9 +20,55 @@
 
     let tooltipState = $derived(tooltip.current);
 
-    // Commento solo il PERCHÉ: assicura che il client si posizioni in cima alla pagina ad ogni caricamento iniziale o refresh completo
+    // Commento solo il PERCHÉ: Lenis/Snap vanno creati nel corpo script del layout — non in onMount — perché
+    // le use:action delle sezioni (es. introReveal, snapSection) girano durante il mount dei figli, PRIMA che
+    // l'onMount del layout (genitore) venga eseguito: lo store deve già esporre le istanze a quel punto.
+    // Con prefers-reduced-motion non istanziamo Lenis e lasciamo lo scroll nativo.
+    const reducedMotion = browser && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (browser && !reducedMotion) {
+        gsap.registerPlugin(ScrollTrigger, Observer);
+
+        const lenis = new Lenis({ smoothWheel: true, syncTouch: false });
+        setLenis(lenis);
+    }
+
+    // Commento solo il PERCHÉ: il RAF condiviso (gsap.ticker guida lenis.raf) e il wiring di ScrollTrigger
+    // si attivano in onMount, quando il DOM è pronto; nessun secondo requestAnimationFrame per evitare desync.
     onMount(() => {
-        window.scrollTo(0, 0);
+        const lenis = getLenis();
+        if (!lenis) {
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        lenis.on('scroll', ScrollTrigger.update);
+
+        /** @param {number} time */
+        const tick = (time) => lenis.raf(time * 1000);
+        gsap.ticker.add(tick);
+        gsap.ticker.lagSmoothing(0);
+
+        lenis.scrollTo(0, { immediate: true });
+
+        return () => {
+            gsap.ticker.remove(tick);
+        };
+    });
+
+    // Commento solo il PERCHÉ: il layout (e quindi Lenis) persiste tra le navigazioni client-side: a ogni
+    // cambio rotta ricalcoliamo i trigger sulle nuove altezze e riportiamo lo scroll in cima — tranne quando
+    // arriviamo con ?fromArchetype, dove il posizionamento lo gestisce cinematicScroll (non va sovrascritto a 0).
+    afterNavigate(() => {
+        ScrollTrigger.refresh();
+        const fromArchetype =
+            typeof window !== 'undefined' &&
+            new URLSearchParams(window.location.search).get('fromArchetype') === 'true';
+        if (fromArchetype) return;
+
+        const lenis = getLenis();
+        if (lenis) lenis.scrollTo(0, { immediate: true });
+        else window.scrollTo(0, 0);
     });
 
     // Nasconde il tooltip ad ogni cambio di rotta: onmouseleave non si attiva

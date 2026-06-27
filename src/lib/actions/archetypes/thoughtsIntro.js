@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -37,6 +38,24 @@ if (typeof window !== 'undefined') {
 export function thoughtsIntro(node, params) {
   const { thoughts, onIntroChange, onReset } = params;
   let hasCompletedOnce = params.hasCompletedOnce ?? false;
+
+  // Commento solo il PERCHÉ: blocco direzionale verso il basso mentre la sezione è in cima e l'attività non è
+  // completata; la risalita resta libera. Centralizzato nello store (listener in fase capture, Lenis-aware).
+  let downLocked = false;
+  /** @param {boolean} active */
+  function setDownLock(active) {
+    if (active && !hasCompletedOnce) {
+      if (!downLocked) {
+        downLocked = true;
+        lockScrollDown();
+        // Incolla la sezione al top, uccidendo l'eventuale overshoot di inerzia di Lenis
+        getLenis()?.scrollTo(node, { immediate: true, force: true });
+      }
+    } else if (downLocked) {
+      downLocked = false;
+      unlockScrollDown();
+    }
+  }
 
   // Utilizzo del context per isolare le istanze e garantire un revert pulito in caso di distruzione del DOM
   const ctx = gsap.context(() => {
@@ -197,6 +216,15 @@ export function thoughtsIntro(node, params) {
       }
     });
 
+    // Terzo ScrollTrigger: blocca lo scroll verso il basso quando la sezione è in cima alla viewport,
+    // finché l'utente non ha disperso tutti i pensieri. La risalita resta sempre consentita.
+    ScrollTrigger.create({
+      trigger: node,
+      start: 'top top',
+      end: 'bottom top',
+      onToggle: (self) => setDownLock(self.isActive)
+    });
+
   }, node);
 
   return {
@@ -206,9 +234,12 @@ export function thoughtsIntro(node, params) {
      */
     update(newParams) {
       hasCompletedOnce = newParams.hasCompletedOnce ?? false;
+      // Completata l'attività, rilascia subito il blocco verso il basso
+      if (hasCompletedOnce) setDownLock(false);
     },
     destroy() {
-      // Revert di GSAP per rimuovere tutti i gestori ed evitare leak di memoria
+      // Rilascia il blocco e fa il revert di GSAP per evitare leak di memoria/listener orfani
+      setDownLock(false);
       ctx.revert();
     }
   };
