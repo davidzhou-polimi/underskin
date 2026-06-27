@@ -73,6 +73,7 @@
 		position: relative;
 		z-index: 1;
 		margin: 0;
+        margin-top: var(--spacing-2);
 		font-family: var(--font-family-base);
 		font-size: var(--text-title-size);
 		font-weight: var(--text-title-weight);

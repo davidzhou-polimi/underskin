@@ -81,7 +81,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 						coverage: 1.0,
 						speed: 1.1,
 						focusCenter: [0.5, 0.5],
-						focusRadius: [0.25, 0.25]
+						focusRadius: [0.24, 0.24]
 					}
 				: isPastFirstViewport
 					? { colors, coverage: 0.35, speed: 0.6 }
