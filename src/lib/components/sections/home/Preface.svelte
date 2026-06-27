@@ -48,7 +48,7 @@
         <div class="reveal-line final-phrase">
             <span>Tutto per soli</span>
             <span
-                class="break-line gradient-text animate-gradient-text dynamic-archetypes"
+                class="gradient-text animate-gradient-text dynamic-archetypes"
             >
                 120 secondi di performance
             </span>
@@ -114,11 +114,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-    }
-
-    .break-line {
-        display: block;
-        margin-top: var(--spacing-1);
     }
 
     /* Consuma i token senza dichiarare o sovrascrivere variabili CSS locali */
