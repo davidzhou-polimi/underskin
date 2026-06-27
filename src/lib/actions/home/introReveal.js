@@ -15,6 +15,20 @@ export function introReveal(node) {
 	/** @type {(() => void) | undefined} */
 	let handleMouseLeave;
 
+	/** @type {((e: WheelEvent) => void) | undefined} */
+	let handleWheel;
+	/** @type {((e: TouchEvent) => void) | undefined} */
+	let handleTouchStart;
+	/** @type {((e: TouchEvent) => void) | undefined} */
+	let handleTouchMove;
+
+	let isLocked = typeof window !== 'undefined' ? window.scrollY < 10 : true;
+	let isTransitioning = false;
+	let startY = 0;
+
+	/** @type {gsap.core.Timeline | null} */
+	let activeTimeline = null;
+
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
@@ -44,13 +58,13 @@ export function introReveal(node) {
 
 		tl.from(
 			node.querySelector('.intro-title'),
-			{ opacity: 0, yPercent: 15, duration: 1.0 },
-			'-=0.6'
+			{ opacity: 0, yPercent: 15, duration: 1.6 },
+			'-=0.4'
 		);
 
 		tl.from(
 			node.querySelector('.scroll-hint-content'),
-			{ opacity: 0, y: 12, duration: 0.8 },
+			{ opacity: 0, y: 12, duration: 1.0 },
 			'+=0'
 		);
 
@@ -192,79 +206,185 @@ export function introReveal(node) {
 			node.addEventListener('mouseleave', handleMouseLeave);
 		}
 
-		// Commento solo il PERCHÉ: Dissolve gli elementi dell'intro quando si scende e li fa ricomparire quando si torna in cima, disattivando l'effetto mouse
-		ScrollTrigger.create({
-			trigger: node,
-			start: 'top top',
-			end: 'top -100',
-			onLeave: () => {
-				isIntroActive = false;
+		function triggerExit() {
+			if (isTransitioning) return;
+			isTransitioning = true;
 
-				// Reset delle traslazioni del mouse tramite quickTo per evitare che gsap.to distrugga i tween interni di quickTo
-				titleX(0);
-				titleY(0);
-				titleRotX(0);
-				titleRotY(0);
-				circlesX(0);
-				circlesY(0);
-				circlesRotX(0);
-				circlesRotY(0);
+			if (activeTimeline) activeTimeline.kill();
 
-				gsap.to(node.querySelectorAll('.intro-circle'), {
+			activeTimeline = gsap.timeline({
+				onComplete: () => {
+					isLocked = false;
+					isTransitioning = false;
+					isIntroActive = false;
+					// Commento solo il PERCHÉ: riposiziona la finestra a 105px per aggiornare lo store del gradiente e sbloccare lo scorrimento normale.
+					window.scrollTo(0, 105);
+				}
+			});
+
+			const introCircles = node.querySelectorAll('.intro-circle');
+			const introTitle = node.querySelector('.intro-title');
+			const scrollHintEl = node.querySelector('.scroll-hint');
+
+			if (introCircles.length > 0) {
+				activeTimeline.to(introCircles, {
 					opacity: 0,
-					scale: 0.7,
+					scale: 1.3,
 					transformOrigin: 'center center',
 					stagger: 0.05,
-					duration: 0.4,
-					overwrite: 'auto',
+					duration: 0.8,
 					ease: 'power2.inOut'
-				});
-				gsap.to(title, {
+				}, 0);
+			}
+
+			if (introTitle) {
+				activeTimeline.to(introTitle, {
 					opacity: 0,
 					yPercent: -15,
-					duration: 0.4,
-					overwrite: 'auto',
+					duration: 0.8,
 					ease: 'power2.inOut'
-				});
-				gsap.to(scrollHint, {
+				}, 0);
+			}
+
+			if (scrollHintEl) {
+				activeTimeline.to(scrollHintEl, {
 					opacity: 0,
 					y: 20,
-					duration: 0.3,
-					overwrite: 'auto',
-					ease: 'power2.inOut'
-				});
-			},
-			onEnterBack: () => {
-				isIntroActive = true;
-
-				gsap.to(node.querySelectorAll('.intro-circle'), {
-					opacity: 1,
-					scale: 1,
-					transformOrigin: 'center center',
-					stagger: 0.08,
 					duration: 0.6,
-					overwrite: 'auto',
-					ease: 'power2.out'
-				});
-				gsap.fromTo(title,
+					ease: 'power2.inOut'
+				}, 0);
+			}
+
+			if (gradientRenderer) {
+				const proxy = gradientRenderer.getAnimatableState();
+				activeTimeline.to(proxy, {
+					focusRx: 2.0,
+					focusRy: 2.0,
+					coverage: 0.35,
+					duration: 0.8,
+					ease: 'power2.inOut',
+					onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+				}, 0);
+			}
+		}
+
+		function triggerEntry() {
+			if (isTransitioning) return;
+			isTransitioning = true;
+
+			if (activeTimeline) activeTimeline.kill();
+
+			activeTimeline = gsap.timeline({
+				onComplete: () => {
+					isTransitioning = false;
+				}
+			});
+
+			const introCircles = node.querySelectorAll('.intro-circle');
+			const introTitle = node.querySelector('.intro-title');
+			const scrollHintEl = node.querySelector('.scroll-hint');
+
+			// Commento solo il PERCHÉ: Fa rientrare per primo il gradiente stringendolo al centro a raggio 0.25.
+			if (gradientRenderer) {
+				const proxy = gradientRenderer.getAnimatableState();
+				activeTimeline.to(proxy, {
+					focusRx: 0.25,
+					focusRy: 0.25,
+					coverage: 1.0,
+					duration: 0.8,
+					ease: 'power2.out',
+					onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+				}, 0);
+			}
+
+			// Commento solo il PERCHÉ: Mostra i cerchi rientrandoli da una scala maggiore di 1.2 per dare un senso di ri-condensazione geometrica (inizia a 0.6s).
+			if (introCircles.length > 0) {
+				activeTimeline.fromTo(introCircles,
+					{ opacity: 0, scale: 1.2 },
+					{
+						opacity: 1,
+						scale: 1,
+						transformOrigin: 'center center',
+						stagger: 0.08,
+						duration: 0.8,
+						ease: 'power2.out'
+					},
+					0.6
+				);
+			}
+
+			// Commento solo il PERCHÉ: Fa ricomparire i testi solo dopo che i cerchi sono quasi del tutto comparsi per creare una sequenza di svelamento logico-spaziale (inizia a 1.2s/1.5s).
+			if (introTitle) {
+				activeTimeline.fromTo(introTitle,
 					{ opacity: 0, yPercent: 15 },
 					{
 						opacity: 1,
 						yPercent: 0,
-						duration: 0.6,
-						delay: 0.45,
-						overwrite: 'auto',
+						duration: 1.4,
 						ease: 'power2.out'
-					}
+					},
+					1.2
 				);
-				gsap.to(scrollHint, {
-					opacity: 1,
-					y: 0,
-					duration: 0.6,
-					delay: 0.8,
-					overwrite: 'auto',
-					ease: 'power2.out'
-				});
+			}
+
+			if (scrollHintEl) {
+				activeTimeline.fromTo(scrollHintEl,
+					{ opacity: 0, y: 12 },
+					{
+						opacity: 1,
+						y: 0,
+						duration: 1.0,
+						ease: 'power2.out'
+					},
+					1.5
+				);
+			}
+		}
+
+		// Commento solo il PERCHÉ: intercetta lo scroll per bloccare la pagina in cima e attivare la dissolvenza centrata al primo movimento verso il basso.
+		/** @param {WheelEvent} e */
+		handleWheel = (e) => {
+			if (isLocked) {
+				if (e.cancelable) e.preventDefault();
+				if (e.deltaY > 0 && !isTransitioning) {
+					triggerExit();
+				}
+			}
+		};
+
+		/** @param {TouchEvent} e */
+		handleTouchStart = (e) => {
+			if (e.touches.length > 0) {
+				startY = e.touches[0].clientY;
+			}
+		};
+
+		/** @param {TouchEvent} e */
+		handleTouchMove = (e) => {
+			if (isLocked) {
+				if (e.cancelable) e.preventDefault();
+				if (!isTransitioning && e.touches.length > 0) {
+					const currentY = e.touches[0].clientY;
+					const diffY = startY - currentY;
+					if (diffY > 10) {
+						triggerExit();
+					}
+				}
+			}
+		};
+
+		window.addEventListener('wheel', handleWheel, { passive: false });
+		window.addEventListener('touchstart', handleTouchStart, { passive: true });
+		window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+		ScrollTrigger.create({
+			trigger: node,
+			start: 'top top',
+			end: 'top -10',
+			onEnterBack: () => {
+				isLocked = true;
+				isIntroActive = true;
+				triggerEntry();
 			}
 		});
 	}, node);
@@ -273,6 +393,9 @@ export function introReveal(node) {
 		destroy() {
 			if (handleMouseMove) node.removeEventListener('mousemove', handleMouseMove);
 			if (handleMouseLeave) node.removeEventListener('mouseleave', handleMouseLeave);
+			if (handleWheel) window.removeEventListener('wheel', handleWheel);
+			if (handleTouchStart) window.removeEventListener('touchstart', handleTouchStart);
+			if (handleTouchMove) window.removeEventListener('touchmove', handleTouchMove);
 			ctx.revert();
 		}
 	};
