@@ -4,7 +4,7 @@
 	import { Observer } from 'gsap/dist/Observer';
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
-	import { lockScroll, unlockScroll, scrollTo } from '$lib/stores/lenis.svelte.js';
+	import { lockScroll, unlockScroll, scrollTo, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 
 	if (typeof window !== 'undefined') {
@@ -82,6 +82,8 @@
 		quizState,
 		lockScroll,
 		unlockScroll,
+		lockScrollDown,
+		unlockScrollDown,
 		onStateChange: (s) => quizState = s,
 		onStepChange: (step) => textStep = step,
 		onEnterBack: () => {

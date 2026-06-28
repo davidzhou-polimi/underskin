@@ -10,6 +10,8 @@ if (typeof window !== 'undefined') {
  * @property {string} quizState - Lo stato reattivo del quiz ('choosing' | 'animating' | 'results')
  * @property {(() => void)} lockScroll - Funzione per bloccare lo scroll della pagina
  * @property {(() => void)} unlockScroll - Funzione per sbloccare lo scroll della pagina
+ * @property {(() => void)} lockScrollDown - Funzione per bloccare lo scroll verso il basso
+ * @property {(() => void)} unlockScrollDown - Funzione per sbloccare lo scroll verso il basso
  * @property {((state: string) => void)} onStateChange - Callback per notificare il cambio di stato a Svelte
  * @property {((step: number) => void)} onStepChange - Callback per notificare il cambio di step a Svelte
  * @property {(() => void)} [onEnterBack] - Callback chiamata quando l'utente rientra nella sezione scrollando dall'alto
@@ -21,7 +23,7 @@ if (typeof window !== 'undefined') {
  * @param {QuizAnimationParams} params - I parametri iniziali di configurazione e le callback
  */
 export function quizAnimation(node, params) {
-	let { quizState, onStateChange, onStepChange, lockScroll, unlockScroll } = params;
+	let { quizState, onStateChange, onStepChange, lockScroll, unlockScroll, lockScrollDown, unlockScrollDown } = params;
 	/** @type {() => void} */
 	let onEnterBack = params.onEnterBack ?? (() => {});
 	
@@ -45,11 +47,15 @@ export function quizAnimation(node, params) {
 
 			if (self.isActive && !circlesTriggered && quizState === 'choosing') {
 				circlesTriggered = true;
-				gsap.fromTo(node.querySelectorAll('.circle-container'), 
+				gsap.fromTo(node.querySelectorAll('.circle-container'),
 					{ opacity: 0, y: 50, scale: 0.8 },
 					{ opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.15 }
 				);
 			}
+
+			// Blocca lo scroll verso il basso solo finché l'utente non ha scelto
+			if (self.isActive && quizState === 'choosing') lockScrollDown();
+			if (!self.isActive) unlockScrollDown();
 		}
 	});
 
@@ -102,6 +108,7 @@ export function quizAnimation(node, params) {
 
 		quizState = 'animating';
 		onStateChange('animating');
+		unlockScrollDown();
 		lockScroll();
 
 		// Calcola lo spostamento Y necessario a centrare il quiz-body nella viewport
@@ -185,12 +192,15 @@ export function quizAnimation(node, params) {
 			quizState = newParams.quizState;
 			lockScroll = newParams.lockScroll;
 			unlockScroll = newParams.unlockScroll;
+			lockScrollDown = newParams.lockScrollDown;
+			unlockScrollDown = newParams.unlockScrollDown;
 			onStateChange = newParams.onStateChange;
 			onStepChange = newParams.onStepChange;
 			onEnterBack = newParams.onEnterBack ?? (() => {});
 		},
 		destroy() {
 			node.removeEventListener('click', handleBtnClick);
+			unlockScrollDown();
 			if (pinTrigger) pinTrigger.kill();
 			if (activeTimeline) activeTimeline.kill();
 		}

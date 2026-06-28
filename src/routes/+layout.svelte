@@ -136,4 +136,11 @@
         overflow-x: hidden;
         background-color: var(--background-primary);
     }
+
+    /* Il selettore html.lenis ha specificità (0,3,1) > (0,3,0) di Lenis: vince senza !important.
+       Impedisce che overflow:clip rimuova html come scroll container (causando thumb full-height). */
+    :global(html.lenis:not(.lenis-autoToggle).lenis-stopped) {
+        overflow: initial;
+    }
+
 </style>
