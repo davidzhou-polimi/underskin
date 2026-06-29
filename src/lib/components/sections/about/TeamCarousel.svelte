@@ -31,7 +31,7 @@
         {
             name: "Ziying Shao",
             type: "favorito",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/ziying-shao.webp",
         },
         {
             name: "Lucrezia Vallar",
