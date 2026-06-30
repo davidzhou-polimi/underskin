@@ -2,6 +2,7 @@
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import Button from "$lib/components/ui/Button.svelte";
     import { goto } from "$app/navigation";
+    import { navigationState } from "$lib/stores/navigationState.svelte.js";
 
     /**
      * @type {{
@@ -41,11 +42,9 @@
         allArchetypes.filter((item) => item.type !== archetype),
     );
 
-    // Reindirizziamo alla rotta radice salvando lo stato in sessionStorage per innescare la transizione automatica in modo invisibile nell'URL
+    // Reindirizziamo alla rotta radice impostando lo store per innescare la transizione cinematica
     const handleButtonClick = () => {
-        if (typeof window !== 'undefined') {
-            sessionStorage.setItem('fromArchetype', 'true');
-        }
+        navigationState.fromArchetype = true;
         goto("/");
     };
 </script>

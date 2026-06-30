@@ -12,6 +12,7 @@
     import favicon from "$lib/assets/favicon.svg";
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
+    import { navigationState } from "$lib/stores/navigationState.svelte.js";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
     import { PAGE_META, DEFAULT_META } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
@@ -58,13 +59,10 @@
 
     // Commento solo il PERCHÉ: il layout (e quindi Lenis) persiste tra le navigazioni client-side: a ogni
     // cambio rotta ricalcoliamo i trigger sulle nuove altezze e riportiamo lo scroll in cima — tranne quando
-    // arriviamo con ?fromArchetype, dove il posizionamento lo gestisce cinematicScroll (non va sovrascritto a 0).
+    // arriviamo da un archetipo, dove il posizionamento lo gestisce cinematicScroll (non va sovrascritto a 0).
     afterNavigate(() => {
         ScrollTrigger.refresh();
-        const fromArchetype =
-            typeof window !== 'undefined' &&
-            sessionStorage.getItem('fromArchetype') === 'true';
-        if (fromArchetype) return;
+        if (navigationState.fromArchetype) return;
 
         const lenis = getLenis();
         if (lenis) lenis.scrollTo(0, { immediate: true });
