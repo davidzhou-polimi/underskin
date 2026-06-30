@@ -74,15 +74,40 @@
 		}
 	});
 
-	// Reset del timer solo in caso di navigazione manuale (click dot / frecce)
+	// Restart dell'autoplay ogni volta che il carosello termina un movimento (drag, inerzia o navigazione)
 	$effect(() => {
-		// Registriamo activeIndex come dipendenza reattiva
-		// eslint-disable-next-line no-unused-expressions
-		activeIndex;
-		if (!motion.isDragging) {
+		if (!isMoving) {
 			motion.restartAutoplay();
-			// Commento solo il PERCHÉ: evitiamo di far ripartire l'autoplay se l'utente è in hover
+			// Commento solo il PERCHÉ: fermiamo l'autoplay se l'utente è in hover sulla card stabilizzata
 			if (hoveredIndex !== null) motion.pauseAutoplay();
+		}
+	});
+
+	// Commento solo il PERCHÉ: registriamo un mousemove temporaneo sul window solo quando la card è girata e in hover.
+	// Questo risolve i bug nativi del browser che perde/invia falsi eventi di mouseleave durante le rotazioni 3D.
+	$effect(() => {
+		if (isFlipped && hoveredIndex !== null) {
+			/** @param {MouseEvent} e */
+			const onWindowMouseMove = (e) => {
+				const currentHover = hoveredIndex;
+				if (currentHover === null) return;
+				const cardEls = document.querySelectorAll('.carousel-item');
+				const hoveredCardEl = cardEls[currentHover];
+				if (hoveredCardEl) {
+					const rect = hoveredCardEl.getBoundingClientRect();
+					const isInside = (
+						e.clientX >= rect.left &&
+						e.clientX <= rect.right &&
+						e.clientY >= rect.top &&
+						e.clientY <= rect.bottom
+					);
+					if (!isInside) {
+						hoveredIndex = null;
+					}
+				}
+			};
+			window.addEventListener('mousemove', onWindowMouseMove);
+			return () => window.removeEventListener('mousemove', onWindowMouseMove);
 		}
 	});
 
@@ -187,10 +212,6 @@
 		function onWindowMouseUp() {
 			if (!motion.isDragging) return;
 			motion.endDrag();
-
-			// Restart autoplay timer fresh after drag is completed
-			motion.restartAutoplay();
-			if (hoveredIndex !== null) motion.pauseAutoplay();
 			
 			// Commento solo il PERCHÉ: nascondiamo il tooltip al mouseup solo se l'utente ha rilasciato il mouse all'esterno della drag zone
 			if (!isMouseOverDragZone) {
@@ -225,10 +246,10 @@
 			<div
 				class="carousel-item"
 				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
-				onmouseleave={(e) => {
+				onmouseleave={() => {
 					if (!motion.isDragging) tooltip.hide();
-					// Commento solo il PERCHÉ: preveniamo il reset dell'hover se la card è girata ma il cursore è ancora fisicamente sopra il box
-					if (isFlipped && e.currentTarget.matches(':hover')) return;
+					// Commento solo il PERCHÉ: quando la card è girata deleghiamo la rimozione dell'hover al mousemove sul window per prevenire i bug di rotazione 3D
+					if (isFlipped) return;
 					hoveredIndex = null;
 				}}
 				onclick={i === activeIndex && !isMoving ? () => {
