@@ -76,9 +76,9 @@
         <div class="action-container">
             <Button
                 onclick={handleButtonClick}
-                ariaLabel="Torna alla narrazione"
+                ariaLabel="Vai alla conclusione"
             >
-                Torna alla narrazione
+                Vai alla conclusione
             </Button>
         </div>
     </div>
