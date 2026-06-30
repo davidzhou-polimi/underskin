@@ -26,7 +26,9 @@ export function outroReveal(node, params) {
 	const descriptionEls = node.querySelectorAll('.circle-description');
 
 	let activeIndex = -1;
+	/** @type {gsap.core.Tween | null} */
 	let currentTween = null;
+	/** @type {gsap.core.Tween[]} */
 	let currentTextTweens = [];
 
 	// Valore numerico corrente utilizzato come stato per il tween discreto del cerchio

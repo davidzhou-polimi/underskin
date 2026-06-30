@@ -41,7 +41,8 @@ export function zoomTextTransition(node) {
 				scrollTrigger: {
 					trigger: node,
 					start: 'top top',    
-					end: '+=250%',       
+					/* Allunga lo spazio complessivo di pinning per ridurre la velocità dello scroll ed evitare passaggi repentini */
+					end: '+=400%',       
 					pin: true,           
 					scrub: 1,            
 					anticipatePin: 1
@@ -59,29 +60,30 @@ export function zoomTextTransition(node) {
 			  // 2. Zoom cinematografico super-nitido tramite animazione del viewBox nativo
 			  .to(zoomSvg, { 
 					attr: { viewBox: '418 333 50 20' },
-					duration: 2, 
+					/* La durata maggiorata rende lo zoom più graduale e cinematografico */
+					duration: 2.5, 
 					ease: 'power2.out' 
-			  }, '+=0.1')
+			  }, '+=1.5') /* Evita l'avvio immediato dello zoom per consentire la lettura del testo iniziale */
 			  
 			  // Scomparsa contemporanea del testo di intro
 			  .to(firstText, { 
 					opacity: 0, 
 					filter: 'blur(10px)', 
 					y: -40, 
-					duration: 0.8 
+					duration: 1.0 
 			  }, '<')
 			  
 			  // 3. Dissolvenza in ingresso della sezione successiva dentro lo zero
 			  .to(nextContent, { 
 					// Rende l'elemento visibile all'inizio del tween e ne anima la comparsa fluida
 					autoAlpha: 1, 
-					duration: 0.8,
+					duration: 1.0,
 					ease: 'power1.out'
-			  }, '-=0.6')
+			  }, '-=0.8')
 			  
 			  // 4. Buffer di riposo (resting state) per dare stabilità alla sezione una volta rivelata
 			  // Evita che uno scroll brusco o l'inerzia dello scroll superino immediatamente la sezione
-			  .to({}, { duration: 2.2 });
+			  .to({}, { duration: 2.5 });
 		});
 	});
 

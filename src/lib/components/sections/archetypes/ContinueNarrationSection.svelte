@@ -3,6 +3,8 @@
     import Button from "$lib/components/ui/Button.svelte";
     import { goto } from "$app/navigation";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
+    import { staggerReveal } from "$lib/actions/staggerReveal.js";
+    import { scrollHomeGate } from "$lib/actions/scrollHomeGate.js";
 
     /**
      * @type {{
@@ -52,6 +54,7 @@
 <section
     id="continue-narration"
     class="continue-section"
+    use:scrollHomeGate={{ onNavigate: handleButtonClick, threshold: 1000 }}
 >
     <div class="continue-container">
         <div class="center-content">
@@ -59,7 +62,14 @@
             <h3 class="continue-title">Continua a esplorare</h3>
 
             <!-- Contenitore delle due card visualizzate in orizzontale -->
-            <div class="cards-grid">
+            <div
+                class="cards-grid"
+                use:staggerReveal={{
+                    y: 40,
+                    duration: 0.7,
+                    triggerOptions: { toggleActions: "play none none reverse" },
+                }}
+            >
                 {#each filteredArchetypes as item (item.name)}
                     <ArchetypeCard
                         name={item.name}
@@ -70,16 +80,16 @@
                     />
                 {/each}
             </div>
+        </div>
 
-            <!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
-            <div class="action-container">
-                <Button
-                    onclick={handleButtonClick}
-                    ariaLabel="Torna alla narrazione"
-                >
-                    Torna alla narrazione
-                </Button>
-            </div>
+        <!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
+        <div class="action-container">
+            <Button
+                onclick={handleButtonClick}
+                ariaLabel="Vai alla conclusione"
+            >
+                Vai alla conclusione
+            </Button>
         </div>
     </div>
 </section>
@@ -107,7 +117,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         padding-inline: var(--spacing-2);
         box-sizing: border-box;
     }
@@ -120,18 +130,17 @@
         /* Commento solo il perché: distribuisce lo spazio extra per centrare verticalmente il blocco principale */
         flex-grow: 1;
         width: 100%;
-        /* Commento solo il perché: distribuisce uno spazio verticale uniforme e coerente tra titolo, griglia e bottone */
-        gap: var(--spacing-8);
     }
 
     .continue-title {
-        /* Commento solo il PERCHÉ: allinea lo stile del titolo a quello delle altre sezioni principali ("Il nostro team" e "Conosci gli archetipi") */
+        /* Commento solo il PERCHÉ: allinea lo stile del titolo a quello delle altre sezioni principali */
         font-size: var(--text-m);
         font-weight: var(--text-regular);
         color: var(--content-primary);
         text-align: center;
-        /* Commento solo il perché: azzera i margini esterni per delegare interamente la spaziatura al gap del contenitore flex parent */
-        margin: 0;
+        /* Commento solo il perché: definisce lo spazio verticale per distanziare il titolo dagli altri elementi */
+        margin-top: var(--spacing-6);
+        margin-bottom: var(--spacing-6);
     }
 
     .cards-grid {
@@ -147,6 +156,8 @@
         display: flex;
         justify-content: center;
         width: 100%;
+        /* nascosto dal primo paint; GSAP lo porta a opacity:1 in activateGate */
+        opacity: 0;
     }
 
     /* Responsive per schermi più piccoli */

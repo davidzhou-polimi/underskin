@@ -95,7 +95,7 @@
 						{#each stage.lines as line, lineIdx}
 							<tspan
 								x="235.5"
-								dy={lineIdx === 0 ? `${-(stage.lines.length - 1) * 0.65}em` : '1.3em'}
+								dy={lineIdx === 0 ? '0' : '1.3em'}
 							>{line}</tspan>
 						{/each}
 					</text>

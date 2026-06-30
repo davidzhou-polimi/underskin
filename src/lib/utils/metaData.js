@@ -4,7 +4,7 @@ export const PAGE_META = {
 	'/': {
 		title: 'UnderSkin',
 		description:
-			"Cosa c'è oltre il podio? UnderSkin svela come la pressione di MIlano-Cortina 2026 modella la salute mentale degli atleti attraverso tre archetipi narrativi."
+			"Cosa c'è oltre il podio? UnderSkin svela come la pressione di Milano-Cortina 2026 modella la salute mentale degli atleti attraverso tre archetipi narrativi."
 	},
 	'/about': {
 		title: 'About · UnderSkin',

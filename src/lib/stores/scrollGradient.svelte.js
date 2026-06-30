@@ -1,3 +1,5 @@
+import { scroll } from '$lib/stores/scroll.svelte.js';
+
 /**
  * Colori combinati dei tre archetipi, bilanciati per evitare la predominanza cromatica dell'arancione.
  * Usato nelle pagine che mostrano tutti e tre gli archetipi (home, about).
@@ -60,8 +62,8 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 	let isInIntroSection = $derived(hasIntro && scrollY < 100);
 	let isPastFirstViewport = $derived(scrollY > 100);
 	let isNearPageBottom = $derived(
-		typeof document !== 'undefined' &&
-			scrollY > document.documentElement.scrollHeight - innerHeight * 1.8
+		// Commento solo il PERCHÉ: Sfrutta il progresso normalizzato di ScrollTrigger (l'ultimo 1% dello scroll) per determinare con massima precisione l'arrivo al footer, evitando calcoli manuali approssimativi basati sull'altezza dinamica della viewport e del documento.
+		scroll.progress > 0.99
 	);
 
 	let activeConfig = $derived(

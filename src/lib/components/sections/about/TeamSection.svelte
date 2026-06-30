@@ -1,5 +1,6 @@
 <script>
 	import TeamCarousel from '$lib/components/sections/about/TeamCarousel.svelte';
+	import { sectionPin } from '$lib/actions/sectionPin.js';
 
 	/**
 	 * @typedef {Object} Props
@@ -13,6 +14,7 @@
 <section
 	id="team"
 	class="team-section"
+	use:sectionPin
 >
 	<div class="team-section__container">
 		{#if title}

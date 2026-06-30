@@ -19,6 +19,10 @@ export function hoverHorizontalCard(node, params = {}) {
 		if (!enabled) return;
 
 		ctx.add(() => {
+			// Commento solo il PERCHÉ: interrompiamo qualsiasi animazione pendente o attiva per evitare disallineamenti dovuti a cambi di hover repentini
+			if (nameEl) gsap.killTweensOf(nameEl);
+			if (decalEl) gsap.killTweensOf(decalEl);
+
 			if (nameEl) {
 				// Commento solo il PERCHÉ: muoviamo il testo verso l'alto con un movimento fluido e ampio
 				gsap.to(nameEl, {
@@ -62,6 +66,10 @@ export function hoverHorizontalCard(node, params = {}) {
 		if (!enabled) return;
 
 		ctx.add(() => {
+			// Commento solo il PERCHÉ: interrompiamo qualsiasi animazione pendente o attiva per evitare disallineamenti dovuti a cambi di hover repentini
+			if (nameEl) gsap.killTweensOf(nameEl);
+			if (decalEl) gsap.killTweensOf(decalEl);
+
 			if (decalEl) {
 				gsap.to(decalEl, {
 					yPercent: 0,
