@@ -81,7 +81,7 @@
 		activeIndex;
 		if (!motion.isDragging) {
 			motion.restartAutoplay();
-			// Se l'utente naviga manualmente mentre è in hover, teniamo la pausa
+			// Commento solo il PERCHÉ: evitiamo di far ripartire l'autoplay se l'utente è in hover
 			if (hoveredIndex !== null) motion.pauseAutoplay();
 		}
 	});
@@ -225,7 +225,12 @@
 			<div
 				class="carousel-item"
 				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
-				onmouseleave={() => { if (!motion.isDragging) tooltip.hide(); hoveredIndex = null; }}
+				onmouseleave={(e) => {
+					if (!motion.isDragging) tooltip.hide();
+					// Commento solo il PERCHÉ: preveniamo il reset dell'hover se la card è girata ma il cursore è ancora fisicamente sopra il box
+					if (isFlipped && e.currentTarget.matches(':hover')) return;
+					hoveredIndex = null;
+				}}
 				onclick={i === activeIndex && !isMoving ? () => {
 					isFlipped = !isFlipped;
 					if (isFlipped) {
