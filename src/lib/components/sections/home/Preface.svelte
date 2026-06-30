@@ -41,7 +41,7 @@
     </div>
 
     <div class="text-container" use:scrollReveal={{ end: "+=800%" }}>
-        <p class="reveal-line">MIlano-Cortina 2026</p>
+        <p class="reveal-line">Milano-Cortina 2026</p>
         <p class="reveal-line">2.900 atleti</p>
         <p class="reveal-line">1 vita di sacrifici</p>
         <p class="reveal-line">4 anni di preparazione</p>
