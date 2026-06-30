@@ -115,7 +115,7 @@ export function draggableThought(node, params) {
     // Trova le coordinate finali sicure calcolate
     const spacing1Raw = window.getComputedStyle(document.documentElement).getPropertyValue('--spacing-1') || '8px';
     const paddingX = parseFloat(spacing1Raw) || 8;
-    const paddingY = containerHeight * 0.15; // 15% di margine sopra e sotto per evitare di uscire dalla fascia centrale
+    const paddingY = containerHeight * 0.05; // Allineato al 5% per uniformare i limiti di volo con quelli di drag
 
     const targetPos = getClampedAndAvoidedPosition(
       node,
@@ -134,8 +134,12 @@ export function draggableThought(node, params) {
     const dx = targetPos.x - startX;
     const dy = targetPos.y - startY;
 
-    // Killa qualsiasi animazione in corso prima di iniziare la traiettoria di sparo
+    // Killa qualsiasi animazione in corso prima di iniziare la trajectoria di sparo
     gsap.killTweensOf(node);
+
+    // Commento solo il PERCHÉ: disabilita temporaneamente il drag durante il volo per evitare
+    // che click rapidi (es. doppio click) interrompano l'animazione a metà strada.
+    if (draggableInstance) draggableInstance.disable();
 
     gsap.to(node, {
       x: dx,
@@ -148,6 +152,10 @@ export function draggableThought(node, params) {
         gsap.set(node, { x: 0, y: 0 });
         node.style.left = `${(targetPos.x / containerWidth) * 100}%`;
         node.style.top = `${(targetPos.y / containerHeight) * 100}%`;
+
+        // Commento solo il PERCHÉ: riabilita il drag una volta che il volo è completato, 
+        // consentendo all'utente di continuare a giocare e spostare i fumetti a piacimento.
+        if (draggableInstance) draggableInstance.enable();
       }
     });
   }
@@ -226,6 +234,8 @@ export function draggableThought(node, params) {
     }
   })[0];
 
+  // Il drag rimane abilitato all'avvio per consentire l'interattività dei fumetti
+
   return {
     /**
      * @param {DraggableThoughtParams} newParams
@@ -253,6 +263,7 @@ export function draggableThought(node, params) {
         // Se viene ripristinato l'intro (es. scroll-up), si azzera lo stato locale dell'azione
         isScattered = false;
         hasFlown = false;
+        if (draggableInstance) draggableInstance.enable(); // Commento solo il PERCHÉ: assicura che il drag sia attivo al reset del gioco
 
         // Ripristina gli stili di posizionamento relativi, lasciando il transform sotto il controllo coordinato di thoughtsIntro
         node.style.left = '';
