@@ -7,9 +7,9 @@
 		<!-- Primo Blocco di Testo -->
 		<div class="text-block text-block-current">
 			<p class="about-narrative-text">
-				Le Olimpiadi Milano Cortina 2026 sono un sistema<br />
-				di misurazione millimetrica: centesimi di secondo,<br />
-				punteggi decimali, medaglieri rigidi.
+				Le Olimpiadi Invernali di Milano-Cortina 2026 sono<br />
+				un sistema di misurazione millimetrica: centesimi di<br />
+				secondo, punteggi decimali, medaglieri rigidi.
 			</p>
 			<p class="about-narrative-text">
 				Ma cosa succede quando riduciamo un essere<br />
