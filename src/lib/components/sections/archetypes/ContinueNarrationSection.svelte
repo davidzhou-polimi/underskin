@@ -70,16 +70,16 @@
                     />
                 {/each}
             </div>
+        </div>
 
-            <!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
-            <div class="action-container">
-                <Button
-                    onclick={handleButtonClick}
-                    ariaLabel="Torna alla narrazione"
-                >
-                    Torna alla narrazione
-                </Button>
-            </div>
+        <!-- Bottone a forma di pillola traslucido con colore background primary, opacità 40% e shadow leggera -->
+        <div class="action-container">
+            <Button
+                onclick={handleButtonClick}
+                ariaLabel="Torna alla narrazione"
+            >
+                Torna alla narrazione
+            </Button>
         </div>
     </div>
 </section>
@@ -107,7 +107,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         padding-inline: var(--spacing-2);
         box-sizing: border-box;
     }
@@ -120,18 +120,17 @@
         /* Commento solo il perché: distribuisce lo spazio extra per centrare verticalmente il blocco principale */
         flex-grow: 1;
         width: 100%;
-        /* Commento solo il perché: distribuisce uno spazio verticale uniforme e coerente tra titolo, griglia e bottone */
-        gap: var(--spacing-8);
     }
 
     .continue-title {
-        /* Commento solo il PERCHÉ: allinea lo stile del titolo a quello delle altre sezioni principali ("Il nostro team" e "Conosci gli archetipi") */
+        /* Commento solo il PERCHÉ: allinea lo stile del titolo a quello delle altre sezioni principali */
         font-size: var(--text-m);
         font-weight: var(--text-regular);
         color: var(--content-primary);
         text-align: center;
-        /* Commento solo il perché: azzera i margini esterni per delegare interamente la spaziatura al gap del contenitore flex parent */
-        margin: 0;
+        /* Commento solo il perché: definisce lo spazio verticale per distanziare il titolo dagli altri elementi */
+        margin-top: var(--spacing-6);
+        margin-bottom: var(--spacing-6);
     }
 
     .cards-grid {
