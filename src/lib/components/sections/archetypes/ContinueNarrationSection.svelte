@@ -3,6 +3,8 @@
     import Button from "$lib/components/ui/Button.svelte";
     import { goto } from "$app/navigation";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
+    import { staggerReveal } from "$lib/actions/staggerReveal.js";
+    import { scrollHomeGate } from "$lib/actions/scrollHomeGate.js";
 
     /**
      * @type {{
@@ -52,6 +54,7 @@
 <section
     id="continue-narration"
     class="continue-section"
+    use:scrollHomeGate={{ onNavigate: handleButtonClick, threshold: 1000 }}
 >
     <div class="continue-container">
         <div class="center-content">
@@ -59,7 +62,14 @@
             <h3 class="continue-title">Continua a esplorare</h3>
 
             <!-- Contenitore delle due card visualizzate in orizzontale -->
-            <div class="cards-grid">
+            <div
+                class="cards-grid"
+                use:staggerReveal={{
+                    y: 40,
+                    duration: 0.7,
+                    triggerOptions: { toggleActions: "play none none reverse" },
+                }}
+            >
                 {#each filteredArchetypes as item (item.name)}
                     <ArchetypeCard
                         name={item.name}
@@ -146,6 +156,8 @@
         display: flex;
         justify-content: center;
         width: 100%;
+        /* nascosto dal primo paint; GSAP lo porta a opacity:1 in activateGate */
+        opacity: 0;
     }
 
     /* Responsive per schermi più piccoli */
