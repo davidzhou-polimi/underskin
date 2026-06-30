@@ -63,7 +63,7 @@
         ScrollTrigger.refresh();
         const fromArchetype =
             typeof window !== 'undefined' &&
-            new URLSearchParams(window.location.search).get('fromArchetype') === 'true';
+            sessionStorage.getItem('fromArchetype') === 'true';
         if (fromArchetype) return;
 
         const lenis = getLenis();

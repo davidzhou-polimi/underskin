@@ -15,8 +15,8 @@ const easeInOutPower2 = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2
 export function cinematicScroll(node) {
 	if (typeof window === 'undefined') return;
 
-	const params = new URLSearchParams(window.location.search);
-	if (params.get('fromArchetype') !== 'true') return;
+	const fromArchetype = sessionStorage.getItem('fromArchetype') === 'true';
+	if (!fromArchetype) return;
 
 	// Seleziona gli elementi necessari nel DOM per orchestrare lo scorrimento
 	const archetypesSection = document.getElementById('archetypes');
@@ -46,9 +46,7 @@ export function cinematicScroll(node) {
 		// 2. Avvia lo scorrimento cinematico morbido dopo una pausa di stabilità visiva
 		scrollTimeout = setTimeout(() => {
 			const clearParam = () => {
-				const url = new URL(window.location.href);
-				url.searchParams.delete('fromArchetype');
-				window.history.replaceState({}, '', url.toString());
+				sessionStorage.removeItem('fromArchetype');
 			};
 
 			const l = getLenis();

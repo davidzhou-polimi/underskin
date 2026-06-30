@@ -41,9 +41,12 @@
         allArchetypes.filter((item) => item.type !== archetype),
     );
 
-    // Reindirizziamo alla rotta radice passando un parametro di query per innescare la transizione automatica verso l'outro
+    // Reindirizziamo alla rotta radice salvando lo stato in sessionStorage per innescare la transizione automatica in modo invisibile nell'URL
     const handleButtonClick = () => {
-        goto("/?fromArchetype=true");
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('fromArchetype', 'true');
+        }
+        goto("/");
     };
 </script>
 

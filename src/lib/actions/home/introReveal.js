@@ -21,7 +21,7 @@ export function introReveal(node) {
 	// quindi l'intro non deve bloccare lo scroll né attivarsi.
 	const fromArchetype =
 		typeof window !== 'undefined' &&
-		new URLSearchParams(window.location.search).get('fromArchetype') === 'true';
+		sessionStorage.getItem('fromArchetype') === 'true';
 
 	let isLocked = !fromArchetype && (typeof window !== 'undefined' ? window.scrollY < 10 : true);
 	let isTransitioning = false;
