@@ -38,7 +38,8 @@ if (typeof window !== 'undefined') {
  * @param {string} targetTopPct La percentuale di top target
  * @param {HTMLElement} container Il contenitore genitore
  * @param {HTMLElement | null} textContainer Il contenitore del testo centrale
- * @param {number} margin Margine di sicurezza dai bordi dello schermo in pixel
+ * @param {number} [paddingX=8] Margine di sicurezza orizzontale dai bordi in pixel
+ * @param {number} [paddingY=100] Margine di sicurezza verticale dai bordi in pixel
  */
 function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, container, textContainer, paddingX = 8, paddingY = 100) {
   const containerWidth = container.offsetWidth;

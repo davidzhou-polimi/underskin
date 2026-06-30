@@ -119,6 +119,7 @@
 	     esclusivamente all'altezza di movimento della palla, limitandola verticalmente a 400px -->
 	<div 
 		class="interaction-zone"
+		role="presentation"
 		onmouseenter={() => { if (attempts === 0) tooltip.show('Click o Spazio', 'semplice', 'crosshair'); }}
 		onmouseleave={() => tooltip.hide()}
 	>
