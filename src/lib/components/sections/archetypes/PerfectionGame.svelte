@@ -64,6 +64,9 @@
 
 		if (isPlaying) {
 			isPlaying = false;
+			// Commento solo il PERCHÉ: nasconde immediatamente il tooltip all'esecuzione del tentativo
+			// per evitare che rimanga visibile sullo schermo dopo l'interazione.
+			tooltip.hide();
 		} else {
 			accuracy = null;
 			isPlaying = true;
@@ -101,24 +104,33 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="perfection-container" bind:this={container} use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset, hasCompletedOnce }}>
+<section 
+	class="perfection-container" 
+	bind:this={container} 
+	use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset, hasCompletedOnce }}
+>
 	
 	<div class="header-text">
 		<h2 class="title">Quanto è difficile la perfezione?</h2>
 		<p class="subtitle" class:game-over-text={attempts >= MAX_ATTEMPTS}>{subtitleText}</p>
 	</div>
 
-	<!-- L'area di gioco si comporta come area interattiva principale -->
+	<!-- Commento solo il PERCHÉ: definisce una fascia orizzontale a tutta larghezza per attivare il tooltip 
+	     esclusivamente all'altezza di movimento della palla, limitandola verticalmente a 400px -->
 	<div 
-		class="game-area" 
-		onclick={toggleGame} 
-		role="button" 
-		tabindex="0" 
-		aria-label="Avvia o ferma il gioco per misurare la precisione"
-		onkeydown={(e) => e.key === 'Enter' && toggleGame()}
-		onmouseenter={() => { if (attempts === 0) tooltip.show('Click o Spazio', 'semplice'); }}
+		class="interaction-zone"
+		onmouseenter={() => { if (attempts === 0) tooltip.show('Click o Spazio', 'semplice', 'crosshair'); }}
 		onmouseleave={() => tooltip.hide()}
 	>
+		<!-- L'area di gioco si comporta come area interattiva principale -->
+		<div 
+			class="game-area" 
+			onclick={toggleGame} 
+			role="button" 
+			tabindex="0" 
+			aria-label="Avvia o ferma il gioco per misurare la precisione"
+			onkeydown={(e) => e.key === 'Enter' && toggleGame()}
+		>
 		<svg class="target-circle" viewBox="0 0 320 320">
 			<circle
 				cx="160"
@@ -155,7 +167,7 @@
 			{/if}
 		</div>
 	</div>
-
+</div>
 
 </section>
 
@@ -212,6 +224,21 @@
 		display: inline-block;
 	}
 
+	.interaction-zone {
+		width: 100%;
+		max-width: 930px; /* Commento solo il PERCHÉ: limita la sensibilità all'oscillazione massima reale del blob (320px di corsa + raggio della palla) */
+		height: var(--spacing-14);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: crosshair; /* Commento solo il PERCHÉ: assicura che il cursore sia il mirino in tutta l'area di movimento della palla */
+	}
+
+	/* Rimuove il cursore di mira in tutta la zona se i tentativi sono esauriti */
+	.interaction-zone:has(.game-over) {
+		cursor: default;
+	}
+
 	.game-area {
 		position: relative;
 		width: var(--spacing-14); /* Utilizza il token da 25rem / 400px per l'area di gioco */
@@ -221,11 +248,6 @@
 		align-items: center;
 		cursor: crosshair; 
 		outline: none;
-	}
-
-	/* Rimuove il cursore di mira se i tentativi sono esauriti */
-	.game-area:has(.game-over) {
-		cursor: default;
 	}
 
 	.target-circle {
