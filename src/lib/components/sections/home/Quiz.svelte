@@ -16,6 +16,8 @@
 	let textStep = $state(1);           // 1: Primo blocco di testo, 2: Citazione Adrian Yung
 	/** Permette allo scroll di passare quando l'utente ha finito gli step e naviga via */
 	let canLeave = $state(false);
+	/** Flag di sicurezza per evitare input dello scroll durante le transizioni dei testi */
+	let isAnimatingStep = $state(false);
 
 	/** @type {Observer | undefined} */
 	let quizObserver;
@@ -24,9 +26,13 @@
 	// con syncTouch:false il touch resta nativo: l'Observer con preventDefault — abilitato solo nel lock — è
 	// ciò che blocca davvero il touch e, con wheelSpeed -1, unifica la direzione di rotella e swipe.
 	function advance() {
-		if (quizState !== 'results') return;
+		if (quizState !== 'results' || isAnimatingStep) return;
 		if (textStep === 1) {
-			animateQuizStep(2, { onStepChange: () => { textStep = 2; } });
+			isAnimatingStep = true;
+			animateQuizStep(2, { 
+				onStepChange: () => { textStep = 2; },
+				onComplete: () => { isAnimatingStep = false; }
+			});
 		} else if (textStep === 2) {
 			// Gate aperto: si esce verso Performance con scroll morbido di Lenis
 			canLeave = true;
@@ -35,9 +41,13 @@
 	}
 
 	function back() {
-		if (quizState !== 'results') return;
+		if (quizState !== 'results' || isAnimatingStep) return;
 		if (textStep === 2) {
-			animateQuizStep(1, { onStepChange: () => { textStep = 1; } });
+			isAnimatingStep = true;
+			animateQuizStep(1, { 
+				onStepChange: () => { textStep = 1; },
+				onComplete: () => { isAnimatingStep = false; }
+			});
 		} else if (textStep === 1) {
 			// Scroll up dalla prima scritta → sblocca così il pin si riavvolge verso l'intro
 			canLeave = true;

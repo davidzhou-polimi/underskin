@@ -60,6 +60,11 @@ export function quizAnimation(node, params) {
 				);
 			}
 
+			// Commento solo il PERCHÉ: notifica Svelte per ripristinare il blocco dello scroll all'attivazione del pin (in ingresso sia da sopra che da sotto)
+			if (self.isActive) {
+				onEnterBack();
+			}
+
 			// Blocca lo scroll verso il basso solo finché l'utente non ha scelto
 			if (self.isActive && quizState === 'choosing') lockScrollDown();
 			if (!self.isActive) unlockScrollDown();
@@ -220,18 +225,19 @@ export function quizAnimation(node, params) {
  * @param {number} targetStep - Lo step di destinazione (1 o 2)
  * @param {Object} callbacks
  * @param {() => void} callbacks.onStepChange - Callback per aggiornare lo stato di Svelte nel momento esatto tra le due animazioni
+ * @param {() => void} [callbacks.onComplete] - Callback invocata al completamento dell'animazione
  */
-export function animateQuizStep(targetStep, { onStepChange }) {
+export function animateQuizStep(targetStep, { onStepChange, onComplete = () => {} }) {
 	// Commento solo il PERCHÉ: gsap.timeline orchestra l'animazione sequenziale (fade-out del vecchio step, cambio stato Svelte tramite callback, fade-in del nuovo step con sfocatura)
 	if (targetStep === 2) {
 		gsap.set('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)' });
-		gsap.timeline()
+		gsap.timeline({ onComplete })
 			.to('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
 			.add(() => { onStepChange(); })
 			.to('.step-2', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
 	} else if (targetStep === 1) {
 		gsap.set('.step-1', { opacity: 0, y: -20, filter: 'blur(10px)' });
-		gsap.timeline()
+		gsap.timeline({ onComplete })
 			.to('.step-2', { opacity: 0, y: 20, filter: 'blur(10px)', duration: 0.4, ease: 'power2.in' })
 			.add(() => { onStepChange(); })
 			.to('.step-1', { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' });
