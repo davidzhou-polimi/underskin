@@ -60,9 +60,10 @@
 
 	.circles-svg {
 		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
+		top: 50%;
+		left: 50%;
+		width: 60rem;
+		height: 60rem;
 		pointer-events: none;
 		overflow: visible;
 		transform-style: preserve-3d;
