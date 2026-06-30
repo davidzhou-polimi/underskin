@@ -43,7 +43,7 @@ export function cinematicScroll(node) {
 		if (lenis) lenis.scrollTo(archetypesSection, { immediate: true, force: true });
 		else archetypesSection.scrollIntoView({ behavior: 'instant' });
 
-		// 2. Avvia lo scorrimento cinematico morbido dopo una pausa di stabilità visiva
+		// Commento solo il PERCHÉ: riduciamo il delay a 50ms per rendere la transizione immediata dopo il posizionamento, mantenendo una piccolissima finestra per l'assestamento del rendering
 		scrollTimeout = setTimeout(() => {
 			const clearParam = () => {
 				navigationState.fromArchetype = false;
@@ -56,7 +56,7 @@ export function cinematicScroll(node) {
 				outroSection.scrollIntoView({ behavior: 'smooth' });
 				clearParam();
 			}
-		}, 500);
+		}, 50);
 	});
 
 	return {
