@@ -149,28 +149,16 @@ export function introReveal(node) {
 			});
 		}
 
-		const title = node.querySelector('.intro-title');
 		const circlesSvg = node.querySelector('.circles-svg');
-		const scrollHint = node.querySelector('.scroll-hint');
 
 		// Commento solo il PERCHÉ: Inizializza placeholder di quickTo per renderli disponibili in ambito lessicale in tutte le funzioni del blocco
-		let titleX = (/** @type {number} */ _v) => {};
-		let titleY = (/** @type {number} */ _v) => {};
-		let titleRotX = (/** @type {number} */ _v) => {};
-		let titleRotY = (/** @type {number} */ _v) => {};
 		let circlesX = (/** @type {number} */ _v) => {};
 		let circlesY = (/** @type {number} */ _v) => {};
 		let circlesRotX = (/** @type {number} */ _v) => {};
 		let circlesRotY = (/** @type {number} */ _v) => {};
 
-		// Commento solo il PERCHÉ: Traccia il movimento del mouse per inclinare e traslare gli elementi su più livelli di profondità (effetto tilt 3D)
-		if (title && circlesSvg) {
-			// Aumentiamo la duration a 1.2s e 1.5s per dare un senso di inerzia e pesantezza (effetto premium)
-			titleX = gsap.quickTo(title, 'x', { duration: 1.2, ease: 'power2.out' });
-			titleY = gsap.quickTo(title, 'y', { duration: 1.2, ease: 'power2.out' });
-			titleRotX = gsap.quickTo(title, 'rotateX', { duration: 1.2, ease: 'power2.out' });
-			titleRotY = gsap.quickTo(title, 'rotateY', { duration: 1.2, ease: 'power2.out' });
-
+		// Commento solo il PERCHÉ: Traccia il movimento del mouse per inclinare e traslare lo sfondo su più livelli di profondità per dare senso di tridimensionalità.
+		if (circlesSvg) {
 			circlesX = gsap.quickTo(circlesSvg, 'x', { duration: 1.5, ease: 'power2.out' });
 			circlesY = gsap.quickTo(circlesSvg, 'y', { duration: 1.5, ease: 'power2.out' });
 			circlesRotX = gsap.quickTo(circlesSvg, 'rotateX', { duration: 1.5, ease: 'power2.out' });
@@ -189,12 +177,6 @@ export function introReveal(node) {
 				const mouseX = ((e.clientX - rect.left) / width) * 2 - 1;
 				const mouseY = ((e.clientY - rect.top) / height) * 2 - 1;
 
-				// Il titolo (primo piano) si sposta in direzione opposta al mouse, con ampiezza ridotta del 30% per stabilità
-				titleX(-mouseX * 10.5);
-				titleY(-mouseY * 10.5);
-				titleRotX(mouseY * 4.2);
-				titleRotY(-mouseX * 4.2);
-
 				// I cerchi (sfondo) assecondano lo spostamento del mouse con ampiezza minore per profondità ottica
 				circlesX(mouseX * 8);
 				circlesY(mouseY * 8);
@@ -204,11 +186,6 @@ export function introReveal(node) {
 
 			handleMouseLeave = () => {
 				if (!isIntroActive) return;
-
-				titleX(0);
-				titleY(0);
-				titleRotX(0);
-				titleRotY(0);
 
 				circlesX(0);
 				circlesY(0);
