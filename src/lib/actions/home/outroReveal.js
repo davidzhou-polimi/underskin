@@ -1,8 +1,6 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
-// Registrazione di ScrollTrigger, necessaria per i plugin GSAP in framework frontend
 if (typeof window !== 'undefined') {
 	gsap.registerPlugin(ScrollTrigger);
 }
@@ -12,9 +10,10 @@ if (typeof window !== 'undefined') {
  */
 
 /**
- * Azione Svelte per la sezione Outro: scrub-on-scroll del cerchio percentuale (0 → primo stadio)
- * e successivo avanzamento a click tra gli stadi. Possiede ScrollTrigger e tween — come da AGENTS.md
- * la logica GSAP vive qui, non nel componente — e pilota direttamente il DOM interno della sezione.
+ * Azione Svelte per la sezione Outro: scrollytelling discreto guidato da ScrollTrigger.
+ * Lo scroll attiva il passaggio tra i vari stadi statistici, ma le animazioni del cerchio
+ * e dei testi sono gestite da tween autonomi che si completano sempre sul valore esatto
+ * dello stage, evitando che il cerchio si fermi su percentuali errate o intermedie.
  *
  * @param {HTMLElement} node - La sezione `.outro-scroll-container`
  * @param {{ stages: OutroStage[] }} params - Stadi statistici (target % e righe descrittive)
@@ -24,21 +23,17 @@ export function outroReveal(node, params) {
 
 	const revealCircleEl = node.querySelector('.reveal-circle');
 	const percentageTextEl = node.querySelector('.circle-percentage');
-	const descriptionTextEl = node.querySelector('.circle-description');
-	const stageEl = node.querySelector('.circle-stage');
+	const descriptionEls = node.querySelectorAll('.circle-description');
 
-	let scrollPhaseComplete = false;
-	let currentIndex = -1;
-	let currentValue = 0;
-	let isAnimating = false;
+	let activeIndex = -1;
+	let currentTween = null;
+	let currentTextTweens = [];
 
-	const hasMoreStages = () => scrollPhaseComplete && currentIndex < stages.length - 1;
+	// Valore numerico corrente utilizzato come stato per il tween discreto del cerchio
+	const animState = { value: 0 };
 
-	// Gestiamo il ciclo di vita di tween e ScrollTrigger tramite un contesto dedicato per il cleanup automatico.
-	const ctx = gsap.context(() => {}, node);
-
-	// Commento solo il PERCHÉ: un'unica funzione di render evita di duplicare (con arrotondamenti divergenti)
-	// la scrittura di percentuale e stroke-dasharray sparsa tra scrub, attivazione e avanzamento.
+	// Commento solo il PERCHÉ: un'unica funzione di render evita di duplicare
+	// la scrittura di percentuale e stroke-dasharray.
 	/** @param {number} v */
 	function renderValue(v) {
 		if (percentageTextEl) percentageTextEl.textContent = `${Math.round(v)}%`;
@@ -47,147 +42,123 @@ export function outroReveal(node, params) {
 		}
 	}
 
-	/** @param {string[]} lines */
-	function updateDescription(lines) {
-		if (!descriptionTextEl) return;
-		descriptionTextEl.innerHTML = '';
-		lines.forEach((line, i) => {
-			const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-			tspan.setAttribute('x', '235.5');
-			tspan.setAttribute('dy', i === 0 ? '0' : '1.3em');
-			tspan.textContent = line;
-			descriptionTextEl.appendChild(tspan);
-		});
-	}
-
-	/** Aggancia la barra al target dello stadio 0, rivela la descrizione, abilita la modalità click */
-	function activateScrollStage() {
-		const t = stages[0].target;
-		renderValue(t);
-		currentValue = t;
-		currentIndex = 0;
-		scrollPhaseComplete = true;
-		updateDescription(stages[0].lines);
-		ctx.add(() => {
-			if (descriptionTextEl) gsap.to(descriptionTextEl, { opacity: 1, duration: 0.3 });
-		});
-	}
-
-	/** L'utente è tornato indietro: il controllo torna al tween di scrub */
-	function resetScrollStage() {
-		scrollPhaseComplete = false;
-		currentIndex = -1;
-		currentValue = 0;
-		ctx.add(() => {
-			if (descriptionTextEl) gsap.set(descriptionTextEl, { opacity: 0 });
-		});
-		tooltip.hide();
-	}
-
-	/** @param {number} stageIndex */
-	function animateToStage(stageIndex) {
-		if (isAnimating) return;
-		isAnimating = true;
-
-		const stage = stages[stageIndex];
-		const fromValue = currentValue;
-
-		ctx.add(() => {
-			gsap.to(descriptionTextEl, {
-				opacity: 0,
-				duration: 0.3,
-				onComplete: () => {
-					updateDescription(stage.lines);
-					if (descriptionTextEl) gsap.to(descriptionTextEl, { opacity: 1, duration: 0.3 });
-				}
-			});
-
-			const obj = { value: fromValue };
-			gsap.to(obj, {
-				value: stage.target,
-				duration: 1.2,
-				ease: 'power1.out',
-				onUpdate() {
-					renderValue(obj.value);
-				},
-				onComplete() {
-					currentValue = stage.target;
-					currentIndex = stageIndex;
-					isAnimating = false;
-					// Ultimo stadio: rimuovi cursore e tooltip immediatamente
-					if (stageIndex === stages.length - 1) tooltip.hide();
-				}
-			});
-		});
-	}
-
-	function onClick() {
-		if (!hasMoreStages() || isAnimating) return;
-		animateToStage(currentIndex + 1);
-	}
-
-	/** @param {KeyboardEvent} e */
-	function onKeydown(e) {
-		if (e.key === 'Enter') onClick();
-	}
-
-	function onMouseEnter() {
-		if (hasMoreStages()) tooltip.show('Click', 'semplice', 'pointer');
-	}
-
-	function onMouseLeave() {
-		tooltip.hide();
-	}
-
-	// Stato iniziale del DOM
+	// Stato iniziale
 	renderValue(0);
-	ctx.add(() => {
-		if (descriptionTextEl) gsap.set(descriptionTextEl, { opacity: 0 });
-	});
 
-	// Scrub-on-scroll: .value scorre da 0 al target del primo stadio mentre la sezione entra
-	ctx.add(() => {
-		const scrollObj = { value: 0 };
-		gsap.to(scrollObj, {
-			value: stages[0].target,
-			ease: 'none',
-			onUpdate() {
-				renderValue(scrollObj.value);
+	/**
+	 * Esegue una transizione fluida e discreta verso lo stage selezionato.
+	 * Il cerchio e i testi si animano verso i valori esatti del target.
+	 * 
+	 * @param {number} targetIndex 
+	 */
+	function goToStage(targetIndex) {
+		activeIndex = targetIndex;
+		const stage = stages[targetIndex];
+
+		// Commento solo il PERCHÉ: interrompe l'animazione del cerchio precedente per evitare
+		// conflitti o sovrapposizioni se l'utente scrolla velocemente tra più stadi.
+		if (currentTween) currentTween.kill();
+
+		ctx.add(() => {
+			currentTween = gsap.to(animState, {
+				value: stage.target,
+				duration: 0.5,
+				ease: 'power2.out',
+				onUpdate() {
+					renderValue(animState.value);
+				}
+			});
+		});
+
+		// Commento solo il PERCHÉ: interrompe i vecchi fade dei testi in corso prima di avviarne di nuovi
+		currentTextTweens.forEach(t => t.kill());
+		currentTextTweens = [];
+
+		ctx.add(() => {
+			descriptionEls.forEach((el, idx) => {
+				const targetOpacity = idx === targetIndex ? 1 : 0;
+				
+				// Commento solo il PERCHÉ: esegue un cross-fade rapido e pulito tra i testi degli stadi,
+				// garantendo che solo il testo attivo sia visibile al 100% e gli altri a 0%.
+				const t = gsap.to(el, {
+					opacity: targetOpacity,
+					duration: 0.25,
+					ease: 'power1.out',
+					overwrite: 'auto'
+				});
+				currentTextTweens.push(t);
+			});
+		});
+	}
+
+	/**
+	 * Ripristina lo stato iniziale (0% e nessun testo visibile) quando l'utente
+	 * esce dalla sezione verso l'alto, garantendo un ingresso pulito alla successiva visita.
+	 */
+	function resetToStart() {
+		activeIndex = -1;
+
+		if (currentTween) currentTween.kill();
+		currentTextTweens.forEach(t => t.kill());
+		currentTextTweens = [];
+
+		ctx.add(() => {
+			currentTween = gsap.to(animState, {
+				value: 0,
+				duration: 0.4,
+				ease: 'power2.out',
+				onUpdate() {
+					renderValue(animState.value);
+				}
+			});
+
+			descriptionEls.forEach((el) => {
+				const t = gsap.to(el, {
+					opacity: 0,
+					duration: 0.2,
+					ease: 'power1.out',
+					overwrite: 'auto'
+				});
+				currentTextTweens.push(t);
+			});
+		});
+	}
+
+	// Gestiamo il ciclo di vita di tween e ScrollTrigger tramite un contesto dedicato per il cleanup automatico.
+	const ctx = gsap.context(() => {
+		ScrollTrigger.create({
+			trigger: node,
+			start: 'top top',
+			end: 'bottom bottom',
+			onLeaveBack: () => {
+				resetToStart();
 			},
-			scrollTrigger: {
-				trigger: node,
-				start: 'top bottom', // parte appena la sezione entra dal basso
-				end: 'top top', // finisce quando il cerchio è al centro = scena sticky
-				scrub: 0.8,
-				onUpdate(self) {
-					// Commento solo il PERCHÉ: usare progress garantisce la transizione allo stato interattivo
-					// non appena il cerchio si completa, evitando i ritardi dei callback onLeave su dispositivi reali.
-					if (self.progress >= 0.99) {
-						if (!scrollPhaseComplete) activateScrollStage();
-					} else {
-						if (scrollPhaseComplete) resetScrollStage();
-					}
+			onUpdate: (self) => {
+				const progress = self.progress;
+				
+				// Commento solo il PERCHÉ: se l'utente torna sopra l'inizio della sezione, 
+				// resettiamo lo stato grafico a 0 anziché mantenere il primo stage attivo.
+				if (progress <= 0) {
+					resetToStart();
+					return;
+				}
+
+				// Commento solo il PERCHÉ: mappa il progresso lineare dello scroll [0, 1] in zone discrete
+				// proporzionali al numero di stadi, determinando quale statistica attivare.
+				let index = Math.floor(progress * stages.length);
+				if (index < 0) index = 0;
+				if (index >= stages.length) index = stages.length - 1;
+
+				if (index !== activeIndex) {
+					goToStage(index);
 				}
 			}
 		});
-	});
-
-	if (stageEl) {
-		stageEl.addEventListener('click', onClick);
-		stageEl.addEventListener('keydown', /** @type {EventListener} */ (onKeydown));
-		stageEl.addEventListener('mouseenter', onMouseEnter);
-		stageEl.addEventListener('mouseleave', onMouseLeave);
-	}
+	}, node);
 
 	return {
 		destroy() {
-			if (stageEl) {
-				stageEl.removeEventListener('click', onClick);
-				stageEl.removeEventListener('keydown', /** @type {EventListener} */ (onKeydown));
-				stageEl.removeEventListener('mouseenter', onMouseEnter);
-				stageEl.removeEventListener('mouseleave', onMouseLeave);
-			}
-			ctx.revert(); // revert() killa tween + ScrollTrigger del contesto
+			ctx.revert(); // revert() fa il kill di tutti i tween e ScrollTrigger registrati nel contesto
 		}
 	};
 }

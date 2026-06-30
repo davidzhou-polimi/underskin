@@ -20,12 +20,7 @@
 			Questo è ciò che non si vede sul podio:
 		</h2>
 
-		<div
-			class="circle-stage"
-			role="button"
-			tabindex="0"
-			aria-label="Avanza alla statistica successiva"
-		>
+		<div class="circle-stage">
 			<svg
 				class="dotted-circle"
 				viewBox="0 0 471 471"
@@ -87,23 +82,34 @@
 					dominant-baseline="middle"
 				>0%</text>
 
-				<!-- Descrizione sotto la percentuale -->
-				<text
-					class="circle-description"
-					x="235.5"
-					y="300"
-					text-anchor="middle"
-				></text>
+				<!-- Commento solo il PERCHÉ: genera tutte le descrizioni nel DOM per consentire a GSAP
+				     di gestire il fade in/out tramite opacità in modo nativo e performante durante lo scrub dello scroll -->
+				{#each stages as stage, i}
+					<text
+						class="circle-description circle-description-{i}"
+						x="235.5"
+						y="300"
+						text-anchor="middle"
+						style="opacity: 0; pointer-events: none;"
+					>
+						{#each stage.lines as line, lineIdx}
+							<tspan
+								x="235.5"
+								dy={lineIdx === 0 ? `${-(stage.lines.length - 1) * 0.65}em` : '1.3em'}
+							>{line}</tspan>
+						{/each}
+					</text>
+				{/each}
 			</svg>
 		</div>
 	</div>
 </section>
 
 <style>
-	/* 1vh extra: tutta per la fase click (lo scroll 0→34% avviene prima che la sticky scatti) */
+	/* Altezza sufficiente a garantire uno scrollytelling fluido per le 5 statistiche */
 	.outro-scroll-container {
 		position: relative;
-		height: calc(100vh * 2);
+		height: 800vh;
 		background-color: transparent;
 		width: 100%;
 	}
