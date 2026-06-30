@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') {
  * @param {HTMLElement | null} textContainer Il contenitore del testo centrale
  * @param {number} margin Margine di sicurezza dai bordi dello schermo in pixel
  */
-function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, container, textContainer, margin = 20) {
+function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, container, textContainer, paddingX = 8, paddingY = 100) {
   const containerWidth = container.offsetWidth;
   const containerHeight = container.offsetHeight;
   const nodeWidth = node.offsetWidth;
@@ -49,8 +49,8 @@ function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, contain
   let x = (parseFloat(targetLeftPct) / 100) * containerWidth;
   let y = (parseFloat(targetTopPct) / 100) * containerHeight;
 
-  x = Math.max(margin, Math.min(x, containerWidth - nodeWidth - margin));
-  y = Math.max(margin, Math.min(y, containerHeight - nodeHeight - margin));
+  x = Math.max(paddingX, Math.min(x, containerWidth - nodeWidth - paddingX));
+  y = Math.max(paddingY, Math.min(y, containerHeight - nodeHeight - paddingY));
 
   if (textContainer) {
     const textLeft = textContainer.offsetLeft;
@@ -84,8 +84,8 @@ function getClampedAndAvoidedPosition(node, targetLeftPct, targetTopPct, contain
         y = textBottom + padding;
       }
 
-      x = Math.max(margin, Math.min(x, containerWidth - nodeWidth - margin));
-      y = Math.max(margin, Math.min(y, containerHeight - nodeHeight - margin));
+      x = Math.max(paddingX, Math.min(x, containerWidth - nodeWidth - paddingX));
+      y = Math.max(paddingY, Math.min(y, containerHeight - nodeHeight - paddingY));
     }
   }
 
@@ -113,12 +113,18 @@ export function draggableThought(node, params) {
     const textContainer = /** @type {HTMLElement | null} */ (container.querySelector('.sentence-container'));
     
     // Trova le coordinate finali sicure calcolate
+    const spacing1Raw = window.getComputedStyle(document.documentElement).getPropertyValue('--spacing-1') || '8px';
+    const paddingX = parseFloat(spacing1Raw) || 8;
+    const paddingY = containerHeight * 0.15; // 15% di margine sopra e sotto per evitare di uscire dalla fascia centrale
+
     const targetPos = getClampedAndAvoidedPosition(
       node,
       sLeft,
       sTop,
       container,
-      textContainer
+      textContainer,
+      paddingX,
+      paddingY
     );
 
     // Calcola la posizione di partenza iniziale in pixel per determinare i delta esatti
@@ -149,9 +155,33 @@ export function draggableThought(node, params) {
   // Creazione del Draggable GSAP
   const draggableInstance = Draggable.create(node, {
     type: 'x,y',
-    edgeResistance: 0.8,
+    edgeResistance: 1,
     bounds: container,
     
+    onPress: function() {
+      // Commento solo il PERCHÉ: calcola dinamicamente all'inizio del drag i confini del translate
+      // applicando un padding di sicurezza dal bordo pari al token --spacing-1 sull'asse X
+      // e il 15% dell'altezza della sezione sull'asse Y per confinarli nella fascia centrale.
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      const nodeWidth = node.offsetWidth;
+      const nodeHeight = node.offsetHeight;
+
+      const spacing1Raw = window.getComputedStyle(document.documentElement).getPropertyValue('--spacing-1') || '8px';
+      const paddingX = parseFloat(spacing1Raw) || 8;
+      const paddingY = containerHeight * 0.05;
+
+      const startLeft = node.offsetLeft;
+      const startTop = node.offsetTop;
+
+      this.applyBounds({
+        minX: paddingX - startLeft,
+        maxX: containerWidth - nodeWidth - paddingX - startLeft,
+        minY: paddingY - startTop,
+        maxY: containerHeight - nodeHeight - paddingY - startTop
+      });
+    },
+
     onDrag: function() {
       // Ottiene il baricentro del fumetto attualmente trascinato
       const rect1 = node.getBoundingClientRect();
