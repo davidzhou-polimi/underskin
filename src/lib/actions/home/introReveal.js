@@ -123,7 +123,7 @@ export function introReveal(node) {
 		if (innerCircle) {
 			gsap.to(innerCircle, {
 				rotation: 360,
-				duration: 140,
+				duration: 110,
 				repeat: -1,
 				ease: 'none',
 				transformOrigin: 'center center'
@@ -132,7 +132,7 @@ export function introReveal(node) {
 		if (middleCircle) {
 			gsap.to(middleCircle, {
 				rotation: -360,
-				duration: 180,
+				duration: 160,
 				repeat: -1,
 				ease: 'none',
 				transformOrigin: 'center center'
