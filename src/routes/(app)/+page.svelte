@@ -13,7 +13,7 @@
     import Preface from '$lib/components/sections/home/Preface.svelte';
     import Quiz from '$lib/components/sections/home/Quiz.svelte';
     import Performance from '$lib/components/sections/home/Performance.svelte';
-    import ArchetypeSection from '$lib/components/sections/archetypes/ArchetypeSection.svelte';
+    import ArchetypeSection from '$lib/components/sections/home/ArchetypeSection.svelte';
     import Outro from '$lib/components/sections/home/Outro.svelte';
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
