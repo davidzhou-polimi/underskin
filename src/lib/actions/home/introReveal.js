@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+import { navigationState } from '$lib/stores/navigationState.svelte.js';
 
 if (typeof window !== 'undefined') {
 	gsap.registerPlugin(ScrollTrigger);
@@ -19,9 +20,7 @@ export function introReveal(node) {
 
 	// Commento solo il PERCHÉ: quando si arriva da un archetipo il posizionamento lo gestisce cinematicScroll,
 	// quindi l'intro non deve bloccare lo scroll né attivarsi.
-	const fromArchetype =
-		typeof window !== 'undefined' &&
-		sessionStorage.getItem('fromArchetype') === 'true';
+	const fromArchetype = navigationState.fromArchetype;
 
 	let isLocked = !fromArchetype && (typeof window !== 'undefined' ? window.scrollY < 10 : true);
 	let isTransitioning = false;

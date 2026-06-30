@@ -1,5 +1,6 @@
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { getLenis } from '$lib/stores/lenis.svelte.js';
+import { navigationState } from '$lib/stores/navigationState.svelte.js';
 
 // Commento solo il PERCHÉ: replica la curva power2.inOut di GSAP come easing per lenis.scrollTo, così la
 // transizione cinematica resta morbida e identica alla precedente implementazione basata su tween.
@@ -15,8 +16,7 @@ const easeInOutPower2 = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2
 export function cinematicScroll(node) {
 	if (typeof window === 'undefined') return;
 
-	const fromArchetype = sessionStorage.getItem('fromArchetype') === 'true';
-	if (!fromArchetype) return;
+	if (!navigationState.fromArchetype) return;
 
 	// Seleziona gli elementi necessari nel DOM per orchestrare lo scorrimento
 	const archetypesSection = document.getElementById('archetypes');
@@ -46,7 +46,7 @@ export function cinematicScroll(node) {
 		// 2. Avvia lo scorrimento cinematico morbido dopo una pausa di stabilità visiva
 		scrollTimeout = setTimeout(() => {
 			const clearParam = () => {
-				sessionStorage.removeItem('fromArchetype');
+				navigationState.fromArchetype = false;
 			};
 
 			const l = getLenis();
