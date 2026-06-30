@@ -31,6 +31,18 @@ export function quizAnimation(node, params) {
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
 
+	const resetTrigger = ScrollTrigger.create({
+		trigger: node,
+		start: 'top bottom',
+		onLeaveBack: () => {
+			if (quizState === 'choosing') {
+				circlesTriggered = false;
+				// Commento solo il PERCHÉ: ripristina lo stato iniziale dei cerchi in modo invisibile solo quando la sezione è completamente uscita dallo schermo in basso
+				gsap.set(node.querySelectorAll('.circle-container'), { opacity: 0, y: 50, scale: 0.8 });
+			}
+		}
+	});
+
 	const pinTrigger = ScrollTrigger.create({
 		trigger: node,
 		start: 'top top',
@@ -40,11 +52,6 @@ export function quizAnimation(node, params) {
 		// Riattivazione da sotto: l'utente torna scrollando dalla sezione successiva
 		onEnterBack: () => { onEnterBack(); },
 		onToggle: (self) => {
-			if (!self.isActive && self.progress === 0 && quizState === 'choosing') {
-				circlesTriggered = false;
-				gsap.set(node.querySelectorAll('.circle-container'), { opacity: 0, y: 50, scale: 0.8 });
-			}
-
 			if (self.isActive && !circlesTriggered && quizState === 'choosing') {
 				circlesTriggered = true;
 				gsap.fromTo(node.querySelectorAll('.circle-container'),
@@ -202,6 +209,7 @@ export function quizAnimation(node, params) {
 			node.removeEventListener('click', handleBtnClick);
 			unlockScrollDown();
 			if (pinTrigger) pinTrigger.kill();
+			if (resetTrigger) resetTrigger.kill();
 			if (activeTimeline) activeTimeline.kill();
 		}
 	};
