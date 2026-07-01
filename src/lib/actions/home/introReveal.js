@@ -307,6 +307,8 @@ export function introReveal(node) {
 			start: 'top top',
 			end: 'top -10',
 			onEnterBack: () => {
+				// Commento solo il PERCHÉ: evita di riattivare il blocco intro se si arriva da un archetipo
+				if (navigationState.fromArchetype) return;
 				lock();
 				triggerEntry();
 			}
