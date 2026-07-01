@@ -6,7 +6,7 @@
 	 * 3. Utilizza scrollReveal per l'ingresso graduale degli elementi.
 	 */
 
-	import { scrollReveal } from '$lib/actions/scrollReveal.js';
+		import { narrativeReveal } from '$lib/actions/archetypes/narrativeReveal.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 
 	/**
@@ -34,9 +34,10 @@
 <section
 	id={sectionId}
 	class="narrative-section"
+	use:narrativeReveal
 >
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
-	<div class="content-container" use:scrollReveal>
+	<div class="content-container">
 		<div class="narrative-wrapper">
 			{#each paragraphs as paragraph}
 				<p class="narrative-text">
