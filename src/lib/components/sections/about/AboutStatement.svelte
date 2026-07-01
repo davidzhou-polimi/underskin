@@ -5,11 +5,11 @@
 <section 
 	id="about-statement" 
 	class="about-statement-section" 
+	use:performanceReveal
 >
 	<div class="statement-content">
 		<blockquote 
 			class="statement-quote" 
-			use:performanceReveal={{ triggerId: '#about-statement' }}
 		>
 			Riconoscere l'atleta dietro il dato è un 
 			<span class="gradient-text animate-gradient-text my-archetypes-color">atto di empatia</span>,<br />

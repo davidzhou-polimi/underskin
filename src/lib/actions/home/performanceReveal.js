@@ -6,41 +6,46 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Action per rivelare la citazione nella sezione Performance tramite ScrollTrigger.
- * @param {HTMLElement} node - L'elemento blockquote da rivelare.
- * @param {Object} [params] - I parametri opzionali.
- * @param {string} [params.triggerId] - L'ID del trigger (default '#performance').
+ * Action per gestire il pinning temporaneo e la rivelazione di Performance.svelte.
+ * @param {HTMLElement} node - La sezione principale da pinnare (.performance-section)
+ * @param {{ end?: string }} [params] - Parametri opzionali di configurazione dello scroll
  */
 export function performanceReveal(node, params = {}) {
-	const triggerId = params.triggerId || '#performance';
+	const content = node.firstElementChild;
+	if (!content) return;
 
-	// Impostiamo lo stato iniziale del testo (sfocato e traslato verso il basso)
-	gsap.set(node, {
-		opacity: 0,
-		filter: 'blur(15px)',
-		y: 20
-	});
+	const ctx = gsap.context(() => {
+		const tl = gsap.timeline({
+			scrollTrigger: {
+				trigger: node,
+				start: 'top top',
+				// Commento solo il PERCHÉ: pin temporaneo per indurre una sosta di lettura naturale prima che la pagina scorra avanti
+				end: params.end || '+=100%',
+				pin: true,
+				scrub: 1,
+				anticipatePin: 1
+			}
+		});
 
-	// Commento solo il PERCHÉ: gsap.to aggancia ScrollTrigger per attivare l'animazione di entrata fluida solo quando l'elemento entra al 75% della viewport, invertendo l'animazione se l'utente torna indietro
-	const st = gsap.to(node, {
-		opacity: 1,
-		filter: 'blur(0px)',
-		y: 0,
-		duration: 1.2,
-		ease: 'power2.out',
-		scrollTrigger: {
-			trigger: triggerId,
-			start: 'top 75%',
-			toggleActions: 'play none none reverse'
-		}
-	});
+		// Stato iniziale dell'intero blocco di testo (leggera sfocatura e opacità)
+		gsap.set(content, { opacity: 0, filter: 'blur(10px)', y: 20 });
+
+		// Rivelazione contemporanea di tutti i testi all'inizio del pin
+		tl.to(content, {
+			opacity: 1,
+			filter: 'blur(0px)',
+			y: 0,
+			duration: 1.0,
+			ease: 'power2.out'
+		});
+
+		// Mantiene il testo visualizzato e leggibile durante lo scroll rimanente
+		tl.to({}, { duration: 1.5 });
+	}, node);
 
 	return {
 		destroy() {
-			if (st.scrollTrigger) {
-				st.scrollTrigger.kill();
-			}
-			st.kill();
+			ctx.revert();
 		}
 	};
 }
