@@ -39,6 +39,7 @@
 			});
 		} else if (textStep === 2) {
 			// Gate aperto: si esce verso Performance con scroll morbido di Lenis
+			showQuizScrollHint = false;
 			canLeave = true;
 			scrollTo('#performance');
 		}
@@ -95,7 +96,7 @@
 				window.clearTimeout(quizHintTimeout);
 				quizHintTimeout = window.setTimeout(() => {
 					showQuizScrollHint = true;
-				}, 3000);
+				}, 1000);
 			}
 		} else {
 			showQuizScrollHint = false;

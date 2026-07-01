@@ -34,6 +34,7 @@
 	let hasCompletedOnce = $state(false);
 	let showScrollHint = $state(false);
 	let hintTimeout = 0;
+	let scrollStartOnUnlock = 0;
 
 	$effect(() => {
 		if (attempts > 0) {
@@ -41,19 +42,33 @@
 		}
 	});
 
-	// Commento solo il PERCHÉ: svela il suggerimento di scroll con un ritardo di 2.5 secondi dopo che il gioco
-	// viene completato, dando tempo all'utente di notare lo sblocco in modo non invasivo.
+	// Commento solo il PERCHÉ: svela l'indicatore con un delay di 2.5s dallo sblocco, ma lo nasconde
+	// immediatamente non appena l'utente inizia a scrollare, per mantenere l'interfaccia pulita.
 	$effect(() => {
 		if (hasCompletedOnce) {
+			scrollStartOnUnlock = window.scrollY;
+
 			window.clearTimeout(hintTimeout);
 			hintTimeout = window.setTimeout(() => {
 				showScrollHint = true;
-			}, 2500);
+			}, 1000);
+
+			const handleScroll = () => {
+				if (Math.abs(window.scrollY - scrollStartOnUnlock) > 40) {
+					showScrollHint = false;
+					window.removeEventListener('scroll', handleScroll);
+				}
+			};
+			window.addEventListener('scroll', handleScroll, { passive: true });
+
+			return () => {
+				window.clearTimeout(hintTimeout);
+				window.removeEventListener('scroll', handleScroll);
+			};
 		} else {
 			showScrollHint = false;
 			window.clearTimeout(hintTimeout);
 		}
-		return () => window.clearTimeout(hintTimeout);
 	});
 
 	// Commento solo il PERCHÉ: il blocco scroll (giù bloccato finché l'utente non gioca un tentativo, su libero)
