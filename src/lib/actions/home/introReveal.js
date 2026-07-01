@@ -100,20 +100,7 @@ export function introReveal(node) {
 			);
 		}
 
-		// Commento solo il PERCHÉ: Crea una pulsazione sinusoidale sulla label che dura esattamente il doppio del ciclo del mouse (3.6s complessivi) per evitare sfarfallii e rendere il ritmo calmo ed elegante
-		const scrollLabel = node.querySelector('.scroll-label');
-		if (scrollLabel) {
-			gsap.fromTo(scrollLabel,
-				{ opacity: 0.6 },
-				{
-					opacity: 0.3,
-					duration: 1.8,
-					repeat: -1,
-					yoyo: true,
-					ease: 'sine.inOut'
-				}
-			);
-		}
+
 
 		// Commento solo il PERCHÉ: Crea una rotazione continua e sfasata dei cerchi per generare un dinamismo geometrico e cinetico tridimensionale
 		const innerCircle = node.querySelector('.circle-inner');

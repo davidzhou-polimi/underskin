@@ -1,5 +1,6 @@
 <script>
 	import { introReveal } from '$lib/actions/home/introReveal.js';
+	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
 </script>
 
 <section class="intro-section" use:introReveal>
@@ -32,14 +33,8 @@
 
 	<h1 class="intro-title">UnderSkin</h1>
 
-	<div class="scroll-hint" aria-label="Scorri per iniziare">
-		<div class="scroll-hint-content">
-			<svg class="scroll-mouse-svg" viewBox="0 0 24 36" width="26" height="39" aria-hidden="true">
-				<rect x="4" y="3" width="16" height="26" rx="8" fill="none" stroke="var(--content-light-secondary)" stroke-width="1.2" stroke-opacity="0.75" />
-				<line class="mouse-wheel" x1="12" y1="10" x2="12" y2="14" stroke="var(--content-light-secondary)" stroke-width="1.2" stroke-linecap="round" />
-			</svg>
-			<span class="scroll-label">Scorri per iniziare</span>
-		</div>
+	<div class="scroll-hint">
+		<ScrollHint showText={true} text="Scorri per iniziare" />
 	</div>
 </section>
 
@@ -90,26 +85,6 @@
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 1;
-	}
-
-	.scroll-hint-content {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--spacing-1);
-	}
-	.scroll-label {
-		font-family: var(--font-family-base);
-		font-size: var(--text-service-size);
-		font-weight: var(--text-service-weight);
-		color: var(--content-light-secondary);
-        opacity: 0.8;
-	}
-
-
-	.scroll-mouse-svg {
-		display: block;
-		opacity: 0.6;
 	}
 </style>
 
