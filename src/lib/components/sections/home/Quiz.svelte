@@ -6,6 +6,8 @@
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { lockScroll, unlockScroll, scrollTo, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
+	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+	import { fade } from 'svelte/transition';
 
 	if (typeof window !== 'undefined') {
 		gsap.registerPlugin(Observer);
@@ -18,6 +20,8 @@
 	let canLeave = $state(false);
 	/** Flag di sicurezza per evitare input dello scroll durante le transizioni dei testi */
 	let isAnimatingStep = $state(false);
+	let showQuizScrollHint = $state(false);
+	let quizHintTimeout = 0;
 
 	/** @type {Observer | undefined} */
 	let quizObserver;
@@ -78,6 +82,27 @@
 			unlockScroll();
 			quizObserver?.disable();
 		}
+	});
+
+	// Commento solo il PERCHÉ: svela l'indicatore di scroll dopo 3 secondi di inattività nel primo step dei risultati,
+	// o immediatamente nello step finale che consente di uscire, facilitando la comprensione dello scrollytelling.
+	$effect(() => {
+		if (quizState === 'results') {
+			if (textStep === 2) {
+				showQuizScrollHint = true;
+			} else {
+				showQuizScrollHint = false;
+				window.clearTimeout(quizHintTimeout);
+				quizHintTimeout = window.setTimeout(() => {
+					showQuizScrollHint = true;
+				}, 3000);
+			}
+		} else {
+			showQuizScrollHint = false;
+			window.clearTimeout(quizHintTimeout);
+		}
+
+		return () => window.clearTimeout(quizHintTimeout);
 	});
 
 	// Nasconde il tooltip quando quizState cambia mentre il mouse è ancora nell'area
@@ -173,11 +198,17 @@
 		</div>
 	</div>
 
+	{#if showQuizScrollHint}
+		<!-- Commento solo il PERCHÉ: svela il suggerimento di scroll per guidare l'utente nei blocchi dello scrollytelling -->
+		<div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
+			<ScrollHint showText={false} />
+		</div>
+	{/if}
 </section>
 
 <style>
 	.quiz-wrapper {
-		position: relative;
+		position: relative; /* Assicura il corretto posizionamento assoluto dell'indicatore */
 		width: 100%;
 		height: 100vh;
 		display: flex;
@@ -442,5 +473,13 @@
 
 	.hidden {
 		display: none !important;
+	}
+
+	.scroll-hint-container {
+		position: absolute;
+		bottom: var(--spacing-8);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 100;
 	}
 </style>

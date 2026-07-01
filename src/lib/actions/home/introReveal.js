@@ -76,7 +76,7 @@ export function introReveal(node) {
 		);
 
 		tl.from(
-			node.querySelector('.scroll-hint-content'),
+			node.querySelector('.scroll-hint'),
 			{ opacity: 0, y: 12, duration: 1.0 },
 			'+=0'
 		);

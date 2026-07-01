@@ -1,6 +1,8 @@
 <script>
   import { draggableThought } from '$lib/actions/archetypes/draggableThought.js';
   import { thoughtsIntro } from '$lib/actions/archetypes/thoughtsIntro.js';
+  import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+  import { fade } from 'svelte/transition';
 
   let container = $state();
   
@@ -9,7 +11,7 @@
     { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right' },
     { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left' },
     { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '68%', isScattered: false, tailDir: 'right' },
-    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '82%', sLeft: '32%', isScattered: false, tailDir: 'right' },
+    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '72%', sLeft: '35%', isScattered: false, tailDir: 'right' },
     { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right' },
     { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left' }
   ]);
@@ -17,12 +19,29 @@
   let isIntroDone = $state(false);
   let hasCompletedOnce = $state(false);
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
+  let showScrollHint = $state(false);
+  let hintTimeout = 0;
   
   // Evita di bloccare nuovamente l'utente se ha già completato l'interazione almeno una volta
   $effect(() => {
     if (isIntroDone && activeCount === 0) {
       hasCompletedOnce = true;
     }
+  });
+
+  // Commento solo il PERCHÉ: svela il suggerimento di scroll con un ritardo di 2.5 secondi dopo che il gioco
+  // viene completato, dando tempo all'utente di notare lo sblocco in modo non invasivo.
+  $effect(() => {
+    if (hasCompletedOnce) {
+      window.clearTimeout(hintTimeout);
+      hintTimeout = window.setTimeout(() => {
+        showScrollHint = true;
+      }, 2500);
+    } else {
+      showScrollHint = false;
+      window.clearTimeout(hintTimeout);
+    }
+    return () => window.clearTimeout(hintTimeout);
   });
 
   // Il testo rimane nitido finché l'animazione di copertura non è completata
@@ -99,6 +118,13 @@
       </div>
     </div>
   {/each}
+
+  {#if showScrollHint}
+    <!-- Commento solo il PERCHÉ: l'indicatore compare solo a gioco completato per segnalare lo sblocco dello scroll -->
+    <div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
+      <ScrollHint showText={false} />
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -181,5 +207,13 @@
   .tail-right {
     padding: var(--spacing-3) var(--spacing-8) var(--spacing-3) var(--spacing-7); 
     clip-path: polygon(0% 16px, 1.5px 10px, 5px 5px, 10px 1.5px, 16px 0%, calc(100% - 15px) 0%, 100% 0%, calc(100% - 15px) 15px, calc(100% - 15px) calc(100% - 16px), calc(100% - 16.5px) calc(100% - 10px), calc(100% - 20px) calc(100% - 5px), calc(100% - 25px) calc(100% - 1.5px), calc(100% - 31px) 100%, 16px 100%, 10px calc(100% - 1.5px), 5px calc(100% - 5px), 1.5px calc(100% - 10px), 0% calc(100% - 16px));
+  }
+
+  .scroll-hint-container {
+    position: absolute;
+    bottom: var(--spacing-8);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
   }
 </style>

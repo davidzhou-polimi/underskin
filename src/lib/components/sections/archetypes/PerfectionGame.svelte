@@ -2,6 +2,8 @@
 	import { perfectionGameAction } from '$lib/actions/archetypes/perfectionGame.js';
 	import { perfectionIntro } from '$lib/actions/archetypes/perfectionIntro.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+	import { fade } from 'svelte/transition';
 
 	// Svelte 5 Runes: la pallina parte già attiva e in movimento per default
 	let isPlaying = $state(true);
@@ -30,11 +32,28 @@
 	// Tracciamento reattivo dello stato dell'intro e completamento per lo scroll lock
 	let isIntroDone = $state(false);
 	let hasCompletedOnce = $state(false);
+	let showScrollHint = $state(false);
+	let hintTimeout = 0;
 
 	$effect(() => {
 		if (attempts > 0) {
 			hasCompletedOnce = true;
 		}
+	});
+
+	// Commento solo il PERCHÉ: svela il suggerimento di scroll con un ritardo di 2.5 secondi dopo che il gioco
+	// viene completato, dando tempo all'utente di notare lo sblocco in modo non invasivo.
+	$effect(() => {
+		if (hasCompletedOnce) {
+			window.clearTimeout(hintTimeout);
+			hintTimeout = window.setTimeout(() => {
+				showScrollHint = true;
+			}, 2500);
+		} else {
+			showScrollHint = false;
+			window.clearTimeout(hintTimeout);
+		}
+		return () => window.clearTimeout(hintTimeout);
 	});
 
 	// Commento solo il PERCHÉ: il blocco scroll (giù bloccato finché l'utente non gioca un tentativo, su libero)
@@ -170,10 +189,17 @@
 	</div>
 </div>
 
+	{#if showScrollHint}
+		<!-- Commento solo il PERCHÉ: l'indicatore compare solo a gioco completato per segnalare lo sblocco dello scroll -->
+		<div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
+			<ScrollHint showText={false} />
+		</div>
+	{/if}
 </section>
 
 <style>
 	.perfection-container {
+		position: relative; /* Assicura il posizionamento corretto dell'indicatore assoluto */
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -301,5 +327,13 @@
 	@keyframes popIn {
 		0% { transform: scale(0.5); opacity: 0; }
 		100% { transform: scale(1); opacity: 1; }
+	}
+
+	.scroll-hint-container {
+		position: absolute;
+		bottom: var(--spacing-8);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 100;
 	}
 </style>
