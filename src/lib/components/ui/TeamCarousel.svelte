@@ -26,7 +26,7 @@
         {
             name: "Ilaria La Spada",
             type: "insoddisfatto",
-            imageSrc: "/images/athletes/ilia-malinin.webp",
+            imageSrc: "/images/team/ilaria-la-spada.webp",
         },
         {
             name: "Ziying Shao",
