@@ -189,8 +189,24 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: visible;
+        /* Commento solo il PERCHÉ: impostato a hidden per contenere la larghezza visibile a quella del container (992px), nascondendo le card asimmetriche ed i wrap improvvisi su schermi larghi */
+        overflow: hidden;
         position: relative;
+        /* Commento solo il PERCHÉ: applica una sfumatura graduale ai lati per far dissolvere morbidamente le card in entrata e uscita */
+        -webkit-mask-image: linear-gradient(
+            to right,
+            transparent,
+            black var(--spacing-4),
+            black calc(100% - var(--spacing-4)),
+            transparent
+        );
+        mask-image: linear-gradient(
+            to right,
+            transparent,
+            black var(--spacing-4),
+            black calc(100% - var(--spacing-4)),
+            transparent
+        );
     }
 
     .carousel-track {
