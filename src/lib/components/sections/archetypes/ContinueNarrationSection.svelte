@@ -117,7 +117,10 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        /* Commento solo il perché: raggruppa tutti i contenuti (titolo, card e bottone) al centro esatto dello schermo */
+        justify-content: center;
+        /* Commento solo il perché: definisce uno stacco bilanciato tra la griglia dei contenuti e l'azione finale */
+        gap: var(--spacing-8);
         padding-inline: var(--spacing-2);
         box-sizing: border-box;
     }
@@ -127,8 +130,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        /* Commento solo il perché: distribuisce lo spazio extra per centrare verticalmente il blocco principale */
-        flex-grow: 1;
         width: 100%;
     }
 
@@ -139,7 +140,7 @@
         color: var(--content-primary);
         text-align: center;
         /* Commento solo il perché: definisce lo spazio verticale per distanziare il titolo dagli altri elementi */
-        margin-top: var(--spacing-6);
+        margin-top: var(--spacing-0);
         margin-bottom: var(--spacing-6);
     }
 
