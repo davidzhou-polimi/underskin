@@ -10,7 +10,7 @@
 			stroke="var(--content-primary)"
 			stroke-opacity="0.24"
 			stroke-width="2"
-			stroke-dasharray="0 11"
+			stroke-dasharray="0 11.016"
 			stroke-linecap="round"
 		/>
 		<circle class="intro-circle circle-middle" cx="400" cy="400" r="440"
@@ -18,7 +18,7 @@
 			stroke="var(--content-primary)"
 			stroke-opacity="0.32"
 			stroke-width="2"
-			stroke-dasharray="0 11"
+			stroke-dasharray="0 11.014"
 			stroke-linecap="round"
 		/>
 		<circle class="intro-circle circle-outer" cx="400" cy="400" r="630"
@@ -26,7 +26,7 @@
 			stroke="var(--content-primary)"
 			stroke-opacity="0.16"
 			stroke-width="2"
-			stroke-dasharray="0 11"
+			stroke-dasharray="0 10.996"
 			stroke-linecap="round"
 		/>
 	</svg>
