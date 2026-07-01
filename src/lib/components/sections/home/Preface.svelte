@@ -34,13 +34,13 @@
 <section
     id="preface-text"
     class="preface-section"
-    use:prefacePin={{ end: "+=1000%" }}
+    use:prefacePin={{ end: "+=550%" }}
 >
     <div class="canvas-layer">
         <canvas use:bindCanvas></canvas>
     </div>
 
-    <div class="text-container" use:scrollReveal={{ end: "+=800%" }}>
+    <div class="text-container" use:scrollReveal={{ end: "+=500%" }}>
         <p class="reveal-line">Milano-Cortina 2026</p>
         <p class="reveal-line">2.900 atleti</p>
         <p class="reveal-line">1 vita di sacrifici</p>
@@ -66,6 +66,8 @@
         justify-content: center;
         overflow: hidden;
         background-color: transparent;
+        /* Commento solo il PERCHÉ: applica un margine negativo per spostare verticalmente la sezione preface verso l'alto rispetto alla viewport su richiesta esplicita dell'utente */
+        margin-top: -20vh;
     }
 
     .canvas-layer {

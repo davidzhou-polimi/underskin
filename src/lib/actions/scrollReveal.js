@@ -30,7 +30,15 @@ export function scrollReveal(node, params = {}) {
 				trigger: triggerElement,
 				start: 'top 0%',
 				end: params.end ?? `+=${lines.length * startPercent}%`,
-				scrub: 1
+				scrub: 1,
+				// Commento solo il PERCHÉ: allinea automaticamente lo scorrimento sulle posizioni esatte in cui 
+				// le singole righe sono nitide (0%, 25%, 50%, 75%, 100%), evitando testi sfuocati in stasi
+				snap: lines.length > 1 ? {
+					snapTo: 1 / (lines.length - 1),
+					duration: { min: 0.2, max: 0.6 },
+					ease: 'power2.inOut',
+					delay: 0.05
+				} : undefined
 			}
 		});
 
