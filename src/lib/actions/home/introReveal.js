@@ -12,11 +12,6 @@ if (typeof window !== 'undefined') {
  * @param {HTMLElement} node
  */
 export function introReveal(node) {
-	let isIntroActive = true;
-	/** @type {((e: MouseEvent) => void) | undefined} */
-	let handleMouseMove;
-	/** @type {(() => void) | undefined} */
-	let handleMouseLeave;
 
 	// Commento solo il PERCHÉ: quando si arriva da un archetipo il posizionamento lo gestisce cinematicScroll,
 	// quindi l'intro non deve bloccare lo scroll né attivarsi.
@@ -137,56 +132,9 @@ export function introReveal(node) {
 
 		const circlesSvg = node.querySelector('.circles-svg');
 
-		// Commento solo il PERCHÉ: Inizializza placeholder di quickTo per renderli disponibili in ambito lessicale in tutte le funzioni del blocco
-		let circlesX = (/** @type {number} */ _v) => {};
-		let circlesY = (/** @type {number} */ _v) => {};
-		let circlesRotX = (/** @type {number} */ _v) => {};
-		let circlesRotY = (/** @type {number} */ _v) => {};
-
-		// Commento solo il PERCHÉ: Traccia il movimento del mouse per inclinare e traslare lo sfondo su più livelli di profondità per dare senso di tridimensionalità.
+		// Commento solo il PERCHÉ: centra inizialmente l'SVG dei cerchi concentrici nello schermo
 		if (circlesSvg) {
 			gsap.set(circlesSvg, { xPercent: -50, yPercent: -50 });
-
-			// Commento solo il PERCHÉ: Legge la dimensione del font radice in pixel per calcolare uno spostamento parallax in rem (es. 0.5rem), garantendo uniformità visiva con il titolo su ogni risoluzione.
-			const rootFontSize = typeof window !== 'undefined' ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16 : 16;
-			const maxMove = 0.5 * rootFontSize;
-
-			circlesX = gsap.quickTo(circlesSvg, 'x', { duration: 1.5, ease: 'power2.out' });
-			circlesY = gsap.quickTo(circlesSvg, 'y', { duration: 1.5, ease: 'power2.out' });
-			circlesRotX = gsap.quickTo(circlesSvg, 'rotateX', { duration: 1.5, ease: 'power2.out' });
-			circlesRotY = gsap.quickTo(circlesSvg, 'rotateY', { duration: 1.5, ease: 'power2.out' });
-
-			/**
-			 * @param {MouseEvent} e
-			 */
-			handleMouseMove = (e) => {
-				if (!isIntroActive) return;
-
-				const rect = node.getBoundingClientRect();
-				const width = rect.width;
-				const height = rect.height;
-
-				const mouseX = ((e.clientX - rect.left) / width) * 2 - 1;
-				const mouseY = ((e.clientY - rect.top) / height) * 2 - 1;
-
-				// I cerchi (sfondo) assecondano lo spostamento del mouse con ampiezza minore per profondità ottica
-				circlesX(mouseX * maxMove);
-				circlesY(mouseY * maxMove);
-				circlesRotX(-mouseY * 3);
-				circlesRotY(mouseX * 3);
-			};
-
-			handleMouseLeave = () => {
-				if (!isIntroActive) return;
-
-				circlesX(0);
-				circlesY(0);
-				circlesRotX(0);
-				circlesRotY(0);
-			};
-
-			node.addEventListener('mousemove', handleMouseMove);
-			node.addEventListener('mouseleave', handleMouseLeave);
 		}
 
 		function triggerExit() {
@@ -200,7 +148,6 @@ export function introReveal(node) {
 			activeTimeline = gsap.timeline({
 				onComplete: () => {
 					isTransitioning = false;
-					isIntroActive = false;
 					unlock();
 					// Commento solo il PERCHÉ: riposiziona a 105px per aggiornare lo store del gradiente e sbloccare
 					// lo scorrimento normale; force perché Lenis è appena ripartito e immediate evita lo scatto animato.
@@ -360,7 +307,6 @@ export function introReveal(node) {
 			start: 'top top',
 			end: 'top -10',
 			onEnterBack: () => {
-				isIntroActive = true;
 				lock();
 				triggerEntry();
 			}
@@ -369,8 +315,6 @@ export function introReveal(node) {
 
 	return {
 		destroy() {
-			if (handleMouseMove) node.removeEventListener('mousemove', handleMouseMove);
-			if (handleMouseLeave) node.removeEventListener('mouseleave', handleMouseLeave);
 			unlockScrollDown();
 			ctx.revert();
 		}
