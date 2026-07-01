@@ -44,8 +44,14 @@ export function outroReveal(node, params) {
 		}
 	}
 
-	// Stato iniziale
-	renderValue(0);
+	// Stato iniziale: mostra subito il primo stage
+	const initialStage = stages[0];
+	renderValue(initialStage.target);
+	animState.value = initialStage.target;
+	activeIndex = 0;
+	if (descriptionEls[0]) {
+		gsap.set(descriptionEls[0], { opacity: 1 });
+	}
 
 	/**
 	 * Esegue una transizione fluida e discreta verso lo stage selezionato.
@@ -94,36 +100,12 @@ export function outroReveal(node, params) {
 	}
 
 	/**
-	 * Ripristina lo stato iniziale (0% e nessun testo visibile) quando l'utente
-	 * esce dalla sezione verso l'alto, garantendo un ingresso pulito alla successiva visita.
+	 * Ripristina il primo stage (34% e relativo testo) quando l'utente
+	 * risale oltre l'inizio della sezione.
 	 */
 	function resetToStart() {
-		activeIndex = -1;
-
-		if (currentTween) currentTween.kill();
-		currentTextTweens.forEach(t => t.kill());
-		currentTextTweens = [];
-
-		ctx.add(() => {
-			currentTween = gsap.to(animState, {
-				value: 0,
-				duration: 0.4,
-				ease: 'power2.out',
-				onUpdate() {
-					renderValue(animState.value);
-				}
-			});
-
-			descriptionEls.forEach((el) => {
-				const t = gsap.to(el, {
-					opacity: 0,
-					duration: 0.2,
-					ease: 'power1.out',
-					overwrite: 'auto'
-				});
-				currentTextTweens.push(t);
-			});
-		});
+		if (activeIndex === 0) return;
+		goToStage(0);
 	}
 
 	// Gestiamo il ciclo di vita di tween e ScrollTrigger tramite un contesto dedicato per il cleanup automatico.
@@ -139,7 +121,7 @@ export function outroReveal(node, params) {
 				const progress = self.progress;
 				
 				// Commento solo il PERCHÉ: se l'utente torna sopra l'inizio della sezione, 
-				// resettiamo lo stato grafico a 0 anziché mantenere il primo stage attivo.
+				// resettiamo lo stato grafico allo stage 0 anziché a 0% vuoto.
 				if (progress <= 0) {
 					resetToStart();
 					return;
