@@ -6,9 +6,13 @@
     
     // Tracciamento dello scroll reattivo (Svelte 5 Runes)
     let scrollProgress = $state(0);
+    let isMobile = $state(false);
     
-    // Posizione di partenza e movimento della scritta BURNOUT gigante
-    let burnoutPositionVw = $derived(140 - (scrollProgress * 520));
+    // Commento solo il PERCHÉ: su schermi mobili (<= 768px), la parola BURNOUT (che è larga 633vh) 
+    // richiede uno spostamento orizzontale molto maggiore in vw rispetto a desktop per uscire dal viewport.
+    let scrollMultiplier = $derived(isMobile ? 1300 : 520);
+    let startOffset = $derived(isMobile ? 100 : 140);
+    let burnoutPositionVw = $derived(startOffset - (scrollProgress * scrollMultiplier));
     let translateXValue = $derived(`translateX(${burnoutPositionVw}vw)`);
 
     // 1. IL PRIMO BLOCCO (Intro) viene spinto via da sinistra verso destra
@@ -19,10 +23,10 @@
     let introBlur = $derived(introPushProgress * 10); // 0→10px blur sull'uscita
 
     // 2. IL SECONDO BLOCCO (Outro) entra da destra agganciato alla "T" di BURNOUT
-    // Abbiamo aumentato il valore da 220 a 350 per spostare il punto di contatto dalla U alla T.
-    // SE NOTI CHE È ANCORA TROPPO A SINISTRA: aumenta 350 (es. 380, 400)
-    // SE NOTI CHE HA SUPERATO LA T ED È TROPPO A DESTRA: diminuisci 350 (es. 320, 330)
-    let tailOfBurnout = $derived(burnoutPositionVw + 350); 
+    // Commento solo il PERCHÉ: su mobile il punto di coda si sposta proporzionalmente in avanti (1100vw) 
+    // rispetto al valore desktop (350vw) a causa del moltiplicatore di scroll aumentato.
+    let tailOffset = $derived(isMobile ? 1100 : 350);
+    let tailOfBurnout = $derived(burnoutPositionVw + tailOffset); 
 
     // Il testo arriva da destra seguendo la T, e si pianta a 0 (centro esatto) quando la T raggiunge il centro
     let outroX = $derived(Math.max(0, tailOfBurnout));
@@ -33,6 +37,8 @@
 
     function handleScroll() {
         if (!sectionRef) return;
+        
+        isMobile = window.innerWidth <= 768;
         
         const rect = sectionRef.getBoundingClientRect();
         const windowHeight = window.innerHeight;
@@ -194,5 +200,19 @@
         --gradient-c1: var(--archetipi-favorito, #6A96DF);
         --gradient-c2: var(--archetipi-insoddisfatto, #8035D2);
         --gradient-c3: var(--archetipi-infortunato, #D86146);
+    }
+
+    @media (max-width: 768px) {
+        .text-container {
+            /* Commento solo il PERCHÉ: aumenta il padding laterale su mobile 
+               per evitare che i testi tocchino i bordi fisici dello schermo del telefono */
+            padding: 0 var(--spacing-4);
+        }
+
+        .text-wrapper {
+            /* Commento solo il PERCHÉ: riduce lo spazio verticale tra titolo 
+               e sottotitolo su schermi mobili per renderlo compatto */
+            gap: var(--spacing-3);
+        }
     }
 </style>

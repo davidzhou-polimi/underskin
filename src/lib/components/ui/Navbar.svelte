@@ -373,4 +373,42 @@
 	.link-nav__item--active {
 		font-weight: var(--text-nav-active-weight);
 	}
+
+	@media (max-width: 768px) {
+		.navbar__inner {
+			/* Commento solo il PERCHÉ: passa ad una disposizione a colonna con sfondo glassato 
+			   su mobile per mantenere i link leggibili ed evitare sovrapposizioni orizzontali */
+			flex-direction: column;
+			align-items: center;
+			padding-inline: var(--spacing-3);
+			padding-block: var(--spacing-2);
+			background-color: rgb(from var(--neutral-100) r g b / 0.85);
+			backdrop-filter: blur(8px);
+			border-bottom: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
+			min-height: auto;
+		}
+
+		.logo-nav {
+			/* Commento solo il PERCHÉ: riduce l'altezza e il carattere del logo per 
+			   adattarlo alla testata verticale mobile */
+			font-size: var(--text-s);
+			height: auto;
+			margin-bottom: var(--spacing-2);
+		}
+
+		.link-nav {
+			/* Commento solo il PERCHÉ: distribuisce i link in modo uniforme lungo tutta 
+			   la larghezza disponibile sullo schermo del telefono */
+			margin-inline-start: 0;
+			width: 100%;
+			justify-content: space-between;
+			gap: var(--spacing-1);
+		}
+
+		.link-nav__item {
+			/* Commento solo il PERCHÉ: riduce la dimensione dei caratteri per 
+			   far allineare ordinatamente tutti i link su un'unica riga */
+			font-size: 0.825rem;
+		}
+	}
 </style>

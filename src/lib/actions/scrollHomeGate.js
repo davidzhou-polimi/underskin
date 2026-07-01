@@ -36,6 +36,18 @@ function resolveTokenRGB(cssVar) {
 export function scrollHomeGate(node, params = {}) {
 	const { onNavigate, threshold = 1000 } = params;
 
+	let finalThreshold = threshold;
+
+	// Commento solo il PERCHÉ: riduce la soglia di scorrimento necessaria su mobile per rendere 
+	// meno faticoso il caricamento del gate tramite swipe consecutivi.
+	const mm = gsap.matchMedia();
+	mm.add("(max-width: 768px)", () => {
+		finalThreshold = 400;
+	});
+	mm.add("(min-width: 769px)", () => {
+		finalThreshold = threshold;
+	});
+
 	// containerEl è un div diretto → disponibile immediatamente
 	// buttonEl è dentro Button.svelte (child component) → queryato lazily in activateGate
 	const containerEl = node.querySelector('.action-container');
@@ -122,11 +134,11 @@ export function scrollHomeGate(node, params = {}) {
 		const proxy = { v: accumulated };
 		decayTween = gsap.to(proxy, {
 			v: 0,
-			duration: Math.min(accumulated / threshold, 1) * 1.5,
+			duration: Math.min(accumulated / finalThreshold, 1) * 1.5,
 			ease: 'power2.out',
 			onUpdate() {
 				accumulated = proxy.v;
-				updateButtonFeel(proxy.v / threshold);
+				updateButtonFeel(proxy.v / finalThreshold);
 			},
 			onComplete() {
 				accumulated = 0;
@@ -164,8 +176,8 @@ export function scrollHomeGate(node, params = {}) {
 			if (buttonEl) gsap.set(buttonEl, { scale: 1 });
 		}
 
-		accumulated = Math.min(accumulated + deltaY, threshold);
-		const progress = accumulated / threshold;
+		accumulated = Math.min(accumulated + deltaY, finalThreshold);
+		const progress = accumulated / finalThreshold;
 		updateButtonFeel(progress);
 
 		if (progress >= 1) {
@@ -288,6 +300,7 @@ export function scrollHomeGate(node, params = {}) {
 			lenis?.off('scroll', checkGate);
 			deactivateGate();
 			ctx.revert();
+			mm.revert();
 		}
 	};
 }

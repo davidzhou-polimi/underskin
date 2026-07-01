@@ -105,6 +105,20 @@
         line-height: 1.4;
     }
 
+    @media (max-width: 768px) {
+        .preface-section {
+            /* Commento solo il PERCHÉ: azzera il margine superiore negativo su mobile 
+               per evitare che la sezione si sovrapponga visivamente con l'IntroSection */
+            margin-top: 0;
+        }
+
+        .reveal-line {
+            /* Commento solo il PERCHÉ: adotta una taglia di testo inferiore su mobile 
+               per evitare che frasi medie/lunghe vadano a capo in troppe righe spezzando il ritmo */
+            font-size: var(--text-l);
+        }
+    }
+
     /* Commento solo il PERCHÉ: nasconde le scritte successive alla prima a livello CSS statico, evitando che si sovrappongano all'avvio prima del caricamento di JS/GSAP */
     .reveal-line:not(:first-child) {
         opacity: 0;

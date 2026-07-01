@@ -97,4 +97,21 @@
         padding-inline: var(--spacing-4);
         box-sizing: border-box;
     }
+
+    @media (max-width: 768px) {
+        .archetype-section {
+            /* Commento solo il PERCHÉ: azzera il margine superiore negativo su mobile 
+               per evitare conflitti spaziali con la sezione precedente */
+            margin-top: 0;
+            padding-top: var(--spacing-6);
+        }
+
+        .cards-row {
+            /* Commento solo il PERCHÉ: passa ad una disposizione verticale in colonna 
+               per ospitare correttamente le tre carte archetipo su schermi stretti */
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-6);
+        }
+    }
 </style>

@@ -115,11 +115,21 @@
     }
 
     @media (max-width: 768px) {
+        .hero-footer {
+            /* Commento solo il PERCHÉ: annulla il margine negativo desktop su mobile 
+               per evitare che il footer si sovrapponga con la sezione Final precedente */
+            margin-top: 0;
+            padding-block-end: var(--spacing-4);
+        }
+
         .footer-bottom {
             flex-direction: column;
             align-items: center;
             gap: var(--spacing-2);
             text-align: center;
+            /* Commento solo il PERCHÉ: usa un margine positivo per distanziare 
+               la nota di copyright dall'SVG vettoriale su schermi piccoli */
+            margin-block-start: var(--spacing-2);
         }
     }
 </style>

@@ -172,4 +172,18 @@
 		font-weight: 700;
 		fill: var(--content-primary);
 	}
+
+	@media (max-width: 768px) {
+		.circle-percentage {
+			/* Commento solo il PERCHÉ: scala la percentuale a 3.5rem (text-2xl) su mobile 
+			   per evitare che sbordi dai confini del cerchio SVG */
+			font-size: var(--text-2xl);
+		}
+
+		.circle-description {
+			/* Commento solo il PERCHÉ: scala la descrizione della statistica a 1.125rem (text-s) 
+			   su mobile per mantenerla leggibile e racchiusa nell'area inferiore dell'SVG */
+			font-size: var(--text-s);
+		}
+	}
 </style>

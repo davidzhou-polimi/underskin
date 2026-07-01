@@ -26,6 +26,14 @@
 		background-color: transparent;
 	}
 
+	@media (max-width: 768px) {
+		.performance-section {
+			/* Commento solo il PERCHÉ: riduce il padding laterale fisso desktop 
+			   per consentire al testo di occupare meglio la larghezza dello schermo mobile */
+			padding: 0 var(--spacing-3);
+		}
+	}
+
 	.perf-quote {
 		font-family: 'Rethink Sans', sans-serif;
 		font-weight: var(--text-important-weight);
