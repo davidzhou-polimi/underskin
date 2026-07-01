@@ -8,6 +8,10 @@ if (typeof window !== 'undefined') {
 /**
  * Azione Svelte per la transizione cinematografica dentro al testo SVG tramite ScrollTrigger.
  * Risolve il problema della sgranatura/pixel dei font durante lo scale elevato.
+ * Utilizza la funzionalità di snap nativo di ScrollTrigger con soglie e target asimmetrici
+ * calibrati sulla direzione dello scroll. Garantisce che in risalita il testo rimanga visibile
+ * al 100% senza vuoti e rende l'animazione estremamente morbida e priva di scatti.
+ * 
  * @param {HTMLElement} node - Il container principale della sezione
  */
 export function zoomTextTransition(node) {
@@ -29,7 +33,6 @@ export function zoomTextTransition(node) {
 		attr: { viewBox: '0 0 1000 400' }
 	});
 	gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 30 });
-	// Impedisce il rendering e l'interazione con l'intera sezione finché lo zoom non è completato
 	gsap.set(nextContent, { autoAlpha: 0 });
 
 	// Differisce la creazione dello ScrollTrigger al prossimo frame di rendering,
@@ -39,13 +42,34 @@ export function zoomTextTransition(node) {
 		ctx = gsap.context(() => {
 			const tl = gsap.timeline({
 				scrollTrigger: {
+					id: 'zoomTrigger',
 					trigger: node,
 					start: 'top top',    
-					/* Allunga lo spazio complessivo di pinning per ridurre la velocità dello scroll ed evitare passaggi repentini */
-					end: '+=400%',       
+					/* Spazio di pinning ottimizzato per bilanciare fluidità di lettura ed efficacia dello snap */
+					end: '+=250%',       
 					pin: true,           
-					scrub: 1,            
-					anticipatePin: 1
+					scrub: 1.5, // Aumentato lo scrub per rendere l'inseguimento dell'animazione estremamente morbido          
+					anticipatePin: 1,
+					// Commento solo il PERCHÉ: lo snap asimmetrico gestisce i target in modo intelligente.
+					// Al ritorno (direzione -1), snappiamo a 0.20 (zona in cui il testo ha completato il fade-in ed è stabile)
+					// invece di 0.0 (inizio assoluto in cui l'opacità è 0 per il reset), evitando il vuoto visivo.
+					snap: {
+						snapTo: (value) => {
+							const trigger = ScrollTrigger.getById('zoomTrigger');
+							const direction = trigger ? trigger.direction : 1;
+
+							if (direction === 1) {
+								// In discesa: se supera il 30% del percorso, completa lo zoom fino a 1.0. Altrimenti si ferma a 0.20 (testo visibile).
+								return value > 0.30 ? 1.0 : 0.20;
+							} else {
+								// In risalita: se scende sotto l'80% del percorso, torna a 0.20 (testo visibile). Altrimenti ri-aggancia a 1.0.
+								return value < 0.80 ? 0.20 : 1.0;
+							}
+						},
+						duration: { min: 0.8, max: 1.4 }, // Allungata la durata per rendere la transizione di snap molto più dolce e graduale
+						delay: 0.02, // Reattività immediata al rilascio dello scroll
+						ease: 'power3.out' // Easing più morbido per attutire l'aggancio finale
+					}
 				}
 			});
 
