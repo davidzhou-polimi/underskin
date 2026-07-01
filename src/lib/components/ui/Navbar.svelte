@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { navbarSlide } from '$lib/actions/navbarSlide.js';
-	import { getLenis } from '$lib/stores/lenis.svelte.js';
+	import { getLenis, lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
 
 	/**
 	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
@@ -27,10 +27,30 @@
 	} = $props();
 
 	let hidden = $state(false);
+	let isMenuOpen = $state(false);
+	let isMobile = $state(false);
 
-	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta (hideByDefault cambia quando page.url.pathname cambia nel layout).
+	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta, 
+	// ma su mobile forza la navbar visibile all'avvio (hidden = false) per preservarne la visibilità in cima
 	$effect(() => {
-		hidden = hideByDefault;
+		if (isMobile) {
+			hidden = false;
+		} else {
+			hidden = hideByDefault;
+		}
+	});
+
+	// Commento solo il PERCHÉ: blocca o sblocca lo scorrimento della pagina di sfondo (Lenis)
+	// a seconda che l'overlay del menu mobile sia aperto o chiuso, garantendo un'interazione pulita.
+	$effect(() => {
+		if (isMenuOpen) {
+			lockScroll();
+		} else {
+			unlockScroll();
+		}
+		return () => {
+			unlockScroll();
+		};
 	});
 
 	let lastScrollY = 0;
@@ -59,7 +79,7 @@
 		/* Evita di nascondere la barra se l'utente la sta sorvolando con il mouse o la sta navigando con la tastiera */
 		if (
 			autoHideDelay <= 0 ||
-			(!hideByDefault && window.scrollY <= 10) ||
+			((isMobile || !hideByDefault) && window.scrollY <= 10) ||
 			isHovered ||
 			isFocused
 		)
@@ -98,6 +118,7 @@
 	 * @param {MouseEvent} e
 	 */
 	const handleLogoClick = async (e) => {
+		isMenuOpen = false; // Chiude il menu mobile se l'utente clicca sul logo
 		const currentPath = page.url.pathname;
 		if (currentPath === '/') {
 			e.preventDefault();
@@ -124,6 +145,7 @@
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
+		isMobile = window.innerWidth <= 768;
 		/** @type {ReturnType<typeof setTimeout> | undefined} */
 		let scrollTimeout;
 		let isMouseNearTop = false;
@@ -132,9 +154,11 @@
 
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
+			isMobile = window.innerWidth <= 768;
 
-			// Blocca visibile in prossimità del top della pagina a meno che non sia richiesto di nasconderla di default
-			if (currentScrollY <= 10 && !hideByDefault) {
+			// Commento solo il PERCHÉ: su mobile o quando hideByDefault è disattivo, 
+			// forza la navbar visibile quando si è vicini alla cima dello schermo (scrollY <= 10)
+			if (currentScrollY <= 10 && (isMobile || !hideByDefault)) {
 				hidden = false;
 				lastScrollY = currentScrollY;
 				clearTimeout(autoHideTimeout);
@@ -290,8 +314,57 @@
 >
 	<nav class="navbar__inner" aria-label="Primary">
 		{@render logo()}
-		{@render menu()}
+		
+		<div class="desktop-menu-wrapper">
+			{@render menu()}
+		</div>
+
+		<button
+			class="menu-toggle-btn"
+			onclick={() => isMenuOpen = true}
+			aria-expanded={isMenuOpen}
+			aria-label="Apri menu"
+		>
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+				<line x1="3" y1="6" x2="21" y2="6"></line>
+				<line x1="3" y1="12" x2="21" y2="12"></line>
+				<line x1="3" y1="18" x2="21" y2="18"></line>
+			</svg>
+		</button>
 	</nav>
+
+	<!-- Commento solo il PERCHÉ: overlay a tutto schermo per ospitare la navigazione verticale mobile 
+	     in linea con lo stile grafico mostrato nello screenshot -->
+	<div class="mobile-menu-overlay" class:is-open={isMenuOpen} aria-hidden={!isMenuOpen}>
+		<div class="mobile-menu-header">
+			{@render logo()}
+			<button
+				class="menu-close-btn"
+				onclick={() => isMenuOpen = false}
+				aria-label="Chiudi menu"
+			>
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
+		</div>
+		<div class="mobile-menu-links">
+			{#each links as link}
+				{@const isActive = getIsActive(link)}
+				<button
+					class="mobile-nav-item"
+					class:mobile-nav-item--active={isActive}
+					onclick={(e) => {
+						isMenuOpen = false;
+						handleNavClick(e, link);
+					}}
+				>
+					{link.label}
+				</button>
+			{/each}
+		</div>
+	</div>
 </header>
 
 <style>
@@ -374,41 +447,131 @@
 		font-weight: var(--text-nav-active-weight);
 	}
 
+	/* Pulsante Menu Mobile */
+	.menu-toggle-btn {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		z-index: 5;
+		color: var(--content-light-primary);
+	}
+
+	/* Overlay Mobile */
+	.mobile-menu-overlay {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		/* Commento solo il PERCHÉ: imposta l'effetto ghiaccio semitrasparente azzurrato del brand */
+		background-color: rgb(from var(--background-primary) r g b / 0.85);
+		backdrop-filter: blur(12px);
+		z-index: 999;
+		display: flex;
+		flex-direction: column;
+		/* Commento solo il PERCHÉ: allinea il padding orizzontale a spacing-4 (32px), 
+		   esattamente identico a quello della navbar chiusa per eliminare ogni layout shift */
+		padding: var(--spacing-4) var(--spacing-4) var(--spacing-10);
+		box-sizing: border-box;
+		transform: translateY(-100%);
+		transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+		pointer-events: none;
+	}
+
+	.mobile-menu-overlay.is-open {
+		transform: translateY(0);
+		pointer-events: auto;
+	}
+
+	.mobile-menu-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-height: var(--spacing-7);
+		/* Commento solo il PERCHÉ: distanzia maggiormente il blocco dei link dall'header 
+		   dando respiro al layout verticale come richiesto dallo screenshot */
+		margin-bottom: var(--spacing-12);
+	}
+
+	.menu-close-btn {
+		background: transparent;
+		border: none;
+		/* Commento solo il PERCHÉ: definisce un'icona SVG allineata e centrata con 
+		   un'area cliccabile confortevole di 32px per il touch */
+		cursor: pointer;
+		color: var(--content-light-primary);
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+	}
+
+	.mobile-menu-links {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		/* Commento solo il PERCHÉ: crea un'ampia spaziatura verticale tra le varie voci 
+		   di menu per garantire leggibilità ed evitare click accidentali su mobile */
+		gap: var(--spacing-6);
+		width: 100%;
+		/* Commento solo il PERCHÉ: azzera il padding orizzontale per far sì che i link 
+		   siano perfettamente allineati in verticale con il logo in alto, come nel mockup */
+		padding-inline-start: 0;
+	}
+
+	.mobile-nav-item {
+		background: transparent;
+		border: none;
+		font-family: var(--font-family-base);
+		/* Commento solo il PERCHÉ: adotta un carattere molto grande (36px) e peso 
+		   standard (500) del menu come da comportamento desktop */
+		font-size: var(--text-xl);
+		font-weight: var(--text-nav-weight);
+		color: var(--content-light-primary);
+		text-align: left;
+		padding: 0;
+		cursor: pointer;
+	}
+
+	.mobile-nav-item--active {
+		/* Commento solo il PERCHÉ: cambia unicamente di peso (700) nello stato attivo 
+		   corrispondente al comportamento di selezione del menu desktop */
+		font-weight: var(--text-nav-active-weight);
+	}
+
 	@media (max-width: 768px) {
 		.navbar__inner {
-			/* Commento solo il PERCHÉ: passa ad una disposizione a colonna con sfondo glassato 
-			   su mobile per mantenere i link leggibili ed evitare sovrapposizioni orizzontali */
-			flex-direction: column;
-			align-items: center;
-			padding-inline: var(--spacing-3);
+			/* Commento solo il PERCHÉ: su mobile la navbar chiusa ha lo sfondo trasparente 
+			   e non ha bordi, lasciando visibili i contenuti retrostanti come richiesto */
+			padding-inline: var(--spacing-4);
 			padding-block: var(--spacing-2);
-			background-color: rgb(from var(--neutral-100) r g b / 0.85);
-			backdrop-filter: blur(8px);
-			border-bottom: 1px solid rgb(from var(--neutral-50) r g b / 0.3);
-			min-height: auto;
+			justify-content: space-between;
+			background-color: transparent;
+			border-bottom: none;
+			backdrop-filter: none;
+		}
+
+		.desktop-menu-wrapper {
+			display: none;
+		}
+
+		.menu-toggle-btn {
+			display: flex;
+			color: var(--content-light-primary);
 		}
 
 		.logo-nav {
-			/* Commento solo il PERCHÉ: riduce l'altezza e il carattere del logo per 
-			   adattarlo alla testata verticale mobile */
-			font-size: var(--text-s);
-			height: auto;
-			margin-bottom: var(--spacing-2);
-		}
-
-		.link-nav {
-			/* Commento solo il PERCHÉ: distribuisce i link in modo uniforme lungo tutta 
-			   la larghezza disponibile sullo schermo del telefono */
-			margin-inline-start: 0;
-			width: 100%;
-			justify-content: space-between;
-			gap: var(--spacing-1);
-		}
-
-		.link-nav__item {
-			/* Commento solo il PERCHÉ: riduce la dimensione dei caratteri per 
-			   far allineare ordinatamente tutti i link su un'unica riga */
-			font-size: 0.825rem;
+			/* Commento solo il PERCHÉ: imposta la dimensione a 24px ed il colore tramite token */
+			font-size: var(--text-l);
+			color: var(--content-light-primary);
 		}
 	}
 </style>
