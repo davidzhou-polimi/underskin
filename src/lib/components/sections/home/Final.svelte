@@ -1,20 +1,27 @@
-<section class="finale-section" aria-label="Chiusura della storia">
+<script>
+    // Commento solo il PERCHÉ: importa l'azione finalScroll per gestire il pinning e l'animazione di reveal
+    import { finalScroll } from '$lib/actions/home/finalScroll.js';
+</script>
+
+<section class="finale-section" use:finalScroll aria-label="Chiusura della storia">
     <div class="finale-content">
         <h3 class="finale-phrase">La sfida più grande non è sul cronometro, ma…</h3>
     </div>
 </section>
 
 <style>
-    /* Centra verticalmente la frase finale e occupa l'intero schermo per dare respiro prima del footer */
+    /* Commento solo il PERCHÉ: imposta la sezione a 100vh per occupare l'intero viewport
+       ed esporre la frase in modo isolato (da sola). */
     .finale-section {
-        min-height: 100vh;
-        padding: var(--spacing-4) var(--spacing-2);
-        margin-top: -15vh;
+        position: relative;
+        width: 100%;
+        height: 100vh;
         background-color: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     .finale-content {
@@ -22,11 +29,19 @@
         max-width: 90rem;
         display: flex;
         justify-content: center;
+        padding-inline: var(--spacing-4);
     }
 
     .finale-phrase {
         margin: 0;
         line-height: 1.25;
         text-align: center;
+        /* Commento solo il PERCHÉ: imposta lo stato iniziale dell'animazione (sfocato, trasparente e traslato verso il basso) 
+           in modo che GSAP lo possa rivelare durante lo scroll senza flash visivi. */
+        opacity: 0;
+        filter: blur(15px);
+        transform: translateY(30px);
+        will-change: transform, opacity, filter;
     }
 </style>
+
