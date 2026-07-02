@@ -7,7 +7,8 @@ const config = {
 			pages: 'build',
 			assets: 'build',
 			fallback: undefined,
-			precompress: false,
+			// Genera .gz/.br accanto agli asset: Netlify li serve direttamente
+			precompress: true,
 			strict: true
 		}),
 		prerender: {

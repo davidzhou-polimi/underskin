@@ -1,34 +1,10 @@
 <script>
-    import { trailCanvas } from "$lib/actions/home/trailCanvas.js";
     import { scrollReveal } from "$lib/actions/scrollReveal.js";
     import { prefacePin } from "$lib/actions/home/prefacePin.js";
 
-    /** @type {any} */
-    let canvasAction = null;
-
-    /**
-     * Gestisce l'inizializzazione del canvas di sfondo.
-     * @param {HTMLCanvasElement} node
-     */
-    function bindCanvas(node) {
-        canvasAction = trailCanvas(node);
-
-        /* IL LOOP DEL CANVAS È STATO COMMENTATO TEMPORANEAMENTE SU RICHIESTA DELL'UTENTE
-			PER RIMUOVERE L'ANIMAZIONE GRAFICA CIRCOLARE SULLO SFONDO:
-
-			if (canvasAction) {
-				canvasAction.startLoop(false);
-			}
-		*/
-        return {
-            destroy() {
-                if (canvasAction) {
-                    canvasAction.destroy();
-                    canvasAction = null;
-                }
-            },
-        };
-    }
+    // L'animazione delle scie circolari (trailCanvas) è stata rimossa: era già
+    // disattivata ma il suo rAF continuava a girare a vuoto. Recuperabile da git
+    // se andrà ripristinata (andrà riscritta con noise a tile e gradienti cachati).
 </script>
 
 <section
@@ -36,10 +12,6 @@
     class="preface-section"
     use:prefacePin={{ end: "+=550%" }}
 >
-    <div class="canvas-layer">
-        <canvas use:bindCanvas></canvas>
-    </div>
-
     <div class="text-container" use:scrollReveal={{ end: "+=500%" }}>
         <p class="reveal-line">Milano-Cortina 2026</p>
         <p class="reveal-line">2.900 atleti</p>
@@ -68,18 +40,6 @@
         background-color: transparent;
         /* Commento solo il PERCHÉ: applica un margine negativo per spostare verticalmente la sezione preface verso l'alto rispetto alla viewport su richiesta esplicita dell'utente */
         margin-top: -20vh;
-    }
-
-    .canvas-layer {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-    }
-
-    canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
     }
 
     .text-container {

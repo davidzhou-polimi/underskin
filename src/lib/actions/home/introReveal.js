@@ -1,12 +1,7 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
-
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
-}
 
 /**
  * @param {HTMLElement} node

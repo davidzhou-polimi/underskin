@@ -1,9 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="it">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<!-- Preload del solo peso regular: è usato dal primo paint; l'italic arriva col CSS -->
+		<link
+			rel="preload"
+			href="/fonts/RethinkSans-VariableFont_wght.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<script>
 			// Commento solo il PERCHÉ: disabilita il ripristino automatico dello scroll del browser prima del rendering per evitare salti visivi al refresh
 			if ('scrollRestoration' in history) {

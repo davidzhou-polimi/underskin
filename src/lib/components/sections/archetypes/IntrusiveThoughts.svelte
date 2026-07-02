@@ -2,6 +2,7 @@
   import { draggableThought } from '$lib/actions/archetypes/draggableThought.js';
   import { thoughtsIntro } from '$lib/actions/archetypes/thoughtsIntro.js';
   import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+  import { scrollHintAfterUnlock } from '$lib/utils/scrollHintAfterUnlock.js';
   import { fade } from 'svelte/transition';
 
   let container = $state();
@@ -20,9 +21,7 @@
   let hasCompletedOnce = $state(false);
   let activeCount = $derived(thoughts.filter(t => !t.isScattered).length);
   let showScrollHint = $state(false);
-  let hintTimeout = 0;
-  let scrollStartOnUnlock = 0;
-  
+
   // Evita di bloccare nuovamente l'utente se ha già completato l'interazione almeno una volta
   $effect(() => {
     if (isIntroDone && activeCount === 0) {
@@ -30,33 +29,13 @@
     }
   });
 
-  // Commento solo il PERCHÉ: svela l'indicatore con un delay di 2.5s dallo sblocco, ma lo nasconde
-  // immediatamente non appena l'utente inizia a scrollare, per mantenere l'interfaccia pulita.
+  // Commento solo il PERCHÉ: svela l'indicatore con un delay dallo sblocco, ma lo nasconde
+  // non appena l'utente inizia a scrollare; comportamento condiviso in scrollHintAfterUnlock.
   $effect(() => {
     if (hasCompletedOnce) {
-      scrollStartOnUnlock = window.scrollY;
-      
-      window.clearTimeout(hintTimeout);
-      hintTimeout = window.setTimeout(() => {
-        showScrollHint = true;
-      }, 1000);
-
-      const handleScroll = () => {
-        if (Math.abs(window.scrollY - scrollStartOnUnlock) > 40) {
-          showScrollHint = false;
-          window.removeEventListener('scroll', handleScroll);
-        }
-      };
-      window.addEventListener('scroll', handleScroll, { passive: true });
-
-      return () => {
-        window.clearTimeout(hintTimeout);
-        window.removeEventListener('scroll', handleScroll);
-      };
-    } else {
-      showScrollHint = false;
-      window.clearTimeout(hintTimeout);
+      return scrollHintAfterUnlock((v) => (showScrollHint = v));
     }
+    showScrollHint = false;
   });
 
   // Il testo rimane nitido finché l'animazione di copertura non è completata

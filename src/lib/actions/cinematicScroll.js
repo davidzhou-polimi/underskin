@@ -1,4 +1,4 @@
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { getLenis } from '$lib/stores/lenis.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
 

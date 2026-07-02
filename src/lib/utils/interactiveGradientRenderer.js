@@ -1,4 +1,10 @@
-import * as THREE from 'three';
+/**
+ * Renderer WebGL in-house del gradiente interattivo (domain-warping fluid background).
+ * Ha sostituito Three.js (485 KB min) con ~300 righe senza dipendenze: lo shader GLSL
+ * è invariato e produce il 100% dei pixel — parità verificata bit-per-bit contro il
+ * backend Three su 5 scenari (hero, intro, scroll, orizzontale, splats) prima dello switch.
+ * Tutti i parametri visivi sono configurabili via GradientConfig.
+ */
 
 /**
  * @typedef {Object} GradientConfig
@@ -56,91 +62,13 @@ export const DEFAULT_CONFIG = {
 	scrollEffect: 'depth',
 	scrollYDepth: 0.75,
 	scrollYParallax: 0.9,
-	scrollXDepth: 0,
-	scrollXParallax: 0,
+	// Attivi solo dove qualcuno scrive lo store scrollX (Burnout in home, text swap in about):
+	// altrove scrollX resta 0 e questi coefficienti non hanno effetto.
+	scrollXDepth: 0.35,
+	scrollXParallax: 0.25,
 };
 
-const MAX_SPLATS = 16;
-
-// Commento solo il PERCHÉ: Consente di risolvere le espressioni CSS `var(--token)` in valori 
-// esadecimali reali leggibili da Three.js senza dover dipendere da valori hardcoded in JS.
-/**
- * @param {any} colorVal
- * @returns {string}
- */
-function resolveColorString(colorVal) {
-	if (typeof window !== 'undefined' && typeof colorVal === 'string' && colorVal.startsWith('var(')) {
-		const match = colorVal.match(/var\((--[a-zA-Z0-9_-]+)\)/);
-		if (match) {
-			const style = getComputedStyle(document.documentElement);
-			return style.getPropertyValue(match[1]).trim() || colorVal;
-		}
-	}
-	return colorVal;
-}
-
-/**
- * @param {any} [override]
- */
-function getThemeColors(override = null) {
-	let bgVal = '#f1fafd';
-	/** @type {string[]} */
-	let gradientColors = [];
-
-	// Fallback to global CSS custom design token properties when running in a browser environment
-	if (typeof window !== 'undefined') {
-		const style = getComputedStyle(document.documentElement);
-		bgVal = style.getPropertyValue('--background-primary').trim() || '#f1fafd';
-		gradientColors = [
-			style.getPropertyValue('--archetipi-favorito').trim() || '#6a96df',
-			style.getPropertyValue('--archetipi-insoddisfatto').trim() || '#8035d2',
-			style.getPropertyValue('--archetipi-infortunato').trim() || '#d86146'
-		];
-	} else {
-		gradientColors = ['#6a96df', '#8035d2', '#d86146'];
-	}
-
-	// Supporta: array piatto di stringhe colore, oppure oggetto { bg?, colors[] }
-	if (override) {
-		if (Array.isArray(override)) {
-			gradientColors = override;
-		} else if (typeof override === 'object') {
-			if (override.bg !== undefined) bgVal = override.bg;
-			if (Array.isArray(override.colors)) gradientColors = override.colors;
-		}
-	}
-
-	// Commento solo il PERCHÉ: Converte le variabili CSS in esadecimale prima di istanziare THREE.Color
-	// per evitare che Three.js fallisca il parsing della stringa var().
-	const finalBg = resolveColorString(bgVal);
-	const finalColors = gradientColors.map(resolveColorString);
-
-	return {
-		bg: new THREE.Color(finalBg),
-		colors: finalColors.map(c => new THREE.Color(c))
-	};
-}
-
-/**
- * Pads the color array to meet WebGL uniform array length requirements
- * @param {THREE.Color[]} themeColorsArray
- * @param {number} maxColors
- */
-function getUniformColors(themeColorsArray, maxColors = 16) {
-	const uniformArray = [];
-	const length = themeColorsArray.length;
-	for (let i = 0; i < maxColors; i++) {
-		if (i < length) {
-			uniformArray.push(themeColorsArray[i]);
-		} else {
-			// Pad the remaining slots with the last active color to avoid blending issues with black/null colors
-			uniformArray.push(length > 0 ? themeColorsArray[length - 1] : new THREE.Color(0, 0, 0));
-		}
-	}
-	return uniformArray;
-}
-
-const fsSource = `
+export const fsSource = `
 	precision mediump float;
 	varying vec2 v_uv;
 
@@ -430,10 +358,217 @@ const fsSource = `
 	}
 `;
 
+const MAX_SPLATS = 16;
+
+// ─── Sostituti minimi delle classi THREE usate dagli uniform ────────────────────
+
+class Vector2 {
+	/** @param {number} [x] @param {number} [y] */
+	constructor(x = 0, y = 0) {
+		this.x = x;
+		this.y = y;
+	}
+	/** @param {number} x @param {number} y */
+	set(x, y) {
+		this.x = x;
+		this.y = y;
+		return this;
+	}
+	/** @param {Vector2} v */
+	copy(v) {
+		this.x = v.x;
+		this.y = v.y;
+		return this;
+	}
+	/** @param {number} s */
+	multiplyScalar(s) {
+		this.x *= s;
+		this.y *= s;
+		return this;
+	}
+}
+
+class Vector4 {
+	/** @param {number} [x] @param {number} [y] @param {number} [z] @param {number} [w] */
+	constructor(x = 0, y = 0, z = 0, w = 0) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+	}
+	/** @param {number} x @param {number} y @param {number} z @param {number} w */
+	set(x, y, z, w) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+		return this;
+	}
+}
+
+// Replica la conversione sRGB→lineare di THREE.Color (ColorManagement attivo di default):
+// lo shader lavora in lineare e applica pow(1/2.2) in uscita, quindi i colori parsati
+// da stringa CSS devono arrivare già linearizzati per ottenere lo stesso output.
+/** @param {number} c */
+function srgbToLinear(c) {
+	return c < 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+class Color {
+	/**
+	 * @param {string | number} [r] - stringa CSS (con conversione sRGB→lineare, come THREE) o canale R numerico (senza conversione)
+	 * @param {number} [g]
+	 * @param {number} [b]
+	 */
+	constructor(r = 0, g, b) {
+		this.r = 0;
+		this.g = 0;
+		this.b = 0;
+		if (typeof r === 'string') this.setStyle(r);
+		else this.setRGB(r, g ?? r, b ?? r);
+	}
+
+	/** @param {number} r @param {number} g @param {number} b */
+	setRGB(r, g, b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		return this;
+	}
+
+	/** @param {string} style - #rgb, #rrggbb, rgb()/rgba() */
+	setStyle(style) {
+		const str = style.trim();
+		let sr = 0, sg = 0, sb = 0;
+
+		let m;
+		if ((m = /^#([0-9a-f]{6})$/i.exec(str))) {
+			const hex = parseInt(m[1], 16);
+			sr = ((hex >> 16) & 255) / 255;
+			sg = ((hex >> 8) & 255) / 255;
+			sb = (hex & 255) / 255;
+		} else if ((m = /^#([0-9a-f]{3})$/i.exec(str))) {
+			sr = parseInt(m[1][0] + m[1][0], 16) / 255;
+			sg = parseInt(m[1][1] + m[1][1], 16) / 255;
+			sb = parseInt(m[1][2] + m[1][2], 16) / 255;
+		} else if ((m = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i.exec(str))) {
+			sr = parseFloat(m[1]) / 255;
+			sg = parseFloat(m[2]) / 255;
+			sb = parseFloat(m[3]) / 255;
+		}
+
+		this.r = srgbToLinear(sr);
+		this.g = srgbToLinear(sg);
+		this.b = srgbToLinear(sb);
+		return this;
+	}
+}
+
+// ─── Risoluzione palette dai design token (stessa logica del backend Three) ─────
+
 /**
- * Three.js scene manager for the domain-warping fluid background.
- * All visual parameters are configurable via the options object.
+ * @param {any} colorVal
+ * @returns {string}
  */
+function resolveColorString(colorVal) {
+	if (typeof window !== 'undefined' && typeof colorVal === 'string' && colorVal.startsWith('var(')) {
+		const match = colorVal.match(/var\((--[a-zA-Z0-9_-]+)\)/);
+		if (match) {
+			const style = getComputedStyle(document.documentElement);
+			return style.getPropertyValue(match[1]).trim() || colorVal;
+		}
+	}
+	return colorVal;
+}
+
+/**
+ * @param {any} [override]
+ */
+function getThemeColors(override = null) {
+	let bgVal = '#f1fafd';
+	/** @type {string[]} */
+	let gradientColors = [];
+
+	if (typeof window !== 'undefined') {
+		const style = getComputedStyle(document.documentElement);
+		bgVal = style.getPropertyValue('--background-primary').trim() || '#f1fafd';
+		gradientColors = [
+			style.getPropertyValue('--archetipi-favorito').trim() || '#6a96df',
+			style.getPropertyValue('--archetipi-insoddisfatto').trim() || '#8035d2',
+			style.getPropertyValue('--archetipi-infortunato').trim() || '#d86146'
+		];
+	} else {
+		gradientColors = ['#6a96df', '#8035d2', '#d86146'];
+	}
+
+	if (override) {
+		if (Array.isArray(override)) {
+			gradientColors = override;
+		} else if (typeof override === 'object') {
+			if (override.bg !== undefined) bgVal = override.bg;
+			if (Array.isArray(override.colors)) gradientColors = override.colors;
+		}
+	}
+
+	const finalBg = resolveColorString(bgVal);
+	const finalColors = gradientColors.map(resolveColorString);
+
+	return {
+		bg: new Color(finalBg),
+		colors: finalColors.map((c) => new Color(c))
+	};
+}
+
+/**
+ * Riempie l'array colori fino ai 16 slot richiesti dall'uniform array WebGL.
+ * @param {Color[]} themeColorsArray
+ * @param {number} maxColors
+ */
+function getUniformColors(themeColorsArray, maxColors = 16) {
+	const uniformArray = [];
+	const length = themeColorsArray.length;
+	for (let i = 0; i < maxColors; i++) {
+		if (i < length) {
+			uniformArray.push(themeColorsArray[i]);
+		} else {
+			uniformArray.push(length > 0 ? themeColorsArray[length - 1] : new Color(0, 0, 0));
+		}
+	}
+	return uniformArray;
+}
+
+// Vertex shader identico a quello usato col backend Three (attributi position/uv del
+// PlaneGeometry): v_uv deve essere interpolato bit-per-bit come prima, perché il grain
+// dello shader è un hash di v_uv e amplifica qualunque differenza di ultimo bit.
+const vsSource = `
+	precision highp float;
+	attribute vec3 position;
+	attribute vec2 uv;
+	varying vec2 v_uv;
+	void main() {
+		v_uv = uv;
+		gl_Position = vec4(position, 1.0);
+	}
+`;
+
+/**
+ * @param {WebGLRenderingContext} gl
+ * @param {number} type
+ * @param {string} source
+ */
+function compileShader(gl, type, source) {
+	const shader = gl.createShader(type);
+	if (!shader) throw new Error('[gradient] impossibile creare lo shader');
+	gl.shaderSource(shader, source);
+	gl.compileShader(shader);
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		const log = gl.getShaderInfoLog(shader);
+		gl.deleteShader(shader);
+		throw new Error(`[gradient] compilazione shader fallita: ${log}`);
+	}
+	return shader;
+}
+
 export class InteractiveGradientRenderer {
 	/**
 	 * @param {HTMLCanvasElement} canvas
@@ -445,17 +580,18 @@ export class InteractiveGradientRenderer {
 		this.config = { ...DEFAULT_CONFIG, ...options };
 
 		this.animationFrameId = 0;
+		this.isPaused = false;
 		this.startTime = performance.now();
 		this.lastTime = performance.now();
 		// scaledTime accumula il tempo pesato per u_speed frame-by-frame in JS,
-		// evitando il salto di fase in scaled_time = u_time * u_speed quando u_time è grande.
+		// evitando il salto di fase quando u_speed cambia a u_time già grande.
 		this.scaledTime = 0.0;
 
 		this.mouse = {
-			current: new THREE.Vector2(0.5, 0.5),
-			target: new THREE.Vector2(0.5, 0.5),
-			lastTarget: new THREE.Vector2(0.5, 0.5),
-			velocity: new THREE.Vector2(0, 0),
+			current: new Vector2(0.5, 0.5),
+			target: new Vector2(0.5, 0.5),
+			lastTarget: new Vector2(0.5, 0.5),
+			velocity: new Vector2(0, 0),
 			speed: 0
 		};
 		this.scrollY = { current: 0, target: 0 };
@@ -466,84 +602,183 @@ export class InteractiveGradientRenderer {
 			currentMorph: 0.0
 		};
 
-		// Ring buffer of active fluid splats
 		/** @type {{ x: number, y: number, vx: number, vy: number, life: number }[]} */
 		this.splats = [];
-		// Reusable Vector4 pool for the GPU uniform — avoids allocation each frame
-		this.splatPool = Array.from({ length: MAX_SPLATS }, () => new THREE.Vector4(0, 0, 0, 0));
+		this.splatPool = Array.from({ length: MAX_SPLATS }, () => new Vector4(0, 0, 0, 0));
 
 		this.themeColors = getThemeColors(this.config.colors);
 
-		this.scene = new THREE.Scene();
-		this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-		this.renderer = new THREE.WebGLRenderer({
-			canvas: this.canvas,
-			powerPreference: 'high-performance',
+		// WebGL2 come Three (stesso codegen dello shader GLSL ES 1.00), con fallback WebGL1
+		const ctxAttribs = {
 			antialias: false,
 			depth: false,
-			stencil: false
-		});
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+			stencil: false,
+			powerPreference: 'high-performance'
+		};
+		const gl = /** @type {WebGLRenderingContext | null} */ (
+			canvas.getContext('webgl2', ctxAttribs) ?? canvas.getContext('webgl', ctxAttribs)
+		);
+		if (!gl) throw new Error('[gradient] WebGL non disponibile');
+		this.gl = gl;
+		this.pixelRatio = Math.min(window.devicePixelRatio, 2);
 
-		this.geometry = new THREE.PlaneGeometry(2, 2);
-		this.material = new THREE.ShaderMaterial({
+		// Programma: quad full-screen + fragment shader condiviso col backend Three
+		const vs = compileShader(gl, gl.VERTEX_SHADER, vsSource);
+		const fs = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+		const program = gl.createProgram();
+		if (!program) throw new Error('[gradient] impossibile creare il program');
+		gl.attachShader(program, vs);
+		gl.attachShader(program, fs);
+		gl.linkProgram(program);
+		if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+			throw new Error(`[gradient] link program fallito: ${gl.getProgramInfoLog(program)}`);
+		}
+		gl.deleteShader(vs);
+		gl.deleteShader(fs);
+		this.program = program;
+		gl.useProgram(program);
+
+		// Stessa geometria di THREE.PlaneGeometry(2,2): vertici, uv, indici e winding
+		// identici, così l'interpolazione dei varying è bit-per-bit quella di prima.
+		this.positionBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+		gl.bufferData(
+			gl.ARRAY_BUFFER,
+			new Float32Array([-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0]),
+			gl.STATIC_DRAW
+		);
+		const positionLoc = gl.getAttribLocation(program, 'position');
+		gl.enableVertexAttribArray(positionLoc);
+		gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 0, 0);
+
+		this.uvBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]), gl.STATIC_DRAW);
+		const uvLoc = gl.getAttribLocation(program, 'uv');
+		gl.enableVertexAttribArray(uvLoc);
+		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, false, 0, 0);
+
+		this.indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 2, 1, 2, 3, 1]), gl.STATIC_DRAW);
+
+		// Stessa forma pubblica di THREE.ShaderMaterial.uniforms: le action esterne
+		// (introReveal, interactiveGradient) leggono/scrivono i .value direttamente.
+		this.material = {
 			uniforms: {
-				u_resolution:     { value: new THREE.Vector2() },
-				u_time:           { value: 0 },
-				u_mouse:          { value: this.mouse.current },
-				u_mouse_velocity: { value: this.mouse.velocity },
-				u_scroll_y:         { value: 0 },
-				u_target_shape:   { value: this.shape.id },
-				u_shape_morph:    { value: 0 },
-				u_bg_color:       { value: this.themeColors.bg },
-				u_colors:         { value: getUniformColors(this.themeColors.colors, 16) },
-				u_color_count:    { value: this.themeColors.colors.length },
-				// Configurable parameters
-				u_speed:          { value: this.config.speed },
-				u_wave_freq:      { value: this.config.waveFrequency },
-				u_wave_amp:       { value: new THREE.Vector2(...this.config.waveAmplitude) },
-				u_coverage:       { value: this.config.coverage },
-				u_intensity:      { value: this.config.intensity },
-				u_focus:          { value: new THREE.Vector4(
+				u_resolution:      { value: new Vector2() },
+				u_time:            { value: 0 },
+				u_mouse:           { value: this.mouse.current },
+				u_mouse_velocity:  { value: this.mouse.velocity },
+				u_scroll_y:        { value: 0 },
+				u_target_shape:    { value: this.shape.id },
+				u_shape_morph:     { value: 0 },
+				u_bg_color:        { value: this.themeColors.bg },
+				u_colors:          { value: getUniformColors(this.themeColors.colors, 16) },
+				u_color_count:     { value: this.themeColors.colors.length },
+				u_speed:           { value: this.config.speed },
+				u_wave_freq:       { value: this.config.waveFrequency },
+				u_wave_amp:        { value: new Vector2(...this.config.waveAmplitude) },
+				u_coverage:        { value: this.config.coverage },
+				u_intensity:       { value: this.config.intensity },
+				u_focus:           { value: new Vector4(
 					this.config.focusCenter[0],
 					this.config.focusCenter[1],
 					Array.isArray(this.config.focusRadius) ? this.config.focusRadius[0] : this.config.focusRadius,
 					Array.isArray(this.config.focusRadius) ? this.config.focusRadius[1] : this.config.focusRadius
 				) },
-				u_mouse_radius:   { value: this.config.mouseRadius },
-				u_mouse_strength: { value: this.config.mouseStrength },
-				u_grain_intensity:{ value: this.config.grainIntensity },
-				u_grain_speed:    { value: this.config.grainSpeed },
-				u_color_blending: { value: this.config.colorBlending },
-				u_vorticity:      { value: this.config.splatVorticity },
-				u_mask_clamp:     { value: new THREE.Vector2(...this.config.maskClamp) },
-				u_scroll_y_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYDepth },
-				u_scroll_y_parallax:{ value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYParallax },
-				u_scroll_x:         { value: 0 },
-				u_scroll_x_depth:   { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXDepth },
-				u_scroll_x_parallax:{ value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXParallax },
-				// Splat system
-				u_splats:         { value: this.splatPool },
-				u_splat_count:    { value: 0 },
-				u_splat_radius:   { value: this.config.splatRadius },
-			},
-			vertexShader: `
-				varying vec2 v_uv;
-				void main() {
-					v_uv = uv;
-					gl_Position = vec4(position, 1.0);
-				}
-			`,
-			fragmentShader: fsSource,
-			depthWrite: false,
-			depthTest: false
-		});
+				u_mouse_radius:    { value: this.config.mouseRadius },
+				u_mouse_strength:  { value: this.config.mouseStrength },
+				u_grain_intensity: { value: this.config.grainIntensity },
+				u_grain_speed:     { value: this.config.grainSpeed },
+				u_color_blending:  { value: this.config.colorBlending },
+				u_vorticity:       { value: this.config.splatVorticity },
+				u_mask_clamp:      { value: new Vector2(...this.config.maskClamp) },
+				u_scroll_y_depth:    { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYDepth },
+				u_scroll_y_parallax: { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollYParallax },
+				u_scroll_x:          { value: 0 },
+				u_scroll_x_depth:    { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXDepth },
+				u_scroll_x_parallax: { value: this.config.scrollEffect === 'none' ? 0 : this.config.scrollXParallax },
+				u_splats:          { value: this.splatPool },
+				u_splat_count:     { value: 0 },
+				u_splat_radius:    { value: this.config.splatRadius }
+			}
+		};
 
-		this.mesh = new THREE.Mesh(this.geometry, this.material);
-		this.scene.add(/** @type {any} */ (this.mesh));
+		// Cache delle location: lookup una sola volta, upload a ogni frame
+		/** @type {Record<string, WebGLUniformLocation | null>} */
+		this.locations = {};
+		for (const name of Object.keys(this.material.uniforms)) {
+			this.locations[name] = gl.getUniformLocation(program, name);
+		}
+
+		// Buffer riusabili per gli uniform array: zero allocazioni per frame
+		this.colorsBuffer = new Float32Array(16 * 3);
+		this.splatsBuffer = new Float32Array(MAX_SPLATS * 4);
 
 		this.resize();
 		this.animate();
+	}
+
+	/** Carica tutti gli uniform correnti nel program (chiamato una volta per frame). */
+	_uploadUniforms() {
+		const gl = this.gl;
+		const u = /** @type {any} */ (this.material.uniforms);
+		const loc = this.locations;
+
+		gl.uniform2f(loc.u_resolution, u.u_resolution.value.x, u.u_resolution.value.y);
+		gl.uniform1f(loc.u_time, u.u_time.value);
+		gl.uniform2f(loc.u_mouse, u.u_mouse.value.x, u.u_mouse.value.y);
+		gl.uniform2f(loc.u_mouse_velocity, u.u_mouse_velocity.value.x, u.u_mouse_velocity.value.y);
+		gl.uniform1f(loc.u_scroll_y, u.u_scroll_y.value);
+		gl.uniform1f(loc.u_target_shape, u.u_target_shape.value);
+		gl.uniform1f(loc.u_shape_morph, u.u_shape_morph.value);
+		gl.uniform3f(loc.u_bg_color, u.u_bg_color.value.r, u.u_bg_color.value.g, u.u_bg_color.value.b);
+		gl.uniform1i(loc.u_color_count, u.u_color_count.value);
+		gl.uniform1f(loc.u_speed, u.u_speed.value);
+		gl.uniform1f(loc.u_wave_freq, u.u_wave_freq.value);
+		gl.uniform2f(loc.u_wave_amp, u.u_wave_amp.value.x, u.u_wave_amp.value.y);
+		gl.uniform1f(loc.u_coverage, u.u_coverage.value);
+		gl.uniform1f(loc.u_intensity, u.u_intensity.value);
+		gl.uniform4f(loc.u_focus, u.u_focus.value.x, u.u_focus.value.y, u.u_focus.value.z, u.u_focus.value.w);
+		gl.uniform1f(loc.u_mouse_radius, u.u_mouse_radius.value);
+		gl.uniform1f(loc.u_mouse_strength, u.u_mouse_strength.value);
+		gl.uniform1f(loc.u_grain_intensity, u.u_grain_intensity.value);
+		gl.uniform1f(loc.u_grain_speed, u.u_grain_speed.value);
+		gl.uniform1f(loc.u_color_blending, u.u_color_blending.value);
+		gl.uniform1f(loc.u_vorticity, u.u_vorticity.value);
+		gl.uniform2f(loc.u_mask_clamp, u.u_mask_clamp.value.x, u.u_mask_clamp.value.y);
+		gl.uniform1f(loc.u_scroll_y_depth, u.u_scroll_y_depth.value);
+		gl.uniform1f(loc.u_scroll_y_parallax, u.u_scroll_y_parallax.value);
+		gl.uniform1f(loc.u_scroll_x, u.u_scroll_x.value);
+		gl.uniform1f(loc.u_scroll_x_depth, u.u_scroll_x_depth.value);
+		gl.uniform1f(loc.u_scroll_x_parallax, u.u_scroll_x_parallax.value);
+		gl.uniform1i(loc.u_splat_count, u.u_splat_count.value);
+		gl.uniform1f(loc.u_splat_radius, u.u_splat_radius.value);
+
+		const colors = u.u_colors.value;
+		for (let i = 0; i < 16; i++) {
+			this.colorsBuffer[i * 3] = colors[i].r;
+			this.colorsBuffer[i * 3 + 1] = colors[i].g;
+			this.colorsBuffer[i * 3 + 2] = colors[i].b;
+		}
+		gl.uniform3fv(loc.u_colors, this.colorsBuffer);
+
+		const splats = u.u_splats.value;
+		for (let i = 0; i < MAX_SPLATS; i++) {
+			this.splatsBuffer[i * 4] = splats[i].x;
+			this.splatsBuffer[i * 4 + 1] = splats[i].y;
+			this.splatsBuffer[i * 4 + 2] = splats[i].z;
+			this.splatsBuffer[i * 4 + 3] = splats[i].w;
+		}
+		gl.uniform4fv(loc.u_splats, this.splatsBuffer);
+	}
+
+	/** Disegna un frame con gli uniform correnti, senza avanzare lo stato (usato anche dal test di parità). */
+	renderFrame() {
+		const gl = this.gl;
+		this._uploadUniforms();
+		gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 	}
 
 	updateColors() {
@@ -569,7 +804,7 @@ export class InteractiveGradientRenderer {
 
 	/**
 	 * Restituisce uno snapshot plain-object di tutti i valori uniform animabili.
-	 * Pensato per essere usato come proxy GSAP: contiene solo numeri, nessun oggetto THREE.
+	 * Pensato per essere usato come proxy GSAP: contiene solo numeri.
 	 * @returns {Record<string, number>}
 	 */
 	getAnimatableState() {
@@ -601,11 +836,8 @@ export class InteractiveGradientRenderer {
 
 	/**
 	 * Risolve una GradientConfig nel corrispondente stato target compatibile con getAnimatableState().
-	 * Restituisce anche il colorCount per l'uniform non-animata u_color_count.
 	 * @param {GradientConfig} newConfig
-	 * @param {Required<GradientConfig>} [fallback] - Base da cui leggere i valori non specificati in newConfig.
-	 *   Passare DEFAULT_CONFIG per garantire il ripristino ai valori di default invece di ereditare
-	 *   lo stato della sezione precedente.
+	 * @param {Required<GradientConfig>} [fallback]
 	 * @returns {{ state: Record<string, number>, colorCount: number }}
 	 */
 	getTargetState(newConfig, fallback = this.config) {
@@ -639,7 +871,7 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
-	 * Applica uno stato plain-object (da getAnimatableState) agli uniform WebGL.
+	 * Applica uno stato plain-object (da getAnimatableState) agli uniform.
 	 * Chiamato a ogni tick GSAP onUpdate — deve rimanere allocation-free.
 	 * @param {Record<string, number>} state
 	 */
@@ -658,7 +890,6 @@ export class InteractiveGradientRenderer {
 		}
 	}
 
-
 	/**
 	 * @param {number} x - normalized x [0-1]
 	 * @param {number} y - normalized y [0-1]
@@ -668,12 +899,10 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
-	 * Updates vertical scroll progress — drives u_scroll in the shader.
 	 * @param {number} value - scroll progress [0-1] or pixel offset [>1]
 	 */
 	updateScrollY(value) {
 		if (this.config.scrollEffect === 'none') return;
-		// Scroll progress is passed to the shader as u_scroll_y and used as depth offset in domainWarp
 		if (value > 1.0) {
 			const docHeight = document.documentElement.scrollHeight - window.innerHeight;
 			this.scrollY.target = docHeight > 0 ? value / docHeight : 0;
@@ -683,7 +912,6 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
-	 * Updates horizontal scroll progress — drives u_scroll_x in the shader.
 	 * @param {number} value - normalized progress [0-1]
 	 */
 	updateScrollX(value) {
@@ -708,7 +936,7 @@ export class InteractiveGradientRenderer {
 	updateConfig(options) {
 		this.config = { ...this.config, ...options };
 		const u = /** @type {any} */ (this.material.uniforms);
-		if (options.speed !== undefined)         u.u_speed.value = this.config.speed;
+		if (options.speed !== undefined)          u.u_speed.value = this.config.speed;
 		if (options.waveFrequency !== undefined)  u.u_wave_freq.value = this.config.waveFrequency;
 		if (options.waveAmplitude !== undefined)  u.u_wave_amp.value.set(...this.config.waveAmplitude);
 		if (options.coverage !== undefined)       u.u_coverage.value = this.config.coverage;
@@ -740,10 +968,7 @@ export class InteractiveGradientRenderer {
 
 	/**
 	 * Plants a velocity splat at a UV position — creates a persistent fluid impulse.
-	 * @param {number} x - UV x [0-1]
-	 * @param {number} y - UV y [0-1]
-	 * @param {number} vx - velocity x in UV warp space
-	 * @param {number} vy - velocity y in UV warp space
+	 * @param {number} x @param {number} y @param {number} vx @param {number} vy
 	 */
 	addSplat(x, y, vx, vy) {
 		this.splats.unshift({ x, y, vx, vy, life: 1.0 });
@@ -753,17 +978,35 @@ export class InteractiveGradientRenderer {
 	resize() {
 		const width = window.innerWidth;
 		const height = window.innerHeight;
-		this.renderer.setSize(width, height, false);
+		this.canvas.width = Math.floor(width * this.pixelRatio);
+		this.canvas.height = Math.floor(height * this.pixelRatio);
+		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+		// Come nel backend Three: u_resolution è in px CSS (usato dal grain), non in device px
 		/** @type {any} */ (this.material.uniforms).u_resolution.value.set(width, height);
 	}
 
+	/** Ferma il loop rAF quando il canvas non è visibile: lo shader full-screen è il costo GPU maggiore della pagina. */
+	pause() {
+		if (this.isPaused) return;
+		this.isPaused = true;
+		cancelAnimationFrame(this.animationFrameId);
+	}
+
+	resume() {
+		if (!this.isPaused) return;
+		this.isPaused = false;
+		// Riallinea il delta-time: senza reset il primo frame accumulerebbe tutto il tempo di pausa
+		this.lastTime = performance.now();
+		this.animate();
+	}
+
 	animate() {
+		if (this.isPaused) return;
 		const now = performance.now();
 		const dt = Math.max((now - this.lastTime) * 0.001, 0.0001);
 		this.lastTime = now;
-		const elapsedSeconds = (now - this.startTime) * 0.001;
 
-		// Calculate instant mouse velocity from per-frame target delta
+		// Velocità istantanea del mouse dal delta per-frame del target
 		const targetDiffX = this.mouse.target.x - this.mouse.lastTarget.x;
 		const targetDiffY = this.mouse.target.y - this.mouse.lastTarget.y;
 		this.mouse.lastTarget.copy(this.mouse.target);
@@ -781,8 +1024,8 @@ export class InteractiveGradientRenderer {
 			this.mouse.velocity.y += (dirY * instSpeed - this.mouse.velocity.y) * 0.1;
 			this.mouse.speed += (instSpeed - this.mouse.speed) * 0.15;
 
-			// Plant a splat only when the cursor has moved enough to avoid dense overlap.
-			// Scale 0.025: UV/s velocity → UV color displacement (~8% of screen at max speed).
+			// Pianta uno splat solo quando il cursore si è mosso abbastanza da evitare overlap densi.
+			// Scala 0.025: velocità UV/s → spostamento colore UV (~8% dello schermo a velocità max).
 			const lastSplat = this.splats[0];
 			const dsx = this.mouse.target.x - (lastSplat?.x ?? -1);
 			const dsy = this.mouse.target.y - (lastSplat?.y ?? -1);
@@ -800,7 +1043,7 @@ export class InteractiveGradientRenderer {
 			this.mouse.speed *= decay;
 		}
 
-		// Viscous mouse follow
+		// Inseguimento viscoso del mouse
 		this.mouse.current.x += (this.mouse.target.x - this.mouse.current.x) * this.config.viscosity;
 		this.mouse.current.y += (this.mouse.target.y - this.mouse.current.y) * this.config.viscosity;
 
@@ -808,12 +1051,11 @@ export class InteractiveGradientRenderer {
 		this.scrollX.current += (this.scrollX.target - this.scrollX.current) * 0.05;
 		this.shape.currentMorph += (this.shape.morph - this.shape.currentMorph) * 0.05;
 
-		// Decay splat life — frame-rate independent
+		// Decadimento vita splat — indipendente dal frame-rate
 		const decayFactor = Math.pow(this.config.splatDecay, dt * 60);
 		for (let i = 0; i < this.splats.length; i++) this.splats[i].life *= decayFactor;
-		this.splats = this.splats.filter(s => s.life > 0.005);
+		this.splats = this.splats.filter((s) => s.life > 0.005);
 
-		// Upload splat data into the reusable pool — avoids GC pressure
 		const activeSplats = Math.min(this.splats.length, MAX_SPLATS);
 		for (let i = 0; i < MAX_SPLATS; i++) {
 			if (i < activeSplats) {
@@ -834,14 +1076,17 @@ export class InteractiveGradientRenderer {
 		uniforms.u_shape_morph.value = this.shape.currentMorph;
 		uniforms.u_splat_count.value = activeSplats;
 
-		this.renderer.render(this.scene, this.camera);
+		this.renderFrame();
 		this.animationFrameId = requestAnimationFrame(() => this.animate());
 	}
 
 	destroy() {
 		cancelAnimationFrame(this.animationFrameId);
-		this.geometry.dispose();
-		this.material.dispose();
-		this.renderer.dispose();
+		const gl = this.gl;
+		gl.deleteBuffer(this.positionBuffer);
+		gl.deleteBuffer(this.uvBuffer);
+		gl.deleteBuffer(this.indexBuffer);
+		gl.deleteProgram(this.program);
+		gl.getExtension('WEBGL_lose_context')?.loseContext();
 	}
 }

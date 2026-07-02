@@ -6,7 +6,6 @@ import { gsap } from 'gsap';
  * @param {Object} options Opzioni per l'animazione (es. duration, delay, y)
  */
 export function fadeUp(node, options = {}) {
-	// Valori di default
 	const config = {
 		duration: 1,
 		y: 50,
@@ -16,36 +15,22 @@ export function fadeUp(node, options = {}) {
 		...options
 	};
 
-	// Imposta lo stato iniziale (immediatamente)
+	// Stato iniziale impostato subito per evitare il flash del contenuto già in posizione
 	gsap.set(node, {
 		y: config.y,
 		opacity: config.opacity
 	});
 
-	// Crea e avvia l'animazione
 	const animation = gsap.to(node, {
 		y: 0,
 		opacity: 1,
 		duration: config.duration,
 		delay: config.delay,
-		ease: config.ease,
-		// Se avessi ScrollTrigger potresti configurarlo qui
+		ease: config.ease
 	});
 
 	return {
-		/**
-		 * Metodo chiamato se le opzioni cambiano (opzionale in questo caso semplice)
-		 * @param {Object} [newOptions]
-		 */
-		update(newOptions) {
-			// Potresti aggiornare l'animazione se necessario
-		},
-		
-		/**
-		 * Metodo critico per la pulizia: chiamato quando il nodo viene rimosso dal DOM
-		 */
 		destroy() {
-			// Ferma e pulisce l'animazione per evitare memory leak
 			animation.kill();
 		}
 	};

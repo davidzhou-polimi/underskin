@@ -42,6 +42,14 @@ export function interactiveGradient(canvas, params = {}) {
 	window.addEventListener('resize', handleResize);
 	window.addEventListener('colors-update', handleThemeUpdate);
 
+	// Ferma il loop di render quando il canvas esce dal viewport (es. hero delle pagine
+	// archetipo con posizionamento absolute): lo shader full-screen è il costo GPU maggiore.
+	const visibilityObserver = new IntersectionObserver(([entry]) => {
+		if (entry.isIntersecting) renderer.resume();
+		else renderer.pause();
+	});
+	visibilityObserver.observe(canvas);
+
 	/** @type {gsap.core.Tween | null} */
 	let activeTween = null;
 
@@ -95,6 +103,7 @@ export function interactiveGradient(canvas, params = {}) {
 			if (activeTween) {
 				activeTween.kill();
 			}
+			visibilityObserver.disconnect();
 			window.removeEventListener('mousemove', handleMouseMove);
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('colors-update', handleThemeUpdate);

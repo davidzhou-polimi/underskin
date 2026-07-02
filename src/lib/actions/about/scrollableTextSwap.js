@@ -1,7 +1,7 @@
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
+// dist/: stessa istanza del plugin usata dal resto del progetto (il percorso ESM
+// 'gsap/ScrollTrigger' creerebbe un secondo ScrollTrigger non sincronizzato con Lenis)
+import { scrollX } from '$lib/stores/scrollX.svelte.js';
 
 /**
  * Azione Svelte per gestire lo swap orizzontale del testo con pinning dello scroll.
@@ -30,7 +30,11 @@ export function scrollableTextSwap(node) {
 				end: '+=100%',
 				scrub: 1,
 				pin: true,
-				invalidateOnRefresh: true
+				invalidateOnRefresh: true,
+				// Il gradiente di sfondo legge scrollX: lo swap orizzontale morpha lo sfondo
+				onUpdate: (self) => {
+					scrollX.progress = self.progress;
+				}
 			}
 		});
 
@@ -57,6 +61,8 @@ export function scrollableTextSwap(node) {
 	return {
 		destroy() {
 			ctx.revert();
+			// Evita che un valore residuo continui a deformare il gradiente su altre rotte
+			scrollX.progress = 0;
 		}
 	};
 }

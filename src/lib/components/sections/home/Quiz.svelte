@@ -1,17 +1,10 @@
 <script>
-	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { Observer } from 'gsap/dist/Observer';
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { lockScroll, unlockScroll, scrollTo, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
 	import { fade } from 'svelte/transition';
-
-	if (typeof window !== 'undefined') {
-		gsap.registerPlugin(Observer);
-	}
 
 	// Stati reattivi (Rune Svelte 5)
 	let quizState = $state('choosing'); // 'choosing' | 'animating' | 'results'
@@ -23,12 +16,10 @@
 	let showQuizScrollHint = $state(false);
 	let quizHintTimeout = 0;
 
-	/** @type {Observer | undefined} */
-	let quizObserver;
+	// L'Observer GSAP che intercetta i gesti durante il lock vive in quizAnimation.js
+	// (regola progetto: tutto GSAP nelle actions); qui si decide solo QUANDO è attivo.
+	let observerEnabled = $derived((quizState === 'animating' || quizState === 'results') && !canLeave);
 
-	// Commento solo il PERCHÉ: durante animazione/risultati il lock è in Lenis (blocca lo smooth-wheel), ma
-	// con syncTouch:false il touch resta nativo: l'Observer con preventDefault — abilitato solo nel lock — è
-	// ciò che blocca davvero il touch e, con wheelSpeed -1, unifica la direzione di rotella e swipe.
 	function advance() {
 		if (quizState !== 'results' || isAnimatingStep) return;
 		if (textStep === 1) {
@@ -59,29 +50,13 @@
 		}
 	}
 
-	onMount(() => {
-		quizObserver = Observer.create({
-			target: window,
-			type: 'wheel,touch,pointer',
-			wheelSpeed: -1,
-			tolerance: 20,
-			preventDefault: true,
-			onUp: advance,
-			onDown: back
-		});
-		quizObserver.disable();
-		return () => quizObserver?.kill();
-	});
-
 	// Commento solo il PERCHÉ: il blocco scroll segue lo stato del quiz; canLeave apre il gate (uscita o ritorno
-	// all'intro). enable/disable dell'Observer è ciò che attiva/disattiva il preventDefault sul touch nativo.
+	// all'intro). L'Observer (in quizAnimation) segue lo stesso stato via param observerEnabled.
 	$effect(() => {
-		if ((quizState === 'animating' || quizState === 'results') && !canLeave) {
+		if (observerEnabled) {
 			lockScroll();
-			quizObserver?.enable();
 		} else {
 			unlockScroll();
-			quizObserver?.disable();
 		}
 	});
 
@@ -116,12 +91,15 @@
 	aria-label="Quiz interattivo tra mente e fisico"
 	use:quizAnimation={{
 		quizState,
+		observerEnabled,
 		lockScroll,
 		unlockScroll,
 		lockScrollDown,
 		unlockScrollDown,
 		onStateChange: (s) => quizState = s,
 		onStepChange: (step) => textStep = step,
+		onAdvance: advance,
+		onBack: back,
 		onEnterBack: () => {
 			// ScrollTrigger ha rilevato che l'utente è tornato nella quiz section
 			// scrollando verso l'alto dalla sezione successiva: riattiva il controllo scroll

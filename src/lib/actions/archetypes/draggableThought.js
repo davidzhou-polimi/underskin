@@ -1,9 +1,4 @@
-import { gsap } from 'gsap';
-import { Draggable } from 'gsap/dist/Draggable';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(Draggable);
-}
+import { gsap, Draggable } from '$lib/utils/gsapSetup.js';
 
 /**
  * @typedef {Object} ThoughtItem

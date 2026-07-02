@@ -1,13 +1,9 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
-}
+import { gsap, ScrollTrigger, Observer } from '$lib/utils/gsapSetup.js';
 
 /**
  * @typedef {Object} QuizAnimationParams
  * @property {string} quizState - Lo stato reattivo del quiz ('choosing' | 'animating' | 'results')
+ * @property {boolean} [observerEnabled] - Attiva l'Observer che intercetta wheel/touch durante il lock
  * @property {(() => void)} lockScroll - Funzione per bloccare lo scroll della pagina
  * @property {(() => void)} unlockScroll - Funzione per sbloccare lo scroll della pagina
  * @property {(() => void)} lockScrollDown - Funzione per bloccare lo scroll verso il basso
@@ -15,6 +11,8 @@ if (typeof window !== 'undefined') {
  * @property {((state: string) => void)} onStateChange - Callback per notificare il cambio di stato a Svelte
  * @property {((step: number) => void)} onStepChange - Callback per notificare il cambio di step a Svelte
  * @property {(() => void)} [onEnterBack] - Callback chiamata quando l'utente rientra nella sezione scrollando dall'alto
+ * @property {(() => void)} [onAdvance] - Gesto "giù" (avanti) intercettato dall'Observer durante il lock
+ * @property {(() => void)} [onBack] - Gesto "su" (indietro) intercettato dall'Observer durante il lock
  */
 
 /**
@@ -26,10 +24,28 @@ export function quizAnimation(node, params) {
 	let { quizState, onStateChange, onStepChange, lockScroll, unlockScroll, lockScrollDown, unlockScrollDown } = params;
 	/** @type {() => void} */
 	let onEnterBack = params.onEnterBack ?? (() => {});
-	
+	/** @type {() => void} */
+	let onAdvance = params.onAdvance ?? (() => {});
+	/** @type {() => void} */
+	let onBack = params.onBack ?? (() => {});
+
 	let circlesTriggered = false;
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
+
+	// Commento solo il PERCHÉ: durante animazione/risultati il lock è in Lenis (blocca lo smooth-wheel), ma
+	// con syncTouch:false il touch resta nativo: l'Observer con preventDefault — abilitato solo nel lock — è
+	// ciò che blocca davvero il touch e, con wheelSpeed -1, unifica la direzione di rotella e swipe.
+	const gestureObserver = Observer.create({
+		target: window,
+		type: 'wheel,touch,pointer',
+		wheelSpeed: -1,
+		tolerance: 20,
+		preventDefault: true,
+		onUp: () => onAdvance(),
+		onDown: () => onBack()
+	});
+	gestureObserver.disable();
 
 	const resetTrigger = ScrollTrigger.create({
 		trigger: node,
@@ -209,10 +225,17 @@ export function quizAnimation(node, params) {
 			onStateChange = newParams.onStateChange;
 			onStepChange = newParams.onStepChange;
 			onEnterBack = newParams.onEnterBack ?? (() => {});
+			onAdvance = newParams.onAdvance ?? (() => {});
+			onBack = newParams.onBack ?? (() => {});
+
+			// enable/disable dell'Observer = attivazione del preventDefault sul touch nativo
+			if (newParams.observerEnabled) gestureObserver.enable();
+			else gestureObserver.disable();
 		},
 		destroy() {
 			node.removeEventListener('click', handleBtnClick);
 			unlockScrollDown();
+			gestureObserver.kill();
 			if (pinTrigger) pinTrigger.kill();
 			if (resetTrigger) resetTrigger.kill();
 			if (activeTimeline) activeTimeline.kill();

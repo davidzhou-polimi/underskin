@@ -42,6 +42,17 @@
 	let colorBrand = $derived(colors.brand);
 	let colorTextPrimary = $derived(colors.textPrimary);
 	let colorGradientStart = $derived(colors.gradientStart);
+
+	// Le varianti responsive sono generate da scripts/convert-webp.js (RESPONSIVE_DIRS):
+	// la card riceve il path base e costruisce srcset, così il browser scarica solo
+	// la risoluzione necessaria — già pronto per il futuro layout mobile full-bleed.
+	const SRCSET_WIDTHS = [800, 1600, 1920];
+	let imageSrcset = $derived(
+		imageSrc
+			? SRCSET_WIDTHS.map((w) => `${imageSrc.replace(/\.webp$/, `-${w}.webp`)} ${w}w`).join(', ')
+			: ''
+	);
+	let imageFallbackSrc = $derived(imageSrc ? imageSrc.replace(/\.webp$/, '-800.webp') : '');
 </script>
 
 <div
@@ -57,7 +68,15 @@
 
         <div class="media-container">
             {#if imageSrc}
-                <img src={imageSrc} alt={name} class="team-member-image" loading="lazy" decoding="async" />
+                <img
+                    src={imageFallbackSrc}
+                    srcset={imageSrcset}
+                    sizes="(max-width: 768px) 100vw, 461px"
+                    alt={name}
+                    class="team-member-image"
+                    loading="lazy"
+                    decoding="async"
+                />
             {/if}
 
             <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->

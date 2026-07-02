@@ -87,23 +87,22 @@
 	// Questo risolve i bug nativi del browser che perde/invia falsi eventi di mouseleave durante le rotazioni 3D.
 	$effect(() => {
 		if (isFlipped && hoveredIndex !== null) {
+			// L'elemento è risolto una volta all'attivazione dell'effect (hoveredIndex è fisso
+			// per tutta la sua vita: al cambio l'effect si ri-esegue): niente querySelectorAll per evento
+			const hoveredCardEl = document.querySelectorAll('.carousel-item')[hoveredIndex];
+			if (!hoveredCardEl) return;
+
 			/** @param {MouseEvent} e */
 			const onWindowMouseMove = (e) => {
-				const currentHover = hoveredIndex;
-				if (currentHover === null) return;
-				const cardEls = document.querySelectorAll('.carousel-item');
-				const hoveredCardEl = cardEls[currentHover];
-				if (hoveredCardEl) {
-					const rect = hoveredCardEl.getBoundingClientRect();
-					const isInside = (
-						e.clientX >= rect.left &&
-						e.clientX <= rect.right &&
-						e.clientY >= rect.top &&
-						e.clientY <= rect.bottom
-					);
-					if (!isInside) {
-						hoveredIndex = null;
-					}
+				const rect = hoveredCardEl.getBoundingClientRect();
+				const isInside = (
+					e.clientX >= rect.left &&
+					e.clientX <= rect.right &&
+					e.clientY >= rect.top &&
+					e.clientY <= rect.bottom
+				);
+				if (!isInside) {
+					hoveredIndex = null;
 				}
 			};
 			window.addEventListener('mousemove', onWindowMouseMove);

@@ -1,7 +1,8 @@
+/* WOFF2: stesso font variabile ricompresso senza perdita (~48 KB vs 117 KB a file);
+   i TTF sorgente restano in scripts/fonts per la generazione dell'immagine OG. */
 @font-face {
 	font-family: "Rethink Sans";
-	src: url("/fonts/RethinkSans-VariableFont_wght.ttf") format("truetype-variations"),
-	     url("/fonts/RethinkSans-VariableFont_wght.ttf") format("truetype");
+	src: url("/fonts/RethinkSans-VariableFont_wght.woff2") format("woff2-variations");
 	font-weight: 400 800;
 	font-style: normal;
 	font-display: swap;
@@ -9,8 +10,7 @@
 
 @font-face {
 	font-family: "Rethink Sans";
-	src: url("/fonts/RethinkSans-Italic-VariableFont_wght.ttf") format("truetype-variations"),
-	     url("/fonts/RethinkSans-Italic-VariableFont_wght.ttf") format("truetype");
+	src: url("/fonts/RethinkSans-Italic-VariableFont_wght.woff2") format("woff2-variations");
 	font-weight: 400 800;
 	font-style: italic;
 	font-display: swap;

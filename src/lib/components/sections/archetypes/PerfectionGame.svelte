@@ -3,6 +3,7 @@
 	import { perfectionIntro } from '$lib/actions/archetypes/perfectionIntro.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+	import { scrollHintAfterUnlock } from '$lib/utils/scrollHintAfterUnlock.js';
 	import { fade } from 'svelte/transition';
 
 	// Svelte 5 Runes: la pallina parte già attiva e in movimento per default
@@ -33,8 +34,6 @@
 	let isIntroDone = $state(false);
 	let hasCompletedOnce = $state(false);
 	let showScrollHint = $state(false);
-	let hintTimeout = 0;
-	let scrollStartOnUnlock = 0;
 
 	$effect(() => {
 		if (attempts > 0) {
@@ -42,33 +41,13 @@
 		}
 	});
 
-	// Commento solo il PERCHÉ: svela l'indicatore con un delay di 2.5s dallo sblocco, ma lo nasconde
-	// immediatamente non appena l'utente inizia a scrollare, per mantenere l'interfaccia pulita.
+	// Commento solo il PERCHÉ: svela l'indicatore con un delay dallo sblocco, ma lo nasconde
+	// non appena l'utente inizia a scrollare; comportamento condiviso in scrollHintAfterUnlock.
 	$effect(() => {
 		if (hasCompletedOnce) {
-			scrollStartOnUnlock = window.scrollY;
-
-			window.clearTimeout(hintTimeout);
-			hintTimeout = window.setTimeout(() => {
-				showScrollHint = true;
-			}, 1000);
-
-			const handleScroll = () => {
-				if (Math.abs(window.scrollY - scrollStartOnUnlock) > 40) {
-					showScrollHint = false;
-					window.removeEventListener('scroll', handleScroll);
-				}
-			};
-			window.addEventListener('scroll', handleScroll, { passive: true });
-
-			return () => {
-				window.clearTimeout(hintTimeout);
-				window.removeEventListener('scroll', handleScroll);
-			};
-		} else {
-			showScrollHint = false;
-			window.clearTimeout(hintTimeout);
+			return scrollHintAfterUnlock((v) => (showScrollHint = v));
 		}
+		showScrollHint = false;
 	});
 
 	// Commento solo il PERCHÉ: il blocco scroll (giù bloccato finché l'utente non gioca un tentativo, su libero)

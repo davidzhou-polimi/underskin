@@ -102,7 +102,9 @@
             {#if imageSrc}
                 <img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
             {:else if videoSrc}
-                <video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
+                <!-- preload="none": i tre webm pesano ~8.7 MB totali; il download parte solo
+                     quando il $effect chiama play() (card attiva o hover), non al load della pagina -->
+                <video bind:this={videoElement} src={videoSrc} preload="none" muted loop playsinline class="athlete-video"></video>
             {/if}
 
             <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->

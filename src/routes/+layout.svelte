@@ -4,9 +4,7 @@
     import { afterNavigate } from '$app/navigation';
     import Lenis from 'lenis';
     import 'lenis/dist/lenis.css';
-    import { gsap } from 'gsap';
-    import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-    import { Observer } from 'gsap/dist/Observer';
+    import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
     import "modern-normalize/modern-normalize.css";
     import "$lib/styles/tokens.css";
     import favicon from "$lib/assets/favicon.svg";
@@ -14,7 +12,7 @@
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
-    import { PAGE_META, DEFAULT_META } from '$lib/utils/metaData.js';
+    import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
 
     let { children } = $props();
@@ -27,9 +25,8 @@
     // Con prefers-reduced-motion non istanziamo Lenis e lasciamo lo scroll nativo.
     const reducedMotion = browser && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // La registrazione dei plugin GSAP avviene una sola volta in $lib/utils/gsapSetup.js
     if (browser && !reducedMotion) {
-        gsap.registerPlugin(ScrollTrigger, Observer);
-
         const lenis = new Lenis({ smoothWheel: true, syncTouch: false });
         setLenis(lenis);
     }
@@ -82,9 +79,9 @@
             : (page.url.pathname in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (page.url.pathname)] : PAGE_META["/"])
     );
 
-    // Determiniamo l'URL relativo dell'immagine per la condivisione social
-    const ogImageUrl = "/images/og/share.png";
-    let ogUrl = $derived(page.url.pathname);
+    // Gli URL Open Graph devono essere assoluti: i crawler social non risolvono i path relativi
+    const ogImageUrl = `${SITE_ORIGIN}/images/og/share.jpg`;
+    let ogUrl = $derived(`${SITE_ORIGIN}${page.url.pathname}`);
 </script>
 
 <svelte:head>
@@ -108,10 +105,10 @@
 </svelte:head>
 
 <div
+    class="app-shell"
     role="application"
     onmousemove={(e) => tooltip.updatePosition(e.clientX, e.clientY)}
     style:cursor={tooltipState.cursor}
-    style="min-height: 100vh; display: flex; flex-direction: column;"
 >
     {@render children()}
 
@@ -126,6 +123,12 @@
 </div>
 
 <style>
+    .app-shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
     /* Lo stile globale del body vive nel layout radice (presente su ogni rotta):
        altrimenti lo sfondo verrebbe scaricato uscendo dalla home, lasciando bianche le pagine interne. */
     :global(body) {

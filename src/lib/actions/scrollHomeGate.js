@@ -1,10 +1,5 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { getLenis } from '$lib/stores/lenis.svelte.js';
-
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
-}
 
 /** @param {string} cssVar */
 function resolveTokenRGB(cssVar) {

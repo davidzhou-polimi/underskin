@@ -1,10 +1,5 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
-
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
-}
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
+import { createGameDownLock } from '$lib/actions/archetypes/gameDownLock.js';
 
 /**
  * Svelte Action per gestire l'animazione di entrata e i trigger di scroll del Perfection Game.
@@ -18,24 +13,9 @@ if (typeof window !== 'undefined') {
  */
 export function perfectionIntro(node, params) {
 	const { onIntroChange, onReset } = params;
-	let hasCompletedOnce = params.hasCompletedOnce ?? false;
 
-	// Commento solo il PERCHÉ: blocco direzionale verso il basso mentre la sezione è in cima e l'utente non ha
-	// ancora giocato; la risalita resta libera. Centralizzato nello store (listener capture, Lenis-aware).
-	let downLocked = false;
-	/** @param {boolean} active */
-	function setDownLock(active) {
-		if (active && !hasCompletedOnce) {
-			if (!downLocked) {
-				downLocked = true;
-				lockScrollDown();
-				getLenis()?.scrollTo(node, { immediate: true, force: true });
-			}
-		} else if (downLocked) {
-			downLocked = false;
-			unlockScrollDown();
-		}
-	}
+	// Blocco direzionale condiviso coi giochini: logica centralizzata in gameDownLock.js
+	const downLock = createGameDownLock(node, params.hasCompletedOnce ?? false);
 
 	// Raggruppa i trigger in un contesto GSAP per consentire una rimozione pulita e sicura delle risorse
 	const ctx = gsap.context(() => {
@@ -124,15 +104,6 @@ export function perfectionIntro(node, params) {
 			}
 		});
 
-		// Terzo ScrollTrigger: blocca lo scroll verso il basso quando la sezione è in cima alla viewport,
-		// finché l'utente non ha giocato almeno un tentativo. La risalita resta sempre consentita.
-		ScrollTrigger.create({
-			trigger: node,
-			start: 'top top',
-			end: 'bottom top',
-			onToggle: (self) => setDownLock(self.isActive)
-		});
-
 	}, node);
 
 	return {
@@ -140,11 +111,10 @@ export function perfectionIntro(node, params) {
 		 * @param {{ hasCompletedOnce?: boolean }} newParams
 		 */
 		update(newParams) {
-			hasCompletedOnce = newParams.hasCompletedOnce ?? false;
-			if (hasCompletedOnce) setDownLock(false);
+			downLock.setCompleted(newParams.hasCompletedOnce ?? false);
 		},
 		destroy() {
-			setDownLock(false);
+			downLock.destroy();
 			ctx.revert();
 		}
 	};

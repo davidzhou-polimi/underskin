@@ -1,12 +1,7 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { scroll } from '$lib/stores/scroll.svelte.js';
 
 // Registers ScrollTrigger globally for SSR safety
-if (typeof window !== 'undefined') {
-	gsap.registerPlugin(ScrollTrigger);
-}
-
 /**
  * Tracks the overall scroll progress of the DOM element it is attached to.
  * This keeps the global scroll.progress reactive state updated for other components.
