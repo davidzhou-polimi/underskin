@@ -3,6 +3,12 @@
     // Commento solo il PERCHÉ: Importa l'azione fadeUp per applicare una transizione di
     // ingresso fluida al montaggio del componente.
     import { fadeUp } from '$lib/actions/fadeUp.js';
+    // Commento solo il PERCHÉ: Importa lo store globale per controllare la visibilità
+    // e il testo del tooltip al passaggio del mouse.
+    import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+    // Commento solo il PERCHÉ: Importa goto di SvelteKit per navigare programmaticamente 
+    // a una pagina senza mostrare l'anteprima dell'URL nel browser all'hover.
+    import { goto } from '$app/navigation';
 
     /** @type {SVGTextElement | null} */
     let textEl = null;
@@ -35,19 +41,30 @@
 </script>
 
 <footer class="hero-footer" use:fadeUp={{ duration: 1.2, delay: 0.1, y: 30 }}>
-    <!-- L'SVG riempie il 100% dello spazio orizzontale disponibile tra i padding laterali -->
-    <svg bind:this={svgEl} class="footer-brand-svg" preserveAspectRatio="none">
-        <text 
-            bind:this={textEl}
-            x="0" 
-            y="0" 
-            dominant-baseline="hanging" 
-            text-anchor="start" 
-            class="brand-text"
-        >
-            UnderSkin
-        </text>
-    </svg>
+    <!-- Commento solo il PERCHÉ: Utilizza un pulsante per consentire la navigazione programmatica a /about 
+         senza attivare l'anteprima nativa dell'URL del browser nella barra di stato in basso all'hover. -->
+    <button 
+        type="button"
+        class="footer-brand-link"
+        aria-label="UnderSkin - Scopri il progetto"
+        onmouseenter={() => tooltip.show("Scopri il progetto", "semplice", "pointer")}
+        onmouseleave={() => tooltip.hide()}
+        onclick={() => goto('/about')}
+    >
+        <!-- L'SVG riempie il 100% dello spazio orizzontale disponibile tra i padding laterali -->
+        <svg bind:this={svgEl} class="footer-brand-svg" preserveAspectRatio="none">
+            <text 
+                bind:this={textEl}
+                x="0" 
+                y="0" 
+                dominant-baseline="hanging" 
+                text-anchor="start" 
+                class="brand-text"
+            >
+                UnderSkin
+            </text>
+        </svg>
+    </button>
     <div class="footer-bottom">
         <p class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</p>
         <p class="footer-text">© 2026</p>
@@ -67,6 +84,19 @@
         background: transparent;
         width: 100%;
         box-sizing: border-box;
+    }
+
+    /* Commento solo il PERCHÉ: Evita comportamenti grafici di default dei pulsanti del browser sul blocco SVG e lo rende interattivo. */
+    .footer-brand-link {
+        display: block;
+        width: 100%;
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
     }
 
     /* Commento solo il PERCHÉ: Applica il padding-inline per allineare l'SVG 
@@ -90,6 +120,12 @@
         font-weight: var(--text-footer-weight);
         fill: color-mix(in srgb, var(--content-dark-primary) 70%, transparent);
         /* Rimossa la spaziatura negativa per allinearla a quella naturale del logo della navbar */
+        transition: fill var(--transition-duration-slow) var(--easing-in-out);
+    }
+
+    /* Commento solo il PERCHÉ: Evidenzia lo stato di hover aumentando la visibilità del brand in modo morbido senza renderlo completamente opaco. */
+    .footer-brand-link:hover .brand-text {
+        fill: color-mix(in srgb, var(--content-dark-primary) 80%, transparent);
     }
 
     /* Commento solo il PERCHÉ: Distribuisce le note informative toccando i medesimi margini. */
