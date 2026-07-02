@@ -102,9 +102,15 @@
             {#if imageSrc}
                 <img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
             {:else if videoSrc}
-                <!-- preload="none": i tre webm pesano ~8.7 MB totali; il download parte solo
-                     quando il $effect chiama play() (card attiva o hover), non al load della pagina -->
-                <video bind:this={videoElement} src={videoSrc} preload="none" muted loop playsinline class="athlete-video"></video>
+                <!-- Niente preload esplicito: questi webm non hanno le Cues in testa al file
+                     (assente l'equivalente del "faststart"), quindi preload="metadata"/"none"
+                     costringono comunque il browser a inseguire range vicini alla fine del file
+                     per trovare un frame decodificabile, risultando in card vuote finché non si
+                     chiama play(). Il default lascia al browser l'euristica originale (che
+                     mostrava già il thumbnail correttamente). Per un vero risparmio andrebbero
+                     ri-processati i webm con le Cues spostate in testa (mkvpropedit/ffmpeg -movflags
+                     equivalente), fuori dallo scope di questo fix. -->
+                <video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
             {/if}
 
             <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
