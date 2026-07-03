@@ -1,4 +1,4 @@
-import gsap from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /**
  * Action Svelte per animare il ritiro verso l'alto di nome e gradiente all'hover delle card orizzontali.
