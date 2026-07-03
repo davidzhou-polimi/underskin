@@ -115,3 +115,29 @@ html {
 	/* Commento solo il PERCHÉ: incrementa l'opacità al passaggio del mouse per fornire un feedback visivo immediato, vibrante e intonato */
 	background-color: color-mix(in srgb, var(--scrollbar-color) 75%, transparent);
 }
+
+/* ==========================================================================
+   Utility Globali: Transizione Fade/Blur (Tipo ScrollReveal)
+   ========================================================================== */
+.fade-reveal {
+	/* Commento solo il PERCHÉ: imposta valori di default personalizzabili tramite CSS custom properties 
+	   per consentire a ciascun componente di riutilizzare la classe sovrascrivendo l'animazione */
+	--fade-blur: 4px;
+	--fade-y: 0px;
+	--fade-duration: var(--transition-duration-normal);
+	--fade-easing: var(--easing-standard);
+
+	opacity: 0;
+	filter: blur(var(--fade-blur));
+	transform: translateY(var(--fade-y));
+	transition:
+		opacity var(--fade-duration) var(--fade-easing),
+		filter var(--fade-duration) var(--fade-easing),
+		transform var(--fade-duration) var(--fade-easing);
+}
+
+.fade-reveal.is-active {
+	opacity: 1;
+	filter: blur(0px);
+	transform: translateY(0px);
+}

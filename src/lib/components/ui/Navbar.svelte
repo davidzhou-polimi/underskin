@@ -319,14 +319,18 @@
 
 		<button
 			class="menu-toggle-btn"
-			onclick={() => isMenuOpen = true}
+			onclick={() => isMenuOpen = !isMenuOpen}
 			aria-expanded={isMenuOpen}
-			aria-label="Apri menu"
+			aria-label={isMenuOpen ? "Chiudi menu" : "Apri menu"}
 		>
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+			<svg class:is-active={!isMenuOpen} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 				<line x1="3" y1="6" x2="21" y2="6"></line>
 				<line x1="3" y1="12" x2="21" y2="12"></line>
 				<line x1="3" y1="18" x2="21" y2="18"></line>
+			</svg>
+			<svg class:is-active={isMenuOpen} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+				<line x1="18" y1="6" x2="6" y2="18"></line>
+				<line x1="6" y1="6" x2="18" y2="18"></line>
 			</svg>
 		</button>
 	</nav>
@@ -334,20 +338,8 @@
 	<!-- Commento solo il PERCHÉ: overlay a tutto schermo per ospitare la navigazione verticale mobile 
 	     in linea con lo stile grafico mostrato nello screenshot -->
 	<div class="mobile-menu-overlay" class:is-open={isMenuOpen} aria-hidden={!isMenuOpen}>
-		<div class="mobile-menu-header">
-			{@render logo()}
-			<button
-				class="menu-close-btn"
-				onclick={() => isMenuOpen = false}
-				aria-label="Chiudi menu"
-			>
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-					<line x1="18" y1="6" x2="6" y2="18"></line>
-					<line x1="6" y1="6" x2="18" y2="18"></line>
-				</svg>
-			</button>
-		</div>
-		<div class="mobile-menu-links">
+		<div class="mobile-menu-header"></div>
+		<div class="mobile-menu-links fade-reveal" class:is-active={isMenuOpen}>
 			{#each links as link}
 				{@const isActive = getIsActive(link)}
 				<button
@@ -385,6 +377,10 @@
 		padding-block: var(--spacing-3);
 		padding-inline: var(--spacing-6);
 		pointer-events: auto;
+		/* Commento solo il PERCHÉ: mantiene logo e pulsante di toggle in primo piano rispetto 
+		   all'overlay del menu mobile (che ha z-index 999), garantendo interattività e visibilità */
+		position: relative;
+		z-index: 1000;
 	}
 
 	/* Logo */
@@ -455,8 +451,9 @@
 	/* Pulsante Menu Mobile */
 	.menu-toggle-btn {
 		display: none;
-		align-items: center;
-		justify-content: center;
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr;
+		place-items: center;
 		width: 32px;
 		height: 32px;
 		background: transparent;
@@ -465,6 +462,19 @@
 		padding: 0;
 		z-index: 5;
 		color: var(--content-light-primary);
+	}
+
+	/* Commento solo il PERCHÉ: sovrappone i due SVG (hamburger e close) nella stessa cella del CSS Grid 
+	   e ne gestisce la visibilità reciproca con un semplice effetto di dissolvenza incrociata (cross-fade) */
+	.menu-toggle-btn svg {
+		grid-column: 1;
+		grid-row: 1;
+		opacity: 0;
+		transition: opacity var(--transition-duration-normal) var(--easing-standard);
+	}
+
+	.menu-toggle-btn svg.is-active {
+		opacity: 1;
 	}
 
 	/* Overlay Mobile */
@@ -508,20 +518,6 @@
 		margin-bottom: var(--spacing-12);
 	}
 
-	.menu-close-btn {
-		background: transparent;
-		border: none;
-		/* Commento solo il PERCHÉ: definisce un'icona SVG allineata e centrata con 
-		   un'area cliccabile confortevole di 32px per il touch */
-		cursor: pointer;
-		color: var(--content-light-primary);
-		padding: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 32px;
-		height: 32px;
-	}
 
 	.mobile-menu-links {
 		display: flex;
@@ -534,6 +530,10 @@
 		/* Commento solo il PERCHÉ: azzera il padding orizzontale per far sì che i link 
 		   siano perfettamente allineati in verticale con il logo in alto, come nel mockup */
 		padding-inline-start: 0;
+		/* Commento solo il PERCHÉ: personalizza i parametri della transizione fade-reveal per coordinare 
+		   la velocità dell'animazione con quella dell'overlay e intensificare la sfocatura delle voci */
+		--fade-duration: var(--transition-duration-slow);
+		--fade-blur: 8px;
 	}
 
 	.mobile-nav-item {
@@ -573,7 +573,7 @@
 		}
 
 		.menu-toggle-btn {
-			display: flex;
+			display: grid;
 			color: var(--content-light-primary);
 		}
 
