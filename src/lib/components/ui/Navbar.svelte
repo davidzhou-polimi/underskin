@@ -483,13 +483,17 @@
 		   esattamente identico a quello della navbar chiusa per eliminare ogni layout shift */
 		padding: var(--spacing-4) var(--spacing-4) var(--spacing-10);
 		box-sizing: border-box;
-		transform: translateY(-100%);
-		transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity var(--transition-duration-slow) var(--easing-standard),
+			visibility var(--transition-duration-slow) var(--easing-standard);
 		pointer-events: none;
 	}
 
 	.mobile-menu-overlay.is-open {
-		transform: translateY(0);
+		opacity: 1;
+		visibility: visible;
 		pointer-events: auto;
 	}
 
