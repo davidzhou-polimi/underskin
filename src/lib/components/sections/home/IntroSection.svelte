@@ -65,6 +65,15 @@
 		will-change: transform;
 	}
 
+	@media (max-width: 768px) {
+		.circles-svg {
+			/* Commento solo il PERCHÉ: riduce la dimensione dei cerchi di sfondo per 
+			   mantenerli interamente visibili ed armoniosi sul viewport ridotto dei telefoni */
+			width: 30rem;
+			height: 30rem;
+		}
+	}
+
 	.intro-title {
 		position: relative;
 		z-index: 1;

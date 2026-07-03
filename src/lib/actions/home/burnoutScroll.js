@@ -16,10 +16,23 @@ export function burnoutScroll(node) {
 
 	if (!introEl || !outroEl || !marqueeEl) return;
 
+	// Commento solo il PERCHÉ: su mobile la scritta BURNOUT (larga 633vh) ha bisogno di una corsa
+	// orizzontale in vw molto maggiore per uscire dal viewport stretto; matchMedia traccia il breakpoint
+	// così apply() sceglie corsa (scrollMultiplier), punto di partenza (startOffset) e aggancio della
+	// coda (tailOffset) coerenti con la larghezza corrente.
+	let isMobile = false;
+	const mm = gsap.matchMedia();
+	mm.add('(max-width: 768px)', () => { isMobile = true; });
+	mm.add('(min-width: 769px)', () => { isMobile = false; });
+
 	/** @param {number} progress */
 	function apply(progress) {
-		// La scritta parte fuori schermo a destra (140vw) e attraversa fino a -380vw
-		const burnoutPositionVw = 140 - progress * 520;
+		const scrollMultiplier = isMobile ? 1300 : 520;
+		const startOffset = isMobile ? 100 : 140;
+		const tailOffset = isMobile ? 1100 : 350;
+
+		// La scritta parte fuori schermo a destra (startOffset vw) e attraversa lo schermo
+		const burnoutPositionVw = startOffset - progress * scrollMultiplier;
 		gsap.set(marqueeEl, { x: `${burnoutPositionVw}vw` });
 
 		// Il primo blocco viene spinto via da sinistra man mano che la scritta lo raggiunge
@@ -33,7 +46,7 @@ export function burnoutScroll(node) {
 
 		// Il secondo blocco entra da destra agganciato alla coda della scritta e si
 		// pianta al centro quando questa raggiunge il centro schermo
-		const tailOfBurnout = burnoutPositionVw + 350;
+		const tailOfBurnout = burnoutPositionVw + tailOffset;
 		const outroX = Math.max(0, tailOfBurnout);
 		const outroOpacity = Math.max(0, Math.min(1, (60 - outroX) / 30));
 		gsap.set(outroEl, {
@@ -62,6 +75,7 @@ export function burnoutScroll(node) {
 	return {
 		destroy() {
 			trigger.kill();
+			mm.revert();
 			// Evita che un valore residuo continui a deformare il gradiente su altre rotte
 			scrollX.progress = 0;
 		}

@@ -24,3 +24,28 @@
 	/* CARD GLASS BORDER/PADDING: Ridotto a var(--spacing-1) per diminuire lo spessore dell'effetto glass */
 	--card-glass-padding: 0.75rem;       /* 12px */
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE OVERRIDES (<= 768px)
+   Commento solo il PERCHÉ: riduce proporzionalmente le spaziature 
+   medio-grandi per evitare distanze sproporzionate e scroll inutili 
+   sugli schermi dei telefoni.
+   ============================================================ */
+@media (max-width: 768px) {
+	:root {
+		--spacing-5:  1.5rem;      /* 24px invece di 40px */
+		--spacing-6:  2rem;        /* 32px invece di 48px */
+		--spacing-7:  2.25rem;     /* 36px invece di 56px */
+		--spacing-8:  2.5rem;      /* 40px invece di 64px */
+		--spacing-9:  3rem;        /* 48px invece di 72px */
+		--spacing-10: 3.5rem;      /* 56px invece di 80px */
+		--spacing-11: 4rem;        /* 64px invece di 120px */
+		--spacing-12: 5rem;        /* 80px invece di 160px */
+		--spacing-13: 7rem;        /* 112px invece di 272px */
+		--spacing-14: 9rem;        /* 144px invece di 400px */
+		--spacing-15: 11rem;       /* 176px invece di 480px */
+		--spacing-16: 15rem;       /* 240px invece di 736px */
+		--spacing-17: 20rem;       /* 320px invece di 992px */
+	}
+}
+

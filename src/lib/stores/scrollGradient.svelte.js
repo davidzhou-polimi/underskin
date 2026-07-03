@@ -78,12 +78,13 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 			: isInIntroSection
 				? {
 						/* Commento solo il PERCHÉ: imposta un gradiente focalizzato con raggio stretto
-						   al centro per l'IntroSection, per allinearsi visivamente con i cerchi concentrici animati. */
+						   al centro per l'IntroSection. Su mobile, riduce la dimensione a [0.16, 0.16] 
+						   per allinearsi visivamente con i cerchi concentrici ridotti su piccoli schermi. */
 						colors,
 						coverage: 1.0,
 						speed: 1.1,
 						focusCenter: [0.5, 0.5],
-						focusRadius: [0.24, 0.24]
+						focusRadius: (typeof window !== 'undefined' && window.innerWidth <= 768) ? [0.16, 0.16] : [0.24, 0.24]
 					}
 				: isPastFirstViewport
 					? { colors, coverage: 0.35, speed: 0.6 }

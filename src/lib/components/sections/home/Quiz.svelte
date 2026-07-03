@@ -461,4 +461,72 @@
 		transform: translateX(-50%);
 		z-index: 100;
 	}
+
+	@media (max-width: 768px) {
+		.quiz-wrapper {
+			/* Commento solo il PERCHÉ: riduce le altezze rigide su schermi corti per contenere 
+			   l'incolonnamento del quiz all'interno della viewport senza forzare scroll indesiderati */
+			height: auto;
+			min-height: 100vh;
+			padding: var(--spacing-8) var(--spacing-2);
+		}
+
+		.quiz-title-wrap {
+			margin-bottom: var(--spacing-4);
+		}
+
+		.quiz-body {
+			/* Commento solo il PERCHÉ: adotta un orientamento a colonna per allineare 
+			   verticalmente i due bottoni circolari di scelta e il pannello di testo */
+			flex-direction: column;
+			height: auto;
+			min-height: 520px;
+			gap: var(--spacing-4);
+		}
+
+		.circle-container {
+			/* Commento solo il PERCHÉ: ridimensiona il diametro del cerchio a 180px 
+			   per consentire l'incolonnamento ed evitare overflow orizzontale */
+			width: 180px;
+			height: 180px;
+		}
+
+		.text-panel {
+			/* Commento solo il PERCHÉ: riposiziona il pannello di testo in modalità 
+			   relativa sotto il cerchio ed elimina il posizionamento assoluto laterale desktop */
+			position: relative;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: auto;
+			margin-top: var(--spacing-3);
+			justify-content: center;
+			text-align: center;
+		}
+
+		.text-block {
+			position: relative;
+			width: 100%;
+		}
+
+		.main-statement {
+			/* Commento solo il PERCHÉ: adatta la taglia del testo e centra la frase di risposta su mobile */
+			font-size: var(--text-s);
+			text-align: center;
+		}
+
+		.quote-wrapper {
+			align-items: center;
+		}
+
+		.quote-content {
+			/* Commento solo il PERCHÉ: adatta la taglia del testo della citazione su mobile per migliorarne la leggibilità */
+			font-size: var(--text-s);
+			text-align: center;
+		}
+
+		.scroll-hint-container {
+			bottom: var(--spacing-2);
+		}
+	}
 </style>

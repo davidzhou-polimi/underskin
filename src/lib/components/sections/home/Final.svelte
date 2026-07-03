@@ -24,6 +24,15 @@
         overflow: hidden;
     }
 
+    @media (max-width: 768px) {
+        .finale-section {
+            /* Commento solo il PERCHÉ: azzera il margine superiore negativo su mobile 
+               per evitare conflitti con la sezione precedente (Burnout) */
+            margin-top: 0;
+            padding: var(--spacing-8) var(--spacing-2);
+        }
+    }
+
     .finale-content {
         width: 100%;
         max-width: 90rem;

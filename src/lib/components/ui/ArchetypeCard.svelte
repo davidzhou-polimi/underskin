@@ -243,4 +243,20 @@
 	.archetype-card-container.is-horizontal .athlete-image {
 		transform: scale(1.2);
 	}
+
+	@media (max-width: 768px) {
+		.archetype-card-container {
+			/* Commento solo il PERCHÉ: ridimensiona le card verticali su mobile 
+			   per adattarle alla larghezza tipica degli schermi degli smartphone */
+			width: 290px;
+			height: 380px;
+		}
+
+		.archetype-card-container.is-horizontal {
+			/* Commento solo il PERCHÉ: ridimensiona le card orizzontali su mobile 
+			   per assicurarne il perfetto inserimento nei flussi orizzontali/carousel */
+			width: 340px;
+			height: 260px;
+		}
+	}
 </style>

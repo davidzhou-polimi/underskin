@@ -147,3 +147,22 @@ p, a {
 	font-size: var(--text-service-size);        /* 1rem */
 	font-weight: var(--text-service-weight);    /* 500 */
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE OVERRIDES (<= 768px)
+   Commento solo il PERCHÉ: ridimensiona proporzionalmente i token 
+   della scala tipografica per evitare che testi enormi vadano in 
+   overflow o rompano il layout su schermi piccoli.
+   ============================================================ */
+@media (max-width: 768px) {
+	:root {
+		--text-2xs:  0.875rem;   /* 14px */
+		--text-xs:   1rem;       /* 16px */
+		--text-s:    1.125rem;   /* 18px */
+		--text-m:    1.25rem;    /* 20px */
+		--text-l:    1.5rem;     /* 24px */
+		--text-xl:   2.25rem;    /* 36px */
+		--text-2xl:  3.5rem;     /* 56px */
+		--text-3xl:  5rem;       /* 80px */
+	}
+}

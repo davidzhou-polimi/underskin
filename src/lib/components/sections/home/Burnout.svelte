@@ -140,4 +140,18 @@
         --gradient-c2: var(--archetipi-insoddisfatto, #8035D2);
         --gradient-c3: var(--archetipi-infortunato, #D86146);
     }
+
+    @media (max-width: 768px) {
+        .text-container {
+            /* Commento solo il PERCHÉ: aumenta il padding laterale su mobile 
+               per evitare che i testi tocchino i bordi fisici dello schermo del telefono */
+            padding: 0 var(--spacing-4);
+        }
+
+        .text-wrapper {
+            /* Commento solo il PERCHÉ: riduce lo spazio verticale tra titolo 
+               e sottotitolo su schermi mobili per renderlo compatto */
+            gap: var(--spacing-3);
+        }
+    }
 </style>

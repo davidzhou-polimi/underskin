@@ -47,6 +47,18 @@ export function quizAnimation(node, params) {
 	});
 	gestureObserver.disable();
 
+	let isMobile = false;
+
+	// Commento solo il PERCHÉ: gsap.matchMedia traccia se siamo su mobile, consentendo
+	// all'animazione GSAP di utilizzare parametri di scala e traslazione asse Y ad hoc.
+	const mm = gsap.matchMedia();
+	mm.add("(max-width: 768px)", () => {
+		isMobile = true;
+	});
+	mm.add("(min-width: 769px)", () => {
+		isMobile = false;
+	});
+
 	const resetTrigger = ScrollTrigger.create({
 		trigger: node,
 		start: 'top bottom',
@@ -96,31 +108,56 @@ export function quizAnimation(node, params) {
 	function addMentalePhase(tl, startAt = '>') {
 		tl.addLabel('_mp', startAt);
 
-		// fisico esce a destra + mentale si ingrandisce (simultanei)
-		tl.to(node.querySelector('.circle-container.right-side'),
-			{ x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
-		tl.to(node.querySelector('.circle-container.left-side'),
-			{ x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, '_mp');
+		if (isMobile) {
+			// Commento solo il PERCHÉ: su mobile il cerchio fisico (destra/basso) esce verso il basso
+			// e il cerchio mentale (sinistra/alto) sale leggermente restringendo la scala
+			tl.to(node.querySelector('.circle-container.right-side'),
+				{ y: 300, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
+			tl.to(node.querySelector('.circle-container.left-side'),
+				{ y: -60, scale: 1.3, duration: 0.8, ease: 'power3.out' }, '_mp');
 
-		// "mentale" sfuma mentre il cerchio si espande
-		tl.to(node.querySelector('.left-side .initial-label'),
-			{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
+			tl.to(node.querySelector('.left-side .initial-label'),
+				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
 
-		// "70% mentale" appare durante l'ingrandimento
-		tl.fromTo(node.querySelector('.left-side .percentage-text'),
-			{ opacity: 0, scale: 0.85 },
-			{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
-			'_mp+=0.3');
+			tl.fromTo(node.querySelector('.left-side .percentage-text'),
+				{ opacity: 0, scale: 0.85 },
+				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+				'_mp+=0.3');
 
-		// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
-		// Commento solo il PERCHÉ: allinea il valore di fine corsa dell'animazione GSAP alla coordinata della classe CSS is-final per evitare microscatti al cambio di stato
-		tl.to(node.querySelector('.circle-container.left-side'),
-			{ x: -40, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
+			// Su mobile non spostiamo a sinistra ma teniamo centrato e riduciamo la scala per fare spazio al testo sotto
+			tl.to(node.querySelector('.circle-container.left-side'),
+				{ y: -100, scale: 0.95, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
 
-		// text-panel entra da destra
-		tl.fromTo(node.querySelector('.text-panel'),
-			{ opacity: 0, x: 60 },
-			{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
+			// Il pannello di testo entra dal basso
+			tl.fromTo(node.querySelector('.text-panel'),
+				{ opacity: 0, y: 50 },
+				{ opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
+		} else {
+			// fisico esce a destra + mentale si ingrandisce (simultanei)
+			tl.to(node.querySelector('.circle-container.right-side'),
+				{ x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
+			tl.to(node.querySelector('.circle-container.left-side'),
+				{ x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, '_mp');
+
+			// "mentale" sfuma mentre il cerchio si espande
+			tl.to(node.querySelector('.left-side .initial-label'),
+				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
+
+			// "70% mentale" appare durante l'ingrandimento
+			tl.fromTo(node.querySelector('.left-side .percentage-text'),
+				{ opacity: 0, scale: 0.85 },
+				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+				'_mp+=0.3');
+
+			// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
+			tl.to(node.querySelector('.circle-container.left-side'),
+				{ x: -40, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
+
+			// text-panel entra da destra
+			tl.fromTo(node.querySelector('.text-panel'),
+				{ opacity: 0, x: 60 },
+				{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
+		}
 	}
 
 	/**
@@ -173,19 +210,33 @@ export function quizAnimation(node, params) {
 		} else {
 			// --- SCENARIO B: l'utente seleziona fisico ---
 
-			// STEP 1: fisico si ingrandisce di poco + cambio testo in simultanea
-			// Il cerchio mentale rimane fermo
-			activeTimeline.to(node.querySelector('.circle-container.right-side'),
-				{ scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0);
-			activeTimeline.to(node.querySelector('.right-side .initial-label'),
-				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
-			activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
-				{ opacity: 0, scale: 0.9 },
-				{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
+			if (isMobile) {
+				// Commento solo il PERCHÉ: su mobile il cerchio si ingrandisce con un fattore di scala ridotto
+				// per non andare fuori schermo, per poi ripristinarsi
+				activeTimeline.to(node.querySelector('.circle-container.right-side'),
+					{ scale: 1.15, duration: 0.5, ease: 'power2.out' }, 0);
+				activeTimeline.to(node.querySelector('.right-side .initial-label'),
+					{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
+				activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
+					{ opacity: 0, scale: 0.9 },
+					{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
 
-			// STEP 2: fisico torna alla grandezza iniziale (con "30% fisico" ancora visibile)
-			activeTimeline.to(node.querySelector('.circle-container.right-side'),
-				{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
+				activeTimeline.to(node.querySelector('.circle-container.right-side'),
+					{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
+			} else {
+				// STEP 1: fisico si ingrandisce di poco + cambio testo in simultanea
+				activeTimeline.to(node.querySelector('.circle-container.right-side'),
+					{ scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0);
+				activeTimeline.to(node.querySelector('.right-side .initial-label'),
+					{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
+				activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
+					{ opacity: 0, scale: 0.9 },
+					{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
+
+				// STEP 2: fisico torna alla grandezza iniziale (con "30% fisico" ancora visibile)
+				activeTimeline.to(node.querySelector('.circle-container.right-side'),
+					{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
+			}
 
 			// STEP 3: stessa animazione del caso mentale — inizia subito dopo lo step 2
 			addMentalePhase(activeTimeline);
@@ -239,6 +290,7 @@ export function quizAnimation(node, params) {
 			if (pinTrigger) pinTrigger.kill();
 			if (resetTrigger) resetTrigger.kill();
 			if (activeTimeline) activeTimeline.kill();
+			mm.revert();
 		}
 	};
 }
