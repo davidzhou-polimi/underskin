@@ -1,4 +1,5 @@
 import { scroll } from '$lib/stores/scroll.svelte.js';
+import { media } from '$lib/stores/mediaQuery.svelte.js';
 
 /**
  * Colori combinati dei tre archetipi, bilanciati per evitare la predominanza cromatica dell'arancione.
@@ -84,7 +85,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 						coverage: 1.0,
 						speed: 1.1,
 						focusCenter: [0.5, 0.5],
-						focusRadius: (typeof window !== 'undefined' && window.innerWidth <= 768) ? [0.16, 0.16] : [0.24, 0.24]
+						focusRadius: media.isMobile ? [0.16, 0.16] : [0.24, 0.24]
 					}
 				: isPastFirstViewport
 					? { colors, coverage: 0.35, speed: 0.6 }

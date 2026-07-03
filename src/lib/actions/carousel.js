@@ -1,4 +1,4 @@
-import { gsap } from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 const ANGLE_STEP = 18; // degrees between adjacent card positions
 

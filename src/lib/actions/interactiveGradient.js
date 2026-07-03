@@ -1,5 +1,5 @@
 import { InteractiveGradientRenderer, DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
-import { gsap } from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /**
  * @typedef {Object} GradientParams

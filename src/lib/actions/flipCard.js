@@ -1,4 +1,4 @@
-import gsap from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /**
  * @typedef {Object} FlipCardParams

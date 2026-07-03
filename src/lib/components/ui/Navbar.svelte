@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { navbarSlide } from '$lib/actions/navbarSlide.js';
 	import { getLenis, lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 
 	/**
 	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
@@ -28,12 +29,11 @@
 
 	let hidden = $state(false);
 	let isMenuOpen = $state(false);
-	let isMobile = $state(false);
 
-	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta, 
+	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta,
 	// ma su mobile forza la navbar visibile all'avvio (hidden = false) per preservarne la visibilità in cima
 	$effect(() => {
-		if (isMobile) {
+		if (media.isMobile) {
 			hidden = false;
 		} else {
 			hidden = hideByDefault;
@@ -79,7 +79,7 @@
 		/* Evita di nascondere la barra se l'utente la sta sorvolando con il mouse o la sta navigando con la tastiera */
 		if (
 			autoHideDelay <= 0 ||
-			((isMobile || !hideByDefault) && window.scrollY <= 10) ||
+			((media.isMobile || !hideByDefault) && window.scrollY <= 10) ||
 			isHovered ||
 			isFocused
 		)
@@ -145,7 +145,6 @@
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
-		isMobile = window.innerWidth <= 768;
 		/** @type {ReturnType<typeof setTimeout> | undefined} */
 		let scrollTimeout;
 		let isMouseNearTop = false;
@@ -154,11 +153,10 @@
 
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
-			isMobile = window.innerWidth <= 768;
 
-			// Commento solo il PERCHÉ: su mobile o quando hideByDefault è disattivo, 
+			// Commento solo il PERCHÉ: su mobile o quando hideByDefault è disattivo,
 			// forza la navbar visibile quando si è vicini alla cima dello schermo (scrollY <= 10)
-			if (currentScrollY <= 10 && (isMobile || !hideByDefault)) {
+			if (currentScrollY <= 10 && (media.isMobile || !hideByDefault)) {
 				hidden = false;
 				lastScrollY = currentScrollY;
 				clearTimeout(autoHideTimeout);
