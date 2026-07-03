@@ -29,15 +29,14 @@
 
 	let hidden = $state(false);
 	let isMenuOpen = $state(false);
+	// Commento solo il PERCHÉ: mentre la barra sta scorrendo, i tocchi sull'hamburger vanno ignorati, così
+	// non si apre il menu con la navbar a metà slide (che mostrerebbe l'overlay "scendere" con l'header).
+	let isNavbarSliding = $state(false);
 
-	// Commento solo il PERCHÉ: Resetta hidden a hideByDefault ad ogni cambio rotta,
-	// ma su mobile forza la navbar visibile all'avvio (hidden = false) per preservarne la visibilità in cima
+	// Commento solo il PERCHÉ: stato iniziale = hideByDefault su ogni piattaforma; mobile e desktop
+	// condividono lo stesso comportamento di auto-hide (nessuna eccezione che tenga la barra visibile).
 	$effect(() => {
-		if (media.isMobile) {
-			hidden = false;
-		} else {
-			hidden = hideByDefault;
-		}
+		hidden = hideByDefault;
 	});
 
 	// Commento solo il PERCHÉ: rileva il passaggio da mobile a desktop (es. ridimensionando la finestra)
@@ -46,19 +45,6 @@
 		if (!media.isMobile && isMenuOpen) {
 			isMenuOpen = false;
 		}
-	});
-
-	// Commento solo il PERCHÉ: blocca o sblocca lo scorrimento della pagina di sfondo (Lenis)
-	// a seconda che l'overlay del menu mobile sia aperto o chiuso, garantendo un'interazione pulita.
-	$effect(() => {
-		if (isMenuOpen) {
-			lockScroll();
-		} else {
-			unlockScroll();
-		}
-		return () => {
-			unlockScroll();
-		};
 	});
 
 	let lastScrollY = 0;
@@ -79,23 +65,41 @@
 		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
 	];
 
+	// Commento solo il PERCHÉ: unico punto che nasconde la barra, così l'invariante "a menu aperto non si
+	// nasconde" vive in un solo posto invece che sparsa tra timer e scroll handler.
+	const requestHide = () => {
+		if (!isMenuOpen) hidden = true;
+	};
+
 	/**
 	 * Avvia il timer per nascondere automaticamente la navbar dopo un periodo di inattività
 	 */
 	const startAutoHideTimer = () => {
 		clearTimeout(autoHideTimeout);
-		/* Evita di nascondere la barra se l'utente la sta sorvolando con il mouse o la sta navigando con la tastiera */
+		/* Evita di nascondere la barra se il menu è aperto, se l'utente la sta sorvolando col mouse o la sta navigando con la tastiera */
 		if (
 			autoHideDelay <= 0 ||
-			((media.isMobile || !hideByDefault) && window.scrollY <= 10) ||
+			isMenuOpen ||
+			(!hideByDefault && window.scrollY <= 10) ||
 			isHovered ||
 			isFocused
 		)
 			return;
-		autoHideTimeout = setTimeout(() => {
-			hidden = true;
-		}, autoHideDelay);
+		autoHideTimeout = setTimeout(requestHide, autoHideDelay);
 	};
+
+	// Commento solo il PERCHÉ: a menu aperto blocca lo scroll di sfondo (Lenis) e ferma ogni hide in coda;
+	// alla chiusura riprende l'auto-hide, così la barra torna a nascondersi come su desktop.
+	$effect(() => {
+		if (isMenuOpen) {
+			lockScroll();
+			clearTimeout(autoHideTimeout);
+		} else {
+			unlockScroll();
+			startAutoHideTimer();
+		}
+		return () => unlockScroll();
+	});
 
 	/**
 	 * Gestione della navigazione o dello scorrimento dinamico in base alla pagina corrente
@@ -119,6 +123,16 @@
 		} else {
 			await goto(link.path);
 		}
+	};
+
+	/**
+	 * Apre/chiude il menu mobile. Durante lo slide della barra ignora solo l'apertura (per non aprire il
+	 * menu a metà slide), mai la chiusura. Il lock scroll e il riavvio dell'auto-hide sono gestiti
+	 * dall'$effect su isMenuOpen.
+	 */
+	const toggleMenu = () => {
+		if (!isMenuOpen && isNavbarSliding) return;
+		isMenuOpen = !isMenuOpen;
 	};
 
 	/**
@@ -162,9 +176,9 @@
 		const handleScroll = () => {
 			const currentScrollY = window.scrollY;
 
-			// Commento solo il PERCHÉ: su mobile o quando hideByDefault è disattivo,
-			// forza la navbar visibile quando si è vicini alla cima dello schermo (scrollY <= 10)
-			if (currentScrollY <= 10 && (media.isMobile || !hideByDefault)) {
+			// Commento solo il PERCHÉ: con hideByDefault disattivo la barra resta visibile vicino alla cima;
+			// con hideByDefault attivo (mobile e desktop) si lascia governare dall'auto-hide anche in cima.
+			if (currentScrollY <= 10 && !hideByDefault) {
 				hidden = false;
 				lastScrollY = currentScrollY;
 				clearTimeout(autoHideTimeout);
@@ -174,7 +188,7 @@
 			const delta = currentScrollY - lastScrollY;
 
 			if (delta > hideThreshold) {
-				hidden = true;
+				requestHide();
 				lastScrollY = currentScrollY;
 			} else if (delta < -showThreshold) {
 				hidden = false;
@@ -196,6 +210,9 @@
 
 		/** @param {MouseEvent} e */
 		const handleMouseMove = (e) => {
+			// Commento solo il PERCHÉ: il reveal col mouse vicino al bordo è un'affordance desktop; su mobile
+			// il tap emula un mousemove che altrimenti falserebbe lo stato di prossimità al bordo.
+			if (media.isMobile) return;
 			const nearTop = e.clientY <= 30;
 			if (nearTop) {
 				if (!isMouseNearTop) {
@@ -228,38 +245,56 @@
 			}
 		};
 
+		// Commento solo il PERCHÉ: swipe verso il basso dal bordo superiore per far riapparire la navbar
+		// nascosta a metà pagina. Serve un listener in capture non-passive: è la sola via per rilevare e
+		// insieme sopprimere lo scroll di un gesto discreto (le helper direzionali dello store bloccano la
+		// direzione opposta). stopPropagation batte Lenis, che ascolta in fase bubble.
+		const EDGE_BAND = 40; // px dal bordo superiore in cui il gesto è valido
+		const REVEAL_DELTA = 30; // px di trascinamento giù per far scattare il reveal
 		let touchStartY = 0;
+		let edgePull = false;
+
 		/** @param {TouchEvent} e */
 		const handleTouchStart = (e) => {
+			if (!media.isMobile) return;
 			touchStartY = e.touches[0].clientY;
+			edgePull = touchStartY <= EDGE_BAND && hidden;
 		};
 
 		/** @param {TouchEvent} e */
 		const handleTouchMove = (e) => {
-			// Commento solo il PERCHÉ: Rileva lo swipe verso il basso (scroll verso l'alto) quando la pagina è già al limite superiore.
-			if (window.scrollY <= 10 && hidden) {
-				const touchY = e.touches[0].clientY;
-				if (touchY - touchStartY > 30) {
-					hidden = false;
-					startAutoHideTimer();
-				}
+			if (!edgePull) return;
+			const dy = e.touches[0].clientY - touchStartY;
+			if (dy > 0) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			if (dy > REVEAL_DELTA && hidden) {
+				hidden = false;
+				startAutoHideTimer();
 			}
 		};
 
-		startAutoHideTimer();
+		const handleTouchEnd = () => {
+			edgePull = false;
+		};
+
+		// Commento solo il PERCHÉ: l'auto-hide iniziale è già avviato dall'$effect su isMenuOpen al mount.
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		window.addEventListener('mousemove', handleMouseMove, { passive: true });
 		window.addEventListener('wheel', handleWheel, { passive: true });
-		window.addEventListener('touchstart', handleTouchStart, { passive: true });
-		window.addEventListener('touchmove', handleTouchMove, { passive: true });
+		window.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
+		window.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+		window.addEventListener('touchend', handleTouchEnd, { passive: true, capture: true });
 
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
 			window.removeEventListener('mousemove', handleMouseMove);
 			window.removeEventListener('wheel', handleWheel);
-			window.removeEventListener('touchstart', handleTouchStart);
-			window.removeEventListener('touchmove', handleTouchMove);
+			window.removeEventListener('touchstart', handleTouchStart, { capture: true });
+			window.removeEventListener('touchmove', handleTouchMove, { capture: true });
+			window.removeEventListener('touchend', handleTouchEnd, { capture: true });
 			clearTimeout(scrollTimeout);
 			clearTimeout(mouseRevealTimeout);
 			clearTimeout(autoHideTimeout);
@@ -291,19 +326,26 @@
 <!-- svelte-ignore a11y_no_redundant_roles -->
 <header
 	class="navbar"
-	use:navbarSlide={{ hidden }}
+	use:navbarSlide={{ hidden, onAnimating: (v) => (isNavbarSliding = v) }}
 	role="banner"
 	onmouseenter={() => {
+		// Commento solo il PERCHÉ: su mobile il tap emula mouseenter e terrebbe isHovered=true (bloccando
+		// l'auto-hide) finché non si tocca altrove; l'hover-hold è un comportamento solo desktop.
+		if (media.isMobile) return;
 		isHovered = true;
 		clearTimeout(autoHideTimeout);
 	}}
 	onmouseleave={() => {
+		if (media.isMobile) return;
 		isHovered = false;
 		if (!hidden) {
 			startAutoHideTimer();
 		}
 	}}
 	onfocusin={(e) => {
+		// Commento solo il PERCHÉ: su mobile non c'è motivo di sostare sulla navbar (le voci sono nel
+		// menu a parte), quindi l'hold da focus vale solo desktop; su mobile la barra torna a nascondersi.
+		if (media.isMobile) return;
 		const target = e.target;
 		if (target instanceof Element && target.matches(':focus-visible')) {
 			isFocused = true;
@@ -327,7 +369,7 @@
 
 		<button
 			class="menu-toggle-btn"
-			onclick={() => isMenuOpen = !isMenuOpen}
+			onclick={toggleMenu}
 			aria-expanded={isMenuOpen}
 			aria-label={isMenuOpen ? "Chiudi menu" : "Apri menu"}
 		>
