@@ -479,9 +479,9 @@
 		z-index: 999;
 		display: flex;
 		flex-direction: column;
-		/* Commento solo il PERCHÉ: allinea il padding orizzontale a spacing-4 (32px), 
+		/* Commento solo il PERCHÉ: allinea il padding orizzontale a spacing-6 e verticale a spacing-3, 
 		   esattamente identico a quello della navbar chiusa per eliminare ogni layout shift */
-		padding: var(--spacing-4) var(--spacing-4) var(--spacing-10);
+		padding: var(--spacing-3) var(--spacing-6) var(--spacing-10);
 		box-sizing: border-box;
 		opacity: 0;
 		visibility: hidden;
@@ -560,8 +560,8 @@
 		.navbar__inner {
 			/* Commento solo il PERCHÉ: su mobile la navbar chiusa ha lo sfondo trasparente 
 			   e non ha bordi, lasciando visibili i contenuti retrostanti come richiesto */
-			padding-inline: var(--spacing-4);
-			padding-block: var(--spacing-2);
+			padding-block: var(--spacing-3);
+		    padding-inline: var(--spacing-6);
 			justify-content: space-between;
 			background-color: transparent;
 			border-bottom: none;
