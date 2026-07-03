@@ -40,6 +40,14 @@
 		}
 	});
 
+	// Commento solo il PERCHÉ: rileva il passaggio da mobile a desktop (es. ridimensionando la finestra)
+	// e chiude automaticamente il menu mobile se aperto, per evitare che rimanga un overlay orfano.
+	$effect(() => {
+		if (!media.isMobile && isMenuOpen) {
+			isMenuOpen = false;
+		}
+	});
+
 	// Commento solo il PERCHÉ: blocca o sblocca lo scorrimento della pagina di sfondo (Lenis)
 	// a seconda che l'overlay del menu mobile sia aperto o chiuso, garantendo un'interazione pulita.
 	$effect(() => {

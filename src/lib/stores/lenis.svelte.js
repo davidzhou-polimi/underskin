@@ -18,10 +18,19 @@ export function getLenis() {
 
 export function lockScroll() {
 	lenis?.stop();
+	/* Commento solo il PERCHÉ: applica una classe globale al documentElement per bloccare lo scorrimento touch 
+	   nativo su mobile, siccome Lenis gira con syncTouch disattivato e non controlla tali eventi. */
+	if (typeof document !== 'undefined') {
+		document.documentElement.classList.add('scroll-locked');
+	}
 }
 
 export function unlockScroll() {
 	lenis?.start();
+	/* Commento solo il PERCHÉ: rimuove il blocco a livello DOM ripristinando il regolare scorrimento di pagina. */
+	if (typeof document !== 'undefined') {
+		document.documentElement.classList.remove('scroll-locked');
+	}
 }
 
 /**

@@ -144,4 +144,11 @@
         overflow: initial;
     }
 
+    @media (max-width: 768px) {
+        /* Commento solo il PERCHÉ: disattiva lo scorrimento touch nativo su viewport mobile senza forzare height: 100%, 
+           evitando così che la pagina salti all'inizio (scroll to top) al momento del blocco. */
+        :global(html.scroll-locked) {
+            overflow: hidden !important;
+        }
+    }
 </style>
