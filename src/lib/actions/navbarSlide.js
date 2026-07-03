@@ -1,4 +1,4 @@
-import { gsap } from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /**
  * Azione Svelte per animare la navbar in entrata e in uscita tramite GSAP.

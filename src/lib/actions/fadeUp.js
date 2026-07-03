@@ -1,4 +1,4 @@
-import { gsap } from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /**
  * Svelte Action per un effetto Fade Up con GSAP.

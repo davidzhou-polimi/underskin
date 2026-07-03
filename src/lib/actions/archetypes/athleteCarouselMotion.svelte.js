@@ -1,4 +1,4 @@
-import { gsap } from 'gsap';
+import { gsap } from '$lib/utils/gsapSetup.js';
 
 /* Sincronizzato con l'intervallo di 3.5s di TeamCarousel per coerenza visiva globale */
 const AUTOPLAY_INTERVAL = 3500; // ms
