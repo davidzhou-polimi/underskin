@@ -20,6 +20,10 @@ export function introReveal(node) {
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
 
+	// Commento solo il PERCHÉ: dichiarato fuori da gsap.context per essere accessibile nel destroy().
+	// Su mobile (max-width: 768px) la callback non viene mai eseguita, quindi i tween non esistono.
+	const mm = gsap.matchMedia();
+
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({
 			defaults: { ease: 'power2.out' },
@@ -92,38 +96,18 @@ export function introReveal(node) {
 
 
 
-		// Commento solo il PERCHÉ: Crea una rotazione continua e sfasata dei cerchi per generare un dinamismo geometrico e cinetico tridimensionale
+		// Commento solo il PERCHÉ: la rotazione sfasata dei 3 cerchi è solo desktop — su mobile non esiste
+		// un cursore che interagisce e il costo GPU non è giustificato. gsap.matchMedia reverta
+		// automaticamente i tween (azzerando la rotazione) quando si ridimensiona verso mobile.
 		const innerCircle = node.querySelector('.circle-inner');
 		const middleCircle = node.querySelector('.circle-middle');
 		const outerCircle = node.querySelector('.circle-outer');
 
-		if (innerCircle) {
-			gsap.to(innerCircle, {
-				rotation: 360,
-				duration: 110,
-				repeat: -1,
-				ease: 'none',
-				transformOrigin: 'center center'
-			});
-		}
-		if (middleCircle) {
-			gsap.to(middleCircle, {
-				rotation: -360,
-				duration: 160,
-				repeat: -1,
-				ease: 'none',
-				transformOrigin: 'center center'
-			});
-		}
-		if (outerCircle) {
-			gsap.to(outerCircle, {
-				rotation: 360,
-				duration: 220,
-				repeat: -1,
-				ease: 'none',
-				transformOrigin: 'center center'
-			});
-		}
+		mm.add('(min-width: 769px)', () => {
+			if (innerCircle)  gsap.to(innerCircle,  { rotation: 360,  duration: 110, repeat: -1, ease: 'none', transformOrigin: 'center center' });
+			if (middleCircle) gsap.to(middleCircle, { rotation: -360, duration: 160, repeat: -1, ease: 'none', transformOrigin: 'center center' });
+			if (outerCircle)  gsap.to(outerCircle,  { rotation: 360,  duration: 220, repeat: -1, ease: 'none', transformOrigin: 'center center' });
+		});
 
 		const circlesSvg = node.querySelector('.circles-svg');
 
@@ -313,6 +297,7 @@ export function introReveal(node) {
 	return {
 		destroy() {
 			unlockScrollDown();
+			mm.revert();
 			ctx.revert();
 		}
 	};
