@@ -447,6 +447,13 @@
 		font-weight: var(--text-nav-active-weight);
 	}
 
+	/* Commento solo il PERCHÉ: display:contents dissolve il box del wrapper su desktop, così
+	   .link-nav torna figlio diretto della flex-row .navbar__inner e il suo margin-inline-start:auto
+	   riprende a spingere il menu a destra. Su mobile il @media lo porta a display:none. */
+	.desktop-menu-wrapper {
+		display: contents;
+	}
+
 	/* Pulsante Menu Mobile */
 	.menu-toggle-btn {
 		display: none;
