@@ -99,6 +99,12 @@ export function zoomTextTransition(node) {
 					duration: 1.0,
 					ease: 'power1.out'
 			  }, '-=0.8')
+			  .to(zoomSvg, {
+					/* Commento solo il PERCHÉ: sfuma l'SVG zoomato contemporaneamente all'ingresso del carosello per liberare lo sfondo ed evitare che il colore rimanga visibile nei micro-gap del pinning */
+					opacity: 0,
+					duration: 1.0,
+					ease: 'power1.out'
+			  }, '<')
 			  
 			  // 4. Buffer di riposo (resting state) per dare stabilità alla sezione una volta rivelata
 			  // Evita che uno scroll brusco o l'inerzia dello scroll superino immediatamente la sezione

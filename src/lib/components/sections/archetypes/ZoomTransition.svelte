@@ -108,7 +108,8 @@
         align-items: center;
         justify-content: center;
         z-index: 2;
-        background-color: var(--background-primary);
+        /* Commento solo il PERCHÉ: rende lo sfondo trasparente per consentire il passaggio fluido e continuo del canvas di gradiente interattivo globale */
+        background-color: transparent;
         overflow: visible;
         /* Rende la sezione e tutti i suoi figli invisibili e non interattivi finché non inizia la dissolvenza */
         visibility: hidden;
