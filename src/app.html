@@ -17,6 +17,13 @@
 			if ('scrollRestoration' in history) {
 				history.scrollRestoration = 'manual';
 			}
+			// Il reload diretto mantiene la posizione di scroll a prescindere da scrollRestoration: i
+			// ScrollTrigger pinnati verrebbero creati già "dentro" il proprio range, attivandosi in uno
+			// stato incoerente (es. Performance in overlay su Intro) da cui gli smontaggi delle
+			// navigazioni successive non si riprendono (DOM zombie, navbar duplicate). Doppia
+			// protezione: azzera subito e fai salvare 0 al browser come posizione per il reload.
+			window.scrollTo(0, 0);
+			window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
 		</script>
 		%sveltekit.head%
 	</head>

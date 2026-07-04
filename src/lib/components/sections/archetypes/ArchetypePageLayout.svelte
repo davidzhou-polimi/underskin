@@ -168,13 +168,13 @@
 
 	<NarrativeText sectionId={config.narrativeSectionId} theme={archetype} paragraphs={config.paragraphs} />
 
-	<ZoomTransition theme={archetype}>
+	<ZoomTransition theme={archetype} onRevealChange={(revealed) => { gradient.carouselRevealed = revealed; }}>
 		{#snippet children()}
 			<AthleteSection type={archetype} />
 		{/snippet}
 	</ZoomTransition>
 
-	<ContinueNarrationSection {archetype} />
+	<ContinueNarrationSection {archetype} onVisibilityChange={(visible) => { gradient.nearConclusion = visible; }} />
 	<section class="scroll-spacer" aria-hidden="true"></section>
 </main>
 

@@ -9,6 +9,30 @@ import { gsap } from '$lib/utils/gsapSetup.js';
  */
 
 /**
+ * Confronto per valore tra config (shallow, array elemento-per-elemento). I config arrivano da
+ * $derived che possono ricreare l'oggetto senza cambiarne la semantica: un config equivalente non
+ * deve riavviare la transizione — il kill+restart continuo del tween (curva inOut che riparte da
+ * ferma a ogni evento scroll) congelerebbe il gradiente finché lo scroll non si esaurisce.
+ * @param {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} [a]
+ * @param {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} [b]
+ */
+function configsEqual(a, b) {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+	for (const key of keys) {
+		const va = /** @type {any} */ (a)[key];
+		const vb = /** @type {any} */ (b)[key];
+		if (Array.isArray(va) && Array.isArray(vb)) {
+			if (va.length !== vb.length || va.some((v, i) => v !== vb[i])) return false;
+		} else if (va !== vb) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
  * Svelte Action to initialize and update a canvas using Three.js custom shader.
  * Binds DOM event listeners and exposes the renderer on the canvas element.
  * @param {HTMLCanvasElement} canvas
@@ -60,38 +84,36 @@ export function interactiveGradient(canvas, params = {}) {
 	/** @type {gsap.core.Tween | null} */
 	let activeTween = null;
 
-	// Commento solo il PERCHÉ: Sincronizza la durata delle transizioni di GSAP con i design tokens definiti nel foglio di stile globale.
-	const getTransitionDuration = (tokenName = '--transition-duration-slow', fallback = 1.2) => {
-		if (typeof window === 'undefined') return fallback;
-		const durationStr = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim();
-		if (!durationStr) return fallback;
-		return parseFloat(durationStr) / (durationStr.endsWith('ms') ? 1000 : 1);
-	};
-
-	// Commento solo il PERCHÉ: GSAP interpola fluidamente sia i parametri scalari (coverage, speed) 
+	// Commento solo il PERCHÉ: GSAP interpola fluidamente sia i parametri scalari (coverage, speed)
 	// sia i canali cromatici (R, G, B) delle uniform di Three.js per evitare cambi di stato netti.
+	// Durata/easing letterali (0.8s, power2.inOut): stesso ordine di grandezza e stessa curva già
+	// validati per l'identica animazione (sfera↔schermo intero) nella coreografia scroll-locked
+	// dell'intro (introReveal.js, anch'essa non tokenizzata) — un'unica velocità in entrambe le
+	// direzioni, non tokenizzata perché è un valore di feel dell'animazione, non un token di design.
 	/**
 	 * @param {import('$lib/utils/interactiveGradientRenderer.js').GradientConfig} newConfig
 	 * @param {number} [duration]
 	 */
-	function transitionConfig(newConfig, duration) {
-		const resolvedDuration = duration ?? getTransitionDuration('--transition-duration-slow', 1.2);
+	function transitionConfig(newConfig, duration = 0.8) {
 		if (activeTween) activeTween.kill();
 
-		const proxy = renderer.getAnimatableState();
 		// DEFAULT_CONFIG come fallback: le proprietà non esplicitate in newConfig vengono riportate
 		// ai valori di default invece di ereditare lo stato della sezione precedente (es. speed, mouseStrength).
-		const { state: targetState, colorCount } = renderer.getTargetState(newConfig, DEFAULT_CONFIG);
+		const { state: targetState, palette } = renderer.getTargetState(newConfig, DEFAULT_CONFIG);
 
-		// colorCount non è animabile (è un int GLSL): aggiornato subito prima del tween
-		// per evitare glitch cromatici quando il numero di colori cambia tra sezioni.
-		/** @type {any} */ (renderer.material.uniforms).u_color_count.value = colorCount;
+		// La palette non transita canale-per-canale (riorganizzerebbe le bande): FROM congela lo
+		// stato corrente, TO è la nuova palette, e paletteMix le dissolve pixel-per-pixel nello
+		// shader — ogni palette resa con la propria struttura autentica, mai stati intermedi estranei.
+		// Il proxy va catturato DOPO beginPaletteTransition, così paletteMix parte da 0.
+		renderer.beginPaletteTransition(palette);
+		const proxy = renderer.getAnimatableState();
 		renderer.config = { ...renderer.config, ...newConfig };
 
 		activeTween = gsap.to(proxy, {
 			...targetState,
-			duration: resolvedDuration,
-			ease: 'power2.out',
+			paletteMix: 1,
+			duration,
+			ease: 'power2.inOut',
 			onUpdate: () => renderer.applyAnimatableState(proxy),
 		});
 	}
@@ -100,12 +122,17 @@ export function interactiveGradient(canvas, params = {}) {
 	// istantaneamente per non animare un tween d'apertura indesiderato. Navigazioni e scroll successivi
 	// (stessa istanza persistente) transitano morbidamente con la durata di default.
 	let firstConfigApplied = false;
+	// Il costruttore ha già applicato params.config: un primo update identico non deve transitare.
+	let lastConfig = params.config;
 
 	return {
 		/** @param {GradientParams} newParams */
 		update(newParams) {
 			if (newParams.config !== undefined) {
-				transitionConfig(newParams.config, firstConfigApplied ? undefined : 0);
+				if (!configsEqual(newParams.config, lastConfig)) {
+					transitionConfig(newParams.config, firstConfigApplied ? undefined : 0);
+				}
+				lastConfig = newParams.config;
 				firstConfigApplied = true;
 			}
 			if (newParams.shapeId !== undefined) {

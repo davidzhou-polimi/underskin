@@ -8,10 +8,11 @@
 
     /**
      * @type {{
-     *   archetype?: 'favorito' | 'infortunato' | 'insoddisfatto'
+     *   archetype?: 'favorito' | 'infortunato' | 'insoddisfatto',
+     *   onVisibilityChange?: (visible: boolean) => void
      * }}
      */
-    let { archetype = "favorito" } = $props();
+    let { archetype = "favorito", onVisibilityChange } = $props();
 
     // Lista statica di tutti gli archetipi disponibili
     /**
@@ -54,7 +55,7 @@
 <section
     id="continue-narration"
     class="continue-section"
-    use:scrollHomeGate={{ onNavigate: handleButtonClick, threshold: 1000 }}
+    use:scrollHomeGate={{ onNavigate: handleButtonClick, threshold: 1000, onVisibilityChange }}
 >
     <div class="continue-container">
         <div class="center-content">
@@ -104,7 +105,10 @@
         padding-top: var(--spacing-10);
         padding-bottom: var(--spacing-10);
         box-sizing: border-box;
-        background-color: var(--background-primary);
+        /* Trasparente (era opaco): espone il canvas del gradiente, che qui viene portato a
+           intensity:0 (invisibile) da onVisibilityChange — a riposo nessuna differenza visiva,
+           ma il reveal verso home diventa un fade animato invece di una comparsa improvvisa. */
+        background-color: transparent;
         overflow: hidden;
     }
 

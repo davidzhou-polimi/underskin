@@ -24,12 +24,15 @@ function resolveTokenRGB(cssVar) {
  *   se l'utente smette di scrollare tutti questi effetti decadono gradualmente insieme
  * - Al 100% del fill: pop di conferma sul pulsante, poi un ulteriore scroll naviga via params.onNavigate()
  * - Scroll verso l'alto in qualsiasi momento → reset completo dello stato del gate
+ * - onVisibilityChange(visible) notifica quando QUALSIASI parte della sezione è in viewport (trigger
+ *   dedicato, indipendente dal gate del bottone): riusato dal gradiente per restare invisibile per
+ *   tutto il tempo in cui la sezione è visibile, non solo quando è interamente a schermo
  *
  * @param {HTMLElement} node - Elemento section padre
- * @param {{ onNavigate?: () => void, threshold?: number }} [params]
+ * @param {{ onNavigate?: () => void, threshold?: number, onVisibilityChange?: (visible: boolean) => void }} [params]
  */
 export function scrollHomeGate(node, params = {}) {
-	const { onNavigate, threshold = 1000 } = params;
+	const { onNavigate, threshold = 1000, onVisibilityChange } = params;
 
 	let finalThreshold = threshold;
 
@@ -286,6 +289,19 @@ export function scrollHomeGate(node, params = {}) {
 				opacity: 1,
 				duration: 0.6,
 				ease: 'power2.out'
+			});
+		}
+
+		// Commento solo il PERCHÉ: trigger dedicato alla visibilità della sezione, separato dal gate
+		// del bottone (che scatta solo a sezione interamente a schermo): il gradiente deve restare
+		// invisibile per TUTTO il tempo in cui una parte qualsiasi della sezione è in viewport.
+		// onToggle valuta anche lo stato iniziale: un reload già dentro la sezione parte corretto.
+		if (onVisibilityChange) {
+			ScrollTrigger.create({
+				trigger: node,
+				start: 'top bottom',
+				end: 'bottom top',
+				onToggle: (self) => onVisibilityChange(self.isActive)
 			});
 		}
 	}, node);

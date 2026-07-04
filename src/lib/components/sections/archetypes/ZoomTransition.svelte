@@ -6,13 +6,15 @@
      * @property {'favorito' | 'infortunato' | 'insoddisfatto'} [theme] - Il tema cromatico dell'archetipo
      * @property {string} [nextTitle] - Il titolo della sezione successiva
      * @property {import('svelte').Snippet} [children] - Frammento Svelte per iniettare contenuti personalizzati
+     * @property {(revealed: boolean) => void} [onRevealChange] - Notifica quando lo zoom rivela/nasconde il contenuto successivo
      */
 
     /** @type {Props} */
-    let { 
-        theme = 'favorito', 
+    let {
+        theme = 'favorito',
         nextTitle = 'Nuova Sezione',
-        children = undefined 
+        children = undefined,
+        onRevealChange = undefined
     } = $props();
 
     /** @type {Record<string, string>} */
@@ -25,7 +27,7 @@
     let textColor = $derived(themeColors[theme] || 'var(--azzurro-600)');
 </script>
 
-<section id="zoom-transition" class="zoom-section" use:zoomTextTransition>
+<section id="zoom-transition" class="zoom-section" use:zoomTextTransition={{ onRevealChange }}>
     
     <div class="intro-container">
         <p class="first-text">Alcuni casi a</p>

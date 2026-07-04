@@ -6,10 +6,17 @@ import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
  * Utilizza la funzionalità di snap nativo di ScrollTrigger con soglie e target asimmetrici
  * calibrati sulla direzione dello scroll. Garantisce che in risalita il testo rimanga visibile
  * al 100% senza vuoti e rende l'animazione estremamente morbida e priva di scatti.
- * 
+ *
+ * onRevealChange(revealed) notifica l'attraversamento del punto della timeline in cui il carosello
+ * viene rivelato (label 'reveal'): il gradiente resta visibile per tutta la fase testo/zoom e viene
+ * spento solo da lì in poi. Il confine vive nella timeline, non in coordinate di viewport, così
+ * resta corretto anche se la coreografia cambia durata.
+ *
  * @param {HTMLElement} node - Il container principale della sezione
+ * @param {{ onRevealChange?: (revealed: boolean) => void }} [params]
  */
-export function zoomTextTransition(node) {
+export function zoomTextTransition(node, params = {}) {
+	const { onRevealChange } = params;
 	const firstText = node.querySelector('.first-text');
 	const zoomSvg = node.querySelector('.zoom-svg');
 	const nextContent = node.querySelector('.next-section-content');
@@ -35,11 +42,13 @@ export function zoomTextTransition(node) {
 	// e che GSAP calcoli la posizione di start corretta
 	rafId = requestAnimationFrame(() => {
 		ctx = gsap.context(() => {
+			let lastRevealed = false;
+
 			const tl = gsap.timeline({
 				scrollTrigger: {
 					id: 'zoomTrigger',
 					trigger: node,
-					start: 'top top',    
+					start: 'top top',
 					/* Spazio di pinning ottimizzato per bilanciare fluidità di lettura ed efficacia dello snap */
 					end: '+=250%',       
 					pin: true,           
@@ -64,6 +73,18 @@ export function zoomTextTransition(node) {
 						duration: { min: 0.8, max: 1.4 }, // Allungata la durata per rendere la transizione di snap molto più dolce e graduale
 						delay: 0.02, // Reattività immediata al rilascio dello scroll
 						ease: 'power3.out' // Easing più morbido per attutire l'aggancio finale
+					},
+					// Notifica solo l'attraversamento del label 'reveal' (memoizzato). Confronta il
+					// progress del trigger, non il tempo della timeline: con lo scrub il playhead
+					// arriva in ritardo e l'ultimo onUpdate leggerebbe uno stato non ancora assestato.
+					onUpdate: (self) => {
+						if (!onRevealChange) return;
+						const anim = /** @type {gsap.core.Timeline} */ (self.animation);
+						const revealed = self.progress >= anim.labels.reveal / anim.duration();
+						if (revealed !== lastRevealed) {
+							lastRevealed = revealed;
+							onRevealChange(revealed);
+						}
 					}
 				}
 			});
@@ -93,12 +114,15 @@ export function zoomTextTransition(node) {
 			  }, '<')
 			  
 			  // 3. Dissolvenza in ingresso della sezione successiva dentro lo zero
-			  .to(nextContent, { 
+			  // Il label marca il punto di reveal del carosello: è il confine oltre cui il gradiente
+			  // va spento (letto da onUpdate del trigger), e segue la coreografia se cambia durata
+			  .addLabel('reveal', '-=0.8')
+			  .to(nextContent, {
 					// Rende l'elemento visibile all'inizio del tween e ne anima la comparsa fluida
-					autoAlpha: 1, 
+					autoAlpha: 1,
 					duration: 1.0,
 					ease: 'power1.out'
-			  }, '-=0.8')
+			  }, 'reveal')
 			  .to(zoomSvg, {
 					/* Commento solo il PERCHÉ: sfuma l'SVG zoomato contemporaneamente all'ingresso del carosello per liberare lo sfondo ed evitare che il colore rimanga visibile nei micro-gap del pinning */
 					opacity: 0,

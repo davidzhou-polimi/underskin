@@ -32,13 +32,30 @@ export const introFocusRadius = () => (media.isMobile ? [0.16, 0.16] : [0.24, 0.
 export function createArchetypeGradientConfig(baseColors) {
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
+	// Nella coda della pagina (dal reveal del carosello dentro ZoomTransition fino a
+	// ContinueNarration) il gradiente va a intensity 0: invisibile ma presente, pronto per un
+	// reveal animato al posto di una comparsa improvvisa quando si naviga verso home.
+	// nearConclusion arriva dal trigger di visibilità di scrollHomeGate; carouselRevealed
+	// dall'attraversamento del label 'reveal' nella timeline di zoomTextTransition.
+	let nearConclusion = $state(false);
+	let carouselRevealed = $state(false);
+	const hidden = $derived(nearConclusion || carouselRevealed);
 
 	// Commento solo il PERCHÉ: supportiamo la risoluzione dinamica dei colori tramite funzione getter per mantenere intatta la reattività Svelte 5
 	const resolvedColors = $derived(typeof baseColors === 'function' ? baseColors() : baseColors);
 	const baseConfig = $derived({ colors: resolvedColors, coverage: 1.0 });
 
+	// Booleano intermedio (come isPastFirstViewport in createFullPageGradientConfig): propaga solo
+	// ai flip di soglia — leggere scrollY direttamente qui creerebbe un oggetto config nuovo a ogni
+	// evento scroll, riavviando in continuazione la transizione da 0.8s dell'action.
+	const isPastHero = $derived(scrollY > 100);
+
 	let activeConfig = $derived(
-		scrollY > 100 ? { ...baseConfig, coverage: 0.3 } : baseConfig
+		hidden
+			? { ...baseConfig, coverage: 0.3, intensity: 0 }
+			: isPastHero
+				? { ...baseConfig, coverage: 0.3 }
+				: baseConfig
 	);
 
 	return {
@@ -53,6 +70,18 @@ export function createArchetypeGradientConfig(baseColors) {
 		},
 		set innerHeight(v) {
 			innerHeight = v;
+		},
+		get nearConclusion() {
+			return nearConclusion;
+		},
+		set nearConclusion(v) {
+			nearConclusion = v;
+		},
+		get carouselRevealed() {
+			return carouselRevealed;
+		},
+		set carouselRevealed(v) {
+			carouselRevealed = v;
 		},
 		get activeConfig() {
 			return activeConfig;

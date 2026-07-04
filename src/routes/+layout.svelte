@@ -63,6 +63,12 @@
     // arriviamo da un archetipo, dove il posizionamento lo gestisce cinematicScroll (non va sovrascritto a 0).
     afterNavigate(() => {
         ScrollTrigger.refresh();
+        // Commento solo il PERCHÉ: azzerati qui (dopo il mount della pagina entrante e lo smontaggio
+        // di quella uscente), non in onNavigate — la pagina uscente può dipendere da questi store nel
+        // proprio $derived (es. isNearPageBottom in scrollGradient.svelte.js) e resettarli mentre è
+        // ancora viva ne corromperebbe la config per un frame (flash cromatico alla navigazione).
+        scroll.progress = 0;
+        scrollX.progress = 0;
         if (navigationState.fromArchetype) return;
 
         const lenis = getLenis();
@@ -71,12 +77,11 @@
     });
 
     // Commento solo il PERCHÉ: il canvas gradiente è unico e persistente su tutte le rotte. Prima che
-    // la pagina entrante monti riportiamo lo scroll (posizione) alla baseline e segnaliamo che non è più
-    // il primo atterraggio; la config transita comunque fluidamente via transitionConfig.
+    // la pagina entrante monti segnaliamo che non è più il primo atterraggio e riportiamo lo stato
+    // interno del renderer (non lo store) alla baseline; la config transita comunque fluidamente via
+    // transitionConfig.
     onNavigate(() => {
         navigationState.hasNavigated = true;
-        scroll.progress = 0;
-        scrollX.progress = 0;
         /** @type {any} */
         const canvas = document.querySelector('.interactive-gradient-canvas');
         canvas?.__gradientRenderer?.resetScroll();

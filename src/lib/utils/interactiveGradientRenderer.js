@@ -83,7 +83,15 @@ export const fsSource = `
 
 	uniform vec3 u_bg_color;
 	uniform vec3 u_colors[16];
-	uniform int u_color_count;
+	// float (non int): animabile con continuità — i layer in eccesso sfumano via peso invece
+	// di sparire in un frame quando la palette cambia cardinalità (es. home 9 ↔ archetipo 3).
+	uniform float u_color_count;
+	// Palette di partenza della dissolvenza: ogni palette è resa con la propria struttura
+	// autentica e u_palette_mix le dissolve pixel-per-pixel (0 = partenza, 1 = destinazione).
+	// Gli stati intermedi sono medie pesate dei due stati reali: mai una struttura estranea.
+	uniform vec3 u_colors_from[16];
+	uniform float u_color_count_from;
+	uniform float u_palette_mix;
 
 	// Configurable animation parameters
 	uniform float u_speed;
@@ -333,9 +341,16 @@ export const fsSource = `
 
 		// 8. Color blending — scroll_z offsets the color noise too so colors morph with scroll
 		float blend_range = u_color_blending * 0.8;
-		vec3 shape_color = u_colors[0];
+		// Doppio accumulo nello stesso loop: la maschera di noise di ogni layer dipende solo
+		// dall'indice i, quindi le due palette (partenza/destinazione) condividono lo stesso
+		// snoise — costo identico al singolo accumulo. I pesi per-layer (0/1 ai count interi)
+		// rendono i count animabili senza salto spaziale.
+		vec3 color_to = u_colors[0];
+		vec3 color_from = u_colors_from[0];
 		for (int i = 1; i < 16; i++) {
-			if (i >= u_color_count) break;
+			float w_to = clamp(u_color_count - float(i), 0.0, 1.0);
+			float w_from = clamp(u_color_count_from - float(i), 0.0, 1.0);
+			if (w_to <= 0.0 && w_from <= 0.0) break; // pesi decrescenti in i: early-out sicuro
 			// We dynamically scale frequency and coordinate offsets based on indices to match the legacy 3-color blending
 			// mathematically, while scaling organically for any additional user-configured colors.
 			float scale = 0.7 + float(i - 1) * 0.2;
@@ -343,8 +358,11 @@ export const fsSource = `
 			float time_mult = 0.1 - float(i - 1) * 0.03;
 			float scroll_mult = 0.5 - float(i - 1) * 0.15;
 			float layer_blend = smoothstep(-blend_range, blend_range, snoise(vec3(warped_uv * scale + offset, scaled_time * time_mult + scroll_z * scroll_mult)));
-			shape_color = mix(shape_color, u_colors[i], layer_blend);
+			color_to = mix(color_to, u_colors[i], layer_blend * w_to);
+			color_from = mix(color_from, u_colors_from[i], layer_blend * w_from);
 		}
+		// Dissolvenza pixel-per-pixel tra i due campi colore, entrambi vivi (tempo/warp/scroll)
+		vec3 shape_color = mix(color_from, color_to, u_palette_mix);
 
 		// 9. Film grain — step-based animation to avoid high-frequency flickering.
 		// If u_grain_speed is 0.0, the grain pattern remains completely static.
@@ -676,6 +694,13 @@ export class InteractiveGradientRenderer {
 				u_bg_color:        { value: this.themeColors.bg },
 				u_colors:          { value: getUniformColors(this.themeColors.colors, 16) },
 				u_color_count:     { value: this.themeColors.colors.length },
+				// Palette di partenza della dissolvenza: al mount coincide con la destinazione
+				// (mix=1 → a riposo il ramo FROM è ininfluente, resa identica al singolo accumulo).
+				// 16 istanze Color UNICHE (getUniformColors riusa la stessa istanza per il padding):
+				// beginPaletteTransition le muta slot-per-slot via setRGB, mai le sostituisce.
+				u_colors_from:     { value: getUniformColors(this.themeColors.colors, 16).map((c) => new Color(c.r, c.g, c.b)) },
+				u_color_count_from: { value: this.themeColors.colors.length },
+				u_palette_mix:     { value: 1 },
 				u_speed:           { value: this.config.speed },
 				u_wave_freq:       { value: this.config.waveFrequency },
 				u_wave_amp:        { value: new Vector2(...this.config.waveAmplitude) },
@@ -714,6 +739,7 @@ export class InteractiveGradientRenderer {
 
 		// Buffer riusabili per gli uniform array: zero allocazioni per frame
 		this.colorsBuffer = new Float32Array(16 * 3);
+		this.colorsFromBuffer = new Float32Array(16 * 3);
 		this.splatsBuffer = new Float32Array(MAX_SPLATS * 4);
 
 		this.resize();
@@ -734,7 +760,10 @@ export class InteractiveGradientRenderer {
 		gl.uniform1f(loc.u_target_shape, u.u_target_shape.value);
 		gl.uniform1f(loc.u_shape_morph, u.u_shape_morph.value);
 		gl.uniform3f(loc.u_bg_color, u.u_bg_color.value.r, u.u_bg_color.value.g, u.u_bg_color.value.b);
-		gl.uniform1i(loc.u_color_count, u.u_color_count.value);
+		// uniform1f, non 1i: durante i tween di palette i count sono frazionari (peso per-layer nello shader)
+		gl.uniform1f(loc.u_color_count, u.u_color_count.value);
+		gl.uniform1f(loc.u_color_count_from, u.u_color_count_from.value);
+		gl.uniform1f(loc.u_palette_mix, u.u_palette_mix.value);
 		gl.uniform1f(loc.u_speed, u.u_speed.value);
 		gl.uniform1f(loc.u_wave_freq, u.u_wave_freq.value);
 		gl.uniform2f(loc.u_wave_amp, u.u_wave_amp.value.x, u.u_wave_amp.value.y);
@@ -757,12 +786,17 @@ export class InteractiveGradientRenderer {
 		gl.uniform1f(loc.u_splat_radius, u.u_splat_radius.value);
 
 		const colors = u.u_colors.value;
+		const colorsFrom = u.u_colors_from.value;
 		for (let i = 0; i < 16; i++) {
 			this.colorsBuffer[i * 3] = colors[i].r;
 			this.colorsBuffer[i * 3 + 1] = colors[i].g;
 			this.colorsBuffer[i * 3 + 2] = colors[i].b;
+			this.colorsFromBuffer[i * 3] = colorsFrom[i].r;
+			this.colorsFromBuffer[i * 3 + 1] = colorsFrom[i].g;
+			this.colorsFromBuffer[i * 3 + 2] = colorsFrom[i].b;
 		}
 		gl.uniform3fv(loc.u_colors, this.colorsBuffer);
+		gl.uniform3fv(loc.u_colors_from, this.colorsFromBuffer);
 
 		const splats = u.u_splats.value;
 		for (let i = 0; i < MAX_SPLATS; i++) {
@@ -785,8 +819,14 @@ export class InteractiveGradientRenderer {
 		this.themeColors = getThemeColors(this.config.colors);
 		const uniforms = /** @type {any} */ (this.material.uniforms);
 		uniforms.u_bg_color.value = this.themeColors.bg;
-		uniforms.u_colors.value = getUniformColors(this.themeColors.colors, 16);
+		const resolved = getUniformColors(this.themeColors.colors, 16);
+		uniforms.u_colors.value = resolved;
 		uniforms.u_color_count.value = this.themeColors.colors.length;
+		// Theme-swap a caldo: allinea anche la palette di partenza della dissolvenza, per non
+		// lasciare un FROM stale coi colori risolti della vecchia paletta.
+		const from = uniforms.u_colors_from.value;
+		for (let i = 0; i < 16; i++) from[i].setRGB(resolved[i].r, resolved[i].g, resolved[i].b);
+		uniforms.u_color_count_from.value = this.themeColors.colors.length;
 	}
 
 	// Privato: converte una palette (anche con var CSS) nei 16 slot richiesti da WebGL.
@@ -803,13 +843,38 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
+	 * Prepara la dissolvenza di palette: congela lo stato cromatico corrente come partenza (FROM),
+	 * imposta la nuova palette come destinazione (TO) e riporta il mix a 0. Il chiamante anima poi
+	 * paletteMix 0→1 via getAnimatableState/applyAnimatableState. Lo snapshot è esatto a dissolvenza
+	 * conclusa (mix=1) e un lerp continuo se una dissolvenza precedente viene interrotta a metà:
+	 * in nessun caso produce un salto visivo.
+	 * @param {{ colors: Color[], count: number }} palette - da getTargetState().palette
+	 */
+	beginPaletteTransition(palette) {
+		const u = /** @type {any} */ (this.material.uniforms);
+		const m = u.u_palette_mix.value;
+		const from = u.u_colors_from.value;
+		const to = u.u_colors.value;
+		for (let i = 0; i < 16; i++) {
+			from[i].setRGB(
+				from[i].r + (to[i].r - from[i].r) * m,
+				from[i].g + (to[i].g - from[i].g) * m,
+				from[i].b + (to[i].b - from[i].b) * m
+			);
+		}
+		u.u_color_count_from.value += (u.u_color_count.value - u.u_color_count_from.value) * m;
+		u.u_colors.value = palette.colors;
+		u.u_color_count.value = palette.count;
+		u.u_palette_mix.value = 0;
+	}
+
+	/**
 	 * Restituisce uno snapshot plain-object di tutti i valori uniform animabili.
 	 * Pensato per essere usato come proxy GSAP: contiene solo numeri.
 	 * @returns {Record<string, number>}
 	 */
 	getAnimatableState() {
 		const u = /** @type {any} */ (this.material.uniforms);
-		const colors = u.u_colors.value;
 		/** @type {Record<string, number>} */
 		const state = {
 			speed: u.u_speed.value,
@@ -822,23 +887,22 @@ export class InteractiveGradientRenderer {
 			focusY: u.u_focus.value.y,
 			focusRx: u.u_focus.value.z,
 			focusRy: u.u_focus.value.w,
+			// La palette non si anima più canale-per-canale: le due palette (FROM/TO) vivono nei
+			// rispettivi uniform e paletteMix le dissolve pixel-per-pixel nello shader.
+			paletteMix: u.u_palette_mix.value,
 			bgR: u.u_bg_color.value.r,
 			bgG: u.u_bg_color.value.g,
 			bgB: u.u_bg_color.value.b,
 		};
-		for (let i = 0; i < 16; i++) {
-			state[`c${i}R`] = colors[i].r;
-			state[`c${i}G`] = colors[i].g;
-			state[`c${i}B`] = colors[i].b;
-		}
 		return state;
 	}
 
 	/**
-	 * Risolve una GradientConfig nel corrispondente stato target compatibile con getAnimatableState().
+	 * Risolve una GradientConfig nel corrispondente stato target compatibile con getAnimatableState(),
+	 * più la palette risolta da passare a beginPaletteTransition().
 	 * @param {GradientConfig} newConfig
 	 * @param {Required<GradientConfig>} [fallback]
-	 * @returns {{ state: Record<string, number>, colorCount: number }}
+	 * @returns {{ state: Record<string, number>, palette: { bg: Color, colors: Color[], count: number } }}
 	 */
 	getTargetState(newConfig, fallback = this.config) {
 		const c = fallback;
@@ -862,12 +926,7 @@ export class InteractiveGradientRenderer {
 			bgG: palette.bg.g,
 			bgB: palette.bg.b,
 		};
-		for (let i = 0; i < 16; i++) {
-			state[`c${i}R`] = palette.colors[i].r;
-			state[`c${i}G`] = palette.colors[i].g;
-			state[`c${i}B`] = palette.colors[i].b;
-		}
-		return { state, colorCount: palette.count };
+		return { state, palette };
 	}
 
 	/**
@@ -883,11 +942,8 @@ export class InteractiveGradientRenderer {
 		u.u_grain_intensity.value = state.grainIntensity;
 		u.u_mask_clamp.value.set(state.clampMin, state.clampMax);
 		u.u_focus.value.set(state.focusX, state.focusY, state.focusRx, state.focusRy);
+		u.u_palette_mix.value = state.paletteMix;
 		u.u_bg_color.value.setRGB(state.bgR, state.bgG, state.bgB);
-		const colors = u.u_colors.value;
-		for (let i = 0; i < 16; i++) {
-			colors[i].setRGB(state[`c${i}R`], state[`c${i}G`], state[`c${i}B`]);
-		}
 	}
 
 	/**
@@ -920,13 +976,14 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
-	 * Azzera lo scroll (current + target) senza lerp: il canvas persiste tra le rotte, quindi al
-	 * cambio pagina va riportato alla baseline di posizione, altrimenti il domain-warp "rientrerebbe"
-	 * dallo scroll della pagina precedente. Snappa current perché il solo target verrebbe raggiunto per lerp.
+	 * Riporta lo scroll alla baseline: il canvas persiste tra le rotte, quindi al cambio pagina
+	 * l'offset della pagina precedente va azzerato. Solo i target: current converge col lerp già
+	 * usato per lo scroll normale — con la parallasse a 0.9 uno snap di current sposterebbe il
+	 * campo di quasi un viewport in un frame (scatto visibile durante la dissolvenza).
 	 */
 	resetScroll() {
-		this.scrollY.current = this.scrollY.target = 0;
-		this.scrollX.current = this.scrollX.target = 0;
+		this.scrollY.target = 0;
+		this.scrollX.target = 0;
 	}
 
 	/**
