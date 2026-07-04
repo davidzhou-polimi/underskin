@@ -4,16 +4,17 @@
 	import AboutStatement from '$lib/components/sections/about/AboutStatement.svelte';
 	import TeamSection from '$lib/components/sections/about/TeamSection.svelte';
 	import Footer from '$lib/components/sections/Footer.svelte';
-	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 	import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 	import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
+	import { gradientConfig } from '$lib/stores/gradientConfig.svelte.js';
 
 	const gradient = createFullPageGradientConfig();
+
+	// Propaga la config scroll-driven al canvas unico del layout (app).
+	$effect(() => { gradientConfig.config = gradient.activeConfig; });
 </script>
 
 <svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} />
-
-<InteractiveGradient config={gradient.activeConfig} />
 
 <main id="about" use:trackScrollProgress>
 	<AboutHero />

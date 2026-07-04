@@ -18,6 +18,14 @@ export const TOTAL_COLORS = [
 ];
 
 /**
+ * Raggio del focus nell'intro (sfera concentrata al centro). Fonte unica condivisa tra la factory
+ * qui sotto e l'action introReveal, così il raggio non dipende dal timing di applicazione della config.
+ * Su mobile è ridotto per allinearsi ai cerchi concentrici più piccoli.
+ * @returns {[number, number]}
+ */
+export const introFocusRadius = () => (media.isMobile ? [0.16, 0.16] : [0.24, 0.24]);
+
+/**
  * Gradient a 2 stati per le pagine archetype: copertura piena nella hero, ridotta nel corpo.
  * @param {string[] | (() => string[])} baseColors Palette cromatica dell'archetipo o getter reattivo
  */
@@ -85,7 +93,7 @@ export function createFullPageGradientConfig(colors = TOTAL_COLORS, hasIntro = f
 						coverage: 1.0,
 						speed: 1.1,
 						focusCenter: [0.5, 0.5],
-						focusRadius: media.isMobile ? [0.16, 0.16] : [0.24, 0.24]
+						focusRadius: introFocusRadius()
 					}
 				: isPastFirstViewport
 					? { colors, coverage: 0.35, speed: 0.6 }

@@ -18,17 +18,18 @@
     import Burnout from '$lib/components/sections/home/Burnout.svelte';
     import Final from '$lib/components/sections/home/Final.svelte';
     import Footer from '$lib/components/sections/Footer.svelte';
-    import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
     import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
     import { createFullPageGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
+    import { gradientConfig } from '$lib/stores/gradientConfig.svelte.js';
     import { cinematicScroll } from '$lib/actions/cinematicScroll.js';
 
     const gradient = createFullPageGradientConfig(undefined, true);
+
+    // Propaga la config scroll-driven al canvas unico del layout (app).
+    $effect(() => { gradientConfig.config = gradient.activeConfig; });
 </script>
 
 <svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} />
-
-<InteractiveGradient config={gradient.activeConfig} />
 
 <main class="page-flow" use:trackScrollProgress use:cinematicScroll>
     <IntroSection />

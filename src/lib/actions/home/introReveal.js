@@ -2,6 +2,7 @@ import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
+import { introFocusRadius } from '$lib/stores/scrollGradient.svelte.js';
 
 /**
  * @param {HTMLElement} node
@@ -34,24 +35,27 @@ export function introReveal(node) {
 		const canvas = /** @type {any} */ (document.querySelector('.interactive-gradient-canvas'));
 		const gradientRenderer = canvas?.__gradientRenderer;
 
-		// Commento solo il PERCHÉ: i raggi target sono letti dalle config (unica fonte di verità)
-		// anziché hardcoded qui: così modificare focusRadius nello store/DEFAULT_CONFIG ridimensiona
-		// davvero la sfera, senza essere sovrascritto dai tween di questa action.
+		// Il raggio d'uscita/exit deriva da DEFAULT_CONFIG.focusRadius (stato hero/body); toRxRy lo normalizza.
+		// Il raggio intro viene invece da introFocusRadius() (fonte unica), indipendente dal timing di
+		// applicazione della config: al mount renderer.config potrebbe non essere ancora la config intro.
 		/** @param {number | number[]} fr */
 		const toRxRy = (fr) => (Array.isArray(fr) ? [fr[0], fr[1]] : [fr, fr]);
-		const introRadius = () => toRxRy(gradientRenderer?.config?.focusRadius ?? 0.25);
 
-		if (gradientRenderer) {
+		// Commento solo il PERCHÉ: l'intro possiede il focus (crescita da 0) solo al primo atterraggio.
+		// Arrivando alla home da un'altra pagina il canvas è persistente e il focus lo anima già
+		// transitionConfig (morph fluido dallo stato precedente): resettarlo a 0 qui sarebbe uno scatto.
+		// Animiamo SOLO u_focus (mai lo stato pieno via applyAnimatableState) per non ridipingere i colori.
+		if (gradientRenderer && !navigationState.hasNavigated) {
 			const u = gradientRenderer.material.uniforms;
 			u.u_focus.value.z = 0.0;
 			u.u_focus.value.w = 0.0;
-			const [rx, ry] = introRadius();
-			const proxy = gradientRenderer.getAnimatableState();
-			tl.to(proxy, {
-				focusRx: rx,
-				focusRy: ry,
+			const [rx, ry] = introFocusRadius();
+			const p = { rx: 0, ry: 0 };
+			tl.to(p, {
+				rx,
+				ry,
 				duration: 1.8,
-				onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+				onUpdate: () => { u.u_focus.value.z = p.rx; u.u_focus.value.w = p.ry; }
 			}, 0);
 		}
 
@@ -171,16 +175,18 @@ export function introReveal(node) {
 
 			// Commento solo il PERCHÉ: il raggio d'uscita coincide con lo stato hero/body, che lo store
 			// eredita da DEFAULT_CONFIG.focusRadius non specificandolo: lo leggiamo da lì invece di duplicarlo.
+			// Animiamo SOLO u_focus e u_coverage (non lo stato pieno) per non ridipingere i colori.
 			if (gradientRenderer) {
+				const u = gradientRenderer.material.uniforms;
 				const [exitRx, exitRy] = toRxRy(DEFAULT_CONFIG.focusRadius);
-				const proxy = gradientRenderer.getAnimatableState();
-				activeTimeline.to(proxy, {
-					focusRx: exitRx,
-					focusRy: exitRy,
-					coverage: 0.35,
+				const p = { rx: u.u_focus.value.z, ry: u.u_focus.value.w, cov: u.u_coverage.value };
+				activeTimeline.to(p, {
+					rx: exitRx,
+					ry: exitRy,
+					cov: 0.35,
 					duration: 0.8,
 					ease: 'power2.inOut',
-					onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+					onUpdate: () => { u.u_focus.value.z = p.rx; u.u_focus.value.w = p.ry; u.u_coverage.value = p.cov; }
 				}, 0);
 			}
 		}
@@ -204,17 +210,19 @@ export function introReveal(node) {
 			const introTitle = node.querySelector('.intro-title');
 			const scrollHintEl = node.querySelector('.scroll-hint');
 
-			// Commento solo il PERCHÉ: Fa rientrare per primo il gradiente stringendolo al centro al raggio intro configurato.
+			// Commento solo il PERCHÉ: Fa rientrare per primo il gradiente stringendolo al centro al raggio intro.
+			// Animiamo SOLO u_focus e u_coverage (non lo stato pieno) per non ridipingere i colori.
 			if (gradientRenderer) {
-				const [rx, ry] = introRadius();
-				const proxy = gradientRenderer.getAnimatableState();
-				activeTimeline.to(proxy, {
-					focusRx: rx,
-					focusRy: ry,
-					coverage: 1.0,
+				const u = gradientRenderer.material.uniforms;
+				const [rx, ry] = introFocusRadius();
+				const p = { rx: u.u_focus.value.z, ry: u.u_focus.value.w, cov: u.u_coverage.value };
+				activeTimeline.to(p, {
+					rx,
+					ry,
+					cov: 1.0,
 					duration: 0.8,
 					ease: 'power2.out',
-					onUpdate: () => gradientRenderer.applyAnimatableState(proxy)
+					onUpdate: () => { u.u_focus.value.z = p.rx; u.u_focus.value.w = p.ry; u.u_coverage.value = p.cov; }
 				}, 0);
 			}
 

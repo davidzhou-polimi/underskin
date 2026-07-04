@@ -920,6 +920,16 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
+	 * Azzera lo scroll (current + target) senza lerp: il canvas persiste tra le rotte, quindi al
+	 * cambio pagina va riportato alla baseline di posizione, altrimenti il domain-warp "rientrerebbe"
+	 * dallo scroll della pagina precedente. Snappa current perché il solo target verrebbe raggiunto per lerp.
+	 */
+	resetScroll() {
+		this.scrollY.current = this.scrollY.target = 0;
+		this.scrollX.current = this.scrollX.target = 0;
+	}
+
+	/**
 	 * @param {number} shapeId - 0=fluid, 1=circle, 2=capsule
 	 * @param {number} [morphProgress]
 	 */

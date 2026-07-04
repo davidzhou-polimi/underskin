@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
-    import { afterNavigate } from '$app/navigation';
+    import { afterNavigate, onNavigate } from '$app/navigation';
     import Lenis from 'lenis';
     import 'lenis/dist/lenis.css';
     import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
@@ -11,6 +11,10 @@
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
+    import { gradientConfig } from "$lib/stores/gradientConfig.svelte.js";
+    import { scroll } from "$lib/stores/scroll.svelte.js";
+    import { scrollX } from "$lib/stores/scrollX.svelte.js";
+    import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
@@ -66,6 +70,18 @@
         else window.scrollTo(0, 0);
     });
 
+    // Commento solo il PERCHÉ: il canvas gradiente è unico e persistente su tutte le rotte. Prima che
+    // la pagina entrante monti riportiamo lo scroll (posizione) alla baseline e segnaliamo che non è più
+    // il primo atterraggio; la config transita comunque fluidamente via transitionConfig.
+    onNavigate(() => {
+        navigationState.hasNavigated = true;
+        scroll.progress = 0;
+        scrollX.progress = 0;
+        /** @type {any} */
+        const canvas = document.querySelector('.interactive-gradient-canvas');
+        canvas?.__gradientRenderer?.resetScroll();
+    });
+
     // Nasconde il tooltip ad ogni cambio di rotta: onmouseleave non si attiva
     // quando il componente viene smontato durante la navigazione.
     $effect(() => {
@@ -103,6 +119,11 @@
     <meta property="twitter:description" content={meta.description} />
     <meta property="twitter:image" content={ogImageUrl} />
 </svelte:head>
+
+<!-- Canvas gradiente unico e persistente su tutte le rotte (error inclusa): la config è pilotata
+     dalla pagina attiva via lo store, così il cambio pagina anima la transizione invece di rimontare
+     il canvas. Reso prima delle pagine così il renderer esiste quando le loro sezioni lo interrogano. -->
+<InteractiveGradient config={gradientConfig.config} />
 
 <div
     class="app-shell"

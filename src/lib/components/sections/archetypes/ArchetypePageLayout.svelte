@@ -1,11 +1,11 @@
 <script>
-	import InteractiveGradient from '$lib/components/ui/InteractiveGradient.svelte';
 	import HeroSection from './HeroSection.svelte';
 	import NarrativeText from './NarrativeText.svelte';
 	import ZoomTransition from './ZoomTransition.svelte';
 	import AthleteSection from './AthleteSection.svelte';
 	import ContinueNarrationSection from './ContinueNarrationSection.svelte';
 	import { createArchetypeGradientConfig } from '$lib/stores/scrollGradient.svelte.js';
+	import { gradientConfig } from '$lib/stores/gradientConfig.svelte.js';
 	import { trackScrollProgress } from '$lib/actions/trackScrollProgress.js';
 
 	/**
@@ -154,11 +154,12 @@
 	// Commento solo il PERCHÉ: deriviamo reattivamente la configurazione in base all'archetipo corrente e passiamo un getter allo store del gradiente per mantenere intatta la reattività
 	const config = $derived(ARCHETYPE_CONFIG[archetype]);
 	const gradient = createArchetypeGradientConfig(() => config.colors);
+
+	// Propaga la config scroll-driven al canvas unico del layout (app).
+	$effect(() => { gradientConfig.config = gradient.activeConfig; });
 </script>
 
 <svelte:window bind:scrollY={gradient.scrollY} bind:innerHeight={gradient.innerHeight} />
-
-<InteractiveGradient config={gradient.activeConfig} />
 
 <main id="{archetype}-profile-page" use:trackScrollProgress>
 	<HeroSection theme={archetype} title={config.title} sectionId={config.heroSectionId} textShadow="none" />

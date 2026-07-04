@@ -96,11 +96,17 @@ export function interactiveGradient(canvas, params = {}) {
 		});
 	}
 
+	// Il canvas persiste tra le rotte e nasce col default dello store: il primo update va applicato
+	// istantaneamente per non animare un tween d'apertura indesiderato. Navigazioni e scroll successivi
+	// (stessa istanza persistente) transitano morbidamente con la durata di default.
+	let firstConfigApplied = false;
+
 	return {
 		/** @param {GradientParams} newParams */
 		update(newParams) {
 			if (newParams.config !== undefined) {
-				transitionConfig(newParams.config, 1.2);
+				transitionConfig(newParams.config, firstConfigApplied ? undefined : 0);
+				firstConfigApplied = true;
 			}
 			if (newParams.shapeId !== undefined) {
 				renderer.updateShape(newParams.shapeId, newParams.morphProgress ?? 1.0);

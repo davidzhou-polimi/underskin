@@ -1,8 +1,8 @@
 <script>
     import { page } from "$app/state";
-    import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
     import Button from "$lib/components/ui/Button.svelte";
     import Navbar from "$lib/components/ui/Navbar.svelte";
+    import { gradientConfig } from "$lib/stores/gradientConfig.svelte.js";
 
     // Configurazione del gradiente per la pagina di errore (colori unificati della Home)
     let statusCode = $state(page.status);
@@ -21,9 +21,10 @@
         ],
         coverage: 1.0, // Copertura totale
     };
-</script>
 
-<InteractiveGradient config={ERROR_GRADIENT} />
+    // Alimenta il canvas unico del root layout (come le altre pagine): niente canvas locale.
+    $effect(() => { gradientConfig.config = ERROR_GRADIENT; });
+</script>
 
 <Navbar />
 
