@@ -9,11 +9,27 @@
     // Commento solo il PERCHÉ: Importa goto di SvelteKit per navigare programmaticamente 
     // a una pagina senza mostrare l'anteprima dell'URL nel browser all'hover.
     import { goto } from '$app/navigation';
+    // Commento solo il PERCHÉ: Importa page per identificare la rotta corrente ed evitare link ricorsivi.
+    import { page } from '$app/state';
+    // Commento solo il PERCHÉ: Importa lo stato del breakpoint mobile per disabilitare il logo su piccoli schermi.
+    import { media } from '$lib/stores/mediaQuery.svelte.js';
+    // Commento solo il PERCHÉ: Importa il componente UI del bottone riutilizzabile del brand.
+    import Button from '$lib/components/ui/Button.svelte';
 
     /** @type {SVGTextElement | null} */
-    let textEl = null;
+    let textEl = $state(null);
     /** @type {SVGSVGElement | null} */
-    let svgEl = null;
+    let svgEl = $state(null);
+    /** @type {HTMLElement | null} */
+    let footerEl = $state(null);
+
+    // Commento solo il PERCHÉ: isCtaVisible governa dinamicamente entrata/uscita della CTA scroll-driven;
+    // non è un flag one-shot, ma uno stato bidirezionale che segue la direzione dello scroll.
+    let isCtaVisible = $state(false);
+    // Commento solo il PERCHÉ: la CTA esiste nel DOM solo se siamo sulla homepage E su mobile;
+    // su desktop il componente non viene montato, evitando timer e listener superflui.
+    const showCta = $derived(page.url.pathname === '/' && media.isMobile);
+    const isLogoClickable = $derived(page.url.pathname !== '/about' && !media.isMobile);
 
     // Funzione per calcolare l'ingombro geometrico esatto dei glifi vettoriali
     function updateSvgViewBox() {
@@ -30,26 +46,87 @@
 
     onMount(() => {
         updateSvgViewBox();
-
         // Ricalcola non appena il font personalizzato è stato renderizzato nel DOM
         if (document && document.fonts) {
-            document.fonts.ready.then(() => {
-                updateSvgViewBox();
-            });
+            document.fonts.ready.then(() => updateSvgViewBox());
         }
+    });
+
+    // Commento solo il PERCHÉ: $effect si riesegue ad ogni cambio di rotta e di breakpoint.
+    // Strategia: IntersectionObserver per sapere se il footer è visibile + scroll listener
+    // per nascondere la CTA al minimo gesto. Il debounce "scroll ended" riavvia il reveal timer
+    // ogni volta che l'utente smette di scrollare con il footer ancora in vista.
+    $effect(() => {
+        if (!showCta || !footerEl) {
+            isCtaVisible = false;
+            return;
+        }
+
+        let footerInView = false;
+        /** @type {ReturnType<typeof setTimeout> | undefined} */
+        let revealTimer;
+        /** @type {ReturnType<typeof setTimeout> | undefined} */
+        let scrollEndTimer;
+
+        const REVEAL_DELAY = 800;
+        const SCROLL_END_DEBOUNCE = 250;
+
+        const startRevealTimer = () => {
+            clearTimeout(revealTimer);
+            revealTimer = setTimeout(() => { isCtaVisible = true; }, REVEAL_DELAY);
+        };
+
+        const observer = new IntersectionObserver(([entry]) => {
+            footerInView = entry.isIntersecting;
+            if (footerInView) {
+                // Commento solo il PERCHÉ: il footer è entrato nel viewport — avvia il timer di reveal.
+                startRevealTimer();
+            } else {
+                clearTimeout(revealTimer);
+                clearTimeout(scrollEndTimer);
+                isCtaVisible = false;
+            }
+        }, { threshold: 0.1 });
+
+        // Commento solo il PERCHÉ: Lenis ha syncTouch:false — su mobile lo scroll touch non passa
+        // per Lenis, quindi usiamo window per intercettare tutti i gesti nativi.
+        const handleScroll = () => {
+            // Qualsiasi scroll: nascondi la CTA immediatamente e cancella i timer attivi
+            isCtaVisible = false;
+            clearTimeout(revealTimer);
+            clearTimeout(scrollEndTimer);
+
+            if (footerInView) {
+                // Commento solo il PERCHÉ: se il footer è ancora in vista quando lo scroll si ferma,
+                // riavvia il delay di reveal così il pulsante torna a comparire ogni volta.
+                scrollEndTimer = setTimeout(startRevealTimer, SCROLL_END_DEBOUNCE);
+            }
+        };
+
+        observer.observe(footerEl);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            clearTimeout(revealTimer);
+            clearTimeout(scrollEndTimer);
+            observer.disconnect();
+            window.removeEventListener('scroll', handleScroll);
+        };
     });
 </script>
 
-<footer class="hero-footer" use:fadeUp={{ duration: 1.2, delay: 0.1, y: 30 }}>
+<footer bind:this={footerEl} class="hero-footer" use:fadeUp={{ duration: 1.2, delay: 0.1, y: 30 }}>
     <!-- Commento solo il PERCHÉ: Utilizza un pulsante per consentire la navigazione programmatica a /about 
-         senza attivare l'anteprima nativa dell'URL del browser nella barra di stato in basso all'hover. -->
+         senza attivare l'anteprima nativa dell'URL del browser nella barra di stato in basso all'hover.
+         Controlla la classe e gli eventi in base alla cliccabilità del logo (disabilitato su mobile o su /about). -->
     <button 
         type="button"
         class="footer-brand-link"
+        class:is-disabled={!isLogoClickable}
         aria-label="UnderSkin - Scopri il progetto"
-        onmouseenter={() => tooltip.show("Scopri il progetto", "semplice", "pointer")}
+        onmouseenter={() => isLogoClickable && tooltip.show("Scopri il progetto", "semplice", "pointer")}
         onmouseleave={() => tooltip.hide()}
-        onclick={() => goto('/about')}
+        onclick={() => isLogoClickable && goto('/about')}
     >
         <!-- L'SVG riempie il 100% dello spazio orizzontale disponibile tra i padding laterali -->
         <svg bind:this={svgEl} class="footer-brand-svg" preserveAspectRatio="none">
@@ -70,6 +147,18 @@
         <p class="footer-text">© 2026</p>
     </div>
 </footer>
+
+<!-- Commento solo il PERCHÉ: il wrapper CTA sta FUORI dal footer per evitare che il transform GSAP
+     del fadeUp applicato al footer rompa il posizionamento fixed rispetto al viewport. -->
+{#if showCta}
+    <div class="fixed-cta-wrapper">
+        <div class="fade-reveal" class:is-active={isCtaVisible}>
+            <Button href="/about" ariaLabel="Scopri il progetto">
+                Scopri il progetto
+            </Button>
+        </div>
+    </div>
+{/if}
 
 <style>
     /* Commento solo il PERCHÉ: Posiziona il footer nel flusso e lo solleva di 30vh per farlo entrare in anticipo sullo schermo sopra lo spazio vuoto della sezione soprastante. */
@@ -150,6 +239,27 @@
         font-weight: var(--text-service-weight);
     }
 
+    /* Commento solo il PERCHÉ: disattiva completamente puntatore, selezione ed hover quando il logo non è cliccabile */
+    .footer-brand-link.is-disabled {
+        pointer-events: none;
+        cursor: default;
+    }
+
+
+
+    /* Commento solo il PERCHÉ: personalizza durata e coordinata Y del token fade-reveal;
+       slow (500ms) per un'entrata e un'uscita morbide e percettibili. */
+    .fixed-cta-wrapper :global(.fade-reveal) {
+        --fade-duration: var(--transition-duration-slow);
+        --fade-y: 20px;
+    }
+
+    /* Commento solo il PERCHÉ: impedisce che il pulsante sia cliccabile quando è invisible (opacity:0);
+       il token .fade-reveal non imposta pointer-events:none di default. */
+    .fixed-cta-wrapper :global(.fade-reveal:not(.is-active)) {
+        pointer-events: none;
+    }
+
     @media (max-width: 768px) {
         .hero-footer {
             /* Commento solo il PERCHÉ: annulla il margine negativo desktop su mobile 
@@ -166,6 +276,17 @@
             /* Commento solo il PERCHÉ: usa un margine positivo per distanziare 
                la nota di copyright dall'SVG vettoriale su schermi piccoli */
             margin-block-start: var(--spacing-2);
+        }
+
+        /* Commento solo il PERCHÉ: il posizionamento fisso al centro esatto del viewport
+           è scoped nella media query mobile, così su desktop il wrapper non genera nessun box fixed. */
+        .fixed-cta-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            pointer-events: auto;
         }
     }
 </style>
