@@ -13,7 +13,7 @@
  * @property {number} [waveFrequency]    - Spatial frequency of noise blobs (lower = larger blobs)
  * @property {number[] | [number, number]} [waveAmplitude] - Domain warp amplitude [layer1, layer2]
  * @property {number} [coverage]         - 0=sparse blobs, 1=full-screen wash
- * @property {number} [intensity]        - Opacity/saturation of the blobs (0=invisible, 1=full, default 1.0); independent from coverage
+ * @property {number} [intensity]        - Ceiling color level of the blobs (0=invisible, 1=full, default 1.0); honest cap, independent from coverage
  * @property {number[] | [number, number]} [focusCenter]   - UV center of gradient concentration [x, y]
  * @property {number | number[] | [number, number]} [focusRadius] - Focus radius [rx, ry] or single value for circle
  * @property {number} [viscosity]        - Mouse follow lerp factor (lower = more viscous)
@@ -30,10 +30,10 @@
  * @property {number} [morphProgress]    - Shape morph 0.0–1.0
  * @property {number[] | [number, number]} [maskClamp] - Min and max clamping limits for the shape mask (default [0.0, 1.0])
  * @property {'depth' | 'none'} [scrollEffect] - Scroll interaction: 'depth' = NEAT-style infinite procedural scroll
- * @property {number} [scrollYDepth]     - Depth units traversed over full vertical scroll (higher = more dramatic morph)
- * @property {number} [scrollYParallax]  - Y parallax shift over full scroll in UV units (default 0.6 = 60% of screen height)
- * @property {number} [scrollXDepth]    - Depth units traversed over full horizontal scroll (default 0 = disabled)
- * @property {number} [scrollXParallax] - X parallax shift over full horizontal scroll in UV units (default 0)
+ * @property {number} [scrollYDepth]     - Depth units traversed per viewport scrolled (higher = more dramatic morph)
+ * @property {number} [scrollYParallax]  - Y parallax shift in UV units per viewport scrolled (0.5 = half screen height)
+ * @property {number} [scrollXDepth]    - Depth units traversed per viewport of horizontal (pinned) scroll
+ * @property {number} [scrollXParallax] - X parallax shift in UV units per viewport of horizontal (pinned) scroll
  */
 
 /** @type {Required<GradientConfig>} */
@@ -60,12 +60,16 @@ export const DEFAULT_CONFIG = {
 	morphProgress: 0.0,
 	maskClamp: [0.0, 1.0],
 	scrollEffect: 'depth',
-	scrollYDepth: 0.75,
-	scrollYParallax: 0.9,
+	// Per-viewport (lo scroll arriva già normalizzato in unità viewport = px/innerHeight):
+	// il movimento del gradiente è quindi uniforme tra pagine lunghe e corte. 0.15 = lo sfondo
+	// trasla e morfa di ~15% di schermo per schermata scrollata: parallasse discreto, e il ritmo
+	// di morphing per-viewport resta nel range pre-refactor (0.75 sull'intera pagina).
+	scrollYDepth: 0.15,
+	scrollYParallax: 0.15,
 	// Attivi solo dove qualcuno scrive lo store scrollX (Burnout in home, text swap in about):
-	// altrove scrollX resta 0 e questi coefficienti non hanno effetto.
-	scrollXDepth: 0.35,
-	scrollXParallax: 0.25,
+	// altrove scrollX resta 0 e questi coefficienti non hanno effetto. Allineati a Y.
+	scrollXDepth: 0.15,
+	scrollXParallax: 0.15,
 };
 
 export const fsSource = `
@@ -309,9 +313,12 @@ export const fsSource = `
 		float is_shaped = step(0.5, u_target_shape);
 		float morphed_fluid = mix(shape_noise, shape_noise + target_bias * 1.5, u_shape_morph * is_shaped);
 
-		// 7. Coverage bias: sposta il threshold del noise decidendo *dove* compaiono i blob.
-		// La normalizzazione successiva garantisce che l'intensità del colore nelle zone blob
-		// rimanga piena indipendentemente da coverage — bassa coverage = blob radi ma saturi.
+		// 7. Coverage bias: sposta il threshold del noise decidendo *dove* e *quanto* compaiono i blob.
+		// Finestra stretta ±1.2 = contrasto pieno: i core scattano a piena saturazione e lo shift della
+		// soglia governa l'AREA/densità dei blob (radi a coverage bassa, pieni a coverage alta) invece
+		// di limitarsi a schiarire un haze uniforme. u_intensity fa da tetto onesto della saturazione;
+		// nessuna ri-normalizzazione a valle (expected_peak rimosso), così a parametro basso i blob non
+		// vengono forzati al pieno.
 		float coverage_bias = (u_coverage - 0.5) * 2.5;
 		float shape_mask = smoothstep(-1.2, 1.2, morphed_fluid + coverage_bias);
 
@@ -328,15 +335,7 @@ export const fsSource = `
 		shape_mask *= mix(0.0, 1.0, focus_weight);
 		shape_mask = clamp(shape_mask, u_mask_clamp.x, u_mask_clamp.y);
 
-		// Riscala shape_mask in [0, 1] rispetto al picco atteso per questa coverage,
-		// così i blob mantengono piena intensità cromatica anche a coverage bassa.
-		// Il picco teorico di smoothstep(-1.2, 1.2, x + bias) con x in [-1,1] &egrave;
-		// smoothstep(-1.2, 1.2, 1.0 + bias); lo approssimiamo con il soft-floor già applicato.
-		float expected_peak = mix(0.05, 1.0, smoothstep(-1.2, 1.2, 1.0 + coverage_bias));
-		expected_peak = max(expected_peak, 0.06); // evita divisione per zero a coverage≈0
-		shape_mask = clamp(shape_mask / expected_peak, 0.0, 1.0);
-
-		// intensity scala l'opacità dei blob indipendentemente dalla coverage
+		// intensity scala il livello di colore dei blob indipendentemente dalla coverage
 		shape_mask *= u_intensity;
 
 		// 8. Color blending — scroll_z offsets the color noise too so colors morph with scroll
@@ -955,35 +954,43 @@ export class InteractiveGradientRenderer {
 	}
 
 	/**
-	 * @param {number} value - scroll progress [0-1] or pixel offset [>1]
+	 * @param {number} value - distanza scrollata in unità viewport (px/innerHeight); il chiamante
+	 *   normalizza sul viewport, non sulla pagina, così il movimento è uniforme tra pagine lunghe e corte.
 	 */
 	updateScrollY(value) {
 		if (this.config.scrollEffect === 'none') return;
-		if (value > 1.0) {
-			const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-			this.scrollY.target = docHeight > 0 ? value / docHeight : 0;
-		} else {
-			this.scrollY.target = value;
-		}
+		this.scrollY.target = value;
 	}
 
 	/**
-	 * @param {number} value - normalized progress [0-1]
+	 * @param {number} value - viewport scrollati dalla sezione pinnata (progress * lunghezza in viewport)
 	 */
 	updateScrollX(value) {
 		if (this.config.scrollEffect === 'none') return;
-		this.scrollX.target = Math.max(0, Math.min(1, value));
+		this.scrollX.target = Math.max(0, value);
 	}
 
 	/**
 	 * Riporta lo scroll alla baseline: il canvas persiste tra le rotte, quindi al cambio pagina
 	 * l'offset della pagina precedente va azzerato. Solo i target: current converge col lerp già
-	 * usato per lo scroll normale — con la parallasse a 0.9 uno snap di current sposterebbe il
-	 * campo di quasi un viewport in un frame (scatto visibile durante la dissolvenza).
+	 * usato per lo scroll normale, evitando uno scatto di un frame durante la dissolvenza cross-page.
 	 */
 	resetScroll() {
 		this.scrollY.target = 0;
 		this.scrollX.target = 0;
+	}
+
+	/**
+	 * Azzera anche lo stato interpolato (current), non solo i target. Da usare solo quando la pagina
+	 * torna fisicamente in cima (afterNavigate non-archetipo): con lo scroll in unità viewport, current
+	 * può valere svariate unità e il lerp verso 0 produrrebbe una lunga deriva del parallasse; qui la
+	 * pagina è già in alto, quindi lo snap è coerente e viene mascherato dalla dissolvenza cromatica.
+	 */
+	snapScrollToRest() {
+		this.scrollY.target = 0;
+		this.scrollY.current = 0;
+		this.scrollX.target = 0;
+		this.scrollX.current = 0;
 	}
 
 	/**

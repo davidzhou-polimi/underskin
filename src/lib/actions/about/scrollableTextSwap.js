@@ -31,9 +31,10 @@ export function scrollableTextSwap(node) {
 				scrub: 1,
 				pin: true,
 				invalidateOnRefresh: true,
-				// Il gradiente di sfondo legge scrollX: lo swap orizzontale morpha lo sfondo
+				// Il gradiente legge scrollX in unità viewport (progress * px pinnati / innerHeight):
+				// movimento uniforme per schermata, non compresso sulla lunghezza della sezione.
 				onUpdate: (self) => {
-					scrollX.progress = self.progress;
+					scrollX.viewports = self.progress * (self.end - self.start) / window.innerHeight;
 				}
 			}
 		});
@@ -62,7 +63,7 @@ export function scrollableTextSwap(node) {
 		destroy() {
 			ctx.revert();
 			// Evita che un valore residuo continui a deformare il gradiente su altre rotte
-			scrollX.progress = 0;
+			scrollX.viewports = 0;
 		}
 	};
 }

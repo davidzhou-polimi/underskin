@@ -55,9 +55,16 @@ export function burnoutScroll(node) {
 			opacity: outroOpacity,
 			filter: `blur(${(1 - outroOpacity) * 8}px)`
 		});
+	}
 
-		// Il gradiente legge questo store: il movimento orizzontale morpha lo sfondo
-		scrollX.progress = progress;
+	/**
+	 * Il gradiente legge scrollX in unità viewport: progress * (px scrollati dalla sezione pinnata /
+	 * innerHeight). Così lo sfondo si muove della stessa quantità per schermata, indipendentemente
+	 * dalla lunghezza del contenitore (che su mobile ha corsa orizzontale molto maggiore).
+	 * @param {ScrollTrigger} self
+	 */
+	function syncGradient(self) {
+		scrollX.viewports = self.progress * (self.end - self.start) / window.innerHeight;
 	}
 
 	const trigger = ScrollTrigger.create({
@@ -66,18 +73,22 @@ export function burnoutScroll(node) {
 		end: 'bottom bottom',
 		scrub: true,
 		invalidateOnRefresh: true,
-		onUpdate: (self) => apply(self.progress)
+		onUpdate: (self) => {
+			apply(self.progress);
+			syncGradient(self);
+		}
 	});
 
 	// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto (refresh/navigazione)
 	apply(trigger.progress);
+	syncGradient(trigger);
 
 	return {
 		destroy() {
 			trigger.kill();
 			mm.revert();
 			// Evita che un valore residuo continui a deformare il gradiente su altre rotte
-			scrollX.progress = 0;
+			scrollX.viewports = 0;
 		}
 	};
 }

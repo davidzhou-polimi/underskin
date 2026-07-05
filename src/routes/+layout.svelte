@@ -68,12 +68,20 @@
         // proprio $derived (es. isNearPageBottom in scrollGradient.svelte.js) e resettarli mentre è
         // ancora viva ne corromperebbe la config per un frame (flash cromatico alla navigazione).
         scroll.progress = 0;
-        scrollX.progress = 0;
+        scroll.viewports = 0;
+        scrollX.viewports = 0;
         if (navigationState.fromArchetype) return;
 
         const lenis = getLenis();
         if (lenis) lenis.scrollTo(0, { immediate: true });
         else window.scrollTo(0, 0);
+
+        // La pagina è tornata fisicamente in cima: con lo scroll del gradiente in unità viewport,
+        // lasciar convergere il parallasse dal valore di fondo pagina sarebbe una lunga deriva
+        // visibile. Snappiamo lo stato interno del renderer a riposo (mascherato dalla dissolvenza).
+        /** @type {any} */
+        const canvas = document.querySelector('.interactive-gradient-canvas');
+        canvas?.__gradientRenderer?.snapScrollToRest();
     });
 
     // Commento solo il PERCHÉ: il canvas gradiente è unico e persistente su tutte le rotte. Prima che

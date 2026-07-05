@@ -17,13 +17,13 @@
 
 	$effect(() => {
 		if (canvasElement && canvasElement.__gradientRenderer) {
-			canvasElement.__gradientRenderer.updateScrollY(scroll.progress);
+			canvasElement.__gradientRenderer.updateScrollY(scroll.viewports);
 		}
 	});
 
 	$effect(() => {
 		if (canvasElement && canvasElement.__gradientRenderer) {
-			canvasElement.__gradientRenderer.updateScrollX(scrollX.progress);
+			canvasElement.__gradientRenderer.updateScrollX(scrollX.viewports);
 		}
 	});
 </script>

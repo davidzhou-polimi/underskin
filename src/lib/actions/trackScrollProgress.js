@@ -17,6 +17,9 @@ export function trackScrollProgress(node) {
 			refreshPriority: -1,
 			onUpdate: (self) => {
 				scroll.progress = self.progress;
+				// Distanza scrollata in unità viewport (px/innerHeight): il gradiente la usa per un
+				// parallasse uniforme, non compresso/dilatato sulla lunghezza della pagina come progress.
+				scroll.viewports = self.scroll() / window.innerHeight;
 			}
 		});
 	}, node);
