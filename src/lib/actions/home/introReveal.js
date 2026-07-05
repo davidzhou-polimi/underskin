@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
 import { introFocusRadius } from '$lib/stores/scrollGradient.svelte.js';
+import { onLoadingComplete } from '$lib/stores/loadingState.svelte.js';
 
 /**
  * @param {HTMLElement} node
@@ -21,12 +22,25 @@ export function introReveal(node) {
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
 
+	// Dispose dell'$effect.root che avvia l'intro quando il loader alza il velo (vedi in fondo a ctx).
+	/** @type {(() => void) | null} */
+	let disposeGate = null;
+
+	// Hold su gsap.ticker che tiene il focus del gradiente a 0 finché il loader copre lo schermo
+	// (vedi blocco più sotto). Dichiarato qui per poterlo rimuovere anche nel destroy().
+	/** @type {(() => void) | null} */
+	let holdFocus = null;
+
 	// Commento solo il PERCHÉ: dichiarato fuori da gsap.context per essere accessibile nel destroy().
 	// Su mobile (max-width: 768px) la callback non viene mai eseguita, quindi i tween non esistono.
 	const mm = gsap.matchMedia();
 
 	const ctx = gsap.context(() => {
+		// paused: l'entrata non parte al mount ma quando il loader alza il velo (loadingState.complete),
+		// così l'intro non si "pre-gioca" coperta dall'overlay. Sui carichi senza loader (navigazioni
+		// client-side) il flag è già true e l'$effect avvia subito.
 		const tl = gsap.timeline({
+			paused: true,
 			defaults: { ease: 'power2.out' },
 			onComplete: () => {
 				introRevealed = true;
@@ -59,8 +73,22 @@ export function introReveal(node) {
 				duration: 1.8,
 				onUpdate: () => { u.u_focus.value.z = p.rx; u.u_focus.value.w = p.ry; }
 			}, 0);
+
+			// Commento solo il PERCHÉ: la timeline è in pausa finché il loader copre lo schermo, ma nel
+			// frattempo l'$effect di (app)/+page.svelte pubblica la config intro (focusRadius 0.24) che
+			// interactiveGradient applica istantaneamente al primo update: senza contromisure la sfera
+			// resta cresciuta dietro l'overlay e, quando l'overlay si dissolve, appare già grande per poi
+			// collassare di scatto alla ripartenza. Pinniamo il focus a 0 ad ogni frame finché l'entrata
+			// non parte: introReveal resta l'unico proprietario del focus durante l'attesa, così alla
+			// scomparsa del loader il gradiente è collassato e cresce da 0 con l'intro.
+			holdFocus = () => { u.u_focus.value.z = 0.0; u.u_focus.value.w = 0.0; };
+			gsap.ticker.add(holdFocus);
 		}
 
+		// I .intro-circle e lo .scroll-hint usano tl.from(): con immediateRender:true applica lo stato
+		// "from" (opacity:0 ecc.) già alla creazione — anche a timeline in pausa — quindi non lampeggiano
+		// sotto il loader. NON pre-nasconderli con gsap.set: un set a opacity:0 prima del from farebbe
+		// catturare al from il valore d'arrivo sbagliato (0), lasciandoli invisibili per sempre.
 		tl.from(node.querySelectorAll('.intro-circle'), {
 			opacity: 0,
 			scale: 0.7,
@@ -71,6 +99,10 @@ export function introReveal(node) {
 
 		const letters = node.querySelectorAll('.intro-letter');
 		if (letters.length > 0) {
+			// Stato nascosto applicato SUBITO: le tl.set a t=0 non fanno immediate-render con la
+			// timeline in pausa, quindi senza questo le lettere lampeggerebbero visibili prima del play.
+			gsap.set(letters, { y: 12, xPercent: 0, '--blur-val': '12px', opacity: 0 });
+
 			const centerIdx = (letters.length - 1) / 2;
 			letters.forEach((letter, idx) => {
 				const offset = idx - centerIdx;
@@ -345,10 +377,24 @@ export function introReveal(node) {
 				triggerEntry();
 			}
 		});
+
+		// Avvia l'entrata quando il loader alza il velo. La reattività al flag vive nello store
+		// (.svelte.js, dove le rune sono valide); qui la consumiamo come callback one-shot.
+		disposeGate = onLoadingComplete(() => {
+			// Rilascia il pin del focus (era a 0 durante l'attesa): da qui il tween d'entrata ne diventa
+			// l'unico scrittore e lo fa crescere 0→raggio intro senza collasso. Va tolto PRIMA di play().
+			if (holdFocus) {
+				gsap.ticker.remove(holdFocus);
+				holdFocus = null;
+			}
+			tl.play();
+		});
 	}, node);
 
 	return {
 		destroy() {
+			disposeGate?.();
+			if (holdFocus) gsap.ticker.remove(holdFocus);
 			unlockScrollDown();
 			mm.revert();
 			ctx.revert();

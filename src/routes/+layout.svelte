@@ -15,6 +15,7 @@
     import { scroll } from "$lib/stores/scroll.svelte.js";
     import { scrollX } from "$lib/stores/scrollX.svelte.js";
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
+    import LoadingScreen from "$lib/components/ui/LoadingScreen.svelte";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
@@ -171,6 +172,10 @@
         centered={tooltipState.centered}
     />
 </div>
+
+<!-- Loader unico nel layout root persistente: compare a ogni caricamento hard (e reload), mai nelle
+     navigazioni client-side. Reso per ultimo così sta sopra a tutto (oltre allo z-index). -->
+<LoadingScreen />
 
 <style>
     .app-shell {
