@@ -242,7 +242,7 @@ export function introReveal(node) {
 				);
 			}
 
-			// Commento solo il PERCHÉ: Fa ricomparire i testi solo dopo che i cerchi sono quasi del tutto comparsi per creare una sequenza di svelamento logico-spaziale (inizia a 1.2s/1.5s).
+			// Commento solo il PERCHÉ: Fa ricomparire i testi solo dopo che i cerchi sono quasi del tutto comparsi per creare una sequenza di svelamento logico-spaziale (inizia a 1.2s/2.2s).
 			if (introTitle) {
 				activeTimeline.fromTo(introTitle,
 					{ opacity: 0, yPercent: 15 },
@@ -265,7 +265,7 @@ export function introReveal(node) {
 						duration: 1.0,
 						ease: 'power2.out'
 					},
-					1.5
+					2.2
 				);
 			}
 		}
