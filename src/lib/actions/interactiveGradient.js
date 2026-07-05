@@ -47,12 +47,15 @@ export function interactiveGradient(canvas, params = {}) {
 
 	/** @type {any} */ (canvas)['__gradientRenderer'] = renderer;
 
+	// ⚡ Bolt Optimization: Cache MediaQueryList to prevent parsing CSS query on every mousemove frame
+	const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+
 	/** @param {MouseEvent} e */
 	function handleMouseMove(e) {
 		// Commento solo il PERCHÉ: su mobile non esiste un cursore reale; il DevTools emula un mousemove
 		// ad ogni tap che sposterebbe il gradiente falsamente. Usiamo matchMedia runtime per essere
 		// reattivi al ridimensionamento della finestra in development, senza dipendere da store Svelte.
-		if (window.matchMedia('(max-width: 768px)').matches) return;
+		if (mobileMediaQuery.matches) return;
 		const x = e.clientX / window.innerWidth;
 		const y = 1.0 - (e.clientY / window.innerHeight);
 		renderer.updateMouse(x, y);
@@ -62,7 +65,7 @@ export function interactiveGradient(canvas, params = {}) {
 		renderer.resize();
 		// Commento solo il PERCHÉ: quando si ridimensiona verso mobile, azzera l'offset del mouse
 		// per cancellare qualsiasi spostamento residuo lasciato da un'interazione desktop precedente.
-		if (window.matchMedia('(max-width: 768px)').matches) renderer.updateMouse(0.5, 0.5);
+		if (mobileMediaQuery.matches) renderer.updateMouse(0.5, 0.5);
 	}
 
 	function handleThemeUpdate() {
