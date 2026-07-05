@@ -52,12 +52,15 @@
 
 	// Commento solo il PERCHÉ: il blocco scroll segue lo stato del quiz; canLeave apre il gate (uscita o ritorno
 	// all'intro). L'Observer (in quizAnimation) segue lo stesso stato via param observerEnabled.
+	// Il cleanup sblocca allo smontaggio: navigare via mentre observerEnabled è true lascerebbe
+	// altrimenti Lenis stopped e la pagina successiva non scrollerebbe.
 	$effect(() => {
 		if (observerEnabled) {
 			lockScroll();
 		} else {
 			unlockScroll();
 		}
+		return () => unlockScroll();
 	});
 
 	// Commento solo il PERCHÉ: svela l'indicatore di scroll dopo 3 secondi di inattività nel primo step dei risultati,

@@ -58,11 +58,31 @@
         };
     });
 
-    // Commento solo il PERCHÉ: il layout (e quindi Lenis) persiste tra le navigazioni client-side: a ogni
-    // cambio rotta ricalcoliamo i trigger sulle nuove altezze e riportiamo lo scroll in cima — tranne quando
-    // arriviamo da un archetipo, dove il posizionamento lo gestisce cinematicScroll (non va sovrascritto a 0).
+    // Commento solo il PERCHÉ: il layout (e quindi Lenis) persiste tra le navigazioni client-side.
+    // ORDINE CRITICO: prima riportiamo la pagina in cima in modo autoritativo, POI ricalcoliamo i
+    // trigger. Farlo al contrario valuta pin-spacer e scrub a scroll ≠ 0 (finestra ancora alla
+    // posizione della pagina uscente), producendo spazio extra attorno ai pin e l'assestamento
+    // visibile dello scrub. Eccezione: dagli archetipi il posizionamento lo gestisce cinematicScroll.
     afterNavigate(() => {
+        const lenis = getLenis();
+
+        if (!navigationState.fromArchetype) {
+            if (lenis) {
+                // start(): rete di sicurezza se un lock (lenis.stop) è trapelato dalla pagina uscente
+                // (es. Quiz in 'results'), altrimenti la nuova pagina non scrollerebbe.
+                lenis.start();
+                // resize() sincrono: il ResizeObserver di Lenis è async → dimensioni fresche prima di posizionare.
+                lenis.resize();
+                // force: il reset vince anche se Lenis fosse ancora stopped, eliminando la corsa col restore nativo.
+                lenis.scrollTo(0, { immediate: true, force: true });
+            } else {
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Pagina a riposo in cima → pin-spacer e scrub calcolati correttamente.
         ScrollTrigger.refresh();
+
         // Commento solo il PERCHÉ: azzerati qui (dopo il mount della pagina entrante e lo smontaggio
         // di quella uscente), non in onNavigate — la pagina uscente può dipendere da questi store nel
         // proprio $derived (es. isNearPageBottom in scrollGradient.svelte.js) e resettarli mentre è
@@ -71,10 +91,6 @@
         scroll.viewports = 0;
         scrollX.viewports = 0;
         if (navigationState.fromArchetype) return;
-
-        const lenis = getLenis();
-        if (lenis) lenis.scrollTo(0, { immediate: true });
-        else window.scrollTo(0, 0);
 
         // La pagina è tornata fisicamente in cima: con lo scroll del gradiente in unità viewport,
         // lasciar convergere il parallasse dal valore di fondo pagina sarebbe una lunga deriva
