@@ -172,40 +172,47 @@
 		let isMouseNearTop = false;
 		/** @type {ReturnType<typeof setTimeout> | undefined} */
 		let mouseRevealTimeout;
+		// Throttle dello scroll tramite rAF: al massimo un'esecuzione per frame di rendering,
+		// senza valori arbitrari — la frequenza si adatta automaticamente al refresh rate del display.
+		let scrollRafId = 0;
 
 		const handleScroll = () => {
-			const currentScrollY = window.scrollY;
+			if (scrollRafId) return;
+			scrollRafId = requestAnimationFrame(() => {
+				scrollRafId = 0;
+				const currentScrollY = window.scrollY;
 
-			// Commento solo il PERCHÉ: con hideByDefault disattivo la barra resta visibile vicino alla cima;
-			// con hideByDefault attivo (mobile e desktop) si lascia governare dall'auto-hide anche in cima.
-			if (currentScrollY <= 10 && !hideByDefault) {
-				hidden = false;
-				lastScrollY = currentScrollY;
-				clearTimeout(autoHideTimeout);
-				return;
-			}
+				// Commento solo il PERCHÉ: con hideByDefault disattivo la barra resta visibile vicino alla cima;
+				// con hideByDefault attivo (mobile e desktop) si lascia governare dall'auto-hide anche in cima.
+				if (currentScrollY <= 10 && !hideByDefault) {
+					hidden = false;
+					lastScrollY = currentScrollY;
+					clearTimeout(autoHideTimeout);
+					return;
+				}
 
-			const delta = currentScrollY - lastScrollY;
+				const delta = currentScrollY - lastScrollY;
 
-			if (delta > hideThreshold) {
-				requestHide();
-				lastScrollY = currentScrollY;
-			} else if (delta < -showThreshold) {
-				hidden = false;
-				lastScrollY = currentScrollY;
-			}
+				if (delta > hideThreshold) {
+					requestHide();
+					lastScrollY = currentScrollY;
+				} else if (delta < -showThreshold) {
+					hidden = false;
+					lastScrollY = currentScrollY;
+				}
 
-			if (!hidden) {
-				startAutoHideTimer();
-			} else {
-				clearTimeout(autoHideTimeout);
-			}
+				if (!hidden) {
+					startAutoHideTimer();
+				} else {
+					clearTimeout(autoHideTimeout);
+				}
 
-			clearTimeout(scrollTimeout);
-			/* Evita l'accumulo di scroll parziali quando l'utente interrompe il movimento senza superare la soglia */
-			scrollTimeout = setTimeout(() => {
-				lastScrollY = window.scrollY;
-			}, 150);
+				clearTimeout(scrollTimeout);
+				/* Evita l'accumulo di scroll parziali quando l'utente interrompe il movimento senza superare la soglia */
+				scrollTimeout = setTimeout(() => {
+					lastScrollY = window.scrollY;
+				}, 150);
+			});
 		};
 
 		/** @param {MouseEvent} e */
@@ -295,6 +302,7 @@
 			window.removeEventListener('touchstart', handleTouchStart, { capture: true });
 			window.removeEventListener('touchmove', handleTouchMove, { capture: true });
 			window.removeEventListener('touchend', handleTouchEnd, { capture: true });
+			cancelAnimationFrame(scrollRafId);
 			clearTimeout(scrollTimeout);
 			clearTimeout(mouseRevealTimeout);
 			clearTimeout(autoHideTimeout);
