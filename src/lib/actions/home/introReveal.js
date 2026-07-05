@@ -28,7 +28,9 @@ export function introReveal(node) {
 	const ctx = gsap.context(() => {
 		const tl = gsap.timeline({
 			defaults: { ease: 'power2.out' },
-			onComplete: () => { introRevealed = true; }
+			onComplete: () => {
+				introRevealed = true;
+			}
 		});
 
 		// Commento solo il PERCHÉ: Anima la crescita del raggio della sfera gradiente da 0 al raggio intro configurato, in sincrono con l'ingresso dei cerchi geometrici.
@@ -67,11 +69,30 @@ export function introReveal(node) {
 			duration: 1.2
 		});
 
-		tl.from(
-			node.querySelector('.intro-title'),
-			{ opacity: 0, yPercent: 15, duration: 1.6 },
-			'-=0.4'
-		);
+		const letters = node.querySelectorAll('.intro-letter');
+		if (letters.length > 0) {
+			const centerIdx = (letters.length - 1) / 2;
+			letters.forEach((letter, idx) => {
+				const offset = idx - centerIdx;
+				const delay = Math.abs(offset) * 0.08; // Lo stagger parte dal centro verso l'esterno
+
+				tl.set(letter, {
+					y: 12,
+					xPercent: 0,
+					'--blur-val': '12px',
+					opacity: 0
+				}, 0);
+
+				// Commento solo il PERCHÉ: Fa salire le lettere dal basso facendole comparire a fuoco a partire dal centro verso l'esterno.
+				tl.to(letter, {
+					y: 0,
+					'--blur-val': '0px',
+					opacity: 1,
+					duration: 1.4,
+					ease: 'power3.out'
+				}, 1.16 + delay);
+			});
+		}
 
 		tl.from(
 			node.querySelector('.scroll-hint'),
@@ -128,7 +149,7 @@ export function introReveal(node) {
 			tl.kill();
 			if (activeTimeline) activeTimeline.kill();
 
-			activeTimeline = gsap.timeline({
+			const timeline = gsap.timeline({
 				onComplete: () => {
 					isTransitioning = false;
 					unlock();
@@ -139,13 +160,14 @@ export function introReveal(node) {
 					else window.scrollTo(0, 105);
 				}
 			});
+			activeTimeline = timeline;
 
 			const introCircles = node.querySelectorAll('.intro-circle');
 			const introTitle = node.querySelector('.intro-title');
 			const scrollHintEl = node.querySelector('.scroll-hint');
 
 			if (introCircles.length > 0) {
-				activeTimeline.to(introCircles, {
+				timeline.to(introCircles, {
 					opacity: 0,
 					scale: 1.3,
 					transformOrigin: 'center center',
@@ -155,17 +177,27 @@ export function introReveal(node) {
 				}, 0);
 			}
 
-			if (introTitle) {
-				activeTimeline.to(introTitle, {
-					opacity: 0,
-					yPercent: -15,
-					duration: 0.8,
-					ease: 'power2.inOut'
-				}, 0);
+			const letters = node.querySelectorAll('.intro-letter');
+			if (letters.length > 0) {
+				const centerIdx = (letters.length - 1) / 2;
+				letters.forEach((letter, idx) => {
+					const offset = idx - centerIdx;
+					const delay = (centerIdx - Math.abs(offset)) * 0.05; // Gli estremi partono per primi, il centro per ultimo
+
+					// Commento solo il PERCHÉ: Fa salire le lettere verso l'alto dissolvendole a partire dai bordi esterni verso il centro.
+					timeline.to(letter, {
+						y: -12,
+						xPercent: 0,
+						'--blur-val': '8px',
+						opacity: 0,
+						duration: 0.8,
+						ease: 'power3.inOut'
+					}, delay);
+				});
 			}
 
 			if (scrollHintEl) {
-				activeTimeline.to(scrollHintEl, {
+				timeline.to(scrollHintEl, {
 					opacity: 0,
 					y: 20,
 					duration: 0.6,
@@ -180,7 +212,7 @@ export function introReveal(node) {
 				const u = gradientRenderer.material.uniforms;
 				const [exitRx, exitRy] = toRxRy(DEFAULT_CONFIG.focusRadius);
 				const p = { rx: u.u_focus.value.z, ry: u.u_focus.value.w, cov: u.u_coverage.value };
-				activeTimeline.to(p, {
+				timeline.to(p, {
 					rx: exitRx,
 					ry: exitRy,
 					cov: 0.35,
@@ -199,12 +231,13 @@ export function introReveal(node) {
 
 			if (activeTimeline) activeTimeline.kill();
 
-			activeTimeline = gsap.timeline({
+			const timeline = gsap.timeline({
 				onComplete: () => {
 					isTransitioning = false;
 					introRevealed = true;
 				}
 			});
+			activeTimeline = timeline;
 
 			const introCircles = node.querySelectorAll('.intro-circle');
 			const introTitle = node.querySelector('.intro-title');
@@ -216,7 +249,7 @@ export function introReveal(node) {
 				const u = gradientRenderer.material.uniforms;
 				const [rx, ry] = introFocusRadius();
 				const p = { rx: u.u_focus.value.z, ry: u.u_focus.value.w, cov: u.u_coverage.value };
-				activeTimeline.to(p, {
+				timeline.to(p, {
 					rx,
 					ry,
 					cov: 1.0,
@@ -228,7 +261,7 @@ export function introReveal(node) {
 
 			// Commento solo il PERCHÉ: Mostra i cerchi rientrandoli da una scala maggiore di 1.2 per dare un senso di ri-condensazione geometrica (inizia a 0.6s).
 			if (introCircles.length > 0) {
-				activeTimeline.fromTo(introCircles,
+				timeline.fromTo(introCircles,
 					{ opacity: 0, scale: 1.2 },
 					{
 						opacity: 1,
@@ -243,21 +276,33 @@ export function introReveal(node) {
 			}
 
 			// Commento solo il PERCHÉ: Fa ricomparire i testi solo dopo che i cerchi sono quasi del tutto comparsi per creare una sequenza di svelamento logico-spaziale (inizia a 1.2s/2.2s).
-			if (introTitle) {
-				activeTimeline.fromTo(introTitle,
-					{ opacity: 0, yPercent: 15 },
-					{
+			const letters = node.querySelectorAll('.intro-letter');
+			if (letters.length > 0) {
+				const centerIdx = (letters.length - 1) / 2;
+				letters.forEach((letter, idx) => {
+					const offset = idx - centerIdx;
+					const delay = Math.abs(offset) * 0.08;
+
+					timeline.set(letter, {
+						y: 12,
+						xPercent: 0,
+						'--blur-val': '12px',
+						opacity: 0
+					}, 1.2);
+
+					// Commento solo il PERCHÉ: Fa risalire le lettere dal basso svelandole a partire dal centro del titolo durante il rientro.
+					timeline.to(letter, {
+						y: 0,
+						'--blur-val': '0px',
 						opacity: 1,
-						yPercent: 0,
 						duration: 1.4,
-						ease: 'power2.out'
-					},
-					1.2
-				);
+						ease: 'power3.out'
+					}, 1.2 + delay);
+				});
 			}
 
 			if (scrollHintEl) {
-				activeTimeline.fromTo(scrollHintEl,
+				timeline.fromTo(scrollHintEl,
 					{ opacity: 0, y: 12 },
 					{
 						opacity: 1,

@@ -31,7 +31,11 @@
 		/>
 	</svg>
 
-	<h1 class="intro-title">UnderSkin</h1>
+	<h1 class="intro-title" aria-label="UnderSkin">
+		{#each "UnderSkin" as letter}
+			<span class="intro-letter" aria-hidden="true">{letter}</span>
+		{/each}
+	</h1>
 
 	<div class="scroll-hint">
 		<ScrollHint showText={true} text="Scorri per iniziare" />
@@ -86,11 +90,19 @@
 		line-height: 1;
 		transform-style: preserve-3d;
 		will-change: transform;
-		/* Commento solo il perché: Combina un fade inferiore con un gradiente orizzontale che sfuma solo i bordi esterni sinistro e destro del titolo per mantenerlo nitido e leggibile al centro */
+		/* Commento solo il perché: Combina un fade inferiore con un gradiente orizzontale che sfuma solo i bordi esterni del titolo per mantenerlo nitido e leggibile al centro, fungendo da "lente" statica entro cui le lettere si muovono e sfumano. Aumentiamo l'area solida all'85% per evitare il clipping delle lettere quando salgono dal basso. */
 		mask-image: 
-			linear-gradient(to bottom, #000 60%, transparent 100%), 
+			linear-gradient(to bottom, #000 85%, transparent 100%), 
 			linear-gradient(to right, transparent 0%, #000 15%, #000 75%, transparent 100%);
 		mask-composite: intersect;
+	}
+
+	.intro-letter {
+		display: inline-block;
+		will-change: transform, filter, opacity;
+		/* Commento solo il perché: espone una variabile CSS per gestire in modo performante e cross-browser il blur da GSAP */
+		filter: blur(var(--blur-val, 0px));
+		transform-style: preserve-3d;
 	}
 
 	.scroll-hint {
