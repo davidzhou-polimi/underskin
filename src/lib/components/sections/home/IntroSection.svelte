@@ -78,7 +78,7 @@
 		position: relative;
 		z-index: 1;
 		margin: 0;
-        margin-top: var(--spacing-2);
+		margin-top: var(--spacing-2);
 		font-family: var(--font-family-base);
 		font-size: var(--text-title-size);
 		font-weight: var(--text-title-weight);
@@ -86,6 +86,11 @@
 		line-height: 1;
 		transform-style: preserve-3d;
 		will-change: transform;
+		/* Commento solo il perché: Combina un fade inferiore con un gradiente orizzontale che sfuma solo i bordi esterni sinistro e destro del titolo per mantenerlo nitido e leggibile al centro */
+		mask-image: 
+			linear-gradient(to bottom, #000 60%, transparent 100%), 
+			linear-gradient(to right, transparent 0%, #000 15%, #000 75%, transparent 100%);
+		mask-composite: intersect;
 	}
 
 	.scroll-hint {
