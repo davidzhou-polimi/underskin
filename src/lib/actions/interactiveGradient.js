@@ -50,8 +50,8 @@ export function interactiveGradient(canvas, params = {}) {
 	// ⚡ Bolt Optimization: Cache MediaQueryList to prevent parsing CSS query on every mousemove frame
 	const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
 	// ⚡ Bolt Optimization: Cache window dimensions to prevent reading from DOM on every mousemove
-	let winWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
-	let winHeight = typeof window !== 'undefined' ? window.innerHeight : 768;
+	let winWidth = window.innerWidth;
+	let winHeight = window.innerHeight;
 
 	/** @param {MouseEvent} e */
 	function handleMouseMove(e) {
