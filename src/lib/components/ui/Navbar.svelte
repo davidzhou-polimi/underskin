@@ -8,16 +8,22 @@
 
 	/**
 	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
-	 * @param {number | HTMLElement} target
+	 * Accetta un ID stringa (grezzo, senza '#'), un HTMLElement, o un numero (posizione Y).
+	 * @param {number | string | HTMLElement} target
 	 */
 	function smoothScrollTo(target) {
 		const lenis = getLenis();
+		// Risolve l'ID grezzo prima di passarlo a Lenis, che accetta solo selettori CSS (es. '#hero')
+		const element = typeof target === 'string'
+			? document.getElementById(target)
+			: target;
+
 		if (lenis) {
-			lenis.scrollTo(target);
-		} else if (typeof target === 'number') {
-			window.scrollTo({ top: target, behavior: 'smooth' });
+			lenis.scrollTo(element ?? 0);
+		} else if (element instanceof HTMLElement) {
+			element.scrollIntoView({ behavior: 'smooth' });
 		} else {
-			target.scrollIntoView({ behavior: 'smooth' });
+			window.scrollTo({ top: typeof target === 'number' ? target : 0, behavior: 'smooth' });
 		}
 	}
 	let {
@@ -114,12 +120,7 @@
 		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta,
 		// altrimenti esegue una navigazione client-side sicura tramite goto()
 		if (currentPath === link.path || (link.path === '/' && isHome) || (link.path.startsWith('/#') && isHome)) {
-			const target = document.getElementById(link.sectionId);
-			if (target) {
-				smoothScrollTo(target);
-			} else {
-				smoothScrollTo(0);
-			}
+			smoothScrollTo(link.sectionId);
 		} else {
 			await goto(link.path);
 		}
@@ -144,12 +145,7 @@
 		const currentPath = page.url.pathname;
 		if (currentPath === '/') {
 			e.preventDefault();
-			const target = document.getElementById('hero');
-			if (target) {
-				smoothScrollTo(target);
-			} else {
-				smoothScrollTo(0);
-			}
+			smoothScrollTo('hero');
 		} else {
 			await goto('/');
 		}
