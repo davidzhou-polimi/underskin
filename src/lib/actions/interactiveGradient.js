@@ -49,6 +49,9 @@ export function interactiveGradient(canvas, params = {}) {
 
 	// ⚡ Bolt Optimization: Cache MediaQueryList to prevent parsing CSS query on every mousemove frame
 	const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+	// ⚡ Bolt Optimization: Cache window dimensions to prevent reading from DOM on every mousemove
+	let winWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
+	let winHeight = typeof window !== 'undefined' ? window.innerHeight : 768;
 
 	/** @param {MouseEvent} e */
 	function handleMouseMove(e) {
@@ -56,12 +59,14 @@ export function interactiveGradient(canvas, params = {}) {
 		// ad ogni tap che sposterebbe il gradiente falsamente. Usiamo matchMedia runtime per essere
 		// reattivi al ridimensionamento della finestra in development, senza dipendere da store Svelte.
 		if (mobileMediaQuery.matches) return;
-		const x = e.clientX / window.innerWidth;
-		const y = 1.0 - (e.clientY / window.innerHeight);
+		const x = e.clientX / winWidth;
+		const y = 1.0 - (e.clientY / winHeight);
 		renderer.updateMouse(x, y);
 	}
 
 	function handleResize() {
+		winWidth = window.innerWidth;
+		winHeight = window.innerHeight;
 		renderer.resize();
 		// Commento solo il PERCHÉ: quando si ridimensiona verso mobile, azzera l'offset del mouse
 		// per cancellare qualsiasi spostamento residuo lasciato da un'interazione desktop precedente.
