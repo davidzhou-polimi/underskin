@@ -20,7 +20,4 @@
 		background-color: var(--color-bg-primary, transparent);
 	}
 
-	.content {
-		/* Esempio: max-width: var(--container-width); */
-	}
 </style>
