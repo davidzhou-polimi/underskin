@@ -4,10 +4,19 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
-		<!-- Preload del solo peso regular: è usato dal primo paint; l'italic arriva col CSS -->
+		<!-- Regular usato dal primo paint. Italic: unico uso è il quote del quiz (display:none fino
+		     al suo step), quindi senza preload il face parte on-demand allo scroll e fa swap; lo
+		     prearichiamo in parallelo così il loader (che ora lo attende) aspetta al più ~48 KB. -->
 		<link
 			rel="preload"
 			href="/fonts/RethinkSans-VariableFont_wght.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			href="/fonts/RethinkSans-Italic-VariableFont_wght.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin

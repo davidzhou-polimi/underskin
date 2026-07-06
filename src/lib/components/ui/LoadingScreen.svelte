@@ -17,8 +17,8 @@
 	let outro = $state(false);
 
 	function onReveal() {
-		// Sblocca l'entrata della pagina (es. introReveal) solo dopo che l'overlay è del tutto
-		// sparito + un breve gap: il timing esatto vive in loadingOrbit.js (REVEAL_GAP).
+		// Sblocca l'entrata della pagina (es. introReveal) a metà del fade-out dell'overlay, in
+		// overlap con la maschera che finisce di aprirsi: il timing esatto vive in loadingOrbit.js (REVEAL_AT).
 		loadingState.complete = true;
 	}
 
@@ -42,7 +42,15 @@
 			: new Promise((resolve) => window.addEventListener('load', () => resolve(undefined), { once: true }));
 		const fonts = document.fonts ? document.fonts.ready : Promise.resolve();
 
-		Promise.all([loaded, fonts]).then(() => {
+		// document.fonts.ready da solo NON copre l'italic: un @font-face viene richiesto solo quando
+		// un glifo che lo usa entra nel render tree, ma l'unico testo italic (il quote del quiz) è
+		// display:none fino al suo step → il loader si alzerebbe senza attenderlo e lo swap avverrebbe
+		// on-demand allo scroll. Forziamo qui la richiesta così che fonts.ready la includa.
+		const italic = document.fonts
+			? document.fonts.load('italic 400 1rem "Rethink Sans"').catch(() => undefined)
+			: Promise.resolve();
+
+		Promise.all([loaded, fonts, italic]).then(() => {
 			const wait = Math.max(0, MIN_MS - (performance.now() - start));
 			minTimer = setTimeout(() => (outro = true), wait);
 		});

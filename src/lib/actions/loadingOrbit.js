@@ -15,16 +15,23 @@ const ORBIT_RADIUS = 30;
 const OMEGA = (Math.PI * 2) / 3.4; // ~1 giro ogni 3.4s: rotazione lenta ma chiaramente visibile
 const WOBBLE_FREQ = 1.1;           // lieve ondulazione condivisa della velocità (mantiene i 120° fissi)
 const WOBBLE_AMP = 0.14;
-// Pausa dopo la scomparsa totale dell'overlay prima che parta il reveal della pagina sottostante:
-// senza questo gap l'entrata (es. introReveal) partirebbe mentre il loader è ancora in dissolvenza,
-// leggendosi come un cross-fade indesiderato invece di due fasi nette e separate.
-// ⬇ UNICA manopola del ritardo "loader sparito → inizio intro": regola solo questo valore.
-const REVEAL_GAP = 0.3;
-
 // Dissolvenza radiale d'uscita dell'overlay: la maschera si apre dal centro con una banda morbida
 // (nessun bordo netto), svelando ciò che sta dietro (sfondo piatto in home, contenuto altrove).
 const MASK_FEATHER = 50; // ampiezza (%) della banda sfumata: più grande = transizione più morbida
 const MASK_END = 130;    // % oltre l'angolo più lontano: garantisce la copertura degli angoli a fine apertura
+
+// Finestra temporale in cui la maschera scopre la pagina: la reveal parte a REVEAL_START e dura
+// REVEAL_DURATION (le lucine hanno già raggiunto il centro e si sono spente prima di REVEAL_START,
+// così la maschera non le taglia a metà).
+const REVEAL_START = 1.5;
+const REVEAL_DURATION = 1.2;
+
+// ⬇ UNICA manopola del timing "inizio intro": a che punto del fade-out parte l'entrata della pagina.
+// 0 = appena la maschera inizia ad aprirsi, 1 = a maschera del tutto trasparente. A metà (0.5) il
+// centro (<40% del raggio) è già scoperto e il gradiente/titolo — centrati — crescono nel varco
+// mentre la maschera finisce di aprirsi verso i bordi: overlap voluto, niente sfondo vuoto tra le
+// due fasi. onDone/onComplete restano a fine timeline, quindi l'overlay si smonta solo a velo alzato.
+const REVEAL_AT = 0.5;
 
 /**
  * Action sul nodo root dell'overlay: fa ruotare in cerchio 3 "lucine" e, su richiesta, le fa
@@ -90,10 +97,11 @@ export function loadingOrbit(node, params = {}) {
 
 		if (params.reducedMotion) {
 			clock?.kill();
+			const fadeDuration = 0.6;
 			const tl = gsap.timeline({ onComplete: () => onDone?.() });
-			tl.to(node, { autoAlpha: 0, duration: 0.6, ease: 'power1.inOut' });
-			// Gap netto: il reveal della pagina parte solo dopo che l'overlay è del tutto sparito.
-			tl.call(() => onReveal?.(), [], `+=${REVEAL_GAP}`);
+			tl.to(node, { autoAlpha: 0, duration: fadeDuration, ease: 'power1.inOut' });
+			// Coerente col ramo animato: l'intro parte a REVEAL_AT del fade dell'overlay, non a fine.
+			tl.call(() => onReveal?.(), [], fadeDuration * REVEAL_AT);
 			return;
 		}
 
@@ -118,12 +126,12 @@ export function loadingOrbit(node, params = {}) {
 		}, 0.7);
 
 		// L'overlay si dissolve con una maschera radiale che si apre dal centro: la banda morbida
-		// (MASK_FEATHER) evita il bordo netto e dà un'apertura fluida. Parte a 1.5s, quando le lucine
-		// hanno già raggiunto il centro e si sono spente, così la maschera non le taglia a metà.
+		// (MASK_FEATHER) evita il bordo netto e dà un'apertura fluida. Parte a REVEAL_START, quando le
+		// lucine hanno già raggiunto il centro e si sono spente, così la maschera non le taglia a metà.
 		const reveal = { p: 0 };
 		tl.to(reveal, {
 			p: 1,
-			duration: 1.2,
+			duration: REVEAL_DURATION,
 			ease: 'power2.inOut',
 			onUpdate: () => {
 				const inner = -MASK_FEATHER + (MASK_END + MASK_FEATHER) * reveal.p;
@@ -133,11 +141,12 @@ export function loadingOrbit(node, params = {}) {
 				node.style.webkitMaskImage = mask;
 				node.style.maskImage = mask;
 			}
-		}, 1.5);
+		}, REVEAL_START);
 
-		// Gap netto DOPO che l'overlay è del tutto invisibile: solo qui si avvisa che si può partire
-		// con l'entrata della pagina (es. introReveal), evitando che si sovrapponga alla dissolvenza.
-		tl.call(() => onReveal?.(), [], `+=${REVEAL_GAP}`);
+		// L'entrata della pagina (es. introReveal) parte a REVEAL_AT del fade-out: in overlap con la
+		// maschera che finisce di aprirsi, così l'intro cresce nel centro già scoperto invece di
+		// comparire dopo un vuoto. Posizione assoluta sulla timeline, non appesa alla fine.
+		tl.call(() => onReveal?.(), [], REVEAL_START + REVEAL_DURATION * REVEAL_AT);
 	}
 
 	if (params.outro) playOutro();
