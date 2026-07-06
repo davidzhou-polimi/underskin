@@ -156,6 +156,12 @@ export function draggableThought(node, params) {
     });
   }
 
+  // Cache per ottimizzare onDrag ed evitare layout thrashing
+  /** @type {{ cx: number, cy: number } | null} */
+  let draggedNodeInitialCenter = null;
+  /** @type {{ id: number, cx: number, cy: number }[]} */
+  let cachedOtherBoxes = [];
+
   // Creazione del Draggable GSAP
   const draggableInstance = Draggable.create(node, {
     type: 'x,y',
@@ -184,35 +190,49 @@ export function draggableThought(node, params) {
         minY: paddingY - startTop,
         maxY: containerHeight - nodeHeight - paddingY - startTop
       });
-    },
 
-    onDrag: function() {
-      // Ottiene il baricentro del fumetto attualmente trascinato
+      // ⚡ Bolt Optimization: Popola la cache per evitare querySelectorAll e getBoundingClientRect in onDrag
       const rect1 = node.getBoundingClientRect();
-      const cx1 = rect1.left + rect1.width / 2;
-      const cy1 = rect1.top + rect1.height / 2;
+      draggedNodeInitialCenter = {
+        cx: rect1.left + rect1.width / 2 - this.x,
+        cy: rect1.top + rect1.height / 2 - this.y
+      };
 
-      // Seleziona gli altri fumetti presenti nel container
+      cachedOtherBoxes = [];
       const otherBoxes = container.querySelectorAll('.thought-box:not([data-id="' + id + '"])');
-
       otherBoxes.forEach(otherBox => {
         const otherIdAttr = otherBox.getAttribute('data-id');
         const otherId = parseInt(otherIdAttr || '0', 10);
-        
-        // Cerca lo stato dell'altro pensiero per verificare che non sia già sparpagliato
         const otherThought = thoughts.find(t => t.id === otherId);
+
         if (otherThought && !otherThought.isScattered) {
           const rect2 = otherBox.getBoundingClientRect();
-          const cx2 = rect2.left + rect2.width / 2;
-          const cy2 = rect2.top + rect2.height / 2;
+          cachedOtherBoxes.push({
+            id: otherId,
+            cx: rect2.left + rect2.width / 2,
+            cy: rect2.top + rect2.height / 2
+          });
+        }
+      });
+    },
 
-          // Calcola la distanza euclidea tra i due baricentri
-          const distance = Math.hypot(cx1 - cx2, cy1 - cy2);
+    onDrag: function() {
+      if (!draggedNodeInitialCenter) return;
 
-          // Soglia magnetica di allontanamento (130px)
-          if (distance < 130) {
-            onScatter(otherId);
-          }
+      // Calcola il baricentro combinando la posizione iniziale con il delta del trascinamento (this.x/this.y)
+      const cx1 = draggedNodeInitialCenter.cx + this.x;
+      const cy1 = draggedNodeInitialCenter.cy + this.y;
+
+      cachedOtherBoxes.forEach(otherBox => {
+        // Calcola la distanza euclidea tra i due baricentri
+        const distance = Math.hypot(cx1 - otherBox.cx, cy1 - otherBox.cy);
+
+        // Soglia magnetica di allontanamento (130px)
+        if (distance < 130) {
+          onScatter(otherBox.id);
+          // Rimuovi dalla cache per evitare chiamate ripetute prima del prossimo onDragEnd
+          otherBox.cx = -9999;
+          otherBox.cy = -9999;
         }
       });
     },
