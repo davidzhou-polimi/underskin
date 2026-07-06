@@ -42,6 +42,7 @@ export function introReveal(node) {
 		// client-side) il flag è già true e l'$effect avvia subito.
 		const tl = gsap.timeline({
 			paused: true,
+			delay: navigationState.hasNavigated ? 0.7 : 0,
 			defaults: { ease: 'power2.out' },
 			onComplete: () => {
 				introRevealed = true;
