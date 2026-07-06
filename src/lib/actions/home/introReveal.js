@@ -42,6 +42,7 @@ export function introReveal(node) {
 		// client-side) il flag è già true e l'$effect avvia subito.
 		const tl = gsap.timeline({
 			paused: true,
+			delay: navigationState.hasNavigated ? 0.7 : 0,
 			defaults: { ease: 'power2.out' },
 			onComplete: () => {
 				introRevealed = true;
@@ -436,7 +437,12 @@ export function introReveal(node) {
 			if (holdFocus) gsap.ticker.remove(holdFocus);
 			unlockScrollDown();
 			mm.revert();
-			ctx.revert();
+			// Commento solo il PERCHÉ: kill() ferma tutti i tween e pulisce gli ScrollTrigger del
+			// contesto senza ripristinare nessuna proprietà al valore iniziale. A differenza di revert(),
+			// non riporta u_focus a 0 (il valore "from" del tween di primo caricamento), lasciando il
+			// gradiente WebGL alla sua dimensione corrente durante la transizione verso la pagina successiva.
+			// I nodi DOM (cerchi, lettere) vengono smontati da SvelteKit comunque: non serve reverting.
+			ctx.kill();
 		}
 	};
 }
