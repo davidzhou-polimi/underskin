@@ -86,7 +86,7 @@
 		if (
 			autoHideDelay <= 0 ||
 			isMenuOpen ||
-			(!hideByDefault && window.scrollY <= 10) ||
+			window.scrollY <= 10 ||
 			isHovered ||
 			isFocused
 		)
@@ -163,6 +163,8 @@
 
 	onMount(() => {
 		lastScrollY = window.scrollY;
+		// Garantisce che la navbar sia visibile se la pagina si apre già in cima, indipendentemente da hideByDefault.
+		if (window.scrollY <= 10) hidden = false;
 		/** @type {ReturnType<typeof setTimeout> | undefined} */
 		let scrollTimeout;
 		let isMouseNearTop = false;
@@ -178,9 +180,8 @@
 				scrollRafId = 0;
 				const currentScrollY = window.scrollY;
 
-				// Commento solo il PERCHÉ: con hideByDefault disattivo la barra resta visibile vicino alla cima;
-				// con hideByDefault attivo (mobile e desktop) si lascia governare dall'auto-hide anche in cima.
-				if (currentScrollY <= 10 && !hideByDefault) {
+				// Commento solo il PERCHÉ: in cima alla pagina la navbar rimane sempre visibile, su qualunque dispositivo.
+				if (currentScrollY <= 10) {
 					hidden = false;
 					lastScrollY = currentScrollY;
 					clearTimeout(autoHideTimeout);
