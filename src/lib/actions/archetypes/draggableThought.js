@@ -161,6 +161,8 @@ export function draggableThought(node, params) {
   let draggedNodeInitialCenter = null;
   /** @type {{ id: number, cx: number, cy: number }[]} */
   let cachedOtherBoxes = [];
+  /** @type {Set<number>} */
+  let processedIds = new Set();
 
   // Creazione del Draggable GSAP
   const draggableInstance = Draggable.create(node, {
@@ -199,6 +201,7 @@ export function draggableThought(node, params) {
       };
 
       cachedOtherBoxes = [];
+      processedIds = new Set();
       const otherBoxes = container.querySelectorAll('.thought-box:not([data-id="' + id + '"])');
       otherBoxes.forEach(otherBox => {
         const otherIdAttr = otherBox.getAttribute('data-id');
@@ -219,25 +222,30 @@ export function draggableThought(node, params) {
     onDrag: function() {
       if (!draggedNodeInitialCenter) return;
 
-      // Calcola il baricentro combinando la posizione iniziale con il delta del trascinamento (this.x/this.y)
+      // Subtract GSAP's current transform to get the initial position in the same
+      // coordinate space as the drag delta applied by this.x/this.y.
       const cx1 = draggedNodeInitialCenter.cx + this.x;
       const cy1 = draggedNodeInitialCenter.cy + this.y;
 
       cachedOtherBoxes.forEach(otherBox => {
+        if (processedIds.has(otherBox.id)) return;
+
         // Calcola la distanza euclidea tra i due baricentri
         const distance = Math.hypot(cx1 - otherBox.cx, cy1 - otherBox.cy);
 
         // Soglia magnetica di allontanamento (130px)
         if (distance < 130) {
+          processedIds.add(otherBox.id);
           onScatter(otherBox.id);
-          // Rimuovi dalla cache per evitare chiamate ripetute prima del prossimo onDragEnd
-          otherBox.cx = -9999;
-          otherBox.cy = -9999;
         }
       });
     },
 
     onDragEnd: function() {
+      draggedNodeInitialCenter = null;
+      cachedOtherBoxes = [];
+      processedIds.clear();
+
       if (!isScattered) {
         onScatter(id);
       }
