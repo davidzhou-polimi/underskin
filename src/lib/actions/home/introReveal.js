@@ -4,6 +4,7 @@ import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.sv
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
 import { introFocusRadius } from '$lib/stores/scrollGradient.svelte.js';
 import { onLoadingComplete } from '$lib/stores/loadingState.svelte.js';
+import { heroExit } from '$lib/stores/heroExit.svelte.js';
 
 /**
  * @param {HTMLElement} node
@@ -131,6 +132,43 @@ export function introReveal(node) {
 			{ opacity: 0, y: 12, duration: 1.0 },
 			'+=0'
 		);
+
+		// Commento solo il PERCHÉ: registriamo l'uscita in heroExit per le navigazioni cross-route via menu.
+		// Permette all'intro di sfumare elegantemente in parallelo con il gradiente senza bloccare SvelteKit,
+		// esattamente come i titoli interni (heroParallax).
+		heroExit.register(() => {
+			// Se il nodo è già nascosto dallo scroll (o dal triggerExit interno), evitiamo l'animazione inutile.
+			const nodeOpacity = /** @type {number} */ (gsap.getProperty(node, 'opacity'));
+			if (nodeOpacity < 0.05) return Promise.resolve();
+
+			const rect = node.getBoundingClientRect();
+			const clone = /** @type {HTMLElement} */ (node.cloneNode(true));
+			
+			clone.style.transform = 'none';
+			
+			Object.assign(clone.style, {
+				position: 'fixed',
+				top: `${rect.top}px`,
+				left: `${rect.left}px`,
+				width: `${rect.width}px`,
+				height: `${rect.height}px`,
+				margin: '0',
+				zIndex: '9999',
+				pointerEvents: 'none'
+			});
+			
+			document.body.appendChild(clone);
+
+			gsap.to(clone, {
+				opacity: 0,
+				filter: `blur(4px)`,
+				duration: 0.3,
+				ease: 'power2.in',
+				onComplete: () => clone.remove()
+			});
+
+			return Promise.resolve();
+		});
 
 		// Commento solo il PERCHÉ: Riproduce il gesto dello scrolling della rotellina tramite una timeline sinusoidale con pausa ritmica
 		const mouseWheel = node.querySelector('.mouse-wheel');
@@ -393,7 +431,8 @@ export function introReveal(node) {
 
 	return {
 		destroy() {
-			disposeGate?.();
+			heroExit.clear();
+			if (disposeGate) disposeGate();
 			if (holdFocus) gsap.ticker.remove(holdFocus);
 			unlockScrollDown();
 			mm.revert();

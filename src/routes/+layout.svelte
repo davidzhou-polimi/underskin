@@ -11,6 +11,7 @@
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
+    import { heroExit } from "$lib/stores/heroExit.svelte.js";
     import { gradientConfig } from "$lib/stores/gradientConfig.svelte.js";
     import { scroll } from "$lib/stores/scroll.svelte.js";
     import { scrollX } from "$lib/stores/scrollX.svelte.js";
@@ -105,8 +106,10 @@
     // la pagina entrante monti segnaliamo che non è più il primo atterraggio e riportiamo lo stato
     // interno del renderer (non lo store) alla baseline; la config transita comunque fluidamente via
     // transitionConfig.
-    onNavigate(() => {
+    onNavigate((navigation) => {
+        heroExit.run();
         navigationState.hasNavigated = true;
+        navigationState.fromHome = navigation.from?.url.pathname === '/';
         /** @type {any} */
         const canvas = document.querySelector('.interactive-gradient-canvas');
         canvas?.__gradientRenderer?.resetScroll();

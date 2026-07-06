@@ -1,5 +1,6 @@
 import { InteractiveGradientRenderer, DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { gsap } from '$lib/utils/gsapSetup.js';
+import { navigationState } from '$lib/stores/navigationState.svelte.js';
 
 /**
  * @typedef {Object} GradientParams
@@ -117,10 +118,21 @@ export function interactiveGradient(canvas, params = {}) {
 		const proxy = renderer.getAnimatableState();
 		renderer.config = { ...renderer.config, ...newConfig };
 
+		// Commento solo il PERCHÉ: se stiamo navigando tra pagine (client-side), ritardiamo la transizione
+		// del gradiente per permettere al titolo della pagina uscente di sfumare (via heroExit).
+		// Se veniamo dalla Home, l'utente ha richiesto una pausa teatrale di 0.3s *dopo* l'uscita del titolo (0.3s),
+		// quindi il delay totale è 0.6s. Altrimenti, il delay è di 0.3s (il gradiente parte appena il titolo scompare).
+		// Se è un caricamento iniziale (hard load), il gradiente prende posizione immediatamente (0s delay).
+		let delay = 0;
+		if (typeof navigationState !== 'undefined' && navigationState.hasNavigated) {
+			delay = navigationState.fromHome ? 0.6 : 0.3;
+		}
+
 		activeTween = gsap.to(proxy, {
 			...targetState,
 			paletteMix: 1,
 			duration,
+			delay,
 			ease: 'power2.inOut',
 			onUpdate: () => renderer.applyAnimatableState(proxy),
 		});
