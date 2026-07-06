@@ -101,9 +101,16 @@
         }
 
         .preface-list .reveal-line {
-            /* Commento solo il PERCHÉ: annulla la sovrapposizione grid per i figli della lista su mobile 
+            /* Commento solo il PERCHÉ: annulla la sovrapposizione grid per i figli della lista su mobile
                consentendo il flusso verticale flex */
             grid-area: auto;
+        }
+
+        .preface-list .reveal-line:first-child {
+            /* Commento solo il PERCHÉ: replica staticamente lo stato iniziale che scrollReveal.js
+               applica via gsap.set() (y: 25, scale: 1.3) al primo paint, per evitare che la riga
+               scatti visibilmente in quella posizione quando l'azione JS monta */
+            transform: translateY(25px) scale(1.3);
         }
 
         .reveal-line.final-phrase {
