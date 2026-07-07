@@ -53,11 +53,13 @@ export function thoughtsStackReveal(node) {
     // Finto scroll: la colonna parte con la prima riga nella metà alta (~30vh) e sale finché il
     // suo fondo (la frase) raggiunge il basso del viewport. La sezione resta ferma (pin) → la
     // colonna "resta fissa e si allunga". Funzioni per rileggere le misure a ogni refresh.
+    // Il clamp a 0 protegge il caso di colonna più corta del viewport: senza, il target sarebbe
+    // positivo e la colonna scenderebbe invece di salire, invertendo il conveyor.
     tl.fromTo(
       scroller,
       { y: () => window.innerHeight * 0.3 },
       {
-        y: () => window.innerHeight - scroller.scrollHeight,
+        y: () => Math.min(0, window.innerHeight - scroller.scrollHeight),
         ease: 'none',
         duration: count + 2
       },
