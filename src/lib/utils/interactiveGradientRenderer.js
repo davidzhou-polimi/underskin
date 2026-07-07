@@ -1050,8 +1050,8 @@ export class InteractiveGradientRenderer {
 	}
 
 	resize() {
-		const width = window.innerWidth;
-		const height = window.innerHeight;
+		const width = this.canvas.clientWidth || window.innerWidth;
+		const height = this.canvas.clientHeight || window.innerHeight;
 		this.canvas.width = Math.floor(width * this.pixelRatio);
 		this.canvas.height = Math.floor(height * this.pixelRatio);
 		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);

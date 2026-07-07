@@ -18,24 +18,47 @@ export function perfectionGameAction(node, options = {}) {
 	// Utilizziamo un context GSAP per raggruppare tutte le animazioni e gli ScrollTrigger,
 	// garantendo una pulizia e rimozione sicura delle risorse al destroy dell'elemento.
 	const ctx = gsap.context(() => {
-		// Posiziona il blob all'estremo sinistro per iniziare in modo deterministico
-		gsap.set(node, { x: -320, scale: 0.55 });
+		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
-		tween = gsap.to(node, {
-			x: 320,
-			duration: 3,
-			ease: 'sine.inOut',
-			repeat: -1,
-			yoyo: true,
-			paused: true,
-			onUpdate: function() {
-				// Calcola dinamicamente la scala in base al valore x corrente.
-				// Lo scale deve essere massimo (1.0) al centro (0px) e minimo (0.55) a -320px e 320px.
-				const currentX = Number(gsap.getProperty(node, 'x'));
-				const scale = 1.0 - (Math.abs(currentX) / 320) * 0.45;
-				gsap.set(node, { scale: scale });
-			}
-		});
+		if (isMobile) {
+			// Posiziona il blob all'estremo superiore per iniziare in modo deterministico
+			gsap.set(node, { y: -140, x: 0, scale: 0.6 });
+
+			tween = gsap.to(node, {
+				y: 140,
+				duration: 3,
+				ease: 'sine.inOut',
+				repeat: -1,
+				yoyo: true,
+				paused: true,
+				onUpdate: function() {
+					// Calcola dinamicamente la scala in base al valore y corrente.
+					// Su mobile la pallina parte da scala 0.6 agli estremi e raggiunge 1.05 al centro
+					const currentY = Number(gsap.getProperty(node, 'y'));
+					const scale = 1.05 - (Math.abs(currentY) / 140) * 0.45;
+					gsap.set(node, { scale: scale });
+				}
+			});
+		} else {
+			// Posiziona il blob all'estremo sinistro per iniziare in modo deterministico
+			gsap.set(node, { x: -320, y: 0, scale: 0.55 });
+
+			tween = gsap.to(node, {
+				x: 320,
+				duration: 3,
+				ease: 'sine.inOut',
+				repeat: -1,
+				yoyo: true,
+				paused: true,
+				onUpdate: function() {
+					// Calcola dinamicamente la scala in base al valore x corrente.
+					// Lo scale deve essere massimo (1.0) al centro (0px) e minimo (0.55) a -320px e 320px.
+					const currentX = Number(gsap.getProperty(node, 'x'));
+					const scale = 1.0 - (Math.abs(currentX) / 320) * 0.45;
+					gsap.set(node, { scale: scale });
+				}
+			});
+		}
 
 		// Commento solo il PERCHÉ: mantiene in esecuzione l'oscillazione solo quando la sezione è visibile a schermo, gestendo correttamente anche il ripristino o lo scroll iniziale.
 		ScrollTrigger.create({
@@ -74,9 +97,10 @@ export function perfectionGameAction(node, options = {}) {
 				if (tween) {
 					tween.pause();
 					// Restituisce la posizione precisa in cui l'utente ha premuto il tasto/click
-					const finalX = Number(gsap.getProperty(node, 'x'));
+					const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+					const finalValue = Number(gsap.getProperty(node, isMobile ? 'y' : 'x'));
 					if (newOptions.onStop) {
-						newOptions.onStop(finalX);
+						newOptions.onStop(finalValue);
 					}
 				}
 			}

@@ -87,17 +87,20 @@
 	}
 
 	/**
-	 * Riceve la X finale registrata nel momento in cui il gioco si è interrotto.
+	 * Riceve la coordinata finale registrata nel momento in cui il gioco si è interrotto (X su desktop, Y su mobile).
 	 * Calcola e normalizza la precisione del tentativo.
 	 * 
-	 * @param {number} finalX La coordinata X registrata dall'azione GSAP
+	 * @param {number} finalValue La coordinata registrata dall'azione GSAP
 	 */
-	function handleStop(finalX) {
+	function handleStop(finalValue) {
 		attempts++;
-		const distance = Math.abs(finalX);
+		const distance = Math.abs(finalValue);
 		
-		// Calcola la percentuale normalizzata sul raggio massimo di oscillazione (320px)
-		let calcPerc = 100 - (distance / 320) * 100;
+		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+		const maxRange = isMobile ? 140 : 320;
+		
+		// Calcola la percentuale normalizzata sul raggio massimo di oscillazione (320px desktop, 140px mobile)
+		let calcPerc = 100 - (distance / maxRange) * 100;
 
 		// Il 100% di perfezione rimane volutamente inarrivabile, il tetto massimo è 99%
 		accuracy = Math.max(1, Math.min(99, Math.round(calcPerc)));
@@ -124,7 +127,7 @@
 >
 	
 	<div class="header-text">
-		<h2 class="title">Quanto è difficile la perfezione?</h2>
+		<h2 class="title">Quanto è difficile<br class="mobile-only-br" /> la perfezione?</h2>
 		<p class="subtitle" class:game-over-text={attempts >= MAX_ATTEMPTS}>{subtitleText}</p>
 	</div>
 
@@ -293,15 +296,26 @@
 	}
 
 	.purple-blob {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		background: radial-gradient(circle, var(--viola-500) 0%, var(--viola-800) 100%);
-		border-radius: 50%;
-		filter: blur(var(--spacing-3)); /* Utilizza il token --spacing-3 (1.5rem / 24px) per la sfocatura */
-		opacity: 0.9;
-		z-index: 1;
-	}
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: radial-gradient(circle, var(--viola-500) 0%, var(--viola-800) 100%);
+	border-radius: 50%;
+	filter: blur(var(--spacing-3));
+	opacity: 0.9;
+	z-index: 1;
+
+	/* --- TRUCCO ANTI-QUADRATO PER MOBILE --- */
+	/* 1. Forza la GPU a ricalcolare i confini oltre il cerchio */
+	transform: translate3d(0, 0, 0); 
+	
+	/* 2. Estende l'area di rendering della sfocatura isolando l'elemento */
+	isolation: isolate; 
+	
+	/* 3. Evita che i sub-pixel arrotondati vengano clippati dal browser */
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+    }
 
 	.purple-blob.game-over {
 		opacity: 0.7;
@@ -329,5 +343,61 @@
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 100;
+	}
+
+	.mobile-only-br {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.mobile-only-br {
+			display: block;
+		}
+
+		.header-text {
+			/* Sposta le scritte leggermente più in alto e riduce lo spazio rispetto all'area di gioco */
+			margin-top: -50px;
+			margin-bottom: var(--spacing-8);
+		}
+
+		.title {
+			/* Commento solo il PERCHÉ: utilizza var(--text-xl) (36px) per mantenere il testo leggibile 
+			   e imponente, spezzandolo su due righe bilanciate grazie al tag br */
+			font-size: var(--text-xl);
+			padding: 0 var(--spacing-4);
+			line-height: 1.25;
+		}
+
+		.interaction-zone {
+			/* Su mobile il moto è verticale, quindi aumentiamo l'altezza dell'area */
+			height: 360px;
+			width: 100%;
+			flex-direction: column;
+			margin-top: var(--spacing-3);
+		}
+
+		.game-area {
+			width: 300px;
+			height: 300px;
+			flex-shrink: 0;
+			aspect-ratio: 1 / 1;
+		}
+
+		.target-circle {
+			/* Diminuita ulteriormente la dimensione del cerchio tratteggiato */
+			width: 220px;
+			height: 220px;
+		}
+
+		.blob-wrapper {
+			/* Ridotta la dimensione base a 160px per evitare contatti o sovrapposizioni del blob con i testi descrittivi superiori */
+			width: 160px;
+			height: 160px;
+			aspect-ratio: 1 / 1;
+		}
+
+		.percentage {
+			font-size: 3rem;
+		}
 	}
 </style>
