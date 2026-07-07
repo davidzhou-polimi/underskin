@@ -46,7 +46,12 @@
 	.intro-section {
 		position: relative;
 		width: 100%;
+		/* svh (viewport minimo, statico) invece di vh: l'intro è a scroll bloccato, quindi deve stare
+		   nell'area realmente visibile anche con la toolbar del browser aperta, altrimenti lo scroll cue
+		   in basso finisce sotto la chrome. svh è statico (non ricalcola come dvh) → nessun thrashing di
+		   ScrollTrigger. Su desktop svh == vh: nessun cambiamento. Fallback vh per browser senza svh. */
 		height: 100vh;
+		height: 100svh;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -107,7 +112,9 @@
 
 	.scroll-hint {
 		position: absolute;
-		bottom: var(--spacing-8);
+		/* Aggiunge la safe-area inferiore (home indicator / gesture bar) al distacco dal fondo, così il
+		   cue resta staccato dai bordi di sistema oltre che dentro la sezione svh. */
+		bottom: calc(var(--spacing-8) + env(safe-area-inset-bottom));
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 1;

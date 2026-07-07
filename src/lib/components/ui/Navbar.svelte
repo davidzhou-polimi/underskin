@@ -422,6 +422,9 @@
 		pointer-events: none;
 		background: transparent;
 		will-change: transform;
+		/* Con viewport-fit=cover la barra fissa passerebbe sotto la status bar / notch: la safe-area
+		   superiore spinge il contenuto sotto l'area di sistema. 0 su desktop → nessun cambiamento. */
+		padding-top: env(safe-area-inset-top);
 	}
 
 	.navbar__inner {
@@ -537,16 +540,20 @@
 		position: fixed;
 		inset: 0;
 		width: 100vw;
+		/* svh statico: l'overlay copre l'area visibile senza eccedere sotto la chrome. vh fallback. */
 		height: 100vh;
+		height: 100svh;
 		/* Commento solo il PERCHÉ: imposta l'effetto ghiaccio semitrasparente azzurrato del brand */
 		background-color: rgb(from var(--background-primary) r g b / 0.85);
 		backdrop-filter: blur(12px);
 		z-index: 999;
 		display: flex;
 		flex-direction: column;
-		/* Commento solo il PERCHÉ: allinea il padding orizzontale a spacing-6 e verticale a spacing-3, 
-		   esattamente identico a quello della navbar chiusa per eliminare ogni layout shift */
-		padding: var(--spacing-3) var(--spacing-6) var(--spacing-10);
+		/* Commento solo il PERCHÉ: allinea il padding orizzontale a spacing-6 e verticale a spacing-3,
+		   esattamente identico a quello della navbar chiusa per eliminare ogni layout shift.
+		   Le safe-area su top/bottom tengono header e link fuori da status bar e gesture bar. */
+		padding: calc(var(--spacing-3) + env(safe-area-inset-top)) var(--spacing-6)
+			calc(var(--spacing-10) + env(safe-area-inset-bottom));
 		box-sizing: border-box;
 		opacity: 0;
 		visibility: hidden;

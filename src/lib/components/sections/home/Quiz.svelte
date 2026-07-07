@@ -725,7 +725,8 @@
 		}
 
 		.scroll-hint-container {
-			bottom: var(--spacing-2);
+			/* Somma la safe-area inferiore così il cue non finisce sotto la chrome/gesture bar del browser. */
+			bottom: calc(var(--spacing-2) + env(safe-area-inset-bottom));
 		}
 	}
 </style>

@@ -53,6 +53,20 @@
 		animation: ballSlideCyclic 2.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 	}
 
+	/* Commento solo il PERCHÉ: su mobile il cue (navy su fondo chiaro) risultava appena leggibile.
+	   Alziamo l'opacità efficace solo su schermi piccoli; desktop invariato. */
+	@media (max-width: 768px) {
+		.scroll-mouse-svg {
+			opacity: 0.9;
+		}
+		.scroll-mouse-svg rect {
+			stroke-opacity: 0.9;
+		}
+		.scroll-label {
+			opacity: 0.85;
+		}
+	}
+
 	@keyframes ballSlideCyclic {
 		0% {
 			transform: translateY(0);
