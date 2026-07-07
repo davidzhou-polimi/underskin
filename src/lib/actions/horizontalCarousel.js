@@ -3,6 +3,8 @@ import { gsap } from '$lib/utils/gsapSetup.js';
 /**
  * @typedef {Object} HorizontalCarouselParams
  * @property {number} [activeIndex]
+ * @property {number} [gap]
+ * @property {number} [dragOffset]
  */
 
 /**
@@ -30,9 +32,10 @@ export function horizontalCarousel(node, params = {}) {
 		const firstItem = /** @type {HTMLElement} */ (items[0]);
 		const itemWidth = firstItem.offsetWidth;
 
-		// Definiamo un gap costante coerente con i token di spaziatura (var(--spacing-4) = 32px)
-		const gap = 32;
+		// Definiamo un gap coerente con i token di spaziatura o configurato tramite parametri
+		const gap = params.gap ?? 32;
 		const offset = itemWidth + gap;
+		const dragOffset = params.dragOffset ?? 0;
 
 		// Calcoliamo se il movimento è in avanti o all'indietro per determinare la direzione di uscita
 		let isForward = true;
@@ -63,11 +66,11 @@ export function horizontalCarousel(node, params = {}) {
 			if (prevDiff > itemsCount / 2) prevDiff -= itemsCount;
 			else if (prevDiff < -itemsCount / 2) prevDiff += itemsCount;
 
-			// Calcoliamo la coordinata X target circolare reale
-			const circularX = currentDiff * offset;
+			// Calcoliamo la coordinata X target circolare reale, sommando lo scostamento del drag
+			const circularX = currentDiff * offset + dragOffset;
 
-			// Calcoliamo la coordinata X precedente teorica
-			const prevX = prevDiff * offset;
+			// Calcoliamo la coordinata X precedente teorica, sommando lo scostamento del drag
+			const prevX = prevDiff * offset + dragOffset;
 
 			// Identifichiamo se questa specifica card deve fare "wrap" (salto circolare) durante la transizione
 			const movement = circularX - prevX;
@@ -187,8 +190,18 @@ export function horizontalCarousel(node, params = {}) {
 	return {
 		/** @param {HorizontalCarouselParams} newParams */
 		update(newParams) {
-			if (newParams.activeIndex !== activeIndex) {
-				updateLayout(newParams.activeIndex ?? 0, true);
+			const oldGap = params.gap;
+			const oldDragOffset = params.dragOffset;
+			params = newParams;
+			
+			// Commento solo il PERCHÉ: se stiamo trascinando col dito (dragOffset !== 0) disattiviamo 
+			// l'animazione GSAP per una reattività istantanea. Al rilascio (dragOffset torna a 0), 
+			// abilitiamo l'animazione di snap per ricentrare la card
+			const isDragging = newParams.dragOffset !== 0;
+			const animate = !isDragging && (newParams.dragOffset === 0 && oldDragOffset !== 0 ? true : (newParams.activeIndex !== activeIndex));
+
+			if (newParams.activeIndex !== activeIndex || newParams.gap !== oldGap || newParams.dragOffset !== oldDragOffset) {
+				updateLayout(newParams.activeIndex ?? 0, animate);
 			}
 		},
 		destroy() {

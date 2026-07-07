@@ -27,6 +27,8 @@ export class AthleteCarouselMotion {
 	targetIndex = $state(0);
 	isDragging = $state(false);
 	inertiaVelocity = $state(0);
+	autoplayProgress = $state(0);
+	autoplayDisabled = $state(false);
 
 	/** @type {() => number} */
 	#getLen;
@@ -59,6 +61,11 @@ export class AthleteCarouselMotion {
 			duration: AUTOPLAY_INTERVAL / 1000,
 			repeat: -1,
 			ease: 'none',
+			onUpdate: () => {
+				if (this.#autoplayTween) {
+					this.autoplayProgress = this.#autoplayTween.progress();
+				}
+			},
 			onRepeat: () => this.next()
 		});
 
@@ -104,15 +111,24 @@ export class AthleteCarouselMotion {
 		this.#navigationTween?.kill();
 	}
 
+	disableAutoplay() {
+		this.autoplayDisabled = true;
+		this.#autoplayTween?.kill();
+		this.#autoplayTween = null;
+		this.autoplayProgress = 0;
+	}
+
 	pauseAutoplay() {
 		this.#autoplayTween?.pause();
 	}
 
 	resumeAutoplay() {
+		if (this.autoplayDisabled) return;
 		this.#autoplayTween?.play();
 	}
 
 	restartAutoplay() {
+		if (this.autoplayDisabled) return;
 		this.#autoplayTween?.restart();
 	}
 
@@ -180,7 +196,14 @@ export class AthleteCarouselMotion {
 	/** @param {number} clientX */
 	drag(clientX) {
 		if (!this.isDragging) return;
-		const deltaX = (clientX - this.#dragStartX) * DRAG_RESISTANCE;
+		let deltaX = (clientX - this.#dragStartX) * DRAG_RESISTANCE;
+		
+		// Commento solo il PERCHÉ: su mobile limitiamo lo swipe unicamente verso sinistra (deltaX <= 0)
+		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+		if (isMobile) {
+			deltaX = Math.min(0, deltaX);
+		}
+
 		let newTarget = this.#dragStartTarget - deltaX / PIXELS_PER_INDEX;
 
 		const offset = newTarget - this.#dragStartTarget;
@@ -207,6 +230,13 @@ export class AthleteCarouselMotion {
 
 		// Da indici/ms a indici/frame (assumendo 60fps -> 16.67ms per frame)
 		let velocityPerFrame = this.#dragVelocity * 16.67;
+		
+		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+		if (isMobile) {
+			// Su mobile l'inerzia può solo far avanzare il carousel (velocità non negativa)
+			velocityPerFrame = Math.max(0, velocityPerFrame);
+		}
+
 		if (Math.abs(velocityPerFrame) > MAX_INERTIA_SPEED) {
 			velocityPerFrame = Math.sign(velocityPerFrame) * MAX_INERTIA_SPEED;
 		}

@@ -44,21 +44,26 @@
     let autoplayActive = $state(true);
     /** @type {HTMLDivElement | null} */
     let dotsPillElement = $state(null);
+    let progressRatio = $state(0);
+    let dragOffset = $state(0);
 
     // ─── Navigazione ───────────────────────────────────────────────────────────
 
     function next() {
         activeIndex = (activeIndex + 1) % activeItems.length;
+        progressRatio = 0;
     }
 
     function prev() {
         activeIndex = (activeIndex - 1 + activeItems.length) % activeItems.length;
+        progressRatio = 0;
     }
 
     /** @param {number} index */
     function selectIndex(index) {
         activeIndex = index;
         autoplayActive = false; // Disattiva autoplay su interazione
+        progressRatio = 0;
     }
 
     function handleVideoEnded() {
@@ -67,26 +72,58 @@
         }
     }
 
-    // ─── Touch Events per Swipe ───────────────────────────────────────────────
+    /**
+     * @param {number} currentTime
+     * @param {number} duration
+     */
+    function handleVideoTimeUpdate(currentTime, duration) {
+        progressRatio = currentTime / duration;
+    }
+
+    // ─── Touch Events per Swipe e Drag ────────────────────────────────────────
 
     let touchStartX = 0;
     let touchStartY = 0;
+    let isDragging = false;
 
     /** @param {TouchEvent} e */
     function handleTouchStart(e) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        dragOffset = 0;
+        isDragging = true;
+        autoplayActive = false; // Disattiva autoplay su interazione
+    }
+
+    /** @param {TouchEvent} e */
+    function handleTouchMove(e) {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        
+        // Se il movimento è prevalentemente orizzontale, tracciamo il trascinamento ed evitiamo lo scroll di pagina nativo
+        if (Math.abs(dx) > Math.abs(dy)) {
+            dragOffset = dx;
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }
     }
 
     /** @param {TouchEvent} e */
     function handleTouchEnd(e) {
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        const dy = e.changedTouches[0].clientY - touchStartY;
-        // Rileva swipe orizzontale significativo
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-            autoplayActive = false; // Disattiva autoplay su interazione
-            dx > 0 ? prev() : next();
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const threshold = 70; // Soglia in pixel per il cambio slide
+        if (dragOffset < -threshold) {
+            next();
+        } else if (dragOffset > threshold) {
+            prev();
         }
+        
+        // Resetta l'offset per avviare l'animazione di snap GSAP
+        dragOffset = 0;
     }
 
     // ─── Touch Drag sulla barra dei Dot ────────────────────────────────────────
@@ -149,8 +186,9 @@
         <div class="carousel-viewport">
             <div
                 class="carousel-track"
-                use:horizontalCarousel={{ activeIndex }}
+                use:horizontalCarousel={{ activeIndex, gap: 24, dragOffset }}
                 ontouchstart={handleTouchStart}
+                ontouchmove={handleTouchMove}
                 ontouchend={handleTouchEnd}
                 role="group"
                 aria-label="Archetypes Carousel Track"
@@ -166,6 +204,7 @@
                             isPlaying={i === activeIndex}
                             loop={!autoplayActive}
                             onVideoEnded={i === activeIndex ? handleVideoEnded : undefined}
+                            onTimeUpdate={i === activeIndex ? handleVideoTimeUpdate : undefined}
                             showTooltip={false}
                         />
                         <!-- Clic sulle card parziali laterali per centrarle -->
@@ -198,7 +237,15 @@
                         class:active={i === activeIndex}
                         onclick={() => selectIndex(i)}
                         aria-label="Vai alla card {i + 1}"
-                    ></button>
+                    >
+                        {#if i === activeIndex}
+                            <span
+                                class="dot-progress"
+                                class:no-transition={progressRatio === 0}
+                                style="width: {progressRatio * 100}%"
+                            ></span>
+                        {/if}
+                    </button>
                 {/each}
             </div>
         </div>
@@ -354,13 +401,43 @@
         border: none;
         padding: 0;
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
         transition: transform var(--transition-duration-normal) var(--easing-standard),
-                    background-color var(--transition-duration-normal) var(--easing-standard);
+                    background-color var(--transition-duration-normal) var(--easing-standard),
+                    width var(--transition-duration-normal) var(--easing-standard),
+                    border-radius var(--transition-duration-normal) var(--easing-standard);
     }
 
     .dot-button.active {
-        transform: scale(1.6);
+        width: 24px; /* Commento solo il PERCHÉ: allunga la pillola attiva a forma di riga per visualizzare il progresso temporale del video */
+        border-radius: 9999px;
+        background-color: color-mix(
+            in srgb,
+            var(--neutral-800) 20%,
+            transparent
+        );
+        transform: scale(1.0); /* Rimuove lo scale del dot attivo poiché la larghezza è ora gestita esplicitamente in pixel */
+    }
+
+    .dot-progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0%;
+        border-radius: 9999px;
         background-color: var(--neutral-800);
+        pointer-events: none;
+        /* Commento solo il PERCHÉ: applica una transizione lineare fluida sulla larghezza 
+           per ammorbidire gli scatti intermedi derivanti dagli eventi timeupdate del video nativo */
+        transition: width 0.15s linear;
+    }
+
+    .dot-progress.no-transition {
+        /* Commento solo il PERCHÉ: disattiva temporaneamente la transizione quando il progresso si azzera 
+           per evitare l'animazione di scivolamento all'indietro della barra */
+        transition: none !important;
     }
 
     .desktop-only {

@@ -12,7 +12,8 @@
 	 *   imageSrc?: string,
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
 	 *   duration?: number,
-	 *   active?: boolean
+	 *   active?: boolean,
+	 *   flipped?: boolean
 	 * }}
 	 */
 	let {
@@ -24,7 +25,8 @@
 		imageSrc = "",
 		type = 'favorito',
 		duration = 1.0,
-		active = true
+		active = true,
+		flipped = false
 	} = $props();
 
 	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
@@ -65,7 +67,7 @@
 
 <div
 	class="athlete-card-container"
-	use:flipCard={{ axis, duration, active }}
+	use:flipCard={{ axis, duration, active, flipped }}
 	use:hoverLift={{ disabled: !active }}
 	role="button"
 	tabindex="0"
@@ -148,13 +150,16 @@
 		perspective: 1200px;
 		will-change: transform;
 		-webkit-font-smoothing: subpixel-antialiased;
+		-webkit-backface-visibility: hidden;
 		backface-visibility: hidden;
+		border-radius: var(--radius-m);
 	}
 
 	.card-inner {
 		width: 100%;
 		height: 100%;
 		position: relative;
+		-webkit-transform-style: preserve-3d;
 		transform-style: preserve-3d;
 		border-radius: var(--radius-m);
 		will-change: transform;
@@ -167,22 +172,38 @@
 	.card-face {
 		position: absolute;
 		inset: 0;
+		-webkit-backface-visibility: hidden;
 		backface-visibility: hidden;
 		border-radius: var(--radius-m);
 		overflow: hidden;
 		-webkit-font-smoothing: subpixel-antialiased;
+		/* Commento solo il PERCHÉ: applica una maschera radiale trasparente fittizia per forzare WebKit/Safari 
+		   a ritagliare correttamente gli elementi figli trasformati in 3D lungo il raggio di curvatura del border-radius */
+		-webkit-mask-image: -webkit-radial-gradient(white, black);
+		mask-image: radial-gradient(white, black);
+	}
+
+	/* Commento solo il PERCHÉ: applica backface-visibility hidden a tutti i discendenti delle facce 
+	   per impedire a WebKit di ignorare il constraint 3D a causa di nuovi render layer interni (es. immagini, overlay) */
+	.card-face * {
+		-webkit-backface-visibility: hidden;
+		backface-visibility: hidden;
 	}
 
 	.card-front {
 		user-select: none;
+		transform: rotateY(0deg) translateZ(1px);
+		-webkit-transform: rotateY(0deg) translateZ(1px);
 	}
 
 	.card-back.rotate-y {
-		transform: rotateY(180deg);
+		transform: rotateY(180deg) translateZ(1px);
+		-webkit-transform: rotateY(180deg) translateZ(1px);
 	}
 
 	.card-back.rotate-x {
-		transform: rotateX(180deg);
+		transform: rotateX(180deg) translateZ(1px);
+		-webkit-transform: rotateX(180deg) translateZ(1px);
 	}
 
 	.background-glass {
@@ -300,11 +321,19 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: flex-start;
+		gap: var(--spacing-2, 16px);
 		width: 100%;
 		flex: 1;
 		padding-bottom: var(--spacing-4, 32px);
 		box-sizing: border-box;
+		overflow-y: auto;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.info-retro::-webkit-scrollbar {
+		display: none;
 	}
 
 	.context-text {
@@ -340,5 +369,32 @@
 		font-weight: var(--text-card-back-quote-weight);
 		text-align: center;
 		white-space: pre-line;
+	}
+
+	@media (max-width: 768px) {
+		.athlete-card-container {
+			/* Commento solo il PERCHÉ: allinea le dimensioni delle card a 290px x 380px su mobile 
+			   per garantire consistenza con i caroselli di home e about */
+			width: 290px;
+			height: 380px;
+		}
+
+		.name-back {
+			height: 60px;
+			font-size: var(--text-m);
+		}
+
+		.info-retro {
+			padding-bottom: var(--spacing-2);
+			gap: var(--spacing-1);
+		}
+
+		.context-text {
+			line-height: 16px;
+		}
+
+		.quote-text {
+			line-height: 18px;
+		}
 	}
 </style>

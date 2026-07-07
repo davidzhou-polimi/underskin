@@ -28,7 +28,13 @@
 	const motion = new AthleteCarouselMotion(() => filteredAthletes.length);
 
 	// Stato di UI locale al componente (il movimento è di motion)
-	let isFlipped = $state(false);
+	/** @type {boolean[]} */
+	let flippedStates = $state([]);
+	$effect(() => {
+		if (filteredAthletes.length > 0 && flippedStates.length !== filteredAthletes.length) {
+			flippedStates = new Array(filteredAthletes.length).fill(false);
+		}
+	});
 	/** @type {number | null} */
 	let hoveredIndex = $state(null);
 
@@ -43,15 +49,20 @@
 		motion.isDragging || motion.inertiaVelocity !== 0 || Math.abs(motion.displayedIndex - motion.targetIndex) > 0.001
 	);
 
-	// Reset flip state when user slides to another athlete
-	$effect(() => {
-		if (activeIndex !== undefined) {
-			isFlipped = false;
-		}
-	});
-
 	// Stato per tracciare se il mouse è posizionato all'interno della zona di drag
 	let isMouseOverDragZone = $state(false);
+
+	// Commento solo il PERCHÉ: resetta lo stato flipped delle card non attive solo quando il movimento è ultimato, 
+	// evitando rotazioni anomale della card in primo piano mentre scivola via durante lo swipe.
+	$effect(() => {
+		if (!isMoving && flippedStates.length > 0) {
+			flippedStates.forEach((_, idx) => {
+				if (idx !== activeIndex) {
+					flippedStates[idx] = false;
+				}
+			});
+		}
+	});
 
 	// Commento solo il PERCHÉ: l'$effect gestisce solo lo stato interno hoveredIndex.
 	// Il ciclo di vita del tooltip è completamente delegato agli handler mouse
@@ -67,6 +78,7 @@
 
 	// Pausa/ripresa dell'autoplay in base ad hover e drag
 	$effect(() => {
+		if (motion.autoplayDisabled) return;
 		if (hoveredIndex !== null || motion.isDragging) {
 			motion.pauseAutoplay();
 		} else {
@@ -76,6 +88,7 @@
 
 	// Restart dell'autoplay ogni volta che il carosello termina un movimento (drag, inerzia o navigazione)
 	$effect(() => {
+		if (motion.autoplayDisabled) return;
 		if (!isMoving) {
 			motion.restartAutoplay();
 			// Commento solo il PERCHÉ: fermiamo l'autoplay se l'utente è in hover sulla card stabilizzata
@@ -86,7 +99,7 @@
 	// Commento solo il PERCHÉ: registriamo un mousemove temporaneo sul window solo quando la card è girata e in hover.
 	// Questo risolve i bug nativi del browser che perde/invia falsi eventi di mouseleave durante le rotazioni 3D.
 	$effect(() => {
-		if (isFlipped && hoveredIndex !== null) {
+		if (flippedStates[activeIndex] && hoveredIndex !== null) {
 			// L'elemento è risolto una volta all'attivazione dell'effect (hoveredIndex è fisso
 			// per tutta la sua vita: al cambio l'effect si ri-esegue): niente querySelectorAll per evento
 			const hoveredCardEl = document.querySelectorAll('.carousel-item')[hoveredIndex];
@@ -180,14 +193,20 @@
 	function handleTouchStart(e) {
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
+		motion.disableAutoplay();
+		motion.startDrag(touchStartX);
 	}
 
 	/** @param {TouchEvent} e */
-	function handleTouchEnd(e) {
-		const dx = e.changedTouches[0].clientX - touchStartX;
-		const dy = e.changedTouches[0].clientY - touchStartY;
-		if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-			dx > 0 ? motion.prev() : motion.next();
+	function handleTouchMove(e) {
+		if (!motion.isDragging) return;
+		// Rileva lo spostamento e lo propaga al gestore di drag GSAP
+		motion.drag(e.touches[0].clientX);
+	}
+
+	function handleTouchEnd() {
+		if (motion.isDragging) {
+			motion.endDrag();
 		}
 	}
 
@@ -211,6 +230,7 @@
 
 	/** @param {MouseEvent} e */
 	function handleNavMouseDown(e) {
+		motion.disableAutoplay();
 		motion.startDrag(e.clientX);
 	}
 
@@ -241,6 +261,38 @@
 			window.removeEventListener('mouseup', onWindowMouseUp);
 		};
 	});
+
+	// Mappatura colori per la barra di progresso dell'autoplay dei dot
+	const themeColors = {
+		favorito: 'var(--azzurro-600)',
+		infortunato: 'var(--arancione-600)',
+		insoddisfatto: 'var(--viola-500)'
+	};
+	let textColor = $derived(themeColors[type] || 'var(--azzurro-600)');
+
+	/** @param {number} idx */
+	function handleDotClick(idx) {
+		motion.disableAutoplay();
+		selectIndex(idx);
+	}
+
+	function handleActiveCardClick() {
+		if (!isMoving && flippedStates.length > 0) {
+			motion.disableAutoplay();
+			flippedStates[activeIndex] = !flippedStates[activeIndex];
+			if (flippedStates[activeIndex]) {
+				tooltip.hide();
+			}
+		}
+	}
+
+	/** @param {KeyboardEvent} e */
+	function handleHintKeydown(e) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleActiveCardClick();
+		}
+	}
 </script>
 
 <div
@@ -249,10 +301,21 @@
 	role="region"
 	aria-label="Visualizzatore atleti {PLURAL_TYPES[type] ?? ''}"
 >
+	<!-- Mobile Hint Text: "Clicca per approfondire" posizionata sopra le card come il titolo nella pagina About -->
+	<div 
+		class="mobile-hint-text mobile-only" 
+		onclick={handleActiveCardClick} 
+		role="button" 
+		tabindex="0" 
+		onkeydown={handleHintKeydown}
+	>
+		<span>Clicca per approfondire</span>
+	</div>
 	<div
 		class="carousel-track"
 		use:carousel={{ activeIndex: motion.displayedIndex, itemsCount: filteredAthletes.length, hoveredIndex, isDragging: motion.isDragging }}
 		ontouchstart={handleTouchStart}
+		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
 		role="group"
 		aria-label="Carousel Track"
@@ -260,16 +323,17 @@
 		{#each filteredAthletes as athlete, i (athlete.name)}
 			<div
 				class="carousel-item"
-				onmouseenter={!isMoving ? (i === activeIndex && !isFlipped ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
+				onmouseenter={!isMoving ? (i === activeIndex && !flippedStates[i] ? (e) => { tooltip.updatePosition(e.clientX, e.clientY); tooltip.show("Scopri", "semplice", "pointer"); hoveredIndex = i; } : () => { hoveredIndex = i; }) : null}
 				onmouseleave={() => {
 					if (!motion.isDragging) tooltip.hide();
 					// Commento solo il PERCHÉ: quando la card è girata deleghiamo la rimozione dell'hover al mousemove sul window per prevenire i bug di rotazione 3D
-					if (isFlipped) return;
+					if (flippedStates[i]) return;
 					hoveredIndex = null;
 				}}
 				onclick={i === activeIndex && !isMoving ? () => {
-					isFlipped = !isFlipped;
-					if (isFlipped) {
+					motion.disableAutoplay();
+					flippedStates[i] = !flippedStates[i];
+					if (flippedStates[i]) {
 						tooltip.hide();
 					}
 				} : null}
@@ -283,6 +347,7 @@
 					type={athlete.type}
 					number={"0" + (i + 1)}
 					active={i === activeIndex && !isMoving}
+					flipped={flippedStates[i]}
 				/>
 				{#if i !== activeIndex}
 					<button
@@ -296,7 +361,7 @@
 	</div>
 
 	<!-- Navigation: SVG uses full-bleed CSS transform so the arc exits the full section width -->
-	<div class="carousel-navigation">
+	<div class="carousel-navigation desktop-only">
 		<svg
 			class="svg-track"
 			viewBox={svgViewBox}
@@ -358,6 +423,30 @@
 			{/each}
 		</svg>
 	</div>
+
+	<!-- Mobile Dots Navigation: visibile solo su schermi piccoli (<= 768px) -->
+	<div class="dots-navigation-container mobile-only">
+		<div class="glass-effect dots-pill" role="tablist" aria-label="Controlli carosello atleti">
+			{#each filteredAthletes as _, idx}
+				<button
+					class="dot-button"
+					class:active={idx === activeIndex}
+					class:autoplay-disabled={motion.autoplayDisabled}
+					onclick={() => handleDotClick(idx)}
+					aria-label="Vai alla card {idx + 1}"
+					role="tab"
+					aria-selected={idx === activeIndex}
+				>
+					{#if idx === activeIndex && !motion.autoplayDisabled}
+						<div 
+							class="dot-progress" 
+							style:width={`${motion.autoplayProgress * 100}%`}
+						></div>
+					{/if}
+				</button>
+			{/each}
+		</div>
+	</div>
 </div>
 
 <style>
@@ -395,6 +484,7 @@
 		width: 357px;
 		height: 461px;
 		will-change: transform, opacity;
+		transform-style: preserve-3d;
 	}
 
 	.card-overlay {
@@ -438,5 +528,120 @@
 	/* Remove browser focus ring from SVG dots — they have a custom hover highlight */
 	:global(.carousel-dot:focus) {
 		outline: none;
+	}
+
+	/* --- Mobile Dots & Hint Navigation Styles --- */
+	.dots-navigation-container {
+		margin-top: var(--spacing-6);
+		z-index: 10;
+		display: none; /* Nasconde su desktop */
+	}
+
+	.dots-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-2);
+		padding: var(--spacing-2) var(--spacing-4);
+		border-radius: 9999px;
+	}
+
+	.dot-button {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background-color: var(--neutral-400);
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		position: relative;
+		overflow: hidden;
+		transition:
+			background-color var(--transition-duration-normal) var(--easing-standard),
+			width var(--transition-duration-normal) var(--easing-standard),
+			border-radius var(--transition-duration-normal) var(--easing-standard);
+	}
+
+	.dot-button.active {
+		width: 40px;
+		border-radius: 9999px;
+		background-color: color-mix(in srgb, var(--neutral-800) 20%, transparent);
+	}
+
+	.dot-button.active.autoplay-disabled {
+		background-color: var(--neutral-800) !important;
+	}
+
+	.dot-progress {
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 0%;
+		border-radius: 9999px;
+		background-color: var(--neutral-800);
+		pointer-events: none;
+	}
+
+	.mobile-hint-text {
+		display: none; /* Nasconde su desktop */
+	}
+
+	/* --- Responsive Overrides --- */
+	@media (max-width: 768px) {
+		.desktop-only {
+			display: none !important;
+		}
+
+		.mobile-only {
+			display: flex !important;
+		}
+
+		.carousel-track {
+			/* Commento solo il PERCHÉ: adatta l'altezza del track su mobile per alloggiare la card da 380px più l'offset verticale delle card retrostanti nello stack */
+			height: 420px;
+		}
+
+		.carousel-item {
+			width: 290px;
+			height: 380px;
+			top: calc(50% + 20px);
+		}
+
+		.dots-navigation-container.mobile-only {
+			display: flex !important;
+			justify-content: center;
+			width: 100%;
+			margin-top: var(--spacing-4);
+		}
+
+		.dot-button {
+			width: 6px;
+			height: 6px;
+		}
+
+		.dot-button.active {
+			width: 24px;
+		}
+
+		.mobile-hint-text.mobile-only {
+			display: flex !important;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+			margin-top: 0;
+			margin-bottom: var(--spacing-6);
+			color: var(--content-primary);
+			font-size: var(--text-l);
+			font-weight: var(--text-regular);
+			text-align: center;
+			cursor: pointer;
+			user-select: none;
+			outline: none;
+			transition: opacity var(--transition-duration-fast) var(--easing-standard);
+		}
+
+		.mobile-hint-text.mobile-only:active {
+			opacity: 0.6;
+		}
 	}
 </style>

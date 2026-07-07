@@ -32,11 +32,22 @@
     <div class="intro-container">
         <p class="first-text">Alcuni casi a</p>
         
+        <!-- Desktop: SVG con zoom cinematografico via viewBox nativo -->
         <svg class="zoom-svg" viewBox="0 0 1000 400" width="100%" height="100%">
             <g class="zoom-content">
                 <text class="zoom-text" x="500" text-anchor="middle" style:fill={textColor}><tspan x="500" dy="180">Milano Cortina</tspan><tspan x="500" dy="220" class="year-text">2026</tspan></text>
             </g>
         </svg>
+
+        <!-- Mobile: testo bold che riempie lo schermo, fade al posto dello zoom -->
+        <div class="zoom-text-mobile">
+            <p class="mobile-eyebrow">Alcuni casi a</p>
+            <div class="mobile-title-block" style:color={textColor}>
+                <span class="mobile-title-line">Milano</span>
+                <span class="mobile-title-line">Cortina</span>
+                <span class="mobile-year">2026</span>
+            </div>
+        </div>
     </div>
 
     <div class="next-section-content">
@@ -98,6 +109,66 @@
         /* Commento solo il PERCHÉ: allinea il testo zoom dell'SVG con il peso massimo (black) definito globalmente */
         font-weight: var(--text-black);
         line-height: 1.1;
+    }
+
+    /* ==========================================================================
+       MOBILE LAYOUT
+       ========================================================================== */
+
+    .zoom-text-mobile {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--spacing-3);
+    }
+
+    .mobile-eyebrow {
+        font-size: var(--text-caption-size);
+        font-weight: var(--text-regular);
+        color: var(--content-primary);
+    }
+
+    .mobile-title-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .mobile-title-line {
+        display: block;
+        /* Commento solo il PERCHÉ: valore vw puro perché --text-3xl (80px) è il token massimo
+           ma non basta a riempire la larghezza dello schermo. 25vw = ~97px su 390px, che fa
+           sì che "Milano" e "Cortina" coprano quasi tutta la viewport mobile */
+        font-size: 25vw;
+        font-weight: var(--text-black);
+        line-height: 0.95;
+        letter-spacing: -0.02em;
+    }
+
+    .mobile-year {
+        /* Commento solo il PERCHÉ: vw puro allineato alla stessa logica di .mobile-title-line,
+           leggermente più piccolo (~66px su 390px) per dare gerarchia senza perdere il peso */
+        font-size: 17vw;
+        font-weight: var(--text-black);
+        letter-spacing: -0.01em;
+        line-height: 1;
+        margin-top: var(--spacing-2);
+    }
+
+    @media (max-width: 768px) {
+        .zoom-svg {
+            display: none;
+        }
+
+        /* Nasconde il .first-text desktop: l'eyebrow è dentro .zoom-text-mobile */
+        .first-text {
+            display: none;
+        }
+
+        .zoom-text-mobile {
+            display: flex;
+        }
     }
 
     .next-section-content {
