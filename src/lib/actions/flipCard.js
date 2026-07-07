@@ -7,6 +7,7 @@ import { gsap } from '$lib/utils/gsapSetup.js';
  * @property {string} [textSelector]
  * @property {number} [duration]
  * @property {boolean} [active]
+ * @property {boolean} [flipped]
  */
 
 /**
@@ -19,7 +20,8 @@ export function flipCard(node, params = {}) {
 		innerSelector = '.card-inner', 
 		textSelector = '.back-text',
 		duration = 1.0,
-		active = true
+		active = true,
+		flipped = false
 	} = params;
 
 	const innerCard = node.querySelector(innerSelector);
@@ -79,17 +81,12 @@ export function flipCard(node, params = {}) {
 		});
 	};
 
-	let isFlipped = false;
-	const onClick = () => {
-		isFlipped = !isFlipped;
-		if (isFlipped) {
-			flipToBack();
-		} else {
-			flipToFront();
-		}
-	};
-
-	node.addEventListener('click', onClick);
+	// Stato di rotazione iniziale
+	if (flipped) {
+		flipToBack();
+	} else {
+		flipToFront();
+	}
 
 	return {
 		/**
@@ -98,15 +95,25 @@ export function flipCard(node, params = {}) {
 		update(newParams) {
 			axis = newParams.axis ?? 'Y';
 			duration = newParams.duration ?? 1.0;
+			active = newParams.active ?? true;
+			const newFlipped = newParams.flipped ?? false;
+
+			if (newFlipped !== flipped) {
+				flipped = newFlipped;
+				if (flipped) {
+					flipToBack();
+				} else {
+					flipToFront();
+				}
+			}
 
 			// Ripristina lo stato iniziale per evitare che la card rimanga sul retro quando l'utente seleziona un altro atleta
-			if (newParams.active === false && isFlipped) {
-				isFlipped = false;
+			if (active === false && flipped) {
+				flipped = false;
 				flipToFront();
 			}
 		},
 		destroy() {
-			node.removeEventListener('click', onClick);
 			ctx.revert();
 		}
 	};
