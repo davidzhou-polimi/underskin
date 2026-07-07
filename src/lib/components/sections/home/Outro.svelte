@@ -187,7 +187,19 @@
 			>
 				Successivo
 			</button>
+		{:else}
+			<div class="mobile-next-placeholder" aria-hidden="true"></div>
 		{/if}
+
+		<div class="mobile-followup-copy">
+			<p class="mobile-mental-copy">
+				La salute mentale non &egrave; <br />separata dalla performance.
+			</p>
+
+			<p class="mobile-performance-copy gradient-text animate-gradient-text">
+				&egrave; la performance
+			</p>
+		</div>
 	</div>
 </section>
 
@@ -378,6 +390,49 @@
 			margin-top: 4rem;
 			flex-shrink: 0;
 			/* background-color, backdrop-filter, border: forniti interamente da .glass-effect */
+		}
+
+		.mobile-next-placeholder {
+			/* Commento solo il PERCHÉ: evita di spingere verso il basso il copy finale
+			   quando il bottone scompare sull'ultimo stage mobile */
+			height: 0;
+			margin-top: 0;
+			flex-shrink: 0;
+		}
+
+		.mobile-followup-copy {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 120px;
+			width: 100%;
+			margin-top: 24px;
+			flex-shrink: 0;
+		}
+
+		.mobile-mental-copy {
+			font-family: 'Rethink Sans', sans-serif;
+			font-size: 24px;
+			font-weight: 500;
+			line-height: 1.2;
+			color: var(--content-primary);
+			text-align: center;
+			margin: 0;
+			flex-shrink: 0;
+		}
+
+		.mobile-performance-copy {
+			--gradient-c1: var(--archetipi-insoddisfatto);
+			--gradient-c2: var(--azzurro-500);
+			--gradient-c3: var(--arancione-500);
+
+			font-family: 'Rethink Sans', sans-serif;
+			font-size: 40px;
+			font-weight: 800;
+			line-height: 1.1;
+			text-align: center;
+			margin: 0;
+			flex-shrink: 0;
 		}
 	}
 </style>
