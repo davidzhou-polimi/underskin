@@ -1,5 +1,9 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { scrollTo } from '$lib/stores/lenis.svelte.js';
+import { lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
+
+// Durata del micro-stop all'ingresso: quanto basta a uccidere il momentum del flick
+// e far registrare la sezione all'occhio, senza che il freno sembri un blocco.
+const ENTRY_STOP_SECONDS = 0.6;
 
 /**
  * @typedef {{ target: number, lines: string[] }} OutroStage
@@ -8,9 +12,9 @@ import { scrollTo } from '$lib/stores/lenis.svelte.js';
 /**
  * Azione Svelte per la variante mobile della sezione Outro: un carosello solo-testo
  * pilotato dal pulsante Successivo/Precedente (l'indice attivo arriva dal componente).
- * Anima il count-up della percentuale e il cross-fade delle didascalie; inoltre "aggancia"
- * la sezione a schermo intero quando entra nel viewport, così chi scrolla velocemente
- * non la salta senza vederla (scroll comunque libero, nessun lock).
+ * Anima il count-up della percentuale e il cross-fade delle didascalie; inoltre all'ingresso
+ * ferma davvero lo scroll (micro-stop: lock CSS sul posto che uccide il momentum del flick);
+ * subito dopo lo scroll torna libero e il pin sticky completa l'inquadratura.
  *
  * @param {HTMLElement} node - La sezione `.outro-scroll-container`
  * @param {{ stages: OutroStage[], activeIndex?: number }} params
@@ -77,29 +81,52 @@ export function outroCarouselMobile(node, params) {
 			});
 		};
 
-		// Commento solo il PERCHÉ: il fermo vero è il pin CSS (sticky su 200svh) in Outro.svelte,
-		// che regge anche l'inerzia del touch nativo; questo snap all'ingresso è il rifinitore
-		// per wheel/trackpad, allineando il carosello a schermo intero appena entra in viewport.
-		// Il flag evita ri-agganci finché non si riesce da sopra.
-		let hasSnapped = false;
+		// Commento solo il PERCHÉ: con syncTouch:false lo scroll touch è NATIVO e il momentum di
+		// un flick non si ferma né con snap né con preventDefault a dito sollevato: l'unico freno
+		// reale è il lock CSS (html.scroll-locked → overflow hidden). Il freeze scatta SOLO quando
+		// il top della sezione tocca il top del viewport: grazie al pin sticky (200svh) lì
+		// l'inquadratura è già piena, quindi il fermo si legge come "arrivato sull'Outro" — un
+		// confine più alto (55%/75%, provati) congelava a cavallo della sezione precedente e
+		// sembrava uno stallo. Un fling percorre il tratto mancante in un paio di frame, la
+		// protezione non cambia. Niente salti né glide programmatici (scattosi, provati anche
+		// quelli): si congela sul posto e basta. Il flag si ri-arma solo riuscendo da sopra, e
+		// gli eventi emessi durante il freeze vengono ignorati: a scroll congelato (lenis.stop)
+		// i trigger sparano onLeaveBack spuri che ri-armavano il freno (blocchi ripetuti).
+		let hasStopped = false;
+		let stopLockActive = false;
+		/** @type {gsap.core.Tween | null} */
+		let unlockCall = null;
+
 		ctx.add(() => {
 			ScrollTrigger.create({
 				trigger: node,
-				start: 'top 75%',
+				start: 'top top+=2',
 				end: 'bottom top',
 				onEnter: () => {
-					if (hasSnapped) return;
-					hasSnapped = true;
-					scrollTo(node);
+					if (hasStopped) return;
+					hasStopped = true;
+					lockScroll();
+					stopLockActive = true;
+					unlockCall = gsap.delayedCall(ENTRY_STOP_SECONDS, () => {
+						stopLockActive = false;
+						unlockScroll();
+					});
 				},
 				onLeaveBack: () => {
-					hasSnapped = false;
+					if (stopLockActive) return;
+					hasStopped = false;
 				}
 			});
 		});
 
 		return () => {
 			applyStage = null;
+			unlockCall?.kill();
+			// Mai lasciare la pagina congelata se si smonta/cambia breakpoint durante il micro-stop
+			if (stopLockActive) {
+				stopLockActive = false;
+				unlockScroll();
+			}
 			ctx.revert();
 		};
 	});

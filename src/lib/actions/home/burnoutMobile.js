@@ -7,17 +7,19 @@ const FILL_SECONDS = 2;
 const DECAY_SECONDS = 1.2;
 
 /**
- * Azione Svelte per la variante mobile della sezione Burnout: scrollytelling verticale
- * (reveal di "È la performance.", uscita dei testi, ingresso del cerchio tratteggiato)
- * che culmina in un press-and-hold. Tenendo premuto, un cerchio pieno riempie quello
- * tratteggiato mentre la parola BURNOUT cresce tremolando sullo sfondo; a riempimento
- * completo la parola esplode e svanisce, entrano i testi finali e lo scroll si sblocca.
+ * Azione Svelte per la variante mobile della sezione Burnout, composta da due blocchi
+ * sequenziali in flusso:
+ * 1. `.m-text-block` — pinnato via sticky: lo scroll rivela "È la performance." sotto il
+ *    sottotitolo, poi (esaurito il pin) il blocco scorre via naturalmente verso l'alto.
+ * 2. `.m-hold-block` — il press-and-hold: tenendo premuto, un cerchio pieno riempie quello
+ *    tratteggiato mentre la parola BURNOUT cresce tremolando sullo sfondo; a riempimento
+ *    completo la parola esplode e svanisce, entrano i testi finali e lo scroll si sblocca.
  *
- * Lo scroll verso il basso è bloccato sul fondo della sezione finché l'interazione non è
- * stata completata almeno una volta (stessa logica direzionale di gameDownLock.js, ma
- * agganciata al bordo di FINE sezione perché il giochino sta in fondo allo scrub).
+ * Lo scroll verso il basso è bloccato in cima al blocco del cerchio finché l'interazione
+ * non è stata completata almeno una volta (pattern direzionale di gameDownLock.js, più il
+ * re-ancoraggio anti-fling: preventDefault non ferma un'inerzia già partita).
  *
- * @param {HTMLElement} node - Il contenitore esterno della sezione (sticky interno)
+ * @param {HTMLElement} node - Il contenitore esterno della sezione
  */
 export function burnoutMobile(node) {
 	// Persiste fuori dal branch matchMedia: un resize desktop↔mobile non deve far rigiocare l'attività
@@ -26,14 +28,19 @@ export function burnoutMobile(node) {
 	const mm = gsap.matchMedia();
 
 	mm.add('(max-width: 768px)', () => {
-		const introEl = node.querySelector('.m-intro');
+		const textBlockEl = node.querySelector('.m-text-block');
 		const titleEl = node.querySelector('.m-title');
+		const holdPinEl = node.querySelector('.m-hold-pin');
 		const holdEl = node.querySelector('.m-hold');
+		const holdTargetEl = node.querySelector('.m-hold-target');
 		const fillEl = node.querySelector('.m-hold-fill');
 		const wordEl = node.querySelector('.m-burnout-word');
 		const outroEl = node.querySelector('.m-outro');
 
-		if (!introEl || !titleEl || !holdEl || !fillEl || !wordEl || !outroEl) return;
+		if (
+			!textBlockEl || !titleEl || !holdPinEl || !holdEl ||
+			!holdTargetEl || !fillEl || !wordEl || !outroEl
+		) return;
 
 		const outroChildren = outroEl.children;
 
@@ -42,61 +49,34 @@ export function burnoutMobile(node) {
 		/** @param {number} v */
 		const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
-		// ─── Fasi guidate dallo scroll ────────────────────────────────────────
-
-		// Ultimo valore della fase di ingresso del cerchio: la pressione è valida solo a scena pronta
-		let holdStageReady = 0;
+		// ─── Reveal del titolo lungo il pin del blocco testi ──────────────────
 
 		/** @param {number} progress */
-		function apply(progress) {
-			// Bande: reveal 0→0.3, plateau di lettura 0.3→0.5, poi scorrimento sequenziale 0.5→0.9.
-			// Testi e giochino sono due schermate distinte: niente cross-fade, l'intro scorre via
-			// verso l'alto mentre il cerchio entra da sotto, come un normale scroll tra sezioni impilate.
-			const reveal = clamp01(progress / 0.3);
-			const swap = clamp01((progress - 0.5) / 0.4);
-			holdStageReady = swap;
-
-			// "È la performance." emerge sotto il sottotitolo già visibile
+		function applyReveal(progress) {
+			// Il reveal occupa il primo 60% del pin; il resto è plateau di lettura
+			// prima che il blocco scorra via.
+			const reveal = clamp01(progress / 0.6);
 			gsap.set(titleEl, {
 				opacity: reveal,
 				y: (1 - reveal) * 30,
 				filter: `blur(${(1 - reveal) * 8}px)`
 			});
-
-			gsap.set(introEl, { yPercent: -swap * 100 });
-
-			// Una volta completato il giochino non torna più.
-			// autoAlpha (e non opacity): a cerchio invisibile il bersaglio touch-action:none deve
-			// anche sparire dal hit-testing per non bloccare i gesti di scroll delle fasi di testo.
-			gsap.set(holdEl, {
-				autoAlpha: hasCompleted || swap === 0 ? 0 : 1,
-				yPercent: (1 - swap) * 100
-			});
-
-			// Dopo il completamento i testi finali prendono il posto del cerchio nella seconda
-			// schermata, così risalendo si torna ai testi introduttivi senza sovrapposizioni
-			if (hasCompleted) {
-				gsap.set(outroEl, {
-					autoAlpha: swap === 0 ? 0 : 1,
-					yPercent: (1 - swap) * 100
-				});
-			}
 		}
 
-		// ─── Lock direzionale sul fondo della sezione ─────────────────────────
+		// ─── Lock direzionale in cima al blocco del cerchio ───────────────────
 
 		let downLocked = false;
 
 		/**
 		 * @param {boolean} active
-		 * @param {number} [snapPosition] - posizione scroll del confine di fine sezione
+		 * @param {number} [snapPosition] - posizione scroll che allinea il blocco a schermo intero
 		 */
 		function setDownLock(active, snapPosition) {
 			if (active && !hasCompleted) {
 				if (!downLocked) {
 					downLocked = true;
 					lockScrollDown();
-					// Incolla la sezione al fondo, uccidendo l'eventuale overshoot di inerzia di Lenis
+					// Incolla il blocco al top, uccidendo l'eventuale overshoot di inerzia di Lenis
 					if (snapPosition !== undefined) {
 						getLenis()?.scrollTo(snapPosition, { immediate: true, force: true });
 					}
@@ -167,8 +147,7 @@ export function burnoutMobile(node) {
 		}
 
 		function onPointerDown() {
-			// La pressione conta solo quando il cerchio è pienamente in scena
-			if (hasCompleted || holdStageReady < 0.9) return;
+			if (hasCompleted) return;
 			isPressed = true;
 		}
 
@@ -176,7 +155,7 @@ export function burnoutMobile(node) {
 			isPressed = false;
 		}
 
-		holdEl.addEventListener('pointerdown', onPointerDown);
+		holdTargetEl.addEventListener('pointerdown', onPointerDown);
 		window.addEventListener('pointerup', onPointerUp);
 		window.addEventListener('pointercancel', onPointerUp);
 		gsap.ticker.add(tick);
@@ -188,21 +167,23 @@ export function burnoutMobile(node) {
 
 		ctx.add(() => {
 			scrubTrigger = ScrollTrigger.create({
-				trigger: node,
+				trigger: textBlockEl,
 				start: 'top top',
 				end: 'bottom bottom',
 				scrub: true,
 				invalidateOnRefresh: true,
-				onUpdate: (self) => apply(self.progress)
+				onUpdate: (self) => applyReveal(self.progress)
 			});
 
 			// Commento solo il PERCHÉ: callback direzionali (non onToggle) come in gameDownLock.js,
 			// per evitare che il jitter sub-pixel sul confine generi cicli unlock→lock→scrollTo.
-			// Lo start anticipato di 2px tiene il target dello scrollTo dentro il range attivo.
+			// Lo start spostato di 2px tiene il target dello scrollTo dentro il range attivo.
 			let snapPosition = 0;
 			ScrollTrigger.create({
-				trigger: node,
-				start: 'bottom bottom+=2',
+				// Il trigger è il wrapper del pin (in flusso): il blocco sticky al suo interno
+				// si muove e darebbe confini instabili
+				trigger: holdPinEl,
+				start: 'top top+=2',
 				end: 'bottom top',
 				onEnter: (self) => {
 					snapPosition = self.start + 2;
@@ -217,19 +198,33 @@ export function burnoutMobile(node) {
 				// sollevato non arrivano più touchmove da bloccare), quindi rientrando con inerzia
 				// il confine veniva superato. Finché il lock è attivo, ogni frame oltre il confine
 				// viene riagganciato: il fling muore contro il muro invece di attraversarlo.
+				// Il ramo !downLocked è il failsafe per gli ingressi che sfuggono ai callback
+				// direzionali (es. secondo tentativo dopo una risalita): dentro il range senza
+				// lock e senza completamento = stato illegale, si ri-aggancia subito.
 				onUpdate: (self) => {
-					if (downLocked && self.scroll() > snapPosition + 1) {
+					if (hasCompleted) return;
+					if (!downLocked && self.isActive) {
+						snapPosition = self.start + 2;
+						setDownLock(true, snapPosition);
+					} else if (downLocked && self.scroll() > snapPosition + 1) {
 						getLenis()?.scrollTo(snapPosition, { immediate: true, force: true });
 					}
 				}
 			});
 		});
 
-		// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto (refresh/navigazione)
-		apply(scrubTrigger ? scrubTrigger.progress : 0);
+		// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto o dopo un
+		// resize desktop↔mobile successivo al completamento
+		applyReveal(scrubTrigger ? scrubTrigger.progress : 0);
+		if (hasCompleted) {
+			ctx.add(() => {
+				gsap.set(holdEl, { autoAlpha: 0 });
+				gsap.set(outroEl, { opacity: 1 });
+			});
+		}
 
 		return () => {
-			holdEl.removeEventListener('pointerdown', onPointerDown);
+			holdTargetEl.removeEventListener('pointerdown', onPointerDown);
 			window.removeEventListener('pointerup', onPointerUp);
 			window.removeEventListener('pointercancel', onPointerUp);
 			gsap.ticker.remove(tick);

@@ -26,16 +26,24 @@
             <div class="glass-effect glass-text"></div>
         </div>
 
-        <div class="mobile-flow">
-            <div class="m-word-layer" aria-hidden="true">
-                <div class="glass-effect m-burnout-word"></div>
-            </div>
+    </div>
 
-            <div class="m-intro">
+    <!-- Su mobile la sezione è una sequenza in flusso: blocco testi pinnato che poi scorre
+         via, seguito dal blocco del cerchio. Vive FUORI dalla sticky-viewport desktop. -->
+    <div class="mobile-flow">
+        <div class="m-text-block">
+            <div class="m-text-sticky">
                 <h4 class="subtitle">La salute mentale non è<br />separata dalla performance.</h4>
                 <h2 class="m-title gradient-text animate-gradient-text my-archetypes-color">
                     È la performance.
                 </h2>
+            </div>
+        </div>
+
+        <div class="m-hold-pin">
+        <div class="m-hold-block">
+            <div class="m-word-layer" aria-hidden="true">
+                <div class="glass-effect m-burnout-word"></div>
             </div>
 
             <div class="m-hold">
@@ -64,7 +72,7 @@
                 </h4>
             </div>
         </div>
-
+        </div>
     </div>
 </section>
 
@@ -187,23 +195,65 @@
     }
 
     @media (max-width: 768px) {
-        /* Commento solo il PERCHÉ: su mobile lo scrub copre reveal del titolo, plateau di
-           lettura e scorrimento sequenziale testi→cerchio: 400vh danno a ogni fase circa una
-           schermata di corsa; il press-and-hold avviene poi a sezione ferma sul fondo */
+        /* Commento solo il PERCHÉ: su mobile testi e cerchio sono due blocchi sequenziali in
+           flusso — niente contenitore di scrub: l'altezza la dettano i blocchi stessi */
         .performance-outer-container {
-            height: 400vh;
+            height: auto;
         }
 
-        .text-container,
-        .marquee-container {
+        .sticky-viewport {
             display: none;
         }
 
         .mobile-flow {
             display: block;
-            position: absolute;
-            inset: 0;
-            z-index: 1;
+        }
+
+        /* Commento solo il PERCHÉ: 250svh = 150svh di pin (reveal lento del titolo + plateau
+           di lettura); esaurito il pin il blocco scorre via naturalmente verso l'alto */
+        .m-text-block {
+            height: 250svh;
+        }
+
+        .m-text-sticky {
+            position: sticky;
+            top: 0;
+            height: 100svh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-7);
+            padding: 0 var(--spacing-4);
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .m-title {
+            margin: 0;
+            line-height: 1.2;
+            /* Stato iniziale (progress 0): rivelato dallo scroll, evita il flash pre-action */
+            opacity: 0;
+        }
+
+        /* Commento solo il PERCHÉ: 200svh = 100svh di pin per il blocco del cerchio: così la
+           scena si ferma sotto gli occhi anche risalendo dal fondo pagina, non solo scendendo */
+        .m-hold-pin {
+            height: 200svh;
+        }
+
+        .m-hold-block {
+            position: sticky;
+            top: 0;
+            height: 100svh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Il cerchio resta ancorato nella fascia bassa dello schermo */
+            justify-content: flex-end;
+            padding-bottom: var(--spacing-12);
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .m-word-layer {
@@ -232,52 +282,19 @@
             will-change: transform, opacity;
         }
 
-        .m-intro {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--spacing-7);
-            padding: 0 var(--spacing-4);
-            text-align: center;
-            pointer-events: none;
-            z-index: 2;
-            /* Scorre via verso l'alto (translate scrubbato), non fa cross-fade col giochino */
-            will-change: transform;
-        }
-
-        .m-title {
-            margin: 0;
-            line-height: 1.2;
-            /* Stato iniziale (progress 0): rivelato dallo scroll, evita il flash pre-action */
-            opacity: 0;
-        }
-
         .m-hold {
-            position: absolute;
-            inset: 0;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             gap: var(--spacing-4);
-            /* Commento solo il PERCHÉ: solo il bersaglio circolare cattura i tocchi; il layer
-               a schermo intero deve lasciar passare i gesti di scroll nelle fasi di testo */
-            pointer-events: none;
-            z-index: 3;
-            /* Stato iniziale: entra da sotto dopo l'uscita dei testi (autoAlpha via action) */
-            opacity: 0;
-            visibility: hidden;
-            will-change: transform;
+            z-index: 2;
         }
 
         .m-hold-target {
             position: relative;
             width: min(32vw, 130px);
             aspect-ratio: 1;
-            pointer-events: auto;
             /* La pressione prolungata non deve diventare scroll nativo né selezione */
             touch-action: none;
             user-select: none;
@@ -319,9 +336,8 @@
             padding: 0 var(--spacing-4);
             text-align: center;
             pointer-events: none;
-            z-index: 4;
+            z-index: 3;
             opacity: 0;
-            will-change: transform;
         }
     }
 </style>
