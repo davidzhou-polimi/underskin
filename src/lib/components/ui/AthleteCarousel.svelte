@@ -92,21 +92,37 @@
 			const hoveredCardEl = document.querySelectorAll('.carousel-item')[hoveredIndex];
 			if (!hoveredCardEl) return;
 
+			let rafId = 0;
+			// ⚡ Bolt Optimization: Throttle getBoundingClientRect using requestAnimationFrame
+			// to avoid layout thrashing during the high-frequency mousemove event while
+			// correctly handling scrolling or CSS transitions that change the card's position/size.
 			/** @param {MouseEvent} e */
 			const onWindowMouseMove = (e) => {
-				const rect = hoveredCardEl.getBoundingClientRect();
-				const isInside = (
-					e.clientX >= rect.left &&
-					e.clientX <= rect.right &&
-					e.clientY >= rect.top &&
-					e.clientY <= rect.bottom
-				);
-				if (!isInside) {
-					hoveredIndex = null;
-				}
+				const clientX = e.clientX;
+				const clientY = e.clientY;
+
+				if (rafId) return;
+
+				rafId = requestAnimationFrame(() => {
+					rafId = 0;
+					// Esegui la lettura del DOM (getBoundingClientRect) all'interno del frame di animazione
+					const rect = hoveredCardEl.getBoundingClientRect();
+					const isInside = (
+						clientX >= rect.left &&
+						clientX <= rect.right &&
+						clientY >= rect.top &&
+						clientY <= rect.bottom
+					);
+					if (!isInside) {
+						hoveredIndex = null;
+					}
+				});
 			};
-			window.addEventListener('mousemove', onWindowMouseMove);
-			return () => window.removeEventListener('mousemove', onWindowMouseMove);
+			window.addEventListener('mousemove', onWindowMouseMove, { passive: true });
+			return () => {
+				window.removeEventListener('mousemove', onWindowMouseMove);
+				if (rafId) cancelAnimationFrame(rafId);
+			};
 		}
 	});
 
