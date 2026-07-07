@@ -11,13 +11,13 @@
 
   // `rot` è usato solo dalla variante mobile (obliquità del fumetto nella pila); ignorato dal desktop.
   let thoughts = $state([
-    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left', rot: -4 },
-    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right', rot: 3 },
-    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left', rot: -3 },
-    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '68%', isScattered: false, tailDir: 'right', rot: 5 },
-    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '72%', sLeft: '35%', isScattered: false, tailDir: 'right', rot: -2 },
-    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right', rot: 4 },
-    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left', rot: -3 }
+    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left', rot: -2.5 },
+    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right', rot: 2 },
+    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left', rot: -2 },
+    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '68%', isScattered: false, tailDir: 'right', rot: 3 },
+    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '72%', sLeft: '35%', isScattered: false, tailDir: 'right', rot: -1 },
+    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right', rot: 2.5 },
+    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left', rot: -2 }
   ]);
 
   let isIntroDone = $state(false);
@@ -286,10 +286,11 @@
       z-index: 10;
     }
 
-    /* Spaziatura verticale volutamente irregolare (ravvicinata), ottenuta variando i token di spacing */
-    .mobile-thought + .mobile-thought { margin-top: var(--spacing-4); }
-    .mobile-thought:nth-child(2n) { margin-top: var(--spacing-5); }
-    .mobile-thought:nth-child(3n) { margin-top: var(--spacing-3); }
+    /* Sovrapposizione verticale volutamente irregolare: margin negative così ogni fumetto sconfina
+       un po' sul precedente (il successivo, più avanti nel DOM, resta sopra). */
+    .mobile-thought + .mobile-thought { margin-top: calc(var(--spacing-1) * -1); }
+    .mobile-thought:nth-child(2n) { margin-top: calc(var(--spacing-2) * -1); }
+    .mobile-thought:nth-child(3n) { margin-top: 0; }
 
     .mobile-thought .thought-bubble {
       width: auto;
