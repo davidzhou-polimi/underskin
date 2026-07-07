@@ -29,11 +29,20 @@ export function createGameDownLock(node, initialCompleted = false) {
 		}
 	}
 
+	// Commento solo il PERCHÉ: usiamo callback DIREZIONALI invece di onToggle(isActive).
+	// setDownLock esegue uno scrollTo immediato sul bordo 'start' dello stesso trigger che
+	// governa il lock: con onToggle il jitter sub-pixel su quel confine faceva oscillare isActive
+	// (true→false→true) generando un ciclo unlock→lock→scrollTo = schermo che trema. Ingaggiando
+	// solo su ingresso (enter/enterBack) e rilasciando solo su risalita genuina (leaveBack) o a
+	// completamento, una disattivazione spuria non ricrea più il ciclo e lo scrollTo parte una volta sola.
+	// Lo start spostato di 2px tiene il target dello scrollTo dentro il range attivo, evitando il micro-jitter di confine.
 	const trigger = ScrollTrigger.create({
 		trigger: node,
-		start: 'top top',
+		start: 'top top+=2',
 		end: 'bottom top',
-		onToggle: (self) => setDownLock(self.isActive)
+		onEnter: () => setDownLock(true),
+		onEnterBack: () => setDownLock(true),
+		onLeaveBack: () => setDownLock(false)
 	});
 
 	return {

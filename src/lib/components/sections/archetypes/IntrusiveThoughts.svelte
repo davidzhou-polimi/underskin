@@ -1,20 +1,23 @@
 <script>
   import { draggableThought } from '$lib/actions/archetypes/draggableThought.js';
   import { thoughtsIntro } from '$lib/actions/archetypes/thoughtsIntro.js';
+  import { thoughtsStackReveal } from '$lib/actions/archetypes/thoughtsStackReveal.js';
   import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
   import { scrollHintAfterUnlock } from '$lib/utils/scrollHintAfterUnlock.js';
   import { fade } from 'svelte/transition';
+  import { media } from '$lib/stores/mediaQuery.svelte.js';
 
   let container = $state();
-  
+
+  // `rot` è usato solo dalla variante mobile (obliquità del fumetto nella pila); ignorato dal desktop.
   let thoughts = $state([
-    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left' },
-    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right' },
-    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left' },
-    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '68%', isScattered: false, tailDir: 'right' },
-    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '72%', sLeft: '35%', isScattered: false, tailDir: 'right' },
-    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right' },
-    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left' }
+    { id: 1, text: "\"È IMBATTIBILE\"", cTop: '32%', cLeft: '28%', sTop: '10%', sLeft: '14%', isScattered: false, tailDir: 'left', rot: -4 },
+    { id: 2, text: "\"È OVVIO CHE VINCA\"", cTop: '35%', cLeft: '48%', sTop: '12%', sLeft: '58%', isScattered: false, tailDir: 'right', rot: 3 },
+    { id: 3, text: "\"NON PUÒ SBAGLIARE\"", cTop: '45%', cLeft: '22%', sTop: '30%', sLeft: '6%', isScattered: false, tailDir: 'left', rot: -3 },
+    { id: 4, text: "\"TUTTI LO GUARDANO\"", cTop: '45%', cLeft: '52%', sTop: '28%', sLeft: '68%', isScattered: false, tailDir: 'right', rot: 5 },
+    { id: 5, text: "\"È UNA VITTORIA FACILE\"", cTop: '55%', cLeft: '32%', sTop: '72%', sLeft: '35%', isScattered: false, tailDir: 'right', rot: -2 },
+    { id: 6, text: "\"È IL MIGLIORE\"", cTop: '58%', cLeft: '55%', sTop: '74%', sLeft: '70%', isScattered: false, tailDir: 'right', rot: 4 },
+    { id: 7, text: "\"DEVE VINCERE\"", cTop: '62%', cLeft: '25%', sTop: '68%', sLeft: '10%', isScattered: false, tailDir: 'left', rot: -3 }
   ]);
 
   let isIntroDone = $state(false);
@@ -74,52 +77,84 @@
   // ora interamente gestito dall'action thoughtsIntro tramite lo store Lenis (lock direzionale in fase capture).
 </script>
 
-<section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts, hasCompletedOnce }}>
-  
-  <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
-    <h3 class="main-sentence">
-        Quando vincere diventa l'unico risultato<br>
-        accettabile, l'atleta smette di essere<br>
-        una persona e diventa un risultato.
-    </h3>
-  </div>
-
-  {#each thoughts as t (t.id)}
-    <div 
-      use:draggableThought={{ 
-        id: t.id, 
-        container, 
-        sTop: t.sTop, 
-        sLeft: t.sLeft, 
-        cTop: t.cTop, 
-        cLeft: t.cLeft, 
-        isScattered: t.isScattered,
-        thoughts,
-        onScatter: markAsScattered 
-      }}
-      class="thought-box" 
-      data-id={t.id} 
-      style:--c-top={t.cTop}
-      style:--c-left={t.cLeft}
-      role="button" 
-      tabindex="0"
-    >
-      <div class="shadow-container">
-        <div class="shadow-shape tail-{t.tailDir}"></div>
+{#if media.isMobile}
+  <!-- Commento solo il PERCHÉ: su mobile l'interazione drag-to-scatter non è adatta; il gioco
+       diventa un reveal guidato dallo scroll (fumetti impilati e obliqui, poi la frase di chiusura),
+       senza lock direzionale. Markup e action dedicati, disgiunti dal percorso desktop. -->
+  <section class="favorite-section favorite-section-mobile" use:thoughtsStackReveal>
+    <!-- Commento solo il PERCHÉ: la sezione è pinnata e questo wrapper viene traslato verso l'alto
+         dall'action (finto scroll): la colonna resta ancorata nel viewport e si allunga mentre i
+         fumetti si accendono, spingendo sopra i precedenti. -->
+    <div class="thoughts-scroller">
+      <div class="thoughts-stack">
+        {#each thoughts as t (t.id)}
+          <div class="mobile-thought" data-id={t.id} data-rot={t.rot}>
+            <div class="shadow-container">
+              <div class="shadow-shape tail-{t.tailDir}"></div>
+            </div>
+            <div class="glass-effect thought-bubble tail-{t.tailDir}">
+              {t.text}
+            </div>
+          </div>
+        {/each}
       </div>
-      <div class="glass-effect thought-bubble tail-{t.tailDir}">
-        {t.text}
+
+      <div class="closing-sentence">
+        <h3 class="main-sentence">
+          Quando vincere diventa l'unico risultato accettabile,
+          l'atleta smette di essere una persona e diventa un risultato.
+        </h3>
       </div>
     </div>
-  {/each}
+  </section>
+{:else}
+  <section class="favorite-section" bind:this={container} use:thoughtsIntro={{ thoughts, onIntroChange: handleIntroChange, onReset: resetThoughts, hasCompletedOnce }}>
 
-  {#if showScrollHint}
-    <!-- Commento solo il PERCHÉ: l'indicatore compare solo a gioco completato per segnalare lo sblocco dello scroll -->
-    <div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
-      <ScrollHint showText={false} />
+    <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
+      <h3 class="main-sentence">
+          Quando vincere diventa l'unico risultato<br>
+          accettabile, l'atleta smette di essere<br>
+          una persona e diventa un risultato.
+      </h3>
     </div>
-  {/if}
-</section>
+
+    {#each thoughts as t (t.id)}
+      <div
+        use:draggableThought={{
+          id: t.id,
+          container,
+          sTop: t.sTop,
+          sLeft: t.sLeft,
+          cTop: t.cTop,
+          cLeft: t.cLeft,
+          isScattered: t.isScattered,
+          thoughts,
+          onScatter: markAsScattered
+        }}
+        class="thought-box"
+        data-id={t.id}
+        style:--c-top={t.cTop}
+        style:--c-left={t.cLeft}
+        role="button"
+        tabindex="0"
+      >
+        <div class="shadow-container">
+          <div class="shadow-shape tail-{t.tailDir}"></div>
+        </div>
+        <div class="glass-effect thought-bubble tail-{t.tailDir}">
+          {t.text}
+        </div>
+      </div>
+    {/each}
+
+    {#if showScrollHint}
+      <!-- Commento solo il PERCHÉ: l'indicatore compare solo a gioco completato per segnalare lo sblocco dello scroll -->
+      <div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
+        <ScrollHint showText={false} />
+      </div>
+    {/if}
+  </section>
+{/if}
 
 <style>
   .favorite-section {
@@ -209,5 +244,67 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
+  }
+
+  /* ============================================================
+     Variante MOBILE: conveyor a scroll. La sezione è pinnata (altezza viewport, overflow nascosto)
+     e il wrapper .thoughts-scroller viene traslato verso l'alto dall'action (finto scroll): la
+     colonna resta ancorata e si allunga mentre i fumetti si accendono. La rotazione è da GSAP.
+     ============================================================ */
+  @media (max-width: 768px) {
+    .favorite-section-mobile {
+      height: 100vh;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+
+    .thoughts-scroller {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      /* Distanza netta tra l'ultimo fumetto e la frase: quest'ultima entra come rivelazione */
+      gap: var(--spacing-11);
+      /* will-change perché l'action anima y in continuo durante lo scrub */
+      will-change: transform;
+    }
+
+    .thoughts-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .mobile-thought {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 80vw;
+      z-index: 10;
+    }
+
+    /* Spaziatura verticale volutamente irregolare (ravvicinata), ottenuta variando i token di spacing */
+    .mobile-thought + .mobile-thought { margin-top: var(--spacing-4); }
+    .mobile-thought:nth-child(2n) { margin-top: var(--spacing-5); }
+    .mobile-thought:nth-child(3n) { margin-top: var(--spacing-3); }
+
+    .mobile-thought .thought-bubble {
+      width: auto;
+      height: auto;
+      max-width: 80vw;
+      white-space: normal;
+      text-align: center;
+      /* Padding orizzontale simmetrico (le classi .tail-* usano padding asimmetrico per la coda,
+         che sfalserebbe il testo centrato): su mobile la coda resta decorativa in basso. */
+      padding-inline: var(--spacing-6);
+    }
+
+    .closing-sentence {
+      max-width: 80vw;
+      text-align: center;
+    }
   }
 </style>

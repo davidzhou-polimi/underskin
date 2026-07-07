@@ -156,7 +156,7 @@ export function zoomTextTransition(node, params = {}) {
 						trigger: node,
 						start: 'top top',
 						/* Pin più corto rispetto al desktop per una navigazione più snella su mobile */
-						end: '+=150%',
+						end: '+=210%',
 						pin: true,
 						scrub: 1.5,
 						anticipatePin: 1,
@@ -170,7 +170,7 @@ export function zoomTextTransition(node, params = {}) {
 									return value < 0.80 ? 0.20 : 1.0;
 								}
 							},
-							duration: { min: 0.8, max: 1.4 },
+							duration: { min: 1.4, max: 2.4 },
 							delay: 0.02,
 							ease: 'power3.out'
 						},
@@ -203,15 +203,15 @@ export function zoomTextTransition(node, params = {}) {
 				  })
 
 				  // 5. Reveal sezione successiva
-				  .addLabel('reveal', '-=0.5')
+				  .addLabel('reveal', '-=0.9')
 				  .to(nextContent, {
 						autoAlpha: 1,
-						duration: 1.0,
-						ease: 'power1.out'
+						duration: 2.2,
+						ease: 'power2.out'
 				  }, 'reveal')
 
 				  // 6. Buffer
-				  .to({}, { duration: 1.5 });
+				  .to({}, { duration: 2.0 });
 			}, node);
 
 			return () => ctx.revert();

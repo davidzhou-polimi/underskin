@@ -29,8 +29,9 @@ export function archetypeScrolly(node) {
 
 		if (!quote || !carousel) return;
 
-		// Commento solo il PERCHÉ: allunga lo spazio di scroll complessivo del pin a 2.5 schermate 
-		// per dare tempo all'utente sia di assistere alla transizione sia di interagire con le card
+		// Commento solo il PERCHÉ: pin ~2.5 schermate — abbastanza da tenere la citazione ferma e
+		// leggibile senza allungare troppo la sosta; lo scrub più alto ammortizza i flick veloci
+		// evitando che citazione e carosello si "uniscano" bruscamente.
 		const tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: node,
@@ -38,7 +39,7 @@ export function archetypeScrolly(node) {
 				end: '+=250%',
 				pin: true,
 				pinSpacing: true,
-				scrub: 1
+				scrub: 1.5
 			}
 		});
 
@@ -55,8 +56,9 @@ export function archetypeScrolly(node) {
 			ease: 'power2.out'
 		});
 
-		// Commento solo il PERCHÉ: crea un momento di stasi (dwell) per consentire all'utente di leggere la citazione da sola
-		tl.to({}, { duration: 1.0 });
+		// Commento solo il PERCHÉ: dwell moderato per tenere la citazione ferma e leggibile prima
+		// della transizione, così uno scroll veloce non la incolla subito al carosello
+		tl.to({}, { duration: 1.4 });
 
 		// Commento solo il PERCHÉ: sposta la citazione verso l'alto dello schermo facendo contestualmente salire il carosello mobile
 		tl.to(quote, {
