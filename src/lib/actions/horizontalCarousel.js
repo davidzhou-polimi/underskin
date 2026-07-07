@@ -16,6 +16,11 @@ export function horizontalCarousel(node, params = {}) {
 	// Tracciamo l'indice attivo internamente per evitare re-tweening ridondanti
 	let activeIndex = params.activeIndex ?? 0;
 
+	// Commento solo il PERCHÉ: `offsetWidth` forza un reflow sincrono. Durante un drag updateLayout
+	// gira a ogni frame ma la larghezza card è costante: la misuriamo una volta e la invalidiamo solo
+	// al resize, evitando un layout thrash per ogni touchmove.
+	let cachedItemWidth = 0;
+
 	// Creiamo un contesto GSAP collegato al nodo per un facile cleanup delle animazioni
 	const ctx = gsap.context(() => {}, node);
 
@@ -29,8 +34,11 @@ export function horizontalCarousel(node, params = {}) {
 		const itemsCount = items.length;
 		if (itemsCount === 0) return;
 
-		const firstItem = /** @type {HTMLElement} */ (items[0]);
-		const itemWidth = firstItem.offsetWidth;
+		if (!cachedItemWidth) {
+			const firstItem = /** @type {HTMLElement} */ (items[0]);
+			cachedItemWidth = firstItem.offsetWidth;
+		}
+		const itemWidth = cachedItemWidth;
 
 		// Definiamo un gap coerente con i token di spaziatura o configurato tramite parametri
 		const gap = params.gap ?? 32;
@@ -184,7 +192,10 @@ export function horizontalCarousel(node, params = {}) {
 		updateLayout(activeIndex, false);
 	}, 50);
 
-	const onResize = () => updateLayout(activeIndex, false);
+	const onResize = () => {
+		cachedItemWidth = 0; // invalida la misura: la larghezza card dipende dal viewport
+		updateLayout(activeIndex, false);
+	};
 	window.addEventListener('resize', onResize);
 
 	return {

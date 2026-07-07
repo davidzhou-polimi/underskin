@@ -31,9 +31,11 @@
 	/** @type {boolean[]} */
 	let flippedStates = $state([]);
 	$effect(() => {
-		if (filteredAthletes.length > 0 && flippedStates.length !== filteredAthletes.length) {
-			flippedStates = new Array(filteredAthletes.length).fill(false);
-		}
+		// Commento solo il PERCHÉ: reinizializziamo l'intero stato flip a ogni cambio di filtro (type),
+		// non solo quando cambia la lunghezza: due archetipi con pari numero di atleti condividerebbero
+		// altrimenti lo stato per-indice, mostrando una card girata senza che l'utente l'abbia toccata.
+		type;
+		flippedStates = new Array(filteredAthletes.length).fill(false);
 	});
 	/** @type {number | null} */
 	let hoveredIndex = $state(null);
@@ -188,11 +190,14 @@
 
 	let touchStartX = 0;
 	let touchStartY = 0;
+	/** @type {'none' | 'horizontal' | 'vertical'} */
+	let touchAxis = 'none';
 
 	/** @param {TouchEvent} e */
 	function handleTouchStart(e) {
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
+		touchAxis = 'none';
 		motion.disableAutoplay();
 		motion.startDrag(touchStartX);
 	}
@@ -200,7 +205,20 @@
 	/** @param {TouchEvent} e */
 	function handleTouchMove(e) {
 		if (!motion.isDragging) return;
-		// Rileva lo spostamento e lo propaga al gestore di drag GSAP
+		const dx = e.touches[0].clientX - touchStartX;
+		const dy = e.touches[0].clientY - touchStartY;
+
+		// Commento solo il PERCHÉ: blocchiamo l'asse al primo movimento significativo. Un gesto
+		// verticale è uno scroll di pagina e non deve trascinare il carosello orizzontalmente né
+		// bloccare lo scroll nativo; solo un gesto orizzontale propaga il drag e fa preventDefault.
+		if (touchAxis === 'none') {
+			if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+			touchAxis = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+		}
+
+		if (touchAxis !== 'horizontal') return;
+
+		if (e.cancelable) e.preventDefault();
 		motion.drag(e.touches[0].clientX);
 	}
 
@@ -208,6 +226,7 @@
 		if (motion.isDragging) {
 			motion.endDrag();
 		}
+		touchAxis = 'none';
 	}
 
 	// ─── Drag (area arco SVG) ─────────────────────────────────────────────────
@@ -562,7 +581,7 @@
 	}
 
 	.dot-button.active {
-		width: 40px;
+		width: var(--spacing-5);
 		border-radius: 9999px;
 		background-color: color-mix(in srgb, var(--neutral-800) 20%, transparent);
 	}
@@ -620,7 +639,7 @@
 		}
 
 		.dot-button.active {
-			width: 24px;
+			width: var(--spacing-3);
 		}
 
 		.mobile-hint-text.mobile-only {

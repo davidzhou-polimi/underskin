@@ -3,6 +3,7 @@
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
     import { archetypeScrolly } from "$lib/actions/home/archetypeScrolly.js";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
+    import { dragSwipe } from "$lib/actions/dragSwipe.js";
 
     /**
      * @typedef {Object} Props
@@ -81,49 +82,15 @@
     }
 
     // ─── Touch Events per Swipe e Drag ────────────────────────────────────────
+    // La logica di gesto (axis-lock, throttling, soglia) vive nell'azione condivisa dragSwipe.
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isDragging = false;
+    /** @param {1 | -1} direction */
+    function handleSwipeCommit(direction) {
+        direction === 1 ? next() : prev();
+    }
 
-    /** @param {TouchEvent} e */
-    function handleTouchStart(e) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        dragOffset = 0;
-        isDragging = true;
+    function handleSwipeStart() {
         autoplayActive = false; // Disattiva autoplay su interazione
-    }
-
-    /** @param {TouchEvent} e */
-    function handleTouchMove(e) {
-        if (!isDragging) return;
-        const dx = e.touches[0].clientX - touchStartX;
-        const dy = e.touches[0].clientY - touchStartY;
-        
-        // Se il movimento è prevalentemente orizzontale, tracciamo il trascinamento ed evitiamo lo scroll di pagina nativo
-        if (Math.abs(dx) > Math.abs(dy)) {
-            dragOffset = dx;
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }
-    }
-
-    /** @param {TouchEvent} e */
-    function handleTouchEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const threshold = 70; // Soglia in pixel per il cambio slide
-        if (dragOffset < -threshold) {
-            next();
-        } else if (dragOffset > threshold) {
-            prev();
-        }
-        
-        // Resetta l'offset per avviare l'animazione di snap GSAP
-        dragOffset = 0;
     }
 
     // ─── Touch Drag sulla barra dei Dot ────────────────────────────────────────
@@ -187,9 +154,7 @@
             <div
                 class="carousel-track"
                 use:horizontalCarousel={{ activeIndex, gap: 24, dragOffset }}
-                ontouchstart={handleTouchStart}
-                ontouchmove={handleTouchMove}
-                ontouchend={handleTouchEnd}
+                use:dragSwipe={{ onDrag: (offset) => (dragOffset = offset), onCommit: handleSwipeCommit, onStart: handleSwipeStart }}
                 role="group"
                 aria-label="Archetypes Carousel Track"
             >
@@ -410,7 +375,7 @@
     }
 
     .dot-button.active {
-        width: 24px; /* Commento solo il PERCHÉ: allunga la pillola attiva a forma di riga per visualizzare il progresso temporale del video */
+        width: var(--spacing-3); /* Commento solo il PERCHÉ: allunga la pillola attiva a forma di riga per visualizzare il progresso temporale del video */
         border-radius: 9999px;
         background-color: color-mix(
             in srgb,

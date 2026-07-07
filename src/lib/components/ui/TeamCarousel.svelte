@@ -1,6 +1,7 @@
 <script>
         import TeamCard from "$lib/components/ui/TeamCard.svelte";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
+    import { dragSwipe } from "$lib/actions/dragSwipe.js";
     import { autoplay } from "$lib/actions/autoplay.js";
     import { media } from "$lib/stores/mediaQuery.svelte.js";
 
@@ -54,7 +55,6 @@
     let isHovered = $state(false);
     let dragOffset = $state(0);
     let autoplayActive = $state(true);
-    let isDragging = false;
 
     // ─── Navigation ───────────────────────────────────────────────────────────
 
@@ -77,48 +77,15 @@
     }
 
     // ─── Touch Events per Swipe e Drag ────────────────────────────────────────
+    // La logica di gesto (axis-lock, throttling, soglia) vive nell'azione condivisa dragSwipe.
 
-    let touchStartX = 0;
-    let touchStartY = 0;
+    /** @param {1 | -1} direction */
+    function handleSwipeCommit(direction) {
+        direction === 1 ? next() : prev();
+    }
 
-    /** @param {TouchEvent} e */
-    function handleTouchStart(e) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        dragOffset = 0;
-        isDragging = true;
+    function handleSwipeStart() {
         autoplayActive = false; // Disattiva autoplay su interazione
-    }
-
-    /** @param {TouchEvent} e */
-    function handleTouchMove(e) {
-        if (!isDragging) return;
-        const dx = e.touches[0].clientX - touchStartX;
-        const dy = e.touches[0].clientY - touchStartY;
-        
-        // Se il movimento è prevalentemente orizzontale, tracciamo il trascinamento ed evitiamo lo scroll di pagina nativo
-        if (Math.abs(dx) > Math.abs(dy)) {
-            dragOffset = dx;
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }
-    }
-
-    /** @param {TouchEvent} e */
-    function handleTouchEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const threshold = 70; // Soglia in pixel per il cambio slide
-        if (dragOffset < -threshold) {
-            next();
-        } else if (dragOffset > threshold) {
-            prev();
-        }
-        
-        // Resetta l'offset per avviare l'animazione di snap GSAP
-        dragOffset = 0;
     }
 </script>
 
@@ -132,9 +99,7 @@
         <div
             class="carousel-track"
             use:horizontalCarousel={{ activeIndex, dragOffset, gap }}
-            ontouchstart={handleTouchStart}
-            ontouchmove={handleTouchMove}
-            ontouchend={handleTouchEnd}
+            use:dragSwipe={{ onDrag: (offset) => (dragOffset = offset), onCommit: handleSwipeCommit, onStart: handleSwipeStart }}
             role="group"
             aria-label="Carousel Track"
         >
@@ -315,7 +280,7 @@
 
     .dot-button.active {
         /* Trasformiamo il dot attivo in una pillola allungata per visualizzare il progresso temporale */
-        width: 40px;
+        width: var(--spacing-5);
         border-radius: 9999px;
         background-color: color-mix(
             in srgb,
@@ -373,7 +338,7 @@
         }
 
         .dot-button.active {
-            width: 24px;
+            width: var(--spacing-3);
             background-color: color-mix(
                 in srgb,
                 var(--neutral-800) 20%,
