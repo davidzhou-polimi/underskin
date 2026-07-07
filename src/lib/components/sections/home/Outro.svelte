@@ -1,5 +1,7 @@
 <script>
 	import { outroReveal } from '$lib/actions/home/outroReveal.js';
+	import { outroCarouselMobile } from '$lib/actions/home/outroCarouselMobile.js';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const stages = [
 		{ target: 34, lines: ['soffre di ansia o depressione'] },
@@ -8,12 +10,54 @@
 		{ target: 36, lines: ['soffre di disturbi del sonno'] },
 		{ target: 53, lines: ['soffre di solitudine'] }
 	];
+
+	// ─── Carosello mobile (pilotato dal pulsante, non dallo scroll) ───────────
+
+	let mobileIndex = $state(0);
+	// Commento solo il PERCHÉ: il pulsante inverte la direzione ai capi del carosello:
+	// arrivati all'ultima statistica diventa "Precedente" e riporta fino alla prima.
+	let direction = $state(1);
+
+	function handleStep() {
+		mobileIndex = Math.max(0, Math.min(stages.length - 1, mobileIndex + direction));
+		if (mobileIndex === stages.length - 1) direction = -1;
+		else if (mobileIndex === 0) direction = 1;
+	}
+
+	// ─── Geometria dell'arco puntinato (stesso linguaggio visivo di AthleteCarousel) ───
+
+	const ARC_HEIGHT = 120; // px
+
+	let arcWidth = $state(375);
+
+	const arcRadius = $derived(arcWidth * 0.8);
+	const arcCx = $derived(arcWidth / 2);
+	// L'apice dell'arco resta vicino al bordo superiore dell'SVG, come nell'arco del carosello atleti
+	const arcCy = $derived(ARC_HEIGHT * 0.17 + arcRadius);
+	const arcPath = $derived(
+		`M ${arcCx - arcRadius},${arcCy} A ${arcRadius},${arcRadius} 0 0 1 ${arcCx + arcRadius},${arcCy}`
+	);
+
+	// Commento solo il PERCHÉ: l'angolo dei pallini è ricavato dalla larghezza (spread ±35% del
+	// viewport) invece che da un passo fisso in gradi, così i 5 punti restano sempre a schermo.
+	const dotMaxAngle = $derived(Math.asin(Math.min(1, (arcWidth * 0.35) / arcRadius)));
+	const dotHalfSpan = (stages.length - 1) / 2;
+	const dotPositions = $derived(
+		stages.map((_, i) => {
+			const angle = ((i - dotHalfSpan) / dotHalfSpan) * dotMaxAngle;
+			return {
+				x: arcCx + arcRadius * Math.sin(angle),
+				y: arcCy - arcRadius * Math.cos(angle)
+			};
+		})
+	);
 </script>
 
 <section
 	id="outro"
 	class="outro-scroll-container"
 	use:outroReveal={{ stages }}
+	use:outroCarouselMobile={{ stages, activeIndex: mobileIndex }}
 >
 	<div class="scene">
 		<h2 class="podium-title">
@@ -103,6 +147,68 @@
 			</svg>
 		</div>
 	</div>
+
+	<div class="mobile-carousel">
+		<h2 class="mobile-title">Non tutto si vede sul podio</h2>
+
+		<div class="mobile-arc" bind:clientWidth={arcWidth}>
+			<svg
+				viewBox="0 0 {arcWidth} {ARC_HEIGHT}"
+				preserveAspectRatio="xMidYMid meet"
+				role="presentation"
+				focusable="false"
+			>
+				<defs>
+					<linearGradient
+						id="outro-arc-fade"
+						x1="0"
+						y1={ARC_HEIGHT * 0.17}
+						x2="0"
+						y2={ARC_HEIGHT * 1.8}
+						gradientUnits="userSpaceOnUse"
+					>
+						<stop offset="0%" stop-color="var(--content-primary)" stop-opacity="0.7" />
+						<stop offset="100%" stop-color="var(--content-primary)" stop-opacity="0" />
+					</linearGradient>
+				</defs>
+
+				<path
+					d={arcPath}
+					stroke="url(#outro-arc-fade)"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-dasharray="0.1 8"
+					fill="none"
+				/>
+
+				{#each dotPositions as pos, i}
+					<circle
+						class="arc-dot"
+						class:active={i === mobileIndex}
+						cx={pos.x}
+						cy={pos.y}
+						r="4"
+					/>
+				{/each}
+			</svg>
+		</div>
+
+		<div class="mobile-stat" aria-live="polite">
+			<span class="mobile-percentage">{stages[0].target}%</span>
+			<div class="mobile-captions">
+				{#each stages as stage}
+					<p class="mobile-caption">{stage.lines.join(' ')}</p>
+				{/each}
+			</div>
+		</div>
+
+		<Button
+			ariaLabel={direction === 1 ? 'Statistica successiva' : 'Statistica precedente'}
+			onclick={handleStep}
+		>
+			{direction === 1 ? 'Successivo' : 'Precedente'}
+		</Button>
+	</div>
 </section>
 
 <style>
@@ -173,17 +279,114 @@
 		fill: var(--content-primary);
 	}
 
+	/* Su desktop esiste solo lo scrollytelling: il carosello mobile non occupa spazio */
+	.mobile-carousel {
+		display: none;
+	}
+
 	@media (max-width: 768px) {
-		.circle-percentage {
-			/* Commento solo il PERCHÉ: scala la percentuale a 3.5rem (text-2xl) su mobile 
-			   per evitare che sbordi dai confini del cerchio SVG */
-			font-size: var(--text-2xl);
+		/* Commento solo il PERCHÉ: su mobile la sezione è un carosello a pulsante, non uno
+		   scrollytelling. La schermata extra (200svh) serve al pin: il carosello resta
+		   incollato per un viewport di scroll, così anche chi scorre veloce non lo attraversa
+		   senza vederlo — un semplice snap programmatico perdeva contro l'inerzia del touch. */
+		.outro-scroll-container {
+			height: 200svh;
 		}
 
-		.circle-description {
-			/* Commento solo il PERCHÉ: scala la descrizione della statistica a 1.125rem (text-s) 
-			   su mobile per mantenerla leggibile e racchiusa nell'area inferiore dell'SVG */
-			font-size: var(--text-s);
+		.scene {
+			display: none;
+		}
+
+		.mobile-carousel {
+			display: flex;
+			position: sticky;
+			top: 0;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: var(--spacing-6);
+			height: 100svh;
+			padding: var(--spacing-8) var(--spacing-4);
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		/* Commento solo il PERCHÉ: dimensioni richieste esplicitamente ai valori DESKTOP della
+		   scala (40/128/24px): la media query globale dei token li ridurrebbe (24/56/18px),
+		   quindi qui i rem sono hardcodati. */
+		.mobile-title {
+			font-family: var(--font-family-base);
+			font-size: 2.5rem; /* token approssimativo: --text-l a valore desktop */
+			font-weight: var(--text-important-weight);
+			line-height: 1.25;
+			color: var(--content-primary);
+			margin: 0;
+			text-align: center;
+		}
+
+		.mobile-arc {
+			width: 100%;
+			height: 120px;
+			flex: none;
+		}
+
+		.mobile-arc svg {
+			display: block;
+			width: 100%;
+			height: 100%;
+			/* L'arco prosegue oltre il box SVG: è il contenitore (overflow hidden) a tagliarlo
+			   al bordo, per un effetto full-bleed come nell'arco del carosello atleti */
+			overflow: visible;
+		}
+
+		.arc-dot {
+			fill: var(--content-primary);
+			transform-box: fill-box;
+			transform-origin: center;
+			transition: transform var(--transition-duration-fast) var(--easing-out);
+		}
+
+		/* Il pallino della statistica attiva raddoppia rispetto agli altri */
+		.arc-dot.active {
+			transform: scale(2);
+		}
+
+		.mobile-stat {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: var(--spacing-3);
+			width: 100%;
+		}
+
+		.mobile-percentage {
+			font-family: var(--font-family-base);
+			font-size: 8rem; /* token approssimativo: --text-2xl a valore desktop */
+			font-weight: var(--text-title-weight);
+			line-height: 1;
+			color: var(--content-primary);
+		}
+
+		.mobile-captions {
+			position: relative;
+			width: 100%;
+			/* Riserva l'altezza di due righe per evitare salti di layout nel cross-fade */
+			min-height: calc(2.8 * 1.5rem);
+		}
+
+		.mobile-caption {
+			position: absolute;
+			inset-inline: 0;
+			top: 0;
+			margin: 0;
+			font-family: var(--font-family-base);
+			font-size: 1.5rem; /* token approssimativo: --text-s a valore desktop */
+			font-weight: 700;
+			line-height: 1.4;
+			color: var(--content-primary);
+			text-align: center;
+			/* Stato iniziale del cross-fade: è l'action a rendere visibile la didascalia attiva */
+			opacity: 0;
 		}
 	}
 </style>
