@@ -2,6 +2,10 @@
 	import { outroReveal } from '$lib/actions/home/outroReveal.js';
 
 	let activeStage = $state(0);
+	let displayedStage = $state(0);
+	let isMobileStageFading = $state(false);
+	let stageSwapTimeout = 0;
+	const MOBILE_STAGE_FADE_MS = 180;
 
 	const stages = [
 		{ target: 34, lines: ['soffre di ansia o depressione'] },
@@ -11,13 +15,35 @@
 		{ target: 53, lines: ['soffre di solitudine'] }
 	];
 
-	const dotPositions = [
-		{ x: 0,   y: 80 },
-		{ x: 91,  y: 25 },
-		{ x: 195, y: 5  },
-		{ x: 299, y: 25 },
-		{ x: 390, y: 80 }
-	];
+	const arcRadius = 310;
+	const arcCenterX = 195;
+	const arcCenterY = 82 + Math.sqrt((arcRadius ** 2) - ((408 - (-18)) / 2) ** 2);
+	const arcDotXPositions = [20, 108, 195, 283, 370];
+	const dotPositions = arcDotXPositions.map((x) => {
+		// Commento solo il PERCHÉ: usa la stessa geometria dell'arco SVG per garantire
+		// che ogni pallino cada esattamente sul tracciato e non "a occhio".
+		const y = arcCenterY - Math.sqrt((arcRadius ** 2) - ((x - arcCenterX) ** 2));
+		return { x, y };
+	});
+
+	/** @param {number} nextStage */
+	function selectMobileStage(nextStage) {
+		const clampedStage = Math.max(0, Math.min(nextStage, stages.length - 1));
+
+		if (clampedStage === activeStage && clampedStage === displayedStage) return;
+
+		activeStage = clampedStage;
+		isMobileStageFading = true;
+		window.clearTimeout(stageSwapTimeout);
+		stageSwapTimeout = window.setTimeout(() => {
+			displayedStage = clampedStage;
+			isMobileStageFading = false;
+		}, MOBILE_STAGE_FADE_MS);
+	}
+
+	$effect(() => {
+		return () => window.clearTimeout(stageSwapTimeout);
+	});
 </script>
 
 <section
@@ -123,7 +149,7 @@
 		<!-- Arco puntinato con indicatori di stage tappabili -->
 		<svg
 			class="arc-svg"
-			viewBox="-10 -10 410 100"
+			viewBox="-20 -10 430 110"
 			xmlns="http://www.w3.org/2000/svg"
 			role="img"
 			aria-label="Indicatore progressione statistiche"
@@ -131,7 +157,7 @@
 			<!-- stesso stile visivo del cerchio desktop: stroke-dasharray per i pallini -->
 			<path
 				class="arc-dotted"
-				d="M 0 80 A 291 291 0 0 1 390 80"
+				d="M -18 82 A 310 310 0 0 1 408 82"
 			/>
 			<!-- Commento solo il PERCHÉ: r reattivo cambia dimensione in base allo stage attivo
 			     per rendere chiaramente tappabile la posizione corrente -->
@@ -141,23 +167,23 @@
 					cx={pos.x}
 					cy={pos.y}
 					r={i === activeStage ? 8 : 5}
-					onclick={() => (activeStage = i)}
+					onclick={() => selectMobileStage(i)}
 					role="button"
 					tabindex="0"
 					aria-label={`Statistica ${i + 1}`}
-					onkeydown={(e) => e.key === 'Enter' && (activeStage = i)}
+					onkeydown={(e) => e.key === 'Enter' && selectMobileStage(i)}
 				/>
 			{/each}
 		</svg>
 
-		<p class="mobile-stat-number">{stages[activeStage].target}%</p>
+		<p class="mobile-stat-number" class:is-fading={isMobileStageFading}>{stages[displayedStage].target}%</p>
 
-		<p class="mobile-stat-desc">{stages[activeStage].lines.join(' ')}</p>
+		<p class="mobile-stat-desc" class:is-fading={isMobileStageFading}>{stages[displayedStage].lines.join(' ')}</p>
 
 		{#if activeStage < stages.length - 1}
 			<button
 				class="mobile-next glass-effect"
-				onclick={() => (activeStage = activeStage + 1)}
+				onclick={() => selectMobileStage(activeStage + 1)}
 			>
 				Successivo
 			</button>
@@ -274,9 +300,15 @@
 		}
 
 		.arc-svg {
-			width: 100%;
+			/* Commento solo il PERCHÉ: allarga l'arco oltre il padding mobile della sezione
+			   per farlo toccare i bordi visivi dello schermo */
+			width: calc(100% + (2 * var(--spacing-4)));
+			margin-inline: calc(var(--spacing-4) * -1);
 			overflow: visible;
 			flex-shrink: 0;
+			/* Commento solo il PERCHÉ: sfuma leggermente i bordi dell'arco per un ingresso/uscita visiva più morbida */
+			-webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+			mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
 		}
 
 		.arc-dotted {
@@ -305,6 +337,8 @@
 			margin-top: var(--spacing-2);
 			text-align: center;
 			flex-shrink: 0;
+			transition: opacity var(--transition-duration-normal) var(--easing-standard);
+			will-change: opacity;
 		}
 
 		.mobile-stat-desc {
@@ -321,6 +355,13 @@
 			/* min-height fissa previene il reflow quando lo stage 3 va su 2 righe */
 			min-height: 4rem;
 			flex-shrink: 0;
+			transition: opacity var(--transition-duration-normal) var(--easing-standard);
+			will-change: opacity;
+		}
+
+		.mobile-stat-number.is-fading,
+		.mobile-stat-desc.is-fading {
+			opacity: 0;
 		}
 
 		.mobile-next {
