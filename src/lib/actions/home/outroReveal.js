@@ -14,6 +14,11 @@ import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
  * @param {{ stages: OutroStage[] }} params - Stadi statistici (target % e righe descrittive)
  */
 export function outroReveal(node, params) {
+	// Su mobile la sezione usa navigazione a tap — il DOM e lo scroll non servono qui
+	if (window.matchMedia('(max-width: 768px)').matches) {
+		return { destroy() {} };
+	}
+
 	const stages = params.stages;
 
 	const revealCircleEl = node.querySelector('.reveal-circle');

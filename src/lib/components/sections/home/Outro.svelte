@@ -1,12 +1,22 @@
 <script>
 	import { outroReveal } from '$lib/actions/home/outroReveal.js';
 
+	let activeStage = $state(0);
+
 	const stages = [
 		{ target: 34, lines: ['soffre di ansia o depressione'] },
 		{ target: 45, lines: ['manifesta disturbi alimentari'] },
 		{ target: 26, lines: ['sviluppa problemi mentali', 'gravi dopo il ritiro'] },
 		{ target: 36, lines: ['soffre di disturbi del sonno'] },
 		{ target: 53, lines: ['soffre di solitudine'] }
+	];
+
+	const dotPositions = [
+		{ x: 0,   y: 80 },
+		{ x: 91,  y: 25 },
+		{ x: 195, y: 5  },
+		{ x: 299, y: 25 },
+		{ x: 390, y: 80 }
 	];
 </script>
 
@@ -103,6 +113,56 @@
 			</svg>
 		</div>
 	</div>
+
+	<!-- Mobile scene: navigazione a tap, nascosta su desktop -->
+	<div class="mobile-section">
+		<h2 class="mobile-heading">
+			Non tutto si vede<br>sul podio
+		</h2>
+
+		<!-- Arco puntinato con indicatori di stage tappabili -->
+		<svg
+			class="arc-svg"
+			viewBox="-10 -10 410 100"
+			xmlns="http://www.w3.org/2000/svg"
+			role="img"
+			aria-label="Indicatore progressione statistiche"
+		>
+			<!-- stesso stile visivo del cerchio desktop: stroke-dasharray per i pallini -->
+			<path
+				class="arc-dotted"
+				d="M 0 80 A 291 291 0 0 1 390 80"
+			/>
+			<!-- Commento solo il PERCHÉ: r reattivo cambia dimensione in base allo stage attivo
+			     per rendere chiaramente tappabile la posizione corrente -->
+			{#each dotPositions as pos, i}
+				<circle
+					class="arc-dot"
+					cx={pos.x}
+					cy={pos.y}
+					r={i === activeStage ? 8 : 5}
+					onclick={() => (activeStage = i)}
+					role="button"
+					tabindex="0"
+					aria-label={`Statistica ${i + 1}`}
+					onkeydown={(e) => e.key === 'Enter' && (activeStage = i)}
+				/>
+			{/each}
+		</svg>
+
+		<p class="mobile-stat-number">{stages[activeStage].target}%</p>
+
+		<p class="mobile-stat-desc">{stages[activeStage].lines.join(' ')}</p>
+
+		{#if activeStage < stages.length - 1}
+			<button
+				class="mobile-next glass-effect"
+				onclick={() => (activeStage = activeStage + 1)}
+			>
+				Successivo
+			</button>
+		{/if}
+	</div>
 </section>
 
 <style>
@@ -173,17 +233,110 @@
 		fill: var(--content-primary);
 	}
 
+	/* Mobile section: nascosta su desktop */
+	.mobile-section {
+		display: none;
+	}
+
 	@media (max-width: 768px) {
-		.circle-percentage {
-			/* Commento solo il PERCHÉ: scala la percentuale a 3.5rem (text-2xl) su mobile 
-			   per evitare che sbordi dai confini del cerchio SVG */
-			font-size: var(--text-2xl);
+		.outro-scroll-container {
+			height: 100svh;
 		}
 
-		.circle-description {
-			/* Commento solo il PERCHÉ: scala la descrizione della statistica a 1.125rem (text-s) 
-			   su mobile per mantenerla leggibile e racchiusa nell'area inferiore dell'SVG */
-			font-size: var(--text-s);
+		.scene {
+			display: none;
+		}
+
+		.mobile-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			/* flex-start mantiene le posizioni fisse al cambio di stage */
+			justify-content: flex-start;
+			height: 100svh;
+			padding: var(--spacing-11) var(--spacing-4) var(--spacing-4);
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		.mobile-heading {
+			font-family: var(--font-family-base);
+			/* 40px — nessun token mobile arriva a 40px; --text-l diventa 24px su mobile */
+			font-size: 2.5rem;
+			font-weight: var(--text-bold);
+			line-height: 1.2;
+			color: var(--content-primary);
+			margin: 0;
+			text-align: center;
+			/* 7.5rem = 120px — --spacing-11 diventa 64px su mobile; nessun token mobile copre 120px */
+			margin-bottom: 7.5rem;
+			flex-shrink: 0;
+		}
+
+		.arc-svg {
+			width: 100%;
+			overflow: visible;
+			flex-shrink: 0;
+		}
+
+		.arc-dotted {
+			fill: none;
+			stroke: var(--content-primary);
+			stroke-width: 4;
+			stroke-linecap: round;
+			/* 0 = dot, 16 = gap — stessa densità visiva del cerchio desktop */
+			stroke-dasharray: 0 16;
+		}
+
+		.arc-dot {
+			fill: var(--content-primary);
+			cursor: pointer;
+			touch-action: manipulation;
+		}
+
+		.mobile-stat-number {
+			font-family: var(--font-family-base);
+			/* 8rem / 128px — Figma: --unit/128; --text-2xl è overridato a 56px su mobile */
+			font-size: 8rem;
+			font-weight: var(--text-extrabold);
+			line-height: 1;
+			color: var(--content-primary);
+			margin: 0;
+			margin-top: var(--spacing-2);
+			text-align: center;
+			flex-shrink: 0;
+		}
+
+		.mobile-stat-desc {
+			font-family: var(--font-family-base);
+			/* var(--spacing-3) = 1.5rem / 24px — Figma: Spacing/3; --spacing-3 non viene overridato su mobile */
+			font-size: var(--spacing-3);
+			font-weight: var(--text-medium);
+			line-height: 1.3;
+			color: var(--content-primary);
+			margin: 0;
+			margin-top: var(--spacing-2);
+			text-align: center;
+			max-width: 20rem;
+			/* min-height fissa previene il reflow quando lo stage 3 va su 2 righe */
+			min-height: 4rem;
+			flex-shrink: 0;
+		}
+
+		.mobile-next {
+			font-family: var(--font-family-base);
+			/* 1rem / 16px — Figma: --unit/16; --text-2xs diventa 14px su mobile */
+			font-size: 1rem;
+			font-weight: var(--text-regular);
+			color: var(--content-primary);
+			padding: var(--spacing-2) var(--spacing-4);
+			border-radius: var(--radius-l);
+			cursor: pointer;
+			touch-action: manipulation;
+			/* 4rem = 64px — --spacing-8 diventa 40px su mobile; nessun token mobile copre 64px */
+			margin-top: 4rem;
+			flex-shrink: 0;
+			/* background-color, backdrop-filter, border: forniti interamente da .glass-effect */
 		}
 	}
 </style>
