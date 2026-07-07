@@ -120,6 +120,25 @@
 	</div>
 {/snippet}
 
+{#snippet mobileQuoteBlock()}
+	<div class="quote-wrapper mobile-quote">
+		<!-- Commento solo il PERCHÉ: icona citazione posizionata in alto e centrata per separare visivamente l'inizio della quote -->
+		<img src={quoteIconSrc} alt="" role="presentation" class="quote-icon" />
+		<p class="quote-text">
+			At this level, it’s probably<br />
+			<span class="quote-gradient-text">70% mental and 30% physical</span>.
+		</p>
+		<p class="quote-text">
+			I’ve had races where [...]<br />
+			negativity took over and<br />
+			everything fell apart.<br />
+			Learning to control that<br />
+			is the real challenge.
+		</p>
+		<span class="quote-author">- Adrian Yung, sci alpino</span>
+	</div>
+{/snippet}
+
 {#snippet scrollHint()}
 	{#if showQuizScrollHint}
 		<!-- Commento solo il PERCHÉ: svela il suggerimento di scroll per guidare l'utente nei blocchi dello scrollytelling -->
@@ -172,7 +191,7 @@
 
 		<!-- Solo la citazione, centrata, che sostituisce la schermata del drag alla conferma -->
 		<div class="quote-panel">
-			{@render quoteBlock()}
+			{@render mobileQuoteBlock()}
 		</div>
 
 		{@render scrollHint()}
@@ -733,6 +752,62 @@
 
 		.scroll-hint-container {
 			bottom: var(--spacing-2);
+		}
+
+		/* --- Stili esclusivi della citazione mobile --- */
+		.mobile-quote {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			width: 100%;
+			max-width: 90%;
+			margin: 0 auto;
+		}
+
+		.mobile-quote .quote-icon {
+			width: var(--spacing-7);
+			height: auto;
+			margin-bottom: var(--spacing-5);
+			opacity: 0.85;
+		}
+
+		.mobile-quote .quote-text {
+			font-family: var(--font-family-base, sans-serif);
+			/* Commento solo il PERCHÉ: mantiene la dimensione del font uniforme per tutta la citazione, impostandola a text-m (20px su mobile) */
+			font-size: var(--text-m);
+			font-style: italic;
+			font-weight: var(--text-regular);
+			line-height: 1.5;
+			color: var(--content-primary);
+			margin: 0 0 var(--spacing-3) 0;
+		}
+
+		.mobile-quote .quote-gradient-text {
+			/* Commento solo il PERCHÉ: applica lo stesso gradiente animato continuo (blue-viola-arancio) usato per i testi principali del sito */
+			background-image: linear-gradient(
+				120deg,
+				var(--archetipi-favorito, #6A96DF),
+				var(--archetipi-insoddisfatto, #8035D2),
+				var(--archetipi-infortunato, #D86146),
+				var(--archetipi-favorito, #6A96DF)
+			);
+			background-size: 200% auto;
+			background-clip: text;
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			color: transparent;
+			display: inline-block;
+			animation: moveGradient 3s linear infinite;
+			font-weight: inherit;
+		}
+
+		.mobile-quote .quote-author {
+			font-family: var(--font-family-base, sans-serif);
+			font-size: var(--text-2xs);
+			color: var(--neutral-600);
+			margin: 0;
+			opacity: 0.8;
 		}
 	}
 </style>
