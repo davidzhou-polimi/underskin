@@ -1,7 +1,8 @@
 <script>
-    import TeamCard from "$lib/components/ui/TeamCard.svelte";
+        import TeamCard from "$lib/components/ui/TeamCard.svelte";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
     import { autoplay } from "$lib/actions/autoplay.js";
+    import { media } from "$lib/stores/mediaQuery.svelte.js";
 
     /**
      * @typedef {Object} Props
@@ -10,6 +11,8 @@
 
     /** @type {Props} */
     let { items = undefined } = $props();
+
+    const gap = $derived(media.isMobile ? 24 : 32);
 
     /** @type {{ name: string, type: 'favorito' | 'infortunato' | 'insoddisfatto', imageSrc: string }[]} */
     const defaultItems = [
@@ -49,6 +52,9 @@
 
     let activeIndex = $state(0);
     let isHovered = $state(false);
+    let dragOffset = $state(0);
+    let autoplayActive = $state(true);
+    let isDragging = false;
 
     // ─── Navigation ───────────────────────────────────────────────────────────
 
@@ -67,9 +73,10 @@
     function selectIndex(index) {
         activeIndex = index;
         isHovered = false;
+        autoplayActive = false; // Disattiva autoplay su interazione
     }
 
-    // ─── Touch Events per Swipe ───────────────────────────────────────────────
+    // ─── Touch Events per Swipe e Drag ────────────────────────────────────────
 
     let touchStartX = 0;
     let touchStartY = 0;
@@ -78,15 +85,40 @@
     function handleTouchStart(e) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        dragOffset = 0;
+        isDragging = true;
+        autoplayActive = false; // Disattiva autoplay su interazione
+    }
+
+    /** @param {TouchEvent} e */
+    function handleTouchMove(e) {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        
+        // Se il movimento è prevalentemente orizzontale, tracciamo il trascinamento ed evitiamo lo scroll di pagina nativo
+        if (Math.abs(dx) > Math.abs(dy)) {
+            dragOffset = dx;
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }
     }
 
     /** @param {TouchEvent} e */
     function handleTouchEnd(e) {
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        const dy = e.changedTouches[0].clientY - touchStartY;
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-            dx > 0 ? prev() : next();
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const threshold = 70; // Soglia in pixel per il cambio slide
+        if (dragOffset < -threshold) {
+            next();
+        } else if (dragOffset > threshold) {
+            prev();
         }
+        
+        // Resetta l'offset per avviare l'animazione di snap GSAP
+        dragOffset = 0;
     }
 </script>
 
@@ -99,8 +131,9 @@
     <div class="carousel-viewport">
         <div
             class="carousel-track"
-            use:horizontalCarousel={{ activeIndex }}
+            use:horizontalCarousel={{ activeIndex, dragOffset, gap }}
             ontouchstart={handleTouchStart}
+            ontouchmove={handleTouchMove}
             ontouchend={handleTouchEnd}
             role="group"
             aria-label="Carousel Track"
@@ -147,10 +180,11 @@
                 <button
                     class="dot-button"
                     class:active={i === activeIndex}
+                    class:autoplay-disabled={!autoplayActive}
                     onclick={() => selectIndex(i)}
                     aria-label="Vai alla card {i + 1}"
                 >
-                    {#if i === activeIndex}
+                    {#if i === activeIndex && autoplayActive}
                         <span
                             class="dot-progress"
                             use:autoplay={{
@@ -290,6 +324,11 @@
         );
     }
 
+    .dot-button.active.autoplay-disabled {
+        /* Commento solo il PERCHÉ: colora a tinta unita il dot se l'autoplay è stato interrotto dall'utente */
+        background-color: var(--content-primary);
+    }
+
     .dot-progress {
         position: absolute;
         left: 0;
@@ -299,5 +338,55 @@
         border-radius: 9999px;
         background-color: var(--content-primary);
         pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+        .carousel-viewport {
+            height: 380px;
+            /* Commento solo il PERCHÉ: applica una sfumatura graduale più stretta su mobile (var(--spacing-2) = 16px invece di 32px) 
+               per permettere alle card successive di rendersi visibili sui bordi dello schermo */
+            -webkit-mask-image: linear-gradient(
+                to right,
+                transparent,
+                black var(--spacing-2),
+                black calc(100% - var(--spacing-2)),
+                transparent
+            );
+            mask-image: linear-gradient(
+                to right,
+                transparent,
+                black var(--spacing-2),
+                black calc(100% - var(--spacing-2)),
+                transparent
+            );
+        }
+
+        .carousel-item {
+            width: 290px;
+            height: 380px;
+        }
+
+        .dot-button {
+            width: 6px;
+            height: 6px;
+            background-color: var(--neutral-400);
+        }
+
+        .dot-button.active {
+            width: 24px;
+            background-color: color-mix(
+                in srgb,
+                var(--neutral-800) 20%,
+                transparent
+            );
+        }
+
+        .dot-button.active.autoplay-disabled {
+            background-color: var(--neutral-800);
+        }
+
+        .dot-progress {
+            background-color: var(--neutral-800);
+        }
     }
 </style>

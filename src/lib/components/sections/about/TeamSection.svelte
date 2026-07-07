@@ -51,14 +51,22 @@
 	}
 
 	.section-title {
-		/* Commento solo il PERCHÉ: allinea la dimensione del titolo con "Conosci gli archetipi" della homepage 
-		   utilizzando il token --text-m (2rem) ed il peso regular */
-		font-size: var(--text-m);
+		/* Commento solo il PERCHÉ: allinea la dimensione del titolo a var(--text-l) (dimensione successiva più grande) 
+		   per conferire maggior risalto visivo alla sezione team */
+		font-size: var(--text-l);
 		font-weight: var(--text-regular);
 		color: var(--content-primary);
 		/* Commento solo il PERCHÉ: imposta la spaziatura inferiore a var(--spacing-6) (48px) 
 		   per renderla perfettamente equidistante e simmetrica alla spaziatura superiore dei dots */
 		margin-bottom: var(--spacing-6);
 		text-align: center;
+	}
+
+	@media (max-width: 768px) {
+		.team-section__container {
+			/* Commento solo il PERCHÉ: rimuove il limite max-width (che si contrae a 320px su mobile via token spacing-17) 
+			   permettendo al viewport del carosello di estendersi al 100% e mostrare le card successive sui bordi */
+			max-width: 100%;
+		}
 	}
 </style>
