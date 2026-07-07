@@ -47,6 +47,10 @@
     .text-container {
         position: relative;
         z-index: 1;
+        /* Commento solo il PERCHÉ: testo puramente decorativo che, pinnato e sbiadito ma con
+           z-index:1, resta hit-testabile sopra contenuto interattivo successivo (era l'ombra
+           invisibile che rubava i tocchi alla maniglia del quiz mobile): mai catturare input. */
+        pointer-events: none;
         display: grid;
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
