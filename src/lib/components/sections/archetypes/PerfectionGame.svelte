@@ -87,19 +87,19 @@
 	}
 
 	/**
-	 * Riceve la coordinata finale registrata nel momento in cui il gioco si è interrotto (X su desktop, Y su mobile).
+	 * Riceve la coordinata finale registrata nel momento in cui il gioco si è interrotto (X su desktop, Y su mobile)
+	 * e il raggio massimo di oscillazione usato dall'azione per quell'asse.
 	 * Calcola e normalizza la precisione del tentativo.
-	 * 
+	 *
 	 * @param {number} finalValue La coordinata registrata dall'azione GSAP
+	 * @param {number} maxRange Il raggio massimo di oscillazione (320px desktop, 140px mobile) usato dall'azione
 	 */
-	function handleStop(finalValue) {
+	function handleStop(finalValue, maxRange) {
 		attempts++;
 		const distance = Math.abs(finalValue);
-		
-		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-		const maxRange = isMobile ? 140 : 320;
-		
-		// Calcola la percentuale normalizzata sul raggio massimo di oscillazione (320px desktop, 140px mobile)
+
+		// Calcola la percentuale normalizzata sul raggio massimo di oscillazione ricevuto dall'azione,
+		// che è la stessa fonte (media.isMobile) usata per scegliere l'asse del tween: niente ricalcolo locale.
 		let calcPerc = 100 - (distance / maxRange) * 100;
 
 		// Il 100% di perfezione rimane volutamente inarrivabile, il tetto massimo è 99%
@@ -296,26 +296,15 @@
 	}
 
 	.purple-blob {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	background: radial-gradient(circle, var(--viola-500) 0%, var(--viola-800) 100%);
-	border-radius: 50%;
-	filter: blur(var(--spacing-3));
-	opacity: 0.9;
-	z-index: 1;
-
-	/* --- TRUCCO ANTI-QUADRATO PER MOBILE --- */
-	/* 1. Forza la GPU a ricalcolare i confini oltre il cerchio */
-	transform: translate3d(0, 0, 0); 
-	
-	/* 2. Estende l'area di rendering della sfocatura isolando l'elemento */
-	isolation: isolate; 
-	
-	/* 3. Evita che i sub-pixel arrotondati vengano clippati dal browser */
-	backface-visibility: hidden;
-	-webkit-backface-visibility: hidden;
-    }
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background: radial-gradient(circle, var(--viola-500) 0%, var(--viola-800) 100%);
+		border-radius: 50%;
+		filter: blur(var(--spacing-3)); /* Utilizza il token --spacing-3 (1.5rem / 24px) per la sfocatura */
+		opacity: 0.9;
+		z-index: 1;
+	}
 
 	.purple-blob.game-over {
 		opacity: 0.7;
@@ -352,6 +341,19 @@
 	@media (max-width: 768px) {
 		.mobile-only-br {
 			display: block;
+		}
+
+		.purple-blob {
+			/* --- TRUCCO ANTI-QUADRATO PER MOBILE --- */
+			/* 1. Forza la GPU a ricalcolare i confini oltre il cerchio */
+			transform: translate3d(0, 0, 0);
+
+			/* 2. Estende l'area di rendering della sfocatura isolando l'elemento */
+			isolation: isolate;
+
+			/* 3. Evita che i sub-pixel arrotondati vengano clippati dal browser */
+			-webkit-backface-visibility: hidden;
+			backface-visibility: hidden;
 		}
 
 		.header-text {
