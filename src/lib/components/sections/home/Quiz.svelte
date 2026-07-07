@@ -1,9 +1,12 @@
 <script>
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
+	import { quizDragMobile } from '$lib/actions/home/quizDragMobile.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { lockScroll, unlockScroll, scrollTo, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { fade } from 'svelte/transition';
 
 	// Stati reattivi (Rune Svelte 5)
@@ -18,7 +21,8 @@
 
 	// L'Observer GSAP che intercetta i gesti durante il lock vive in quizAnimation.js
 	// (regola progetto: tutto GSAP nelle actions); qui si decide solo QUANDO è attivo.
-	let observerEnabled = $derived((quizState === 'animating' || quizState === 'results') && !canLeave);
+	// Solo desktop: il branch mobile ha un flusso e un gating propri in quizDragMobile.js.
+	let observerEnabled = $derived(!media.isMobile && (quizState === 'animating' || quizState === 'results') && !canLeave);
 
 	function advance() {
 		if (quizState !== 'results' || isAnimatingStep) return;
@@ -55,6 +59,9 @@
 	// Il cleanup sblocca allo smontaggio: navigare via mentre observerEnabled è true lascerebbe
 	// altrimenti Lenis stopped e la pagina successiva non scrollerebbe.
 	$effect(() => {
+		// Commento solo il PERCHÉ: su mobile il lock è gestito interamente da quizDragMobile,
+		// quindi qui non interferiamo per non sovrapporre due sorgenti di blocco.
+		if (media.isMobile) return;
 		if (observerEnabled) {
 			lockScroll();
 		} else {
@@ -88,105 +95,165 @@
 	$effect(() => { if (quizState !== 'choosing') tooltip.hide(); });
 </script>
 
-<section
-	id="cerchi-quiz"
-	class="quiz-wrapper"
-	aria-label="Quiz interattivo tra mente e fisico"
-	use:quizAnimation={{
-		quizState,
-		observerEnabled,
-		lockScroll,
-		unlockScroll,
-		lockScrollDown,
-		unlockScrollDown,
-		onStateChange: (s) => quizState = s,
-		onStepChange: (step) => textStep = step,
-		onAdvance: advance,
-		onBack: back,
-		onEnterBack: () => {
-			// ScrollTrigger ha rilevato che l'utente è tornato nella quiz section
-			// scrollando verso l'alto dalla sezione successiva: riattiva il controllo scroll
-			if (canLeave && quizState === 'results') canLeave = false;
-		}
-	}}
->
+<!-- Titolo e citazione condivisi tra desktop e mobile: snippet per non duplicarne il markup -->
+{#snippet titleBlock()}
 	<div class="quiz-title-wrap">
 		<h2 class="quiz-title">
 			<span class="title-line">Quando tutto si decide in pochi istanti,<br> cosa pesa davvero di più?</span>
 		</h2>
 	</div>
+{/snippet}
 
-	<div class="quiz-body" class:centered-layout={quizState === 'choosing'} class:results-layout={quizState === 'results'}>
-
-		<div class="circle-container left-side" class:is-final={quizState === 'results'}>
-			<button
-				class="interactive-circle-btn"
-				disabled={quizState !== 'choosing'}
-				onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
-				onmouseleave={() => tooltip.hide()}
-			>
-				<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
-					<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
-				</svg>
-				<div class="label-overlay">
-					<span class="initial-label animate-gradient-text">mentale</span>
-				</div>
-				<span class="percentage-text mental-gradient">70% mentale</span>
-			</button>
-		</div>
-
-		<div class="circle-container right-side" class:is-hidden-final={quizState === 'results'}>
-			<button
-				class="interactive-circle-btn"
-				disabled={quizState !== 'choosing'}
-				onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
-				onmouseleave={() => tooltip.hide()}
-			>
-				<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
-					<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
-				</svg>
-				<div class="label-overlay">
-					<span class="initial-label animate-gradient-text">fisico</span>
-				</div>
-				<span class="percentage-text mental-gradient">30% fisico</span>
-			</button>
-		</div>
-
-		<div class="text-panel" class:visible={quizState === 'results'}>
-			
-			<div class="text-block step-1" class:hidden={textStep !== 1}>
-				<p class="main-statement">
-					Il fisico porta l'atleta alla partenza.<br />
-					<span class="strong-focus">La mente decide cosa succede dopo.</span>
-				</p>
-			</div>
-
-			<div class="text-block step-2" class:hidden={textStep !== 2}>
-				<div class="quote-wrapper">
-					<img src={quoteIconSrc} alt="" role="presentation" class="quote-icon" />
-					<p class="quote-content">
-						At this level, it’s probably 70% mental<br />
-						and 30% physical. [...]<br />
-						I’ve had races where I was confident<br />
-						and performed incredibly well, and<br />
-						others where negativity took over<br />
-						and everything fell apart. Learning to<br />
-						control that is the real challenge.
-					</p>
-					<span class="quote-author">— Adrian Yung, sci alpino</span>
-				</div>
-			</div>
-
-		</div>
+{#snippet quoteBlock()}
+	<div class="quote-wrapper">
+		<img src={quoteIconSrc} alt="" role="presentation" class="quote-icon" />
+		<p class="quote-content">
+			At this level, it’s probably 70% mental<br />
+			and 30% physical. [...]<br />
+			I’ve had races where I was confident<br />
+			and performed incredibly well, and<br />
+			others where negativity took over<br />
+			and everything fell apart. Learning to<br />
+			control that is the real challenge.
+		</p>
+		<span class="quote-author">— Adrian Yung, sci alpino</span>
 	</div>
+{/snippet}
 
+{#snippet scrollHint()}
 	{#if showQuizScrollHint}
 		<!-- Commento solo il PERCHÉ: svela il suggerimento di scroll per guidare l'utente nei blocchi dello scrollytelling -->
 		<div class="scroll-hint-container" transition:fade={{ duration: 400 }}>
 			<ScrollHint showText={false} />
 		</div>
 	{/if}
-</section>
+{/snippet}
+
+{#if media.isMobile}
+	<section
+		id="cerchi-quiz"
+		class="quiz-wrapper quiz-wrapper--mobile"
+		aria-label="Quiz interattivo tra mente e fisico"
+		use:quizDragMobile={{
+			quizState,
+			lockScroll,
+			unlockScroll,
+			onStateChange: (s) => quizState = s
+		}}
+	>
+		<!-- Schermata introduttiva centrata: la domanda precede il gioco e sfuma allo scroll -->
+		<div class="quiz-intro">
+			<p class="quiz-intro-lead">Quando tutto si decide in pochi istanti…</p>
+			<p class="quiz-intro-cta">Cosa pesa di più?</p>
+		</div>
+
+		<div class="quiz-split">
+			<div class="zone zone-mentale">
+				<span class="zone-pct">50%</span>
+				<span class="zone-name">mentale</span>
+			</div>
+			<div class="zone zone-fisico">
+				<span class="zone-pct">50%</span>
+				<span class="zone-name">fisico</span>
+			</div>
+
+			<!-- Barra-maniglia a tutta larghezza: si trascina a step di 10, un tap conferma.
+			     Dopo il primo drag le frecce lasciano il posto a "Scopri" (toggle via .is-confirmable). -->
+			<div class="split-handle">
+				<Button ariaLabel="Trascina per bilanciare mentale e fisico, tocca per scoprire">
+					<span class="handle-arrows" aria-hidden="true">↑<span class="handle-dot">•</span>↓</span>
+					<span class="handle-cta">Scopri</span>
+				</Button>
+			</div>
+		</div>
+
+		<!-- Solo la citazione, centrata, che sostituisce la schermata del drag alla conferma -->
+		<div class="quote-panel">
+			{@render quoteBlock()}
+		</div>
+
+		{@render scrollHint()}
+	</section>
+{:else}
+	<section
+		id="cerchi-quiz"
+		class="quiz-wrapper"
+		aria-label="Quiz interattivo tra mente e fisico"
+		use:quizAnimation={{
+			quizState,
+			observerEnabled,
+			lockScroll,
+			unlockScroll,
+			lockScrollDown,
+			unlockScrollDown,
+			onStateChange: (s) => quizState = s,
+			onStepChange: (step) => textStep = step,
+			onAdvance: advance,
+			onBack: back,
+			onEnterBack: () => {
+				// ScrollTrigger ha rilevato che l'utente è tornato nella quiz section
+				// scrollando verso l'alto dalla sezione successiva: riattiva il controllo scroll
+				if (canLeave && quizState === 'results') canLeave = false;
+			}
+		}}
+	>
+		{@render titleBlock()}
+
+		<div class="quiz-body">
+
+			<div class="circle-container left-side" class:is-final={quizState === 'results'}>
+				<button
+					class="interactive-circle-btn"
+					disabled={quizState !== 'choosing'}
+					onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
+					onmouseleave={() => tooltip.hide()}
+				>
+					<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
+						<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
+					</svg>
+					<div class="label-overlay">
+						<span class="initial-label animate-gradient-text">mentale</span>
+					</div>
+					<span class="percentage-text mental-gradient">70% mentale</span>
+				</button>
+			</div>
+
+			<div class="circle-container right-side" class:is-hidden-final={quizState === 'results'}>
+				<button
+					class="interactive-circle-btn"
+					disabled={quizState !== 'choosing'}
+					onmouseenter={() => { if (quizState === 'choosing') tooltip.show('Scegli', 'semplice'); }}
+					onmouseleave={() => tooltip.hide()}
+				>
+					<svg class="target-circle-svg" viewBox="0 0 320 320" aria-hidden="true">
+						<circle cx="160" cy="160" r="150" class="dashed-circle-element" />
+					</svg>
+					<div class="label-overlay">
+						<span class="initial-label animate-gradient-text">fisico</span>
+					</div>
+					<span class="percentage-text mental-gradient">30% fisico</span>
+				</button>
+			</div>
+
+			<div class="text-panel" class:visible={quizState === 'results'}>
+
+				<div class="text-block step-1" class:hidden={textStep !== 1}>
+					<p class="main-statement">
+						Il fisico porta l'atleta alla partenza.<br />
+						<span class="strong-focus">La mente decide cosa succede dopo.</span>
+					</p>
+				</div>
+
+				<div class="text-block step-2" class:hidden={textStep !== 2}>
+					{@render quoteBlock()}
+				</div>
+
+			</div>
+		</div>
+
+		{@render scrollHint()}
+	</section>
+{/if}
 
 <style>
 	.quiz-wrapper {
@@ -223,17 +290,6 @@
 		max-width: 1200px;
 		height: 380px;
 		/* Gap costante in tutti gli stati per evitare layout shift durante l'animazione */
-		gap: var(--spacing-10);
-	}
-
-	.centered-layout {
-		gap: var(--spacing-10);
-	}
-
-	.quiz-body.results-layout {
-		display: flex;
-		align-items: center;
-		justify-content: center;
 		gap: var(--spacing-10);
 	}
 
@@ -286,7 +342,7 @@
 		cursor: default;
 	}
 
-	.centered-layout .interactive-circle-btn:not(:disabled):hover {
+	.interactive-circle-btn:not(:disabled):hover {
 		transform: scale(1.06);
 	}
 
@@ -304,7 +360,6 @@
 		stroke-width: 4;
 		stroke-dasharray: 0 12.4;
 		stroke-linecap: round;
-		transition: stroke 0.3s ease;
 	}
 
 	.label-overlay {
@@ -325,13 +380,9 @@
 		color: var(--content-primary);
 		/* Commento solo il PERCHÉ: mantiene il testo minuscolo fin da subito per coerenza visiva con le etichette delle percentuali */
 		text-transform: none;
-		transition: color 0.3s ease, background-image 0.3s ease;
-		background-size: 200% auto;
-		background-clip: text;
-	}
-
-	.interactive-circle-btn:hover .animate-gradient-text {
-		color: transparent;
+		/* Commento solo il PERCHÉ: il gradiente sta SEMPRE sotto il colore opaco (i gradienti non
+		   sono interpolabili da transition); così al mouseleave transita solo `color` e non c'è il
+		   flash del gradiente che spariva di scatto. L'animazione è ferma finché non si va in hover. */
 		background-image: linear-gradient(
 			120deg,
 			var(--gradient-c1),
@@ -339,7 +390,16 @@
 			var(--gradient-c3),
 			var(--gradient-c1)
 		);
+		background-size: 200% auto;
+		background-clip: text;
+		transition: color 0.3s ease;
 		animation: moveGradient 3s linear infinite;
+		animation-play-state: paused;
+	}
+
+	.interactive-circle-btn:hover .animate-gradient-text {
+		color: transparent;
+		animation-play-state: running;
 	}
 
 	@keyframes moveGradient {
@@ -361,7 +421,6 @@
 		white-space: nowrap;
 		opacity: 0;
 		transform: scale(0.8);
-		will-change: opacity, transform;
 	}
 
 
@@ -388,7 +447,6 @@
 	.text-block {
 		position: absolute;
 		width: 100%;
-		will-change: transform, opacity, filter;
 	}
 
 	.main-statement {
@@ -438,7 +496,6 @@
 		font-weight: var(--text-important-weight);
 		white-space: nowrap;
 		opacity: 0;
-		will-change: opacity, transform;
 		/* Stesso gradiente animato dell'initial-label */
 		color: transparent;
 		background-image: linear-gradient(
@@ -466,56 +523,195 @@
 	}
 
 	@media (max-width: 768px) {
-		.quiz-wrapper {
-			/* Commento solo il PERCHÉ: riduce le altezze rigide su schermi corti per contenere 
-			   l'incolonnamento del quiz all'interno della viewport senza forzare scroll indesiderati */
-			height: auto;
-			min-height: 100vh;
-			padding: var(--spacing-8) var(--spacing-2);
+		/* Variante mobile a schermo pieno: contenitore di posizionamento per intro, gioco e citazione,
+		   tutti sovrapposti in assoluto e alternati via GSAP (opacity/transform). */
+		.quiz-wrapper--mobile {
+			height: 100vh;
+			padding: 0;
 		}
 
-		.quiz-title-wrap {
-			margin-bottom: var(--spacing-4);
-		}
-
-		.quiz-body {
-			/* Commento solo il PERCHÉ: adotta un orientamento a colonna per allineare 
-			   verticalmente i due bottoni circolari di scelta e il pannello di testo */
+		/* Schermata introduttiva: la domanda centrata che precede il gioco e sfuma allo scroll */
+		.quiz-intro {
+			position: absolute;
+			inset: 0;
+			display: flex;
 			flex-direction: column;
-			height: auto;
-			min-height: 520px;
-			gap: var(--spacing-4);
-		}
-
-		.circle-container {
-			/* Commento solo il PERCHÉ: ridimensiona il diametro del cerchio a 180px 
-			   per consentire l'incolonnamento ed evitare overflow orizzontale */
-			width: 180px;
-			height: 180px;
-		}
-
-		.text-panel {
-			/* Commento solo il PERCHÉ: riposiziona il pannello di testo in modalità 
-			   relativa sotto il cerchio ed elimina il posizionamento assoluto laterale desktop */
-			position: relative;
-			left: 0;
-			top: 0;
-			width: 100%;
-			height: auto;
-			margin-top: var(--spacing-3);
+			align-items: center;
 			justify-content: center;
+			gap: var(--spacing-2);
+			padding: var(--spacing-6);
 			text-align: center;
+			z-index: 5;
+			/* Il gesto d'ingresso è intercettato dall'Observer su window: l'intro non deve mai
+			   catturare pointer/touch, così anche da sfumata non blocca la maniglia sottostante. */
+			pointer-events: none;
 		}
 
-		.text-block {
-			position: relative;
-			width: 100%;
-		}
-
-		.main-statement {
-			/* Commento solo il PERCHÉ: adatta la taglia del testo e centra la frase di risposta su mobile */
+		.quiz-intro-lead {
 			font-size: var(--text-s);
+			color: var(--content-primary);
+		}
+
+		.quiz-intro-cta {
+			font-size: var(--text-m);
+			font-weight: var(--text-bold);
+			color: var(--content-primary);
+		}
+
+		/* Barra che divide il viewport: le zone lo riempiono in assoluto con altezza/top in px
+		   guidati da quizDragMobile (i valori % sono solo fallback pre-JS). */
+		.quiz-split {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			overflow: hidden;
+		}
+
+		/* Commento solo il PERCHÉ: mentre la sezione è "presa" (quizDragMobile aggiunge is-engaged),
+		   intro, gioco e citazione passano a position:fixed, allineati al viewport invece che allo
+		   scroll del documento — elimina la dipendenza da uno scroll pixel-perfect (causa dell'ex-bug
+		   di asimmetria mentale/fisico). Gli z-index espliciti servono perché con lo scroll congelato
+		   fuori registro i sibling in flow (Preface pinnata col testo a z-index:1, Performance
+		   successiva nel DOM) coprirebbero il viewport vincendo paint order E hit-testing sul layer
+		   z-auto — era ciò che rendeva la maniglia intoccabile; l'ordine interno resta quello degli
+		   stati non-engaged (intro sopra quote sopra split). La classe segue il ciclo di vita del
+		   gioco: viene tolta a fine conferma o all'uscita dalla sosta, dopo una ri-sincronizzazione
+		   dello scroll sul top della sezione che rende l'handoff fixed→absolute privo di salti.
+		   inset:0 con fixed ricava width/height dal viewport reale, quindi si adatta da sé a
+		   mostra/nascondi della barra URL mobile senza bisogno di 100dvh. */
+		.quiz-wrapper--mobile:global(.is-engaged) .quiz-split {
+			position: fixed;
+			z-index: 10;
+		}
+
+		.quiz-wrapper--mobile:global(.is-engaged) .quote-panel {
+			position: fixed;
+			z-index: 11;
+		}
+
+		.quiz-wrapper--mobile:global(.is-engaged) .quiz-intro {
+			position: fixed;
+			z-index: 12;
+		}
+
+		.zone {
+			position: absolute;
+			left: 0;
+			right: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: var(--spacing-1);
 			text-align: center;
+		}
+
+		/* Commento solo il PERCHÉ: mentale è trasparente per lasciar trasparire il gradiente
+		   persistente della home (continuità visiva); fisico ha invece un fill solido che lo copre. */
+		.zone-mentale {
+			top: 0;
+			height: 50%;
+			color: var(--content-primary);
+		}
+
+		.zone-fisico {
+			top: 50%;
+			bottom: 0;
+			background-color: var(--background-primary);
+			color: var(--content-primary);
+		}
+
+		.zone-name {
+			font-size: var(--text-l);
+			font-weight: var(--text-bold);
+		}
+
+		.zone-pct {
+			font-size: var(--text-xl);
+			font-weight: var(--text-bold);
+			/* Larghezza stabile mentre i numeri scattano durante drag e reveal */
+			font-variant-numeric: tabular-nums;
+		}
+
+		/* Maniglia: barra a tutta larghezza posizionata sul confine (transform-y via GSAP).
+		   Height 0 + align-items center fa "cavalcare" il pulsante esattamente sulla linea. */
+		.split-handle {
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 0;
+			height: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 3;
+			cursor: grab;
+			/* Il gesto verticale appartiene al Draggable, non allo scroll della pagina */
+			touch-action: none;
+		}
+
+		.split-handle::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 0;
+			/* Hairline sottilissima color sfondo: percettibile solo contro il gradiente di mentale,
+			   si fonde col fill di fisico (stesso token) — linea "appena percettibile". */
+			height: 1px;
+			background-color: var(--background-primary);
+		}
+
+		.split-handle :global(.pill-button) {
+			touch-action: none;
+		}
+
+		/* Dopo il primo rilascio la maniglia pulsa per segnalare che un tap conferma */
+		.split-handle:global(.is-confirmable) :global(.pill-button) {
+			animation: handlePulse 1.6s ease-in-out infinite;
+		}
+
+		@keyframes handlePulse {
+			0%, 100% { transform: scale(1); }
+			50% { transform: scale(1.06); }
+		}
+
+		.handle-arrows {
+			display: inline-flex;
+			flex-direction: column;
+			align-items: center;
+			line-height: 0.9;
+		}
+
+		.handle-dot {
+			font-size: 0.6em;
+			opacity: 0.7;
+		}
+
+		/* Prima del drag la maniglia mostra le frecce; dopo il primo rilascio diventa "Scopri". */
+		.handle-cta {
+			display: none;
+		}
+
+		.split-handle:global(.is-confirmable) :global(.handle-arrows) {
+			display: none;
+		}
+
+		.split-handle:global(.is-confirmable) :global(.handle-cta) {
+			display: inline;
+		}
+
+		/* Solo la citazione, centrata, che sostituisce la schermata del drag alla conferma */
+		.quote-panel {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: var(--spacing-6);
+			opacity: 0;
+			pointer-events: none;
+			z-index: 4;
 		}
 
 		.quote-wrapper {

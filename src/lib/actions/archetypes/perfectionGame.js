@@ -1,13 +1,17 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
+import { media } from '$lib/stores/mediaQuery.svelte.js';
+
+const MAX_RANGE_MOBILE = 140;
+const MAX_RANGE_DESKTOP = 320;
 
 /**
  * Svelte Action per gestire l'oscillazione del Perfection Game con GSAP.
- * 
+ *
  * @param {HTMLElement} node Il blob-wrapper a cui è applicata l'azione
  * @param {Object} [options={}] Opzioni dell'azione
  * @param {boolean} [options.isPlaying] Indica se il gioco è in esecuzione
  * @param {HTMLElement} [options.triggerElement] L'elemento che fa da trigger per lo ScrollTrigger
- * @param {Function} [options.onStop] Callback invocata quando il gioco viene fermato, riceve la X finale
+ * @param {Function} [options.onStop] Callback invocata quando il gioco viene fermato, riceve la coordinata finale e il maxRange (raggio massimo di oscillazione) usato per calcolarla
  */
 export function perfectionGameAction(node, options = {}) {
 	let isPlaying = options.isPlaying ?? false;
@@ -15,11 +19,15 @@ export function perfectionGameAction(node, options = {}) {
 	/** @type {gsap.core.Tween | undefined} */
 	let tween;
 
+	// Commento solo il PERCHÉ: letto una sola volta (invece che ricalcolato ad ogni stop)
+	// così l'asse animato dal tween e l'asse letto allo stop restano sempre coerenti,
+	// anche se il viewport attraversa il breakpoint mobile dopo il mount.
+	const isMobile = media.isMobile;
+	const maxRange = isMobile ? MAX_RANGE_MOBILE : MAX_RANGE_DESKTOP;
+
 	// Utilizziamo un context GSAP per raggruppare tutte le animazioni e gli ScrollTrigger,
 	// garantendo una pulizia e rimozione sicura delle risorse al destroy dell'elemento.
 	const ctx = gsap.context(() => {
-		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-
 		if (isMobile) {
 			// Posiziona il blob all'estremo superiore per iniziare in modo deterministico
 			gsap.set(node, { y: -140, x: 0, scale: 0.6 });
@@ -97,10 +105,9 @@ export function perfectionGameAction(node, options = {}) {
 				if (tween) {
 					tween.pause();
 					// Restituisce la posizione precisa in cui l'utente ha premuto il tasto/click
-					const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 					const finalValue = Number(gsap.getProperty(node, isMobile ? 'y' : 'x'));
 					if (newOptions.onStop) {
-						newOptions.onStop(finalValue);
+						newOptions.onStop(finalValue, maxRange);
 					}
 				}
 			}

@@ -1,4 +1,5 @@
 import { gsap } from '$lib/utils/gsapSetup.js';
+import { media } from '$lib/stores/mediaQuery.svelte.js';
 
 const ANGLE_STEP = 18; // degrees between adjacent card positions
 
@@ -29,6 +30,7 @@ export function carousel(node, params = {}) {
 	let activeIndex = params.activeIndex ?? 0;
 	let itemsCount = params.itemsCount ?? 0;
 	let hoveredIndex = params.hoveredIndex ?? null;
+	let isDragging = params.isDragging ?? false;
 
 	// Gestiamo il ciclo di vita dei tween tramite un contesto dedicato per garantire il cleanup corretto.
 	const ctx = gsap.context(() => {}, node);
@@ -39,7 +41,7 @@ export function carousel(node, params = {}) {
 	function updateLayout(index) {
 		const cards = node.querySelectorAll('.carousel-item');
 		const radius = getRadius(node.offsetWidth);
-		const isMobile = window.innerWidth <= 768;
+		const isMobile = media.isMobile;
 
 		cards.forEach((card, i) => {
 			let targetDiff = i - index;
@@ -171,13 +173,16 @@ export function carousel(node, params = {}) {
 			// Capture previous hover before updating state
 			const prevHoveredIndex = hoveredIndex;
 			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
+			isDragging = newParams.isDragging ?? false;
 
 			if (indexChanged) {
 				itemsCount = newParams.itemsCount ?? itemsCount;
 				const newIndex = newParams.activeIndex ?? activeIndex;
 				updateLayout(newIndex);
-			} else if (hoverChanged) {
-				// Commento solo il PERCHÉ: animiamo localmente l'opacità per l'effetto hover delle card adiacenti
+			} else if (hoverChanged && !isDragging) {
+				// Commento solo il PERCHÉ: animiamo localmente l'opacità per l'effetto hover delle card
+				// adiacenti; durante il drag attivo la sopprimiamo perché l'opacità è già governata dal
+				// layout di trascinamento e le due animazioni combatterebbero.
 				const cards = node.querySelectorAll('.carousel-item');
 				const animateCard = (/** @type {number | null} */ index, /** @type {boolean} */ highlight) => {
 					if (index === null) return;

@@ -177,10 +177,6 @@
 		border-radius: var(--radius-m);
 		overflow: hidden;
 		-webkit-font-smoothing: subpixel-antialiased;
-		/* Commento solo il PERCHÉ: applica una maschera radiale trasparente fittizia per forzare WebKit/Safari 
-		   a ritagliare correttamente gli elementi figli trasformati in 3D lungo il raggio di curvatura del border-radius */
-		-webkit-mask-image: -webkit-radial-gradient(white, black);
-		mask-image: radial-gradient(white, black);
 	}
 
 	/* Commento solo il PERCHÉ: applica backface-visibility hidden a tutti i discendenti delle facce 
@@ -321,19 +317,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start;
-		gap: var(--spacing-2, 16px);
+		justify-content: space-between;
 		width: 100%;
 		flex: 1;
 		padding-bottom: var(--spacing-4, 32px);
 		box-sizing: border-box;
-		overflow-y: auto;
-		scrollbar-width: none;
-		-ms-overflow-style: none;
-	}
-
-	.info-retro::-webkit-scrollbar {
-		display: none;
 	}
 
 	.context-text {
@@ -373,10 +361,18 @@
 
 	@media (max-width: 768px) {
 		.athlete-card-container {
-			/* Commento solo il PERCHÉ: allinea le dimensioni delle card a 290px x 380px su mobile 
+			/* Commento solo il PERCHÉ: allinea le dimensioni delle card a 290px x 380px su mobile
 			   per garantire consistenza con i caroselli di home e about */
 			width: 290px;
 			height: 380px;
+		}
+
+		.card-face {
+			/* Commento solo il PERCHÉ: maschera radiale fittizia che forza WebKit/Safari mobile a ritagliare
+			   i figli trasformati in 3D lungo il border-radius. Scoped a mobile: su desktop sfumerebbe gli angoli
+			   (Chrome/Firefox applicano la mask) alterando l'aspetto originale della card. */
+			-webkit-mask-image: -webkit-radial-gradient(white, black);
+			mask-image: radial-gradient(white, black);
 		}
 
 		.name-back {
@@ -385,8 +381,18 @@
 		}
 
 		.info-retro {
-			padding-bottom: var(--spacing-2);
+			/* Commento solo il PERCHÉ: su mobile la card è più piccola (290×380) e il contenuto del retro
+			   può eccedere: impilamento dall'alto con gap ridotto e scroll verticale interno (scrollbar nascosta). */
+			justify-content: flex-start;
 			gap: var(--spacing-1);
+			padding-bottom: var(--spacing-2);
+			overflow-y: auto;
+			scrollbar-width: none;
+			-ms-overflow-style: none;
+		}
+
+		.info-retro::-webkit-scrollbar {
+			display: none;
 		}
 
 		.context-text {

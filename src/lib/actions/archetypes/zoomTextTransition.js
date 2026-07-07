@@ -21,8 +21,18 @@ export function zoomTextTransition(node, params = {}) {
 
 	if (!firstText || !nextContent) return;
 
-	// Nasconde nextContent immediatamente per prevenire flash (comune a entrambi i branch)
+	const eyebrow = zoomTextMobile ? zoomTextMobile.querySelector('.mobile-eyebrow') : null;
+	const titleBlock = zoomTextMobile ? zoomTextMobile.querySelector('.mobile-title-block') : null;
+
+	// Commento solo il PERCHÉ: azzeriamo subito (sincrono, prima del rAF) l'opacità di nextContent e degli
+	// elementi animati di entrambi i branch. La creazione degli ScrollTrigger è differita di un frame: senza
+	// questo hiding immediato, in quel frame d'attesa il testo (SVG su desktop, blocco tipografico su mobile)
+	// lampeggerebbe a piena opacità. Ogni branch imposterà poi lo stato iniziale completo (blur, y, viewBox).
 	gsap.set(nextContent, { autoAlpha: 0 });
+	if (zoomSvg) gsap.set(zoomSvg, { opacity: 0 });
+	gsap.set(firstText, { opacity: 0 });
+	if (eyebrow) gsap.set(eyebrow, { opacity: 0 });
+	if (titleBlock) gsap.set(titleBlock, { opacity: 0 });
 
 	const mm = gsap.matchMedia();
 	let rafId = 0;
@@ -133,10 +143,7 @@ export function zoomTextTransition(node, params = {}) {
 		mm.add('(max-width: 768px)', () => {
 			if (!zoomTextMobile) return;
 
-			const eyebrow = zoomTextMobile.querySelector('.mobile-eyebrow');
-			const titleBlock = zoomTextMobile.querySelector('.mobile-title-block');
-
-			// Stato iniziale nascosto
+			// Stato iniziale nascosto completo (l'opacità è già stata azzerata sincronamente sopra)
 			if (eyebrow) gsap.set(eyebrow, { opacity: 0, y: 10 });
 			if (titleBlock) gsap.set(titleBlock, { opacity: 0, y: 30 });
 

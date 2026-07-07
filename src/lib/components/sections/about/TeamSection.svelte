@@ -51,9 +51,9 @@
 	}
 
 	.section-title {
-		/* Commento solo il PERCHÉ: allinea la dimensione del titolo a var(--text-l) (dimensione successiva più grande) 
-		   per conferire maggior risalto visivo alla sezione team */
-		font-size: var(--text-l);
+		/* Commento solo il PERCHÉ: allinea la dimensione del titolo con "Conosci gli archetipi" della homepage
+		   utilizzando il token --text-m (2rem) ed il peso regular */
+		font-size: var(--text-m);
 		font-weight: var(--text-regular);
 		color: var(--content-primary);
 		/* Commento solo il PERCHÉ: imposta la spaziatura inferiore a var(--spacing-6) (48px) 

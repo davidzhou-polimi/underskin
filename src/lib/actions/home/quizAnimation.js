@@ -33,6 +33,21 @@ export function quizAnimation(node, params) {
 	/** @type {gsap.core.Timeline | null} */
 	let activeTimeline = null;
 
+	// Commento solo il PERCHÉ: i selettori della sezione sono statici nel branch desktop; risolverli
+	// una volta sola evita di ri-interrogare il DOM a ogni build di timeline.
+	const els = {
+		body: /** @type {HTMLElement} */ (node.querySelector('.quiz-body')),
+		title: node.querySelector('.quiz-title-wrap'),
+		circles: node.querySelectorAll('.circle-container'),
+		left: node.querySelector('.circle-container.left-side'),
+		right: node.querySelector('.circle-container.right-side'),
+		leftLabel: node.querySelector('.left-side .initial-label'),
+		leftPct: node.querySelector('.left-side .percentage-text'),
+		rightLabel: node.querySelector('.right-side .initial-label'),
+		rightPct: node.querySelector('.right-side .percentage-text'),
+		textPanel: node.querySelector('.text-panel')
+	};
+
 	// Commento solo il PERCHÉ: durante animazione/risultati il lock è in Lenis (blocca lo smooth-wheel), ma
 	// con syncTouch:false il touch resta nativo: l'Observer con preventDefault — abilitato solo nel lock — è
 	// ciò che blocca davvero il touch e, con wheelSpeed -1, unifica la direzione di rotella e swipe.
@@ -47,18 +62,6 @@ export function quizAnimation(node, params) {
 	});
 	gestureObserver.disable();
 
-	let isMobile = false;
-
-	// Commento solo il PERCHÉ: gsap.matchMedia traccia se siamo su mobile, consentendo
-	// all'animazione GSAP di utilizzare parametri di scala e traslazione asse Y ad hoc.
-	const mm = gsap.matchMedia();
-	mm.add("(max-width: 768px)", () => {
-		isMobile = true;
-	});
-	mm.add("(min-width: 769px)", () => {
-		isMobile = false;
-	});
-
 	const resetTrigger = ScrollTrigger.create({
 		trigger: node,
 		start: 'top bottom',
@@ -66,7 +69,7 @@ export function quizAnimation(node, params) {
 			if (quizState === 'choosing') {
 				circlesTriggered = false;
 				// Commento solo il PERCHÉ: ripristina lo stato iniziale dei cerchi in modo invisibile solo quando la sezione è completamente uscita dallo schermo in basso
-				gsap.set(node.querySelectorAll('.circle-container'), { opacity: 0, y: 50, scale: 0.8 });
+				gsap.set(els.circles, { opacity: 0, y: 50, scale: 0.8 });
 			}
 		}
 	});
@@ -82,7 +85,7 @@ export function quizAnimation(node, params) {
 		onToggle: (self) => {
 			if (self.isActive && !circlesTriggered && quizState === 'choosing') {
 				circlesTriggered = true;
-				gsap.fromTo(node.querySelectorAll('.circle-container'),
+				gsap.fromTo(els.circles,
 					{ opacity: 0, y: 50, scale: 0.8 },
 					{ opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.15 }
 				);
@@ -108,56 +111,30 @@ export function quizAnimation(node, params) {
 	function addMentalePhase(tl, startAt = '>') {
 		tl.addLabel('_mp', startAt);
 
-		if (isMobile) {
-			// Commento solo il PERCHÉ: su mobile il cerchio fisico (destra/basso) esce verso il basso
-			// e il cerchio mentale (sinistra/alto) sale leggermente restringendo la scala
-			tl.to(node.querySelector('.circle-container.right-side'),
-				{ y: 300, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
-			tl.to(node.querySelector('.circle-container.left-side'),
-				{ y: -60, scale: 1.3, duration: 0.8, ease: 'power3.out' }, '_mp');
+		// fisico esce a destra + mentale si ingrandisce (simultanei)
+		tl.to(els.right,
+			{ x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
+		tl.to(els.left,
+			{ x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, '_mp');
 
-			tl.to(node.querySelector('.left-side .initial-label'),
-				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
+		// "mentale" sfuma mentre il cerchio si espande
+		tl.to(els.leftLabel,
+			{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
 
-			tl.fromTo(node.querySelector('.left-side .percentage-text'),
-				{ opacity: 0, scale: 0.85 },
-				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
-				'_mp+=0.3');
+		// "70% mentale" appare durante l'ingrandimento
+		tl.fromTo(els.leftPct,
+			{ opacity: 0, scale: 0.85 },
+			{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+			'_mp+=0.3');
 
-			// Su mobile non spostiamo a sinistra ma teniamo centrato e riduciamo la scala per fare spazio al testo sotto
-			tl.to(node.querySelector('.circle-container.left-side'),
-				{ y: -100, scale: 0.95, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
+		// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
+		tl.to(els.left,
+			{ x: -40, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
 
-			// Il pannello di testo entra dal basso
-			tl.fromTo(node.querySelector('.text-panel'),
-				{ opacity: 0, y: 50 },
-				{ opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
-		} else {
-			// fisico esce a destra + mentale si ingrandisce (simultanei)
-			tl.to(node.querySelector('.circle-container.right-side'),
-				{ x: 500, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '_mp');
-			tl.to(node.querySelector('.circle-container.left-side'),
-				{ x: 0, scale: 2.0, duration: 0.8, ease: 'power3.out' }, '_mp');
-
-			// "mentale" sfuma mentre il cerchio si espande
-			tl.to(node.querySelector('.left-side .initial-label'),
-				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, '_mp+=0.15');
-
-			// "70% mentale" appare durante l'ingrandimento
-			tl.fromTo(node.querySelector('.left-side .percentage-text'),
-				{ opacity: 0, scale: 0.85 },
-				{ opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
-				'_mp+=0.3');
-
-			// dopo pausa il cerchio si sposta a sinistra per formare il gruppo centrato
-			tl.to(node.querySelector('.circle-container.left-side'),
-				{ x: -40, scale: 1.5, duration: 0.7, ease: 'power2.inOut' }, '+=0.35');
-
-			// text-panel entra da destra
-			tl.fromTo(node.querySelector('.text-panel'),
-				{ opacity: 0, x: 60 },
-				{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
-		}
+		// text-panel entra da destra
+		tl.fromTo(els.textPanel,
+			{ opacity: 0, x: 60 },
+			{ opacity: 1, x: 0, duration: 0.55, ease: 'power2.out' }, '-=0.25');
 	}
 
 	/**
@@ -168,8 +145,7 @@ export function quizAnimation(node, params) {
 
 		// Commento solo il PERCHÉ: verifichiamo la presenza del quiz-body PRIMA di mutare lo stato e bloccare lo scroll,
 		// così un'uscita anticipata non lascia la pagina bloccata senza la corrispondente unlockScroll().
-		const quizBody = node.querySelector('.quiz-body');
-		if (!quizBody) return;
+		if (!els.body) return;
 
 		quizState = 'animating';
 		onStateChange('animating');
@@ -179,7 +155,7 @@ export function quizAnimation(node, params) {
 		// Calcola lo spostamento Y necessario a centrare il quiz-body nella viewport
 		// una volta che il titolo sparisce: attualmente il flex centra titolo + quiz-body
 		// insieme, quindi il quiz-body risulta sotto il centro ottico del viewport.
-		const bodyBounds = quizBody.getBoundingClientRect();
+		const bodyBounds = els.body.getBoundingClientRect();
 		const yShift = Math.round(window.innerHeight / 2 - (bodyBounds.top + bodyBounds.height / 2));
 
 		activeTimeline = gsap.timeline({
@@ -190,13 +166,13 @@ export function quizAnimation(node, params) {
 		});
 
 		// fade out del titolo + quiz-body sale al centro del viewport in sincronia
-		activeTimeline.to(node.querySelector('.quiz-title-wrap'), {
+		activeTimeline.to(els.title, {
 			opacity: 0,
 			y: -60,
 			duration: 0.5,
 			ease: 'power2.in'
 		}, 0);
-		activeTimeline.to(quizBody, {
+		activeTimeline.to(els.body, {
 			y: yShift,
 			duration: 0.6,
 			ease: 'power2.inOut'
@@ -210,33 +186,18 @@ export function quizAnimation(node, params) {
 		} else {
 			// --- SCENARIO B: l'utente seleziona fisico ---
 
-			if (isMobile) {
-				// Commento solo il PERCHÉ: su mobile il cerchio si ingrandisce con un fattore di scala ridotto
-				// per non andare fuori schermo, per poi ripristinarsi
-				activeTimeline.to(node.querySelector('.circle-container.right-side'),
-					{ scale: 1.15, duration: 0.5, ease: 'power2.out' }, 0);
-				activeTimeline.to(node.querySelector('.right-side .initial-label'),
-					{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
-				activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
-					{ opacity: 0, scale: 0.9 },
-					{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
+			// STEP 1: fisico si ingrandisce di poco + cambio testo in simultanea
+			activeTimeline.to(els.right,
+				{ scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0);
+			activeTimeline.to(els.rightLabel,
+				{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
+			activeTimeline.fromTo(els.rightPct,
+				{ opacity: 0, scale: 0.9 },
+				{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
 
-				activeTimeline.to(node.querySelector('.circle-container.right-side'),
-					{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
-			} else {
-				// STEP 1: fisico si ingrandisce di poco + cambio testo in simultanea
-				activeTimeline.to(node.querySelector('.circle-container.right-side'),
-					{ scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0);
-				activeTimeline.to(node.querySelector('.right-side .initial-label'),
-					{ opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.1);
-				activeTimeline.fromTo(node.querySelector('.right-side .percentage-text'),
-					{ opacity: 0, scale: 0.9 },
-					{ opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0.2);
-
-				// STEP 2: fisico torna alla grandezza iniziale (con "30% fisico" ancora visibile)
-				activeTimeline.to(node.querySelector('.circle-container.right-side'),
-					{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
-			}
+			// STEP 2: fisico torna alla grandezza iniziale (con "30% fisico" ancora visibile)
+			activeTimeline.to(els.right,
+				{ scale: 1.0, duration: 0.45, ease: 'power2.inOut' }, '+=0.3');
 
 			// STEP 3: stessa animazione del caso mentale — inizia subito dopo lo step 2
 			addMentalePhase(activeTimeline);
@@ -290,7 +251,6 @@ export function quizAnimation(node, params) {
 			if (pinTrigger) pinTrigger.kill();
 			if (resetTrigger) resetTrigger.kill();
 			if (activeTimeline) activeTimeline.kill();
-			mm.revert();
 		}
 	};
 }

@@ -1,4 +1,5 @@
 import { gsap } from '$lib/utils/gsapSetup.js';
+import { media } from '$lib/stores/mediaQuery.svelte.js';
 
 /* Sincronizzato con l'intervallo di 3.5s di TeamCarousel per coerenza visiva globale */
 const AUTOPLAY_INTERVAL = 3500; // ms
@@ -199,8 +200,7 @@ export class AthleteCarouselMotion {
 		let deltaX = (clientX - this.#dragStartX) * DRAG_RESISTANCE;
 		
 		// Commento solo il PERCHÉ: su mobile limitiamo lo swipe unicamente verso sinistra (deltaX <= 0)
-		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-		if (isMobile) {
+		if (media.isMobile) {
 			deltaX = Math.min(0, deltaX);
 		}
 
@@ -231,8 +231,7 @@ export class AthleteCarouselMotion {
 		// Da indici/ms a indici/frame (assumendo 60fps -> 16.67ms per frame)
 		let velocityPerFrame = this.#dragVelocity * 16.67;
 		
-		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-		if (isMobile) {
+		if (media.isMobile) {
 			// Su mobile l'inerzia può solo far avanzare il carousel (velocità non negativa)
 			velocityPerFrame = Math.max(0, velocityPerFrame);
 		}

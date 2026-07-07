@@ -254,10 +254,11 @@
         --fade-y: 20px;
     }
 
-    /* Commento solo il PERCHÉ: impedisce che il pulsante sia cliccabile quando è invisible (opacity:0);
-       il token .fade-reveal non imposta pointer-events:none di default. */
-    .fixed-cta-wrapper :global(.fade-reveal:not(.is-active)) {
-        pointer-events: none;
+    /* Commento solo il PERCHÉ: solo il pulsante ATTIVO è interattivo; il wrapper è pointer-events:none
+       (contenitore di sola posizione), quindi i figli ereditano none e va riattivato esplicitamente
+       il solo .is-active. Impedisce anche il click quando è invisible (opacity:0). */
+    .fixed-cta-wrapper :global(.fade-reveal.is-active) {
+        pointer-events: auto;
     }
 
     @media (max-width: 768px) {
@@ -286,7 +287,11 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 100;
-            pointer-events: auto;
+            /* Commento solo il PERCHÉ: il wrapper è montato per tutta la homepage mobile (showCta) e
+               fisso al centro esatto del viewport a z-index 100: con pointer-events:auto rubava OGNI
+               tocco al centro dello schermo — occludeva la maniglia del quiz. È un puro contenitore di
+               posizione, non deve mai catturare input; l'interattività vive solo sul pulsante attivo. */
+            pointer-events: none;
         }
     }
 </style>
