@@ -24,7 +24,7 @@
             <span
                 class="gradient-text animate-gradient-text dynamic-archetypes"
             >
-                120 secondi<br class="mobile-only"> di performance
+                120 secondi di<br class="mobile-only"> performance
             </span>
         </div>
     </div>
