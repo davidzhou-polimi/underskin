@@ -73,7 +73,15 @@ export const DEFAULT_CONFIG = {
 };
 
 export const fsSource = `
+	// Le GPU desktop promuovono mediump a fp32, ma alcune GPU mobili (es. Tensor/Imagination del
+	// Pixel) la onorano come fp16 (max ~65504): gli intermedi di permute (~2.84e6) e dell'hash del
+	// grain vanno in overflow → NaN (gradiente assente + triangolo nero). highp li tiene in fp32.
+	// La guardia degrada a mediump sul raro WebGL1 senza highp nel fragment (comportamento storico).
+	#ifdef GL_FRAGMENT_PRECISION_HIGH
+	precision highp float;
+	#else
 	precision mediump float;
+	#endif
 	varying vec2 v_uv;
 
 	uniform vec2 u_resolution;
@@ -741,6 +749,15 @@ export class InteractiveGradientRenderer {
 		this.colorsFromBuffer = new Float32Array(16 * 3);
 		this.splatsBuffer = new Float32Array(MAX_SPLATS * 4);
 
+		// Promise "primo frame disegnato": il loading screen la attende per svelare la pagina solo
+		// quando il gradiente ha davvero dipinto (niente reveal su un canvas ancora vuoto), invece di
+		// gate su `window load` che attende ogni asset eager sotto la piega. Il canvas persiste tra le
+		// rotte: dopo il primo load resta risolta, quindi le navigazioni successive non attendono.
+		/** @type {((value?: any) => void) | null} */
+		this._resolveFirstFrame = null;
+		/** @type {Promise<void>} */
+		this.firstFrame = new Promise((resolve) => { this._resolveFirstFrame = resolve; });
+
 		this.resize();
 		this.animate();
 	}
@@ -812,6 +829,10 @@ export class InteractiveGradientRenderer {
 		const gl = this.gl;
 		this._uploadUniforms();
 		gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+		if (this._resolveFirstFrame) {
+			this._resolveFirstFrame();
+			this._resolveFirstFrame = null;
+		}
 	}
 
 	updateColors() {
