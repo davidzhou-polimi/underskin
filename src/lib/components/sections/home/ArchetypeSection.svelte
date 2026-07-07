@@ -1,7 +1,7 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
-    import { sectionPin } from "$lib/actions/sectionPin.js";
+    import { archetypeScrolly } from "$lib/actions/home/archetypeScrolly.js";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
 
     /**
@@ -119,10 +119,16 @@
 <section
     id="archetypes"
     class="archetype-section"
-    use:sectionPin
+    use:archetypeScrolly
 >
+    <!-- Mobile-only quote: animata da archetypeScrolly -->
+    <blockquote class="perf-quote mobile-only">
+        La performance non consuma <br />
+        solo il corpo: ma modella <br />
+        <span class="gradient-text animate-gradient-text my-archetypes-color">identità, abitudini, ossessioni.</span>
+    </blockquote>
     {#if title}
-        <h3 class="section-title">{title}</h3>
+        <h3 class="section-title desktop-only">{title}</h3>
     {/if}
 
     <!-- Layout Desktop: Riga statica con stagger -->
@@ -223,6 +229,24 @@
         margin: 0 0 var(--spacing-6) 0;
         max-width: var(--spacing-17);
         margin-bottom: var(--spacing-6);
+    }
+
+    .perf-quote {
+        font-family: 'Rethink Sans', sans-serif;
+        font-weight: var(--text-important-weight);
+        font-size: var(--text-l);
+        line-height: 1.5;
+        color: var(--content-primary);
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .my-archetypes-color {
+        --gradient-c1: var(--archetipi-favorito);
+        --gradient-c2: var(--archetipi-insoddisfatto);
+        --gradient-c3: var(--archetipi-infortunato);
     }
 
     .cards-row {
@@ -353,17 +377,41 @@
         }
 
         .mobile-only {
+            display: block;
+        }
+
+        .perf-quote.mobile-only {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            margin-top: -60px; /* Commento solo il PERCHÉ: centra verticalmente il testo di circa 120px di altezza senza generare conflitti con transform di GSAP */
+            z-index: 5;
+            display: block;
+        }
+
+        .archetypes-carousel-container.mobile-only {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            margin-top: -192px; /* Commento solo il PERCHÉ: centra verticalmente il carosello mobile di circa 385px di altezza senza generare conflitti con transform di GSAP */
+            z-index: 2;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         .archetype-section {
-            /* Commento solo il PERCHÉ: azzera il margine superiore negativo su mobile 
-               per evitare conflitti spaziali con la sezione precedente */
+            /* Commento solo il PERCHÉ: azzera margini e padding ed imposta altezza a 100vh 
+               per bloccare la sezione nel viewport durante lo scrollytelling unificato mobile */
             margin-top: 0;
-            padding-top: var(--spacing-6);
-            padding-bottom: var(--spacing-6);
+            padding: 0;
+            height: 100vh;
+            min-height: 100vh;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
         }
     }
 </style>

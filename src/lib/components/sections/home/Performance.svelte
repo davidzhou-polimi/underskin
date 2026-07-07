@@ -58,19 +58,9 @@
 
 	@media (max-width: 768px) {
 		.performance-section {
-			/* Commento solo il PERCHÉ: riduce il padding laterale fisso desktop 
-			   per consentire al testo di occupare meglio la larghezza dello schermo mobile */
-			padding: 0 var(--spacing-3);
-		}
-
-		.desktop-only {
-			/* Commento solo il PERCHÉ: nasconde la citazione desktop su mobile */
+			/* Commento solo il PERCHÉ: nasconde completamente la sezione Performance originale su mobile 
+			   perché viene integrata all'interno del processo di scrollytelling di ArchetypeSection */
 			display: none;
-		}
-
-		.mobile-only {
-			/* Commento solo il PERCHÉ: rende visibile la citazione specifica per mobile */
-			display: block;
 		}
 	}
 </style>
