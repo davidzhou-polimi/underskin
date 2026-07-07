@@ -4,12 +4,20 @@
 
 <section id="performance" class="performance-section" use:performanceReveal>
 	<div class="perf-content">
-		<blockquote class="perf-quote">
+		<!-- Desktop Quote -->
+		<blockquote class="perf-quote desktop-only">
 			La performance non consuma solo il corpo: <br />
 			modella
 			<span class="gradient-text animate-gradient-text my-archetypes-color"> identità, abitudini e ossessioni</span>.<br />
 			Nel tempo emergono schemi ricorrenti, modi<br />
 			diversi di vivere il peso della performance.
+		</blockquote>
+
+		<!-- Mobile Quote -->
+		<blockquote class="perf-quote mobile-only">
+			La performance non consuma <br />
+			solo il corpo: ma modella <br />
+			<span class="gradient-text animate-gradient-text my-archetypes-color"> identità, abitudini, ossessioni</span>.
 		</blockquote>
 	</div>
 </section>
@@ -26,12 +34,8 @@
 		background-color: transparent;
 	}
 
-	@media (max-width: 768px) {
-		.performance-section {
-			/* Commento solo il PERCHÉ: riduce il padding laterale fisso desktop 
-			   per consentire al testo di occupare meglio la larghezza dello schermo mobile */
-			padding: 0 var(--spacing-3);
-		}
+	.mobile-only {
+		display: none;
 	}
 
 	.perf-quote {
@@ -50,5 +54,23 @@
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
+	}
+
+	@media (max-width: 768px) {
+		.performance-section {
+			/* Commento solo il PERCHÉ: riduce il padding laterale fisso desktop 
+			   per consentire al testo di occupare meglio la larghezza dello schermo mobile */
+			padding: 0 var(--spacing-3);
+		}
+
+		.desktop-only {
+			/* Commento solo il PERCHÉ: nasconde la citazione desktop su mobile */
+			display: none;
+		}
+
+		.mobile-only {
+			/* Commento solo il PERCHÉ: rende visibile la citazione specifica per mobile */
+			display: block;
+		}
 	}
 </style>
