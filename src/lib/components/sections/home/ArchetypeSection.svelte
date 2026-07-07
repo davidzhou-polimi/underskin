@@ -236,13 +236,6 @@
         box-sizing: border-box;
     }
 
-    .desktop-only {
-        display: flex;
-    }
-
-    .mobile-only {
-        display: none;
-    }
 
     /* ─── CAROUSEL MOBILE STYLES ────────────────────────────────────────── */
     .archetypes-carousel-container {
@@ -344,6 +337,14 @@
     .dot-button.active {
         transform: scale(1.6);
         background-color: var(--neutral-800);
+    }
+
+    .desktop-only {
+        display: flex;
+    }
+
+    .mobile-only {
+        display: none;
     }
 
     @media (max-width: 768px) {
