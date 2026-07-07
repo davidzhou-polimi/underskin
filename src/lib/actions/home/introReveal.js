@@ -36,6 +36,16 @@ export function introReveal(node) {
 	// Su mobile (max-width: 768px) la callback non viene mai eseguita, quindi i tween non esistono.
 	const mm = gsap.matchMedia();
 
+	// Offset verticale dell'animazione lettere. Solo su mobile in yPercent (proporzionale all'altezza
+	// del glifo): a font ridotto (56px) i 12px fissi erano ~21% dell'altezza e spingevano le lettere a
+	// fondo nella banda sfumata della maschera → titolo tagliato in uscita. ~9% eguaglia i 12px del
+	// desktop (128px), che invece resta sui px storici (zero delta desktop). Letto una volta come
+	// reducedMotion: l'intro non ri-swappa a metà resize (già così col valore px fisso precedente).
+	const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+	const hiddenY = isMobile ? { yPercent: 9 } : { y: 12 };
+	const shownY = isMobile ? { yPercent: 0 } : { y: 0 };
+	const exitY = isMobile ? { yPercent: -9 } : { y: -12 };
+
 	const ctx = gsap.context(() => {
 		// paused: l'entrata non parte al mount ma quando il loader alza il velo (loadingState.complete),
 		// così l'intro non si "pre-gioca" coperta dall'overlay. Sui carichi senza loader (navigazioni
@@ -103,7 +113,7 @@ export function introReveal(node) {
 		if (letters.length > 0) {
 			// Stato nascosto applicato SUBITO: le tl.set a t=0 non fanno immediate-render con la
 			// timeline in pausa, quindi senza questo le lettere lampeggerebbero visibili prima del play.
-			gsap.set(letters, { y: 12, xPercent: 0, '--blur-val': '12px', opacity: 0 });
+			gsap.set(letters, { ...hiddenY, xPercent: 0, '--blur-val': '12px', opacity: 0 });
 
 			const centerIdx = (letters.length - 1) / 2;
 			letters.forEach((letter, idx) => {
@@ -111,7 +121,7 @@ export function introReveal(node) {
 				const delay = Math.abs(offset) * 0.08; // Lo stagger parte dal centro verso l'esterno
 
 				tl.set(letter, {
-					y: 12,
+					...hiddenY,
 					xPercent: 0,
 					'--blur-val': '12px',
 					opacity: 0
@@ -119,7 +129,7 @@ export function introReveal(node) {
 
 				// Commento solo il PERCHÉ: Fa salire le lettere dal basso facendole comparire a fuoco a partire dal centro verso l'esterno.
 				tl.to(letter, {
-					y: 0,
+					...shownY,
 					'--blur-val': '0px',
 					opacity: 1,
 					duration: 1.4,
@@ -257,7 +267,7 @@ export function introReveal(node) {
 
 					// Commento solo il PERCHÉ: Fa salire le lettere verso l'alto dissolvendole a partire dai bordi esterni verso il centro.
 					timeline.to(letter, {
-						y: -12,
+						...exitY,
 						xPercent: 0,
 						'--blur-val': '8px',
 						opacity: 0,
@@ -355,7 +365,7 @@ export function introReveal(node) {
 					const delay = Math.abs(offset) * 0.08;
 
 					timeline.set(letter, {
-						y: 12,
+						...hiddenY,
 						xPercent: 0,
 						'--blur-val': '12px',
 						opacity: 0
@@ -363,7 +373,7 @@ export function introReveal(node) {
 
 					// Commento solo il PERCHÉ: Fa risalire le lettere dal basso svelandole a partire dal centro del titolo durante il rientro.
 					timeline.to(letter, {
-						y: 0,
+						...shownY,
 						'--blur-val': '0px',
 						opacity: 1,
 						duration: 1.4,
