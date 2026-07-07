@@ -286,15 +286,17 @@ export function quizDragMobile(node, params) {
 		// pannello (stesso confine e stessa durata/posizione), "mentale" (gradiente) si espande a tutto
 		// schermo, le etichette svaniscono. Resta il solo sfondo gradiente. (Tween separati: `y` è il
 		// transform della maniglia, `top` è la posizione della zona — non vanno mischiati sullo stesso target.)
-		timeline.to(handle, { y: H, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0.9);
-		timeline.to(zoneFisico, { top: H, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0.9);
-		timeline.to(zoneMentale, { opacity: 0, duration: 0.5, ease: 'power2.in' }, 1.0);
+		// Commento solo il PERCHÉ: allungata la sosta sul risultato 70/30 a 0.8s (la fase 2 inizia a 1.4s anziché 0.9s).
+		timeline.to(handle, { y: H, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 1.4);
+		timeline.to(zoneFisico, { top: H, opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 1.4);
+		timeline.to(zoneMentale, { opacity: 0, duration: 0.5, ease: 'power2.in' }, 1.5);
 
 		// Fase 3 — a uscita conclusa e dopo una pausa più lunga sul risultato pieno, la citazione
 		// compare centrata sul gradiente (staccata dall'animazione d'uscita, non sovrapposta).
+		// Commento solo il PERCHÉ: slittato l'avvio della citazione a 2.9s per mantenere la pausa respiratoria di 0.9s dopo la fine della fase 2.
 		timeline.fromTo(quotePanel,
 			{ opacity: 0, y: 20 },
-			{ opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 2.4);
+			{ opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 2.9);
 	}
 
 	/** Gesto "indietro" durante il gioco: riavvolge l'ingresso; il ritorno alla sosta avviene in onReverseComplete. */
