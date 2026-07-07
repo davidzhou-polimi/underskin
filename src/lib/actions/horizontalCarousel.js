@@ -3,6 +3,7 @@ import { gsap } from '$lib/utils/gsapSetup.js';
 /**
  * @typedef {Object} HorizontalCarouselParams
  * @property {number} [activeIndex]
+ * @property {number} [gap]
  */
 
 /**
@@ -30,8 +31,8 @@ export function horizontalCarousel(node, params = {}) {
 		const firstItem = /** @type {HTMLElement} */ (items[0]);
 		const itemWidth = firstItem.offsetWidth;
 
-		// Definiamo un gap costante coerente con i token di spaziatura (var(--spacing-4) = 32px)
-		const gap = 32;
+		// Definiamo un gap coerente con i token di spaziatura o configurato tramite parametri
+		const gap = params.gap ?? 32;
 		const offset = itemWidth + gap;
 
 		// Calcoliamo se il movimento è in avanti o all'indietro per determinare la direzione di uscita
@@ -187,7 +188,9 @@ export function horizontalCarousel(node, params = {}) {
 	return {
 		/** @param {HorizontalCarouselParams} newParams */
 		update(newParams) {
-			if (newParams.activeIndex !== activeIndex) {
+			const oldGap = params.gap;
+			params = newParams;
+			if (newParams.activeIndex !== activeIndex || newParams.gap !== oldGap) {
 				updateLayout(newParams.activeIndex ?? 0, true);
 			}
 		},

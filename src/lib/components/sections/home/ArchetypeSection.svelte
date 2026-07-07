@@ -44,27 +44,39 @@
     let autoplayActive = $state(true);
     /** @type {HTMLDivElement | null} */
     let dotsPillElement = $state(null);
+    let progressRatio = $state(0);
 
     // ─── Navigazione ───────────────────────────────────────────────────────────
 
     function next() {
         activeIndex = (activeIndex + 1) % activeItems.length;
+        progressRatio = 0;
     }
 
     function prev() {
         activeIndex = (activeIndex - 1 + activeItems.length) % activeItems.length;
+        progressRatio = 0;
     }
 
     /** @param {number} index */
     function selectIndex(index) {
         activeIndex = index;
         autoplayActive = false; // Disattiva autoplay su interazione
+        progressRatio = 0;
     }
 
     function handleVideoEnded() {
         if (autoplayActive) {
             next();
         }
+    }
+
+    /**
+     * @param {number} currentTime
+     * @param {number} duration
+     */
+    function handleVideoTimeUpdate(currentTime, duration) {
+        progressRatio = currentTime / duration;
     }
 
     // ─── Touch Events per Swipe ───────────────────────────────────────────────
@@ -149,7 +161,7 @@
         <div class="carousel-viewport">
             <div
                 class="carousel-track"
-                use:horizontalCarousel={{ activeIndex }}
+                use:horizontalCarousel={{ activeIndex, gap: 24 }}
                 ontouchstart={handleTouchStart}
                 ontouchend={handleTouchEnd}
                 role="group"
@@ -166,6 +178,7 @@
                             isPlaying={i === activeIndex}
                             loop={!autoplayActive}
                             onVideoEnded={i === activeIndex ? handleVideoEnded : undefined}
+                            onTimeUpdate={i === activeIndex ? handleVideoTimeUpdate : undefined}
                             showTooltip={false}
                         />
                         <!-- Clic sulle card parziali laterali per centrarle -->
@@ -198,7 +211,15 @@
                         class:active={i === activeIndex}
                         onclick={() => selectIndex(i)}
                         aria-label="Vai alla card {i + 1}"
-                    ></button>
+                    >
+                        {#if i === activeIndex}
+                            <span
+                                class="dot-progress"
+                                class:no-transition={progressRatio === 0}
+                                style="width: {progressRatio * 100}%"
+                            ></span>
+                        {/if}
+                    </button>
                 {/each}
             </div>
         </div>
@@ -354,13 +375,43 @@
         border: none;
         padding: 0;
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
         transition: transform var(--transition-duration-normal) var(--easing-standard),
-                    background-color var(--transition-duration-normal) var(--easing-standard);
+                    background-color var(--transition-duration-normal) var(--easing-standard),
+                    width var(--transition-duration-normal) var(--easing-standard),
+                    border-radius var(--transition-duration-normal) var(--easing-standard);
     }
 
     .dot-button.active {
-        transform: scale(1.6);
+        width: 24px; /* Commento solo il PERCHÉ: allunga la pillola attiva a forma di riga per visualizzare il progresso temporale del video */
+        border-radius: 9999px;
+        background-color: color-mix(
+            in srgb,
+            var(--neutral-800) 20%,
+            transparent
+        );
+        transform: scale(1.0); /* Rimuove lo scale del dot attivo poiché la larghezza è ora gestita esplicitamente in pixel */
+    }
+
+    .dot-progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0%;
+        border-radius: 9999px;
         background-color: var(--neutral-800);
+        pointer-events: none;
+        /* Commento solo il PERCHÉ: applica una transizione lineare fluida sulla larghezza 
+           per ammorbidire gli scatti intermedi derivanti dagli eventi timeupdate del video nativo */
+        transition: width 0.15s linear;
+    }
+
+    .dot-progress.no-transition {
+        /* Commento solo il PERCHÉ: disattiva temporaneamente la transizione quando il progresso si azzera 
+           per evitare l'animazione di scivolamento all'indietro della barra */
+        transition: none !important;
     }
 
     .desktop-only {

@@ -15,7 +15,8 @@
 	 *   clickable?: boolean,
 	 *   showTooltip?: boolean,
 	 *   loop?: boolean,
-	 *   onVideoEnded?: () => void
+	 *   onVideoEnded?: () => void,
+	 *   onTimeUpdate?: (currentTime: number, duration: number) => void
 	 * }}
 	 */
 	let { 
@@ -28,7 +29,8 @@
 		clickable = true,
 		showTooltip = true,
 		loop = true,
-		onVideoEnded = undefined
+		onVideoEnded = undefined,
+		onTimeUpdate = undefined
 	} = $props();
 
 	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
@@ -120,6 +122,11 @@
                     muted 
                     {loop} 
                     onended={onVideoEnded}
+                    ontimeupdate={(e) => {
+                        if (onTimeUpdate && isPlaying) {
+                            onTimeUpdate(e.currentTarget.currentTime, e.currentTarget.duration || 1);
+                        }
+                    }}
                     playsinline 
                     class="athlete-video"
                 ></video>
