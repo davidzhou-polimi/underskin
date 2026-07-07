@@ -143,7 +143,10 @@
 	>
 		<!-- Schermata introduttiva centrata: la domanda precede il gioco e sfuma allo scroll -->
 		<div class="quiz-intro">
-			<p class="quiz-intro-lead">Quando tutto si decide in pochi istanti…</p>
+			<p class="quiz-intro-lead">
+				Quando tutto si decide<br>
+				in pochi istanti...
+			</p>
 			<p class="quiz-intro-cta">Cosa pesa di più?</p>
 		</div>
 
@@ -548,14 +551,18 @@
 		}
 
 		.quiz-intro-lead {
-			font-size: var(--text-s);
+			/* Commento solo il PERCHÉ: aumenta il font size da text-s (18px) a text-m (20px) su mobile per maggior leggibilità */
+			font-size: var(--text-l);
 			color: var(--content-primary);
+			line-height: 1.4;
 		}
 
 		.quiz-intro-cta {
-			font-size: var(--text-m);
+			/* Commento solo il PERCHÉ: aumenta il font size da text-m (20px) a text-l (24px) su mobile per dare maggiore impatto alla cta */
+			font-size: var(--text-xl);
 			font-weight: var(--text-bold);
 			color: var(--content-primary);
+			margin-top: var(--spacing-2);
 		}
 
 		/* Barra che divide il viewport: le zone lo riempiono in assoluto con altezza/top in px
