@@ -13,7 +13,9 @@
 	 *   isPlaying?: boolean,
 	 *   horizontal?: boolean,
 	 *   clickable?: boolean,
-	 *   showTooltip?: boolean
+	 *   showTooltip?: boolean,
+	 *   loop?: boolean,
+	 *   onVideoEnded?: () => void
 	 * }}
 	 */
 	let { 
@@ -24,7 +26,9 @@
 		isPlaying = false,
 		horizontal = false,
 		clickable = true,
-		showTooltip = true
+		showTooltip = true,
+		loop = true,
+		onVideoEnded = undefined
 	} = $props();
 
 	// Tracciamo lo stato hover locale per controllare la riproduzione video in modalità orizzontale
@@ -110,7 +114,15 @@
                      mostrava già il thumbnail correttamente). Per un vero risparmio andrebbero
                      ri-processati i webm con le Cues spostate in testa (mkvpropedit/ffmpeg -movflags
                      equivalente), fuori dallo scope di questo fix. -->
-                <video bind:this={videoElement} src={videoSrc} muted loop playsinline class="athlete-video"></video>
+                <video 
+                    bind:this={videoElement} 
+                    src={videoSrc} 
+                    muted 
+                    {loop} 
+                    onended={onVideoEnded}
+                    playsinline 
+                    class="athlete-video"
+                ></video>
             {/if}
 
             <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
@@ -161,6 +173,9 @@
 		inset: 0;
 		opacity: 0.5;
 		transition: background 0.3s ease;
+		/* Commento solo il PERCHÉ: applica l'arrotondamento ereditato direttamente sullo sfondo 
+		   per prevenire il mancato clipping degli angoli (angoli squadrati) dovuto al bug Safari/WebKit su iOS */
+		border-radius: inherit;
 	}
 
 	.archetype-card-container:hover .background-glass {
