@@ -113,16 +113,21 @@
 		--orbit-radius: clamp(20px, 7vmin, 30px);
 	}
 
-	/* L'orbita ruota in CSS SOLO nella finestra pre-hydration: si anima già dal frame
-	   prerenderizzato, senza attendere il JS (era la causa del "loader in ritardo" su Android).
-	   All'hydration l'action aggiunge `is-hydrated` e GSAP subentra per idle e outro (il twinkle
-	   in keyframes CSS sfarfallava; quello GSAP originale no). */
+	/* L'orbita ruota in CSS (compositor) per TUTTA l'idle: si anima già dal frame prerenderizzato
+	   e non congela mai — il main thread durante il caricamento è al massimo del carico
+	   (hydration, prima draw WebGL del gradiente) e un'animazione guidata da JS lì si blocca coi
+	   frame per poi recuperare il tempo in un colpo (salto avanti). GSAP prende il transform solo
+	   all'outro (`is-collapsing`), a main thread quieto; all'hydration (`is-hydrated`) prende solo
+	   le opacità delle lucine (il twinkle in keyframes CSS sfarfallava; quello GSAP originale no). */
 	.loading-orbit {
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		width: 0;
 		height: 0;
+		/* Promuove lo spin al compositor: durante il burst di hydration il main thread è bloccato
+		   e senza layer la rotazione congela per poi "recuperare" in avanti al primo paint. */
+		will-change: transform;
 		animation: loading-orbit-spin 3.4s linear infinite;
 	}
 
@@ -166,14 +171,21 @@
 		animation-delay: 0.16s;
 	}
 
-	/* Takeover GSAP all'hydration: le CSS animation battono gli inline style, quindi vanno spente
-	   perché i gsap.set su transform/opacity abbiano effetto (il transform statico da stylesheet è
-	   invece battuto dagli inline e non serve azzerarlo). `is-hydrated` è aggiunta a runtime
-	   dall'action (classList.add): :global() evita che Svelte, non vedendola nel markup, elimini
-	   la regola come "selettore inutilizzato". */
-	.loading-screen:global(.is-hydrated) .loading-orbit,
+	/* Handoff opacità all'hydration: le CSS animation battono gli inline style, quindi la
+	   light-appear (fill both) va spenta perché le opacity GSAP (fine accensione + twinkle)
+	   abbiano effetto. Solo le lucine: lo spin dell'orbita resta in CSS fino all'outro.
+	   `is-hydrated`/`is-collapsing` sono aggiunte a runtime dall'action (classList.add):
+	   :global() evita che Svelte, non vedendole nel markup, elimini le regole come
+	   "selettori inutilizzati". */
 	.loading-screen:global(.is-hydrated) .loading-light {
 		animation: none;
+	}
+
+	/* Avvio outro: GSAP prende il transform per la spirale — lo spin CSS (che batterebbe gli
+	   inline style) va spento e il layer promosso non serve più. */
+	.loading-screen:global(.is-collapsing) .loading-orbit {
+		animation: none;
+		will-change: auto;
 	}
 
 	@keyframes loading-orbit-spin {
