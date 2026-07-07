@@ -101,8 +101,8 @@
 
       <div class="closing-sentence">
         <h3 class="main-sentence">
-          Quando vincere diventa l'unico risultato accettabile,
-          l'atleta smette di essere una persona e diventa un risultato.
+          Quando vincere diventa l'unico traguardo accettabile,
+          l'atleta smette di essere una persona e diventa solo un numero.
         </h3>
       </div>
     </div>
@@ -112,9 +112,9 @@
 
     <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
       <h3 class="main-sentence">
-          Quando vincere diventa l'unico risultato<br>
+          Quando vincere diventa l'unico traguardo<br>
           accettabile, l'atleta smette di essere<br>
-          una persona e diventa un risultato.
+          una persona e diventa solo un numero.
       </h3>
     </div>
 
@@ -305,6 +305,13 @@
     .closing-sentence {
       max-width: 80vw;
       text-align: center;
+    }
+
+    .main-sentence {
+      /* Dimensione mobile allineata alle altre frasi archetipo (variante incoming): text-m per
+         leggibilità ed equilibrio con i fumetti, con respiro orizzontale. */
+      font-size: var(--text-m);
+      padding: 0 var(--spacing-4);
     }
   }
 </style>
