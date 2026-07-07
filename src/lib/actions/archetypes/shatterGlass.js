@@ -20,7 +20,9 @@ export function shatterGlass(node, params = { fragments: [] }) {
 		if (ctx) ctx.revert();
 
 		ctx = gsap.context(() => {
-			const windowHeight = window.innerHeight;
+			// Altezza del box reale (CSS 100vh = viewport lungo) e non window.innerHeight (corto al
+			// mount): i frammenti cadono oltre il bordo del pannello anche a URL bar ritratta.
+			const fallHeight = node.getBoundingClientRect().height;
 
 			// Sfuma la lastra di vetro iniziale in base alla vicinanza allo scroll per dare fisicità prima dell'impatto
 			gsap.fromTo(
@@ -103,7 +105,7 @@ export function shatterGlass(node, params = { fragments: [] }) {
 			tl.to(
 				'.glass-shard',
 				{
-					y: windowHeight * 1.5,
+					y: fallHeight * 1.5,
 					x: () => (Math.random() - 0.5) * 160,
 					rotation: () => (Math.random() - 0.5) * 45,
 					opacity: 0,

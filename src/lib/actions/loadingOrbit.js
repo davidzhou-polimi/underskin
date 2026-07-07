@@ -9,9 +9,10 @@ import { gsap } from '$lib/utils/gsapSetup.js';
  */
 
 // Parametri d'animazione (non stile). Il raggio è costante e uguale per tutte: 3 lucine equispaziate
-// a 120° che ruotano insieme = un'orbita circolare pulita e compatta (niente respiro del raggio, che
-// leggeva come "triangolo che si scala"). ω scelta così che un giro sia percepibile nei ~2s del loader.
-const ORBIT_RADIUS = 30;
+// a 120° che ruotano insieme = un'orbita circolare pulita e compatta. Il raggio NON è più una
+// costante: è il clamp() responsive di --orbit-radius, letto risolto in px dalla matrice computata
+// delle lucine al takeover. ω scelta così che un giro sia percepibile nei ~2s del loader.
+const FALLBACK_RADIUS = 30;        // se la matrice CSS è none/degenere (es. stylesheet non applicato)
 const OMEGA = (Math.PI * 2) / 3.4; // ~1 giro ogni 3.4s: rotazione lenta ma chiaramente visibile
 const WOBBLE_FREQ = 1.1;           // lieve ondulazione condivisa della velocità (mantiene i 120° fissi)
 const WOBBLE_AMP = 0.14;
@@ -34,8 +35,10 @@ const REVEAL_DURATION = 1.2;
 const REVEAL_AT = 0.5;
 
 /**
- * Action sul nodo root dell'overlay: fa ruotare in cerchio 3 "lucine" e, su richiesta, le fa
- * confluire a spirale verso il centro rimpicciolendosi fino a sparire.
+ * Action sul nodo root dell'overlay: prende in consegna ("takeover") l'orbita CSS pre-hydration
+ * — che esiste solo perché il loader sia animato dal primo frame prerenderizzato, prima del JS —
+ * e da lì guida idle e outro con GSAP come nell'implementazione originale: rotazione continua,
+ * twinkle desincronizzato, e uscita a spirale verso il centro rimpicciolendosi fino a sparire.
  * @param {HTMLElement} node
  * @param {LoadingOrbitParams} [params]
  */
@@ -43,9 +46,38 @@ export function loadingOrbit(node, params = {}) {
 	let onReveal = params.onReveal;
 	let onDone = params.onDone;
 
+	const orbit = /** @type {HTMLElement | null} */ (node.querySelector('.loading-orbit'));
 	const lights = /** @type {HTMLElement[]} */ (Array.from(node.querySelectorAll('.loading-light')));
 	const n = lights.length;
-	const baseAngle = lights.map((_, i) => (i / Math.max(n, 1)) * Math.PI * 2);
+
+	// ── Takeover: misura lo stato CSS corrente PRIMA di toccare le classi, così il flush di
+	// stile legge i valori animati (rotazione dello spin, appear a metà). ─────────────────────
+	/** @param {Element | null} el */
+	function computedMatrix(el) {
+		const t = el ? getComputedStyle(el).transform : 'none';
+		return t && t !== 'none' ? new DOMMatrixReadOnly(t) : null;
+	}
+
+	// Angolo corrente dello spin CSS del wrapper: dopo `is-hydrated` il wrapper torna a identity,
+	// quindi phi va assorbito negli angoli per-lucina per non far scattare l'anello.
+	const orbitMatrix = computedMatrix(orbit);
+	const phi = orbitMatrix ? Math.atan2(orbitMatrix.b, orbitMatrix.a) : 0;
+
+	// La matrice di `rotate(θ) translateY(−r)` ha traslazione (r·sinθ, −r·cosθ): hypot = raggio
+	// (è così che il clamp() responsive di --orbit-radius arriva risolto in px), atan2 = angolo
+	// polare di partenza. Con t che parte da 0 il wobble vale sin(0)·amp = 0: nessuno scatto.
+	let radius = FALLBACK_RADIUS;
+	const startAngle = lights.map((el, i) => {
+		const m = computedMatrix(el);
+		if (!m || (m.e === 0 && m.f === 0)) return (i / Math.max(n, 1)) * Math.PI * 2;
+		radius = Math.hypot(m.e, m.f);
+		return Math.atan2(m.f, m.e) + phi;
+	});
+	const startOpacity = lights.map((el) => parseFloat(getComputedStyle(el).opacity) || 0);
+
+	// Handoff atomico (stesso tick → un solo recalc): la classe spegne le animazioni CSS (che
+	// batterebbero gli inline style) e i gsap.set ripiantano posizioni/opacità identiche.
+	node.classList.add('is-hydrated');
 
 	// t = clock in secondi; radiusScale = 1→0 nel collasso finale.
 	const state = { t: 0, radiusScale: 1 };
@@ -53,19 +85,17 @@ export function loadingOrbit(node, params = {}) {
 	function render() {
 		// Rotazione condivisa (+ lieve ondulazione): tutte ruotano insieme, spaziatura 120° costante.
 		const rot = state.t * OMEGA + Math.sin(state.t * WOBBLE_FREQ) * WOBBLE_AMP;
-		const rad = ORBIT_RADIUS * state.radiusScale;
+		const rad = radius * state.radiusScale;
 		for (let i = 0; i < n; i++) {
-			const ang = baseAngle[i] + rot;
+			const ang = startAngle[i] + rot;
 			gsap.set(lights[i], { x: Math.cos(ang) * rad, y: Math.sin(ang) * rad });
 		}
 	}
 
-	// Le lucine sono centrate dal CSS (top/left 50%); qui si centrano sul proprio baricentro una volta,
-	// poi il render muove solo x/y. Partono a opacity 0 (anche in CSS): l'HTML è prerenderizzato e senza
-	// questo, prima dell'hydration, i punti si vedrebbero impilati al centro. Le "accendiamo" in orbita.
-	gsap.set(lights, { xPercent: -50, yPercent: -50, opacity: 0 });
+	lights.forEach((el, i) => gsap.set(el, { opacity: startOpacity[i] }));
 	render();
-	gsap.to(lights, { opacity: 1, duration: 0.5, stagger: 0.08, ease: 'sine.out' });
+	// Completa l'accensione se il takeover cade a metà della light-appear CSS (no-op se già a 1).
+	gsap.to(lights, { opacity: 1, duration: 0.3, ease: 'sine.out' });
 
 	/** @type {gsap.core.Tween | null} */
 	let clock = null;

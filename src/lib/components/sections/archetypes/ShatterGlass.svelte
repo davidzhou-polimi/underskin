@@ -4,15 +4,18 @@
   import { shatterGlass } from "$lib/actions/archetypes/shatterGlass.js";
 
   const NUM_SHARDS = 30; // Ridotto leggermente per diminuire il carico sul DOM mantenendo l'effetto denso
-  let windowWidth = 0;
-  let windowHeight = 0;
+
+  /** @type {HTMLElement} */
+  let stickyContainer;
+  let plateWidth = 0;
+  let plateHeight = 0;
 
   /** @type {Array<any>} */
   let fragments = $state([]);
 
   function generateVoronoiShards() {
-    const width = windowWidth;
-    const height = windowHeight;
+    const width = plateWidth;
+    const height = plateHeight;
     const points = [];
 
     for (let i = 0; i < NUM_SHARDS; i++) {
@@ -47,11 +50,36 @@
   }
 
   onMount(() => {
-    windowWidth = window.innerWidth;
-    windowHeight = window.innerHeight;
+    // Misuriamo il box reale del pannello (CSS 100vh = viewport lungo, stabile rispetto alla URL bar)
+    // invece di window.innerHeight (viewport corto al mount): così i frammenti tappezzano tutto il
+    // pannello e non lasciano scoperta la striscia inferiore quando la URL bar si ritrae.
+    const apply = () => {
+      const rect = stickyContainer.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      // Lo show/hide della URL bar non cambia il box 100vh → niente rigenerazione (evita thrash).
+      if (w === plateWidth && h === plateHeight) return;
+      plateWidth = w;
+      plateHeight = h;
+      fragments = generateVoronoiShards();
+    };
 
-    // Calcolo reattivo sul client dopo il caricamento iniziale del layout
-    fragments = generateVoronoiShards();
+    apply();
+
+    // Rigenera solo su resize/orientation reali (il box 100vh cambia davvero); lo scroll che ritrae
+    // la URL bar non tocca il box, quindi il ResizeObserver non scatta.
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let debounce;
+    const ro = new ResizeObserver(() => {
+      clearTimeout(debounce);
+      debounce = setTimeout(apply, 150);
+    });
+    ro.observe(stickyContainer);
+
+    return () => {
+      clearTimeout(debounce);
+      ro.disconnect();
+    };
   });
 </script>
 
@@ -60,7 +88,7 @@
   class="scroll-wrapper"
   use:shatterGlass={{ fragments }}
 >
-  <div class="sticky-container">
+  <div class="sticky-container" bind:this={stickyContainer}>
     <div class="content-behind">
       <h3>
         Un infortunio non interrompe solo una carriera,<br />
