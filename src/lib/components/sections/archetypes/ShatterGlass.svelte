@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { Delaunay } from "d3-delaunay";
   import { shatterGlass } from "$lib/actions/archetypes/shatterGlass.js";
+  import { media } from "$lib/stores/mediaQuery.svelte.js";
 
   const NUM_SHARDS = 30; // Ridotto leggermente per diminuire il carico sul DOM mantenendo l'effetto denso
   let windowWidth = 0;
@@ -63,8 +64,14 @@
   <div class="sticky-container">
     <div class="content-behind">
       <h3>
-        Un infortunio non interrompe solo una carriera,<br />
-        ma anche il rapporto con il proprio corpo.
+        {#if media.isMobile}
+          Un infortunio non interrompe<br />
+          solo una carriera, ma anche il<br />
+          rapporto con il proprio corpo.
+        {:else}
+          Un infortunio non interrompe solo una carriera,<br />
+          ma anche il rapporto con il proprio corpo.
+        {/if}
       </h3>
     </div>
 
@@ -170,5 +177,12 @@
       rgba(255, 255, 255, 0.1) 100%
     );
     will-change: transform, opacity;
+  }
+
+  @media (max-width: 768px) {
+    h3 {
+      font-size: var(--text-m);
+      line-height: 1.5;
+    }
   }
 </style>

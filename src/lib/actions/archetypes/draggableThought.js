@@ -233,8 +233,13 @@ export function draggableThought(node, params) {
         // Calcola la distanza euclidea tra i due baricentri
         const distance = Math.hypot(cx1 - otherBox.cx, cy1 - otherBox.cy);
 
-        // Soglia magnetica di allontanamento (130px)
-        if (distance < 130) {
+        // Commento solo il PERCHÉ: su mobile la viewport è più stretta e i fumetti sono più ravvicinati;
+        // una soglia fissa a 130px farebbe scattare tutti in un colpo solo. La soglia si adatta
+        // proporzionalmente alla viewport per mantenere un comportamento naturale su qualsiasi schermo.
+        const collisionThreshold = Math.min(130, window.innerWidth * 0.28);
+
+        // Soglia magnetica di allontanamento adattiva
+        if (distance < collisionThreshold) {
           processedIds.add(otherBox.id);
           onScatter(otherBox.id);
         }
