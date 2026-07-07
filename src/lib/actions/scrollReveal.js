@@ -66,34 +66,38 @@ export function scrollReveal(node, params = {}) {
 				duration: 1
 			}, '-=0.5');
 		}
+
+		// Commento solo il PERCHÉ: se il breakpoint cambia a metà scroll (es. rotazione del telefono),
+		// la timeline appena creata riparte sempre dal suo stato iniziale; il resync forzato la allinea
+		// subito al progress di scroll reale invece di mostrare per un frame lo stato "inizio".
+		if (tl.scrollTrigger) {
+			tl.scrollTrigger.refresh();
+			tl.progress(tl.scrollTrigger.progress, true);
+		}
 	});
 
 	// Breakpoint Mobile
 	mm.add('(max-width: 768px)', () => {
-		// La timeline mobile prevede 10 step totali (ciascuno con durata 1):
-		// Step 1: Riga 0 si sposta nella sua posizione finale (scale: 1.0, y: 0)
-		// Step 2: Riga 1 entra dal basso (scale: 1.3, opacity: 1)
-		// Step 3: Riga 1 si sposta nella sua posizione finale (scale: 1.0, y: 0)
-		// Step 4: Riga 2 entra dal basso (scale: 1.3, opacity: 1)
-		// Step 5: Riga 2 si sposta nella sua posizione finale (scale: 1.0, y: 0)
-		// Step 6: Riga 3 entra dal basso (scale: 1.3, opacity: 1)
-		// Step 7: Riga 3 si sposta nella sua posizione finale (scale: 1.0, y: 0)
-		// Step 8: Pausa di lettura statica per permettere all'utente di leggere i 4 dati completi.
-		// Step 9: Le prime 4 righe (0-3) sfumano contemporaneamente (opacity: 0, filter: 'blur(15px)', y: -20)
-		//         mentre l'ultima frase (riga 4) entra centrata a y: 25 e in grande (scale: 1.3, opacity: 1, filter: 'blur(0px)')
-		// Step 10: L'ultima frase si rimpicciolisce e si stabilizza al centro (scale: 1.0, y: 0)
+		// Commento solo il PERCHÉ: l'ultima riga è trattata come "frase finale" (hero) e tutte
+		// le precedenti come dati che si accumulano una sopra l'altra. Ogni riga accumulata usa
+		// due tween separati (entra con opacity/blur, poi si sposta con posizione/scala) invece
+		// di uno solo, per far coincidere l'ingresso con lo snap-point precedente e l'assestamento
+		// con quello successivo, così lo scrub resta leggibile passo per passo.
+		const heroIndex = lines.length - 1;
+		const numStats = heroIndex;
+
 		const tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: triggerElement,
 				start: 'top 0%',
 				end: params.end ?? `+=${lines.length * startPercent}%`,
 				scrub: 1,
-				snap: {
-					snapTo: 1 / 10,
+				snap: numStats > 0 ? {
+					snapTo: 1 / (2 * numStats + 2),
 					duration: { min: 0.2, max: 0.6 },
 					ease: 'power2.inOut',
 					delay: 0.05
-				}
+				} : undefined
 			}
 		});
 
@@ -103,13 +107,13 @@ export function scrollReveal(node, params = {}) {
 			lines[i].classList.remove('reveal-hidden', 'reveal-visible');
 		}
 
-		// Commento solo il PERCHÉ: imposta ciascun elemento all'avvio leggermente traslato verso il basso (+25px) 
+		// Commento solo il PERCHÉ: imposta ciascun elemento all'avvio leggermente traslato verso il basso (+25px)
 		// rispetto al proprio slot naturale e ingrandito (scale: 1.3), in modo che l'entrata avvenga sempre al di sotto del testo precedente.
-		gsap.set(lines[0], { 
-			y: 25, 
-			scale: 1.3, 
-			opacity: 1, 
-			filter: 'blur(0px)' 
+		gsap.set(lines[0], {
+			y: 25,
+			scale: 1.3,
+			opacity: 1,
+			filter: 'blur(0px)'
 		});
 		for (let i = 1; i < lines.length; i++) {
 			gsap.set(lines[i], {
@@ -120,35 +124,28 @@ export function scrollReveal(node, params = {}) {
 			});
 		}
 
-		// Step 1: Riga 0 si sposta nella sua posizione finale
 		tl.to(lines[0], { y: 0, scale: 1.0, duration: 1 }, 0);
 
-		// Step 2: Riga 1 entra dal basso
-		tl.to(lines[1], { opacity: 1, filter: 'blur(0px)', duration: 1 }, 1);
+		if (numStats > 0) {
+			for (let i = 1; i < numStats; i++) {
+				tl.to(lines[i], { opacity: 1, filter: 'blur(0px)', duration: 1 }, 2 * i - 1);
+				tl.to(lines[i], { y: 0, scale: 1.0, duration: 1 }, 2 * i);
+			}
 
-		// Step 3: Riga 1 si sposta nella sua posizione finale
-		tl.to(lines[1], { y: 0, scale: 1.0, duration: 1 }, 2);
+			const fadeTime = 2 * numStats;
+			tl.to(Array.from(lines).slice(0, numStats), { opacity: 0, filter: 'blur(15px)', y: -20, duration: 1 }, fadeTime)
+			  .to(lines[heroIndex], { opacity: 1, filter: 'blur(0px)', duration: 1 }, fadeTime);
 
-		// Step 4: Riga 2 entra dal basso
-		tl.to(lines[2], { opacity: 1, filter: 'blur(0px)', duration: 1 }, 3);
+			tl.to(lines[heroIndex], { scale: 1.0, y: 0, duration: 1 }, fadeTime + 1);
+		}
 
-		// Step 5: Riga 2 si sposta nella sua posizione finale
-		tl.to(lines[2], { y: 0, scale: 1.0, duration: 1 }, 4);
-
-		// Step 6: Riga 3 entra dal basso
-		tl.to(lines[3], { opacity: 1, filter: 'blur(0px)', duration: 1 }, 5);
-
-		// Step 7: Riga 3 si sposta nella sua posizione finale
-		tl.to(lines[3], { y: 0, scale: 1.0, duration: 1 }, 6);
-
-		// Step 8: Pausa di lettura statica (nessun movimento tra t=7 e t=8)
-
-		// Step 9: Le prime 4 righe sfumano e l'ultima frase entra spostata a y: 25 ed in grande
-		tl.to([lines[0], lines[1], lines[2], lines[3]], { opacity: 0, filter: 'blur(15px)', y: -20, duration: 1 }, 8)
-		  .to(lines[4], { opacity: 1, filter: 'blur(0px)', duration: 1 }, 8);
-
-		// Step 10: L'ultima frase si contrae e si posiziona a y: 0
-		tl.to(lines[4], { scale: 1.0, y: 0, duration: 1 }, 9);
+		// Commento solo il PERCHÉ: se il breakpoint cambia a metà scroll (es. rotazione del telefono),
+		// la timeline appena creata riparte sempre dal suo stato iniziale; il resync forzato la allinea
+		// subito al progress di scroll reale invece di mostrare per un frame lo stato "inizio".
+		if (tl.scrollTrigger) {
+			tl.scrollTrigger.refresh();
+			tl.progress(tl.scrollTrigger.progress, true);
+		}
 	});
 
 	return {
