@@ -197,7 +197,12 @@
 			<span class="mobile-percentage">{stages[0].target}%</span>
 			<div class="mobile-captions">
 				{#each stages as stage}
-					<p class="mobile-caption">{stage.lines.join(' ')}</p>
+					<p class="mobile-caption">
+						<!-- Commento solo il PERCHÉ: preserva i ritorni a capo originari definiti in 'stages' per ottimizzare la leggibilità ed evitare sovrapposizioni su schermi mobili -->
+						{#each stage.lines as line, lineIdx}
+							{#if lineIdx > 0}<br />{/if}{line}
+						{/each}
+					</p>
 				{/each}
 			</div>
 		</div>
