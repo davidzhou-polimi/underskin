@@ -9,6 +9,7 @@ const ANGLE_STEP = 18; // degrees between adjacent card positions
  * @property {number} [itemsCount]
  * @property {number|null} [hoveredIndex]
  * @property {boolean} [isDragging]
+ * @property {1|-1} [exitDir] - Lato d'uscita della card sfogliata (deck mobile): 1 sinistra, -1 destra
  */
 
 /**
@@ -31,6 +32,7 @@ export function carousel(node, params = {}) {
 	let itemsCount = params.itemsCount ?? 0;
 	let hoveredIndex = params.hoveredIndex ?? null;
 	let isDragging = params.isDragging ?? false;
+	let exitDir = params.exitDir ?? 1;
 
 	// Gestiamo il ciclo di vita dei tween tramite un contesto dedicato per garantire il cleanup corretto.
 	const ctx = gsap.context(() => {}, node);
@@ -93,11 +95,12 @@ export function carousel(node, params = {}) {
 						pointerEventsVal = 'auto';
 					}
 				} else {
-					// Card trascinata via (sfogliata a sinistra)
-					// Scivola lateralmente a sinistra con una leggera inclinazione per emulare lo swipe manuale
-					xVal = targetDiff * 320;
+					// Card trascinata via (sfogliata): traiettoria e inclinazione specchiate su exitDir,
+					// così la card esce dal lato del gesto (deck bidirezionale). 380: la card
+					// responsive arriva a 357px di larghezza, a 320 resterebbe un lembo visibile.
+					xVal = targetDiff * 380 * exitDir;
 					yVal = -targetDiff * 30; // leggero spostamento verso il basso
-					rotationVal = targetDiff * 15; // inclinazione di rotazione
+					rotationVal = targetDiff * 15 * exitDir; // inclinazione di rotazione
 					scaleVal = 1 + targetDiff * 0.05;
 					opacityVal = Math.max(0, 1 + targetDiff);
 					filterVal = 'none';
@@ -108,7 +111,14 @@ export function carousel(node, params = {}) {
 				}
 
 				ctx.add(() => {
+					// xPercent/yPercent espliciti: GSAP riconosce il translate(-50%,-50%) CSS solo se
+					// Math.round(offsetHeight/2) coincide con l'arrotondamento della matrix — con
+					// l'altezza frazionaria della card responsive il confronto fallisce su alcune
+					// larghezze di viewport e il primo set cancellerebbe il centraggio verticale
+					// (card giù di mezza altezza, sopra i dots).
 					gsap.set(card, {
+						xPercent: -50,
+						yPercent: -50,
 						x: xVal,
 						y: yVal,
 						rotation: rotationVal,
@@ -142,7 +152,11 @@ export function carousel(node, params = {}) {
 				// Commento solo il PERCHÉ: posizioniamo istantaneamente le card lungo l'arco in base all'indice interpolato da Svelte per massima fluidità
 				ctx.add(() => {
 					const angle = targetDiff * ANGLE_STEP * (Math.PI / 180);
+					// Stessi xPercent/yPercent espliciti del ramo mobile: il centraggio della card
+					// non deve dipendere dall'euristica di parsing del transform CSS.
 					gsap.set(card, {
+						xPercent: -50,
+						yPercent: -50,
 						x: radius * Math.sin(angle),
 						y: radius * (1 - Math.cos(angle)),
 						rotation: targetDiff * ANGLE_STEP,
@@ -174,6 +188,7 @@ export function carousel(node, params = {}) {
 			const prevHoveredIndex = hoveredIndex;
 			hoveredIndex = 'hoveredIndex' in newParams ? (newParams.hoveredIndex ?? null) : hoveredIndex;
 			isDragging = newParams.isDragging ?? false;
+			exitDir = newParams.exitDir ?? 1;
 
 			if (indexChanged) {
 				itemsCount = newParams.itemsCount ?? itemsCount;

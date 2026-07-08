@@ -170,7 +170,9 @@
 
 	<ZoomTransition theme={archetype} onRevealChange={(revealed) => { gradient.carouselRevealed = revealed; }}>
 		{#snippet children()}
-			<AthleteSection type={archetype} />
+			<!-- revealed pilota lo swipe hint mobile: deve scattare al reveal della timeline di zoom,
+			     non alla visibilità geometrica (la sezione è in overlay visibility:hidden fino a lì) -->
+			<AthleteSection type={archetype} revealed={gradient.carouselRevealed} />
 		{/snippet}
 	</ZoomTransition>
 

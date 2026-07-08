@@ -8,6 +8,7 @@ import { gsap } from '$lib/utils/gsapSetup.js';
  * @property {number} [duration]
  * @property {boolean} [active]
  * @property {boolean} [flipped]
+ * @property {1 | -1} [flipDir] - Verso del ritorno sul fronte: -1 completa il giro (180→360) invece di tornare indietro
  */
 
 /**
@@ -15,13 +16,14 @@ import { gsap } from '$lib/utils/gsapSetup.js';
  * @param {FlipCardParams} [params]
  */
 export function flipCard(node, params = {}) {
-	let { 
-		axis = 'Y', 
-		innerSelector = '.card-inner', 
+	let {
+		axis = 'Y',
+		innerSelector = '.card-inner',
 		textSelector = '.back-text',
 		duration = 1.0,
 		active = true,
-		flipped = false
+		flipped = false,
+		flipDir = 1
 	} = params;
 
 	const innerCard = node.querySelector(innerSelector);
@@ -62,11 +64,16 @@ export function flipCard(node, params = {}) {
 
 	const flipToFront = () => {
 		ctx.add(() => {
+			// flipDir -1: la rotazione completa il giro (180→360) invece di tornare indietro, così
+			// l'unflip da swipe verso sinistra segue il verso del gesto. 360 viene normalizzato a 0
+			// a fine tween per non accumulare giri sui flip successivi.
+			const target = flipDir === -1 ? 360 : 0;
 			gsap.to(innerCard, {
-				[getRotationProp()]: 0,
+				[getRotationProp()]: target,
 				duration: duration,
 				ease: 'power2.out',
-				overwrite: 'auto'
+				overwrite: 'auto',
+				onComplete: target === 0 ? undefined : () => gsap.set(innerCard, { [getRotationProp()]: 0 })
 			});
 
 			if (backTexts.length) {
@@ -96,6 +103,7 @@ export function flipCard(node, params = {}) {
 			axis = newParams.axis ?? 'Y';
 			duration = newParams.duration ?? 1.0;
 			active = newParams.active ?? true;
+			flipDir = newParams.flipDir ?? 1;
 			const newFlipped = newParams.flipped ?? false;
 
 			if (newFlipped !== flipped) {

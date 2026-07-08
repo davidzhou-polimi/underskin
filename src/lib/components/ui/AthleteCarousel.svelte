@@ -3,16 +3,19 @@
 	import { carousel } from '$lib/actions/carousel.js';
 	import { carouselDots } from '$lib/actions/carouselDots.js';
 	import { AthleteCarouselMotion } from '$lib/actions/archetypes/athleteCarouselMotion.svelte.js';
+	import { athleteSwipeHint } from '$lib/actions/archetypes/athleteSwipeHint.js';
 	import athletesData from '$lib/data/athletes.json';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import { onMount } from 'svelte';
 
 	/**
 	 * @type {{
-	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto'
+	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
+	 *   revealed?: boolean
 	 * }}
 	 */
-	let { type = 'favorito' } = $props();
+	let { type = 'favorito', revealed = true } = $props();
 
 	const PLURAL_TYPES = {
 		favorito: 'favoriti',
@@ -39,6 +42,8 @@
 	});
 	/** @type {number | null} */
 	let hoveredIndex = $state(null);
+	/** Verso dell'unflip della card girata: -1 solo quando lo swipe che la riporta sul fronte va a sinistra. @type {1 | -1} */
+	let unflipDir = $state(1);
 
 	// Indice attivo derivato dall'indice mostrato arrotondato (memoizzato: cambia solo allo scatto di card)
 	const activeIndex = $derived(
@@ -76,7 +81,13 @@
 
 	// ─── Autoplay ─────────────────────────────────────────────────────────────
 
-	onMount(() => motion.start());
+	onMount(() => {
+		const cleanup = motion.start();
+		// Su mobile l'autoplay è spento dall'inizio: senza hover non c'è modo di fermarlo mentre
+		// si legge una card, e il suo posto come invito all'interazione lo prende lo swipe hint.
+		if (media.isMobile) motion.disableAutoplay();
+		return cleanup;
+	});
 
 	// Pausa/ripresa dell'autoplay in base ad hover e drag
 	$effect(() => {
@@ -192,31 +203,47 @@
 	let touchStartY = 0;
 	/** @type {'none' | 'horizontal' | 'vertical'} */
 	let touchAxis = 'none';
+	// Distingue il tap dallo swipe: il click sintetico post-touchend deve flippare la card solo
+	// se il dito non ha mai superato la soglia orizzontale (un gesto di drag non è un tap).
+	let lastTouchWasDrag = false;
 
 	/** @param {TouchEvent} e */
 	function handleTouchStart(e) {
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
 		touchAxis = 'none';
-		motion.disableAutoplay();
-		motion.startDrag(touchStartX);
+		lastTouchWasDrag = false;
 	}
 
 	/** @param {TouchEvent} e */
 	function handleTouchMove(e) {
-		if (!motion.isDragging) return;
 		const dx = e.touches[0].clientX - touchStartX;
 		const dy = e.touches[0].clientY - touchStartY;
 
 		// Commento solo il PERCHÉ: blocchiamo l'asse al primo movimento significativo. Un gesto
 		// verticale è uno scroll di pagina e non deve trascinare il carosello orizzontalmente né
 		// bloccare lo scroll nativo; solo un gesto orizzontale propaga il drag e fa preventDefault.
+		// Il drag del motore parte SOLO qui, oltre la soglia: sul touchstart partirebbe per ogni
+		// tocco e lo snap conseguente terrebbe isMoving alto, inghiottendo il tap di flip.
 		if (touchAxis === 'none') {
 			if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
 			touchAxis = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+			if (touchAxis === 'horizontal') {
+				lastTouchWasDrag = true;
+				motion.disableAutoplay();
+				motion.startDrag(touchStartX);
+				// La card girata torna sul fronte all'inizio dello swipe, mentre è ancora centrata:
+				// il flip-back a movimento concluso avveniva di sbieco nello stack ed era illeggibile.
+				// Il verso dell'unflip segue il gesto: verso sinistra la rotazione completa il giro
+				// invece di tornare indietro (il tap, che resetta a 1, flippa sempre uguale).
+				if (flippedStates[activeIndex]) {
+					unflipDir = dx < 0 ? -1 : 1;
+					flippedStates[activeIndex] = false;
+				}
+			}
 		}
 
-		if (touchAxis !== 'horizontal') return;
+		if (touchAxis !== 'horizontal' || !motion.isDragging) return;
 
 		if (e.cancelable) e.preventDefault();
 		motion.drag(e.touches[0].clientX);
@@ -227,6 +254,26 @@
 			motion.endDrag();
 		}
 		touchAxis = 'none';
+		// Il click sintetico arriva in coda al touchend: il flag si azzera al tick successivo,
+		// dopo che quel click è stato (correttamente) ignorato come coda dello swipe.
+		if (lastTouchWasDrag) setTimeout(() => { lastTouchWasDrag = false; }, 0);
+	}
+
+	/**
+	 * Tap/click sulla card attiva: flippa fronte/retro. Ignora la coda di uno swipe e i drag in
+	 * corso, ma NON il semplice movimento di assestamento/autoplay: su touch il click sintetico
+	 * cade quasi sempre dentro quella finestra e il gate su isMoving rendeva il flip inaffidabile.
+	 * @param {number} i
+	 */
+	function handleCardTap(i) {
+		if (i !== activeIndex || flippedStates.length === 0) return;
+		if (lastTouchWasDrag || motion.isDragging) return;
+		motion.disableAutoplay();
+		unflipDir = 1;
+		flippedStates[i] = !flippedStates[i];
+		if (flippedStates[i]) {
+			tooltip.hide();
+		}
 	}
 
 	// ─── Drag (area arco SVG) ─────────────────────────────────────────────────
@@ -239,7 +286,9 @@
 		isMouseOverDragZone = true;
 		// Commento solo il perché: aggiorniamo la posizione all'istante dell'enter per evitare glitch grafici con coordinate obsolete
 		tooltip.updatePosition(e.clientX, e.clientY);
-		tooltip.show('← • →', 'semplice', 'none', true);
+		// Tooltip classico accanto al cursore (non centrato al suo posto): il cursore nativo
+		// resta visibile come manina grab, è lui l'affordance di trascinamento.
+		tooltip.show('Trascina', 'semplice');
 	}
 
 	function handleNavMouseLeave() {
@@ -292,17 +341,13 @@
 	/** @param {number} idx */
 	function handleDotClick(idx) {
 		motion.disableAutoplay();
-		selectIndex(idx);
+		// Deck mobile: dai dot le card non tornano mai indietro e l'uscita è sempre
+		// verso destra, coerente con lo swipe hint.
+		motion.navigateTo(idx, { forwardOnly: true, exitDir: -1 });
 	}
 
 	function handleActiveCardClick() {
-		if (!isMoving && flippedStates.length > 0) {
-			motion.disableAutoplay();
-			flippedStates[activeIndex] = !flippedStates[activeIndex];
-			if (flippedStates[activeIndex]) {
-				tooltip.hide();
-			}
-		}
+		handleCardTap(activeIndex);
 	}
 
 	/** @param {KeyboardEvent} e */
@@ -332,7 +377,8 @@
 	</div>
 	<div
 		class="carousel-track"
-		use:carousel={{ activeIndex: motion.displayedIndex, itemsCount: filteredAthletes.length, hoveredIndex, isDragging: motion.isDragging }}
+		use:carousel={{ activeIndex: motion.displayedIndex, itemsCount: filteredAthletes.length, hoveredIndex, isDragging: motion.isDragging, exitDir: motion.exitDir }}
+		use:athleteSwipeHint={{ active: revealed && media.isMobile, getIndex: () => activeIndex }}
 		ontouchstart={handleTouchStart}
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
@@ -349,13 +395,7 @@
 					if (flippedStates[i]) return;
 					hoveredIndex = null;
 				}}
-				onclick={i === activeIndex && !isMoving ? () => {
-					motion.disableAutoplay();
-					flippedStates[i] = !flippedStates[i];
-					if (flippedStates[i]) {
-						tooltip.hide();
-					}
-				} : null}
+				onclick={() => handleCardTap(i)}
 				role="none"
 			>
 				<AthleteCard
@@ -367,6 +407,7 @@
 					number={"0" + (i + 1)}
 					active={i === activeIndex && !isMoving}
 					flipped={flippedStates[i]}
+					flipDir={unflipDir}
 				/>
 				{#if i !== activeIndex}
 					<button
@@ -515,6 +556,7 @@
 		border: none;
 		padding: 0;
 		margin: 0;
+		touch-action: manipulation;
 	}
 
 	.carousel-navigation {
@@ -528,9 +570,13 @@
 
 	.svg-drag-path {
 		fill: transparent;
-		cursor: none;
+		cursor: grab;
 		pointer-events: auto;
 		outline: none;
+	}
+
+	.svg-drag-path:active {
+		cursor: grabbing;
 	}
 
 	.svg-track {
@@ -603,6 +649,7 @@
 
 	.mobile-hint-text {
 		display: none; /* Nasconde su desktop */
+		touch-action: manipulation;
 	}
 
 	/* --- Responsive Overrides --- */
@@ -615,14 +662,33 @@
 			display: flex !important;
 		}
 
+		.carousel-container {
+			/* Unica sorgente della geometria del deck (AthleteCard la eredita): larghezza desktop,
+			   clampata dai margini laterali e — terzo termine — dall'altezza del viewport PICCOLO
+			   (barra browser visibile): il budget non-card del blocco è ~313px (padding sezione
+			   56×2 + padding container 16×2 + hint ~27+32 + peek 40 + margine dots 32 + pill 38),
+			   arrotondato a 320: la card non può superare (100svh − 320px) in altezza, pena dots
+			   sotto la piega o sovrapposti alla card. La scala resta uniforme (proporzioni
+			   desktop 357/461 preservate). Non replica alcun token: è geometria computata del
+			   componente. */
+			--deck-card-w: min(
+				357px,
+				calc(100vw - 2 * var(--spacing-4)),
+				calc((100svh - 320px) * 357 / 461)
+			);
+		}
+
 		.carousel-track {
-			/* Commento solo il PERCHÉ: adatta l'altezza del track su mobile per alloggiare la card da 380px più l'offset verticale delle card retrostanti nello stack */
-			height: 420px;
+			/* Commento solo il PERCHÉ: alloggia la card (rapporto desktop 461/357) più i 40px di
+			   peek dello stack retrostante */
+			height: calc(var(--deck-card-w) * 461 / 357 + 40px);
 		}
 
 		.carousel-item {
-			width: 290px;
-			height: 380px;
+			width: var(--deck-card-w);
+			/* Altezza esplicita (non auto+aspect-ratio): clamp rigido, nessuna crescita
+			   content-driven possibile oltre il box che track e dots si aspettano */
+			height: calc(var(--deck-card-w) * 461 / 357);
 			top: calc(50% + 20px);
 		}
 

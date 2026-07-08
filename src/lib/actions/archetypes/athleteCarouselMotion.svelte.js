@@ -8,6 +8,12 @@ const PIXELS_PER_INDEX = 180; // ridotto per far muovere più card a parità di 
 const MAX_CARDS_PER_DRAG = 4.5; // limita lo span di un singolo gesto di drag
 const MAX_INERTIA_SPEED = 0.35; // clamp per evitare swipe troppo veloci
 
+/* Modalità deck (mobile): uno swipe = una card, senza inerzia. La corsa completa del gesto
+   equivale a una card intera; sotto la soglia di commit la card torna al suo posto. */
+const DECK_SWIPE_SPAN = 220; // px di corsa del dito per una card intera
+const DECK_COMMIT_PROGRESS = 0.3; // frazione di corsa oltre cui il rilascio committa la card
+const DECK_COMMIT_FLICK = 0.045; // velocità (indici/frame) oltre cui anche un gesto corto committa
+
 /**
  * Helper per gestire correttamente il modulo negativo
  * @param {number} val
@@ -30,6 +36,8 @@ export class AthleteCarouselMotion {
 	inertiaVelocity = $state(0);
 	autoplayProgress = $state(0);
 	autoplayDisabled = $state(false);
+	/** Lato d'uscita della card sfogliata (deck mobile): 1 = sinistra (default), -1 = destra. */
+	exitDir = $state(/** @type {1 | -1} */ (1));
 
 	/** @type {() => number} */
 	#getLen;
@@ -75,6 +83,14 @@ export class AthleteCarouselMotion {
 			const len = this.#getLen();
 
 			if (this.isDragging) {
+				// Deck (mobile): tracking 1:1 del dito, NIENTE lerp. Col lerp, all'inversione di lato
+				// exitDir flippa istantaneo mentre il progress residuo decade piano: la x della card
+				// (funzione di entrambi) salterebbe di segno — lo "snap al centro" a metà gesto.
+				// Seguendo il dito, progress ed exitDir passano per lo 0 nello stesso frame.
+				if (media.isMobile) {
+					this.displayedIndex = this.targetIndex;
+					return;
+				}
 				// Stato 1: drag attivo. displayedIndex segue targetIndex (mouse) in modo reattivo
 				let diff = this.targetIndex - this.displayedIndex;
 				if (len > 0) {
@@ -133,29 +149,54 @@ export class AthleteCarouselMotion {
 		this.#autoplayTween?.restart();
 	}
 
-	/** @param {number} target */
-	navigateTo(target) {
+	/**
+	 * @param {number} target
+	 * @param {{ forwardOnly?: boolean, exitDir?: 1 | -1 }} [opts] - forwardOnly: avanza sempre lungo
+	 *   il loop (deck mobile, dai dot); exitDir: lato d'uscita imposto per questa navigazione.
+	 */
+	navigateTo(target, opts = {}) {
 		this.#autoplayTween?.pause();
 
 		const len = this.#getLen();
 		if (len === 0) return;
 
-		// Commento solo il PERCHÉ: allineiamo gli indici sul percorso circolare più breve per evitare rotazioni inverse complete
-		let diff = target - this.displayedIndex;
-		const halfLen = len / 2;
-		if (diff > halfLen) {
-			this.displayedIndex += len;
-		} else if (diff < -halfLen) {
-			this.displayedIndex -= len;
+		let duration = 0.6;
+		let ease = 'power2.out';
+
+		if (opts.forwardOnly) {
+			// Deck (dot mobile): mai card che rientrano dal lato opposto — il target "dietro"
+			// si raggiunge continuando a sfogliare in avanti lungo il loop.
+			this.displayedIndex = wrapIndex(this.displayedIndex, len);
+			const base = Math.round(this.displayedIndex);
+			const forward = wrapIndex(target - wrapIndex(base, len), len);
+			if (forward === 0) return;
+			target = base + forward;
+			// Sfogliata leggibile, non raffica: la durata cresce con le card da attraversare
+			// (0.6s fissi scaricavano 4-5 card in un burst) e l'inOut distribuisce il movimento
+			// lungo tutta la corsa invece di concentrarlo nei primi frame.
+			if (forward > 1) {
+				duration = Math.min(0.6 + 0.35 * (forward - 1), 2);
+				ease = 'power1.inOut';
+			}
+		} else {
+			// Commento solo il PERCHÉ: allineiamo gli indici sul percorso circolare più breve per evitare rotazioni inverse complete
+			let diff = target - this.displayedIndex;
+			const halfLen = len / 2;
+			if (diff > halfLen) {
+				this.displayedIndex += len;
+			} else if (diff < -halfLen) {
+				this.displayedIndex -= len;
+			}
 		}
+		if (opts.exitDir) this.exitDir = opts.exitDir;
 
 		this.#navigationTween?.kill();
 
 		const proxy = { val: this.displayedIndex };
 		this.#navigationTween = gsap.to(proxy, {
 			val: target,
-			duration: 0.6,
-			ease: 'power2.out',
+			duration,
+			ease,
 			onUpdate: () => {
 				this.displayedIndex = proxy.val;
 			},
@@ -163,6 +204,9 @@ export class AthleteCarouselMotion {
 				this.displayedIndex = wrapIndex(this.displayedIndex, len);
 				this.targetIndex = this.displayedIndex;
 				this.#navigationTween = null;
+				// A movimento assestato la card sfogliata è già fuori (opacità 0): si torna al
+				// lato d'uscita di default senza flip visibili.
+				this.exitDir = 1;
 			}
 		});
 	}
@@ -186,7 +230,10 @@ export class AthleteCarouselMotion {
 		this.#navigationTween?.kill();
 		this.#navigationTween = null;
 		this.#dragStartX = clientX;
-		this.#dragStartTarget = this.targetIndex;
+		// Deck (mobile): l'ancora è la card visivamente in cima — una presa a metà commit riparte
+		// da lì; targetIndex durante il tween di navigazione è ancora il valore stale pre-commit.
+		this.#dragStartTarget = media.isMobile ? Math.round(this.displayedIndex) : this.targetIndex;
+		if (media.isMobile) this.targetIndex = this.#dragStartTarget;
 		this.#dragVelocity = 0;
 		this.#lastDragIndex = this.targetIndex;
 		this.#lastDragTime = performance.now();
@@ -197,18 +244,22 @@ export class AthleteCarouselMotion {
 	/** @param {number} clientX */
 	drag(clientX) {
 		if (!this.isDragging) return;
-		let deltaX = (clientX - this.#dragStartX) * DRAG_RESISTANCE;
-		
-		// Commento solo il PERCHÉ: su mobile limitiamo lo swipe unicamente verso sinistra (deltaX <= 0)
+		const rawDeltaX = clientX - this.#dragStartX;
+
+		let newTarget;
 		if (media.isMobile) {
-			deltaX = Math.min(0, deltaX);
-		}
-
-		let newTarget = this.#dragStartTarget - deltaX / PIXELS_PER_INDEX;
-
-		const offset = newTarget - this.#dragStartTarget;
-		if (Math.abs(offset) > MAX_CARDS_PER_DRAG) {
-			newTarget = this.#dragStartTarget + Math.sign(offset) * MAX_CARDS_PER_DRAG;
+			// Deck: entrambe le direzioni AVANZANO (al massimo di una card); il lato d'uscita
+			// segue il dito. A progress 0 la card è centrata, quindi il flip di lato è invisibile.
+			if (rawDeltaX !== 0) this.exitDir = rawDeltaX < 0 ? 1 : -1;
+			const progress = Math.min(1, Math.abs(rawDeltaX) / DECK_SWIPE_SPAN);
+			newTarget = this.#dragStartTarget + progress;
+		} else {
+			const deltaX = rawDeltaX * DRAG_RESISTANCE;
+			newTarget = this.#dragStartTarget - deltaX / PIXELS_PER_INDEX;
+			const offset = newTarget - this.#dragStartTarget;
+			if (Math.abs(offset) > MAX_CARDS_PER_DRAG) {
+				newTarget = this.#dragStartTarget + Math.sign(offset) * MAX_CARDS_PER_DRAG;
+			}
 		}
 
 		const now = performance.now();
@@ -228,13 +279,19 @@ export class AthleteCarouselMotion {
 		if (!this.isDragging) return;
 		this.isDragging = false;
 
+		if (media.isMobile) {
+			// Deck: NIENTE inerzia — il rilascio committa al più UNA card (per corsa o per flick,
+			// purché il gesto stesse davvero avanzando), altrimenti la card torna al suo posto.
+			const progress = this.targetIndex - this.#dragStartTarget;
+			const flickV = this.#dragVelocity * 16.67;
+			const commit = progress >= DECK_COMMIT_PROGRESS || (flickV > DECK_COMMIT_FLICK && progress > 0.05);
+			this.inertiaVelocity = 0;
+			this.navigateTo(wrapIndex(this.#dragStartTarget + (commit ? 1 : 0), this.#getLen()));
+			return;
+		}
+
 		// Da indici/ms a indici/frame (assumendo 60fps -> 16.67ms per frame)
 		let velocityPerFrame = this.#dragVelocity * 16.67;
-		
-		if (media.isMobile) {
-			// Su mobile l'inerzia può solo far avanzare il carousel (velocità non negativa)
-			velocityPerFrame = Math.max(0, velocityPerFrame);
-		}
 
 		if (Math.abs(velocityPerFrame) > MAX_INERTIA_SPEED) {
 			velocityPerFrame = Math.sign(velocityPerFrame) * MAX_INERTIA_SPEED;

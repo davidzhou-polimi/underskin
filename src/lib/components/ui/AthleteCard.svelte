@@ -13,7 +13,8 @@
 	 *   type?: 'favorito' | 'infortunato' | 'insoddisfatto',
 	 *   duration?: number,
 	 *   active?: boolean,
-	 *   flipped?: boolean
+	 *   flipped?: boolean,
+	 *   flipDir?: 1 | -1
 	 * }}
 	 */
 	let {
@@ -26,7 +27,8 @@
 		type = 'favorito',
 		duration = 1.0,
 		active = true,
-		flipped = false
+		flipped = false,
+		flipDir = 1
 	} = $props();
 
 	// Mapping interno dei colori degli archetipi basato sui CSS Token del progetto
@@ -67,7 +69,7 @@
 
 <div
 	class="athlete-card-container"
-	use:flipCard={{ axis, duration, active, flipped }}
+	use:flipCard={{ axis, duration, active, flipped, flipDir }}
 	use:hoverLift={{ disabled: !active }}
 	role="button"
 	tabindex="0"
@@ -147,6 +149,8 @@
 		height: 461px;
 		position: relative;
 		cursor: pointer;
+		/* Evita il delay da double-tap-zoom sui tap di flip */
+		touch-action: manipulation;
 		perspective: 1200px;
 		will-change: transform;
 		-webkit-font-smoothing: subpixel-antialiased;
@@ -360,11 +364,20 @@
 	}
 
 	@media (max-width: 768px) {
+		/* La card è un artefatto a geometria propria, come un'immagine: su mobile deve essere
+		   la scala uniforme della card desktop (357×461), non un layout ricomposto — così anche
+		   gli a-capo \n dei testi JSON (pensati per quelle proporzioni) restano corretti.
+		   Il container query rende la larghezza l'unica sorgente: ogni misura interna è in cqw
+		   con lo stesso rapporto del desktop (valore_px / 357 × 100). A 421px+ di viewport la
+		   card È quella desktop, sotto scala tutta insieme. */
 		.athlete-card-container {
-			/* Commento solo il PERCHÉ: allinea le dimensioni delle card a 290px x 380px su mobile
-			   per garantire consistenza con i caroselli di home e about */
-			width: 290px;
-			height: 380px;
+			container-type: inline-size;
+			/* --deck-card-w è ereditata dal carousel (unica sorgente, include il cap in altezza
+			   sul viewport piccolo); il fallback conserva la geometria autonoma se la card
+			   vivesse fuori dal deck */
+			width: var(--deck-card-w, min(357px, calc(100vw - 2 * var(--spacing-4))));
+			height: auto;
+			aspect-ratio: 357 / 461;
 		}
 
 		.card-face {
@@ -375,17 +388,27 @@
 			mask-image: radial-gradient(white, black);
 		}
 
+		/* Rapporti desktop: font 32/357, fascia 91/357 — gli override token mobile (--text-m a
+		   20px) romperebbero la proporzione, quindi qui si torna alla scala geometrica */
+		.name-front,
 		.name-back {
-			height: 60px;
-			font-size: var(--text-m);
+			font-size: 8.96cqw;
+			height: 25.49cqw;
+		}
+
+		.decal-top {
+			height: 31.09cqw; /* 111/357 */
+		}
+
+		.back-content {
+			padding: 0 6.72cqw; /* --spacing-3 desktop: 24/357 */
 		}
 
 		.info-retro {
-			/* Commento solo il PERCHÉ: su mobile la card è più piccola (290×380) e il contenuto del retro
-			   può eccedere: impilamento dall'alto con gap ridotto e scroll verticale interno (scrollbar nascosta). */
-			justify-content: flex-start;
-			gap: var(--spacing-1);
-			padding-bottom: var(--spacing-2);
+			/* Commento solo il PERCHÉ: stesso layout del desktop (contesto in alto, citazione in fondo
+			   via space-between ereditato); l'overflow-y resta come salvagente se il contenuto
+			   eccedesse la card (scrollbar nascosta). */
+			padding-bottom: 8.96cqw; /* --spacing-4 desktop: 32/357 */
 			overflow-y: auto;
 			scrollbar-width: none;
 			-ms-overflow-style: none;
@@ -396,11 +419,12 @@
 		}
 
 		.context-text {
-			line-height: 16px;
+			font-size: 4.48cqw; /* 16/357 */
+			line-height: 5.6cqw; /* 20/357 */
 		}
 
 		.quote-text {
-			line-height: 18px;
+			font-size: 5.6cqw; /* 20/357 */
 		}
 	}
 </style>
