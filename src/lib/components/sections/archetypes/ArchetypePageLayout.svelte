@@ -17,6 +17,7 @@
 	 * @property {string} narrativeSectionId
 	 * @property {string[]} colors
 	 * @property {Segment[][]} paragraphs
+	 * @property {Segment[][]} [mobileParagraphs]
 	 *
 	 * @typedef {Object} Props
 	 * @property {'favorito' | 'infortunato' | 'insoddisfatto'} archetype

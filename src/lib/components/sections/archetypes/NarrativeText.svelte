@@ -29,7 +29,7 @@
 		sectionId,
 		theme,
 		paragraphs = [],
-		mobileParagraphs = null
+		mobileParagraphs = undefined
 	} = $props();
 
 	let isMobile = $state(false);
