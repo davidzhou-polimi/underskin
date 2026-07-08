@@ -46,22 +46,7 @@ export function burnoutMobile(node) {
 
 		const ctx = gsap.context(() => {}, node);
 
-		/** @param {number} v */
-		const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
-		// ─── Reveal del titolo lungo il pin del blocco testi ──────────────────
-
-		/** @param {number} progress */
-		function applyReveal(progress) {
-			// Il reveal occupa il primo 60% del pin; il resto è plateau di lettura
-			// prima che il blocco scorra via.
-			const reveal = clamp01(progress / 0.6);
-			gsap.set(titleEl, {
-				opacity: reveal,
-				y: (1 - reveal) * 30,
-				filter: `blur(${(1 - reveal) * 8}px)`
-			});
-		}
 
 		// ─── Lock direzionale in cima al blocco del cerchio ───────────────────
 
@@ -163,16 +148,35 @@ export function burnoutMobile(node) {
 		// ─── Trigger ──────────────────────────────────────────────────────────
 
 		/** @type {ScrollTrigger | undefined} */
-		let scrubTrigger;
+		let titleTrigger;
 
 		ctx.add(() => {
-			scrubTrigger = ScrollTrigger.create({
+			// Commento solo il PERCHÉ: l'ingresso a tempo fisso (one-shot) e il pin gestito da GSAP
+			// con pinSpacing garantiscono un allineamento perfetto e continuo, rimuovendo i vuoti di layout tipici del pin CSS.
+			titleTrigger = ScrollTrigger.create({
 				trigger: textBlockEl,
 				start: 'top top',
-				end: 'bottom bottom',
-				scrub: true,
-				invalidateOnRefresh: true,
-				onUpdate: (self) => applyReveal(self.progress)
+				end: '+=150%',
+				pin: true,
+				pinSpacing: true,
+				onEnter: () => {
+					gsap.to(titleEl, {
+						opacity: 1,
+						y: 0,
+						duration: 0.8,
+						ease: 'power2.out',
+						overwrite: 'auto'
+					});
+				},
+				onLeaveBack: () => {
+					gsap.to(titleEl, {
+						opacity: 0,
+						y: 20,
+						duration: 0.4,
+						ease: 'power2.out',
+						overwrite: 'auto'
+					});
+				}
 			});
 
 			// Commento solo il PERCHÉ: callback direzionali (non onToggle) come in gameDownLock.js,
@@ -215,7 +219,13 @@ export function burnoutMobile(node) {
 
 		// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto o dopo un
 		// resize desktop↔mobile successivo al completamento
-		applyReveal(scrubTrigger ? scrubTrigger.progress : 0);
+		// Commento solo il PERCHÉ: sincronizza lo stato iniziale del titolo al mount se il refresh
+		// avviene ad una posizione di scroll in cui il trigger è già attivo.
+		if (titleTrigger && titleTrigger.progress > 0) {
+			gsap.set(titleEl, { opacity: 1, y: 0 });
+		} else {
+			gsap.set(titleEl, { opacity: 0, y: 20 });
+		}
 		if (hasCompleted) {
 			ctx.add(() => {
 				gsap.set(holdEl, { autoAlpha: 0 });

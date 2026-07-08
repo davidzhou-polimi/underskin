@@ -209,24 +209,37 @@
             display: block;
         }
 
-        /* Commento solo il PERCHÉ: 250svh = 150svh di pin (reveal lento del titolo + plateau
-           di lettura); esaurito il pin il blocco scorre via naturalmente verso l'alto */
+        /* Commento solo il PERCHÉ: l'altezza è impostata a 100svh poiché il pinning e il
+           suo spazio (duration) sono delegati interamente a GSAP tramite burnoutMobile. */
         .m-text-block {
-            height: 250svh;
+            height: 100svh;
+            position: relative;
+            box-sizing: border-box;
         }
 
         .m-text-sticky {
-            position: sticky;
-            top: 0;
+            /* Commento solo il PERCHÉ: il pinning è delegato interamente a GSAP tramite 
+               burnoutMobile, eliminando la necessità di position sticky e i buchi visivi nel layout. */
+            position: relative;
             height: 100svh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: var(--spacing-7);
-            padding: 0 var(--spacing-4);
+            /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-4) (32px) per legare 
+               maggiormente la frase introduttiva e la sua conclusione "È la performance." */
+            gap: var(--spacing-4);
+            /* Commento solo il PERCHÉ: aggiunto un padding-top di var(--spacing-8) (40px) per 
+               compensare l'ingombro della Navbar superiore fissa e centrare visivamente il testo. */
+            padding: var(--spacing-12) var(--spacing-4) 0;
             box-sizing: border-box;
             text-align: center;
+        }
+
+        .subtitle {
+            /* Commento solo il PERCHÉ: valore mobile incrementato a var(--text-m) (20px) per 
+               dare maggiore presenza visiva alla frase introduttiva prima dello scroll. */
+            font-size: var(--text-m);
         }
 
         .m-title {

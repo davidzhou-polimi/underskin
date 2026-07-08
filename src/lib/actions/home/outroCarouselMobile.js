@@ -98,10 +98,14 @@ export function outroCarouselMobile(node, params) {
 		let unlockCall = null;
 
 		ctx.add(() => {
+			// Commento solo il PERCHÉ: il pin gestito da GSAP con pinSpacing garantisce che la sezione
+			// rimanga fissa a schermo durante lo scorrimento, evitando buchi e salti nel flusso.
 			ScrollTrigger.create({
 				trigger: node,
-				start: 'top top+=2',
-				end: 'bottom top',
+				start: 'top top',
+				end: '+=100%',
+				pin: true,
+				pinSpacing: true,
 				onEnter: () => {
 					if (hasStopped) return;
 					hasStopped = true;

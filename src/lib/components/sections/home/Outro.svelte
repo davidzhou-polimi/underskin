@@ -290,7 +290,9 @@
 		   incollato per un viewport di scroll, così anche chi scorre veloce non lo attraversa
 		   senza vederlo — un semplice snap programmatico perdeva contro l'inerzia del touch. */
 		.outro-scroll-container {
-			height: 200svh;
+			height: 100svh;
+			position: relative;
+			box-sizing: border-box;
 		}
 
 		.scene {
@@ -299,14 +301,15 @@
 
 		.mobile-carousel {
 			display: flex;
-			position: sticky;
-			top: 0;
+			/* Commento solo il PERCHÉ: il pinning è delegato interamente a GSAP tramite 
+			   outroCarouselMobile, rendendo il comportamento e lo spazio fluidi ed omogenei. */
+			position: relative;
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
 			/* Commento solo il PERCHÉ: ridotto a 24px per recuperare spazio verticale 
 			   dato che il titolo mobile ora si sviluppa su due righe. */
-			gap: var(--spacing-3);
+			gap: var(--spacing-5);
 			height: 100svh;
 			/* Commento solo il PERCHÉ: aumentato il padding superiore a var(--spacing-9) (48px) per 
 			   spingere il titolo e il contenuto verso il basso, lontano dalla Dynamic Island. */
