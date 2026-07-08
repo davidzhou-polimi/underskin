@@ -464,7 +464,7 @@
 	.logo-nav:hover,
 	.logo-nav:focus-visible {
 		/* Commento solo il PERCHÉ: cambia il colore di hover con una sfumatura della scala dei neutri (neutral-500) per schiarirlo e garantirne la neutralità cromatica su tutti gli archetipi */
-		color: var(--neutral-300);
+		color: var(--neutral-500);
 	}
 
 	/* Menu Links */
