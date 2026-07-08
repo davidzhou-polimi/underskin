@@ -63,9 +63,9 @@
             </div>
 
             <div class="m-outro">
-                <h2 class="new-title">Il burnout nasce in silenzio.</h2>
+                <h2 class="new-title">Il burnout nasce<br />in silenzio.</h2>
                 <h4 class="new-subtitle">
-                    Cresce ogni volta che un atleta viene ridotto a un tempo, una medaglia, un risultato.
+                    Cresce ogni volta che un atleta<br />viene ridotto a un tempo, una<br />medaglia, un risultato.
                 </h4>
             </div>
         </div>
@@ -230,8 +230,8 @@
             justify-content: center;
             /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-4) (32px) per legare 
                maggiormente la frase introduttiva e la sua conclusione "È la performance." */
-            gap: var(--spacing-4);
-            padding: 0 var(--spacing-4);
+            gap: var(--spacing-3);
+            padding: var(--spacing-12) var(--spacing-4) 0;
             box-sizing: border-box;
             text-align: center;
             z-index: 2;
@@ -334,7 +334,9 @@
             align-items: center;
             justify-content: center;
             gap: var(--spacing-2);
-            padding: 0 var(--spacing-4);
+            /* Commento solo il PERCHÉ: applica un padding-top di var(--spacing-12) (80px) in 
+               linea con .m-text-sticky per allineare otticamente il testo finale sotto la Navbar. */
+            padding: var(--spacing-12) var(--spacing-4) 0;
             text-align: center;
             pointer-events: none;
             z-index: 4;

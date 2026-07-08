@@ -97,8 +97,14 @@ export function burnoutMobile(node) {
 			setDownLock(false);
 
 			ctx.add(() => {
+				// Commento solo il PERCHÉ: svuotiamo la timeline di scrollytelling iniziale per disattivare
+				// gli scrub di risalita dello scroll, mantenendo permanentemente lo stato conclusivo dell'attività.
+				if (scrollTl) {
+					scrollTl.clear();
+				}
+
 				const tlExplode = gsap.timeline();
-				// La parola esplode verso l'osservatore e svanisce; il cerchio e il testo iniziale la seguono
+				// La parola esplode verso l'osservatore e svanisce; il cerchio e il testo iniziale la seguono permanentemente
 				tlExplode.to(wordEl, { scale: 2, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
 					.to(holdEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
 					.to(textStickyEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
@@ -204,6 +210,10 @@ export function burnoutMobile(node) {
 
 			// Fase 3: Plateau / stasi per consentire l'interazione sul cerchio (70% -> 100%)
 			scrollTl.to({}, { duration: 1.5 });
+
+			if (hasCompleted) {
+				scrollTl.clear();
+			}
 		});
 
 		// Stato iniziale coerente se montato a completamento già avvenuto
