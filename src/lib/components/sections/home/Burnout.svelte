@@ -28,20 +28,17 @@
 
     </div>
 
-    <!-- Su mobile la sezione è una sequenza in flusso: blocco testi pinnato che poi scorre
-         via, seguito dal blocco del cerchio. Vive FUORI dalla sticky-viewport desktop. -->
+    <!-- Su mobile la sezione è pinnata via GSAP in un unico viewport:
+         inizialmente il testo è centrato, poi si sposta in alto e fa entrare il cerchio. -->
     <div class="mobile-flow">
-        <div class="m-text-block">
+        <div class="m-container">
             <div class="m-text-sticky">
                 <h4 class="subtitle">La salute mentale non è<br />separata dalla performance.</h4>
                 <h2 class="m-title gradient-text animate-gradient-text my-archetypes-color">
                     È la performance.
                 </h2>
             </div>
-        </div>
 
-        <div class="m-hold-pin">
-        <div class="m-hold-block">
             <div class="m-word-layer" aria-hidden="true">
                 <div class="glass-effect m-burnout-word"></div>
             </div>
@@ -71,7 +68,6 @@
                     Cresce ogni volta che un atleta viene ridotto a un tempo, una medaglia, un risultato.
                 </h4>
             </div>
-        </div>
         </div>
     </div>
 </section>
@@ -207,21 +203,27 @@
 
         .mobile-flow {
             display: block;
+            position: relative;
+            height: 100svh;
+            width: 100%;
+            overflow: hidden;
         }
 
-        /* Commento solo il PERCHÉ: l'altezza è impostata a 100svh poiché il pinning e il
-           suo spazio (duration) sono delegati interamente a GSAP tramite burnoutMobile. */
-        .m-text-block {
-            height: 100svh;
+        .m-container {
             position: relative;
-            box-sizing: border-box;
+            height: 100svh;
+            width: 100%;
+            overflow: hidden;
         }
 
         .m-text-sticky {
             /* Commento solo il PERCHÉ: il pinning è delegato interamente a GSAP tramite 
-               burnoutMobile, eliminando la necessità di position sticky e i buchi visivi nel layout. */
-            position: relative;
-            height: 100svh;
+               burnoutMobile. È posizionato in absolute ed allineato inizialmente al centro del viewport. */
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -229,11 +231,10 @@
             /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-4) (32px) per legare 
                maggiormente la frase introduttiva e la sua conclusione "È la performance." */
             gap: var(--spacing-4);
-            /* Commento solo il PERCHÉ: aggiunto un padding-top di var(--spacing-8) (40px) per 
-               compensare l'ingombro della Navbar superiore fissa e centrare visivamente il testo. */
-            padding: var(--spacing-12) var(--spacing-4) 0;
+            padding: 0 var(--spacing-4);
             box-sizing: border-box;
             text-align: center;
+            z-index: 2;
         }
 
         .subtitle {
@@ -247,26 +248,6 @@
             line-height: 1.2;
             /* Stato iniziale (progress 0): rivelato dallo scroll, evita il flash pre-action */
             opacity: 0;
-        }
-
-        /* Commento solo il PERCHÉ: 200svh = 100svh di pin per il blocco del cerchio: così la
-           scena si ferma sotto gli occhi anche risalendo dal fondo pagina, non solo scendendo */
-        .m-hold-pin {
-            height: 200svh;
-        }
-
-        .m-hold-block {
-            position: sticky;
-            top: 0;
-            height: 100svh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Il cerchio resta ancorato nella fascia bassa dello schermo */
-            justify-content: flex-end;
-            padding-bottom: var(--spacing-12);
-            box-sizing: border-box;
-            overflow: hidden;
         }
 
         .m-word-layer {
@@ -296,12 +277,19 @@
         }
 
         .m-hold {
-            position: relative;
+            /* Commento solo il PERCHÉ: posizionamento assoluto centrato; la comparsa e la traslazione
+               (y: 15vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: var(--spacing-4);
-            z-index: 2;
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .m-hold-target {
@@ -349,7 +337,7 @@
             padding: 0 var(--spacing-4);
             text-align: center;
             pointer-events: none;
-            z-index: 3;
+            z-index: 4;
             opacity: 0;
         }
     }

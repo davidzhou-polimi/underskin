@@ -28,9 +28,8 @@ export function burnoutMobile(node) {
 	const mm = gsap.matchMedia();
 
 	mm.add('(max-width: 768px)', () => {
-		const textBlockEl = node.querySelector('.m-text-block');
 		const titleEl = node.querySelector('.m-title');
-		const holdPinEl = node.querySelector('.m-hold-pin');
+		const textStickyEl = node.querySelector('.m-text-sticky');
 		const holdEl = node.querySelector('.m-hold');
 		const holdTargetEl = node.querySelector('.m-hold-target');
 		const fillEl = node.querySelector('.m-hold-fill');
@@ -38,7 +37,7 @@ export function burnoutMobile(node) {
 		const outroEl = node.querySelector('.m-outro');
 
 		if (
-			!textBlockEl || !titleEl || !holdPinEl || !holdEl ||
+			!titleEl || !textStickyEl || !holdEl ||
 			!holdTargetEl || !fillEl || !wordEl || !outroEl
 		) return;
 
@@ -46,9 +45,7 @@ export function burnoutMobile(node) {
 
 		const ctx = gsap.context(() => {}, node);
 
-
-
-		// ─── Lock direzionale in cima al blocco del cerchio ───────────────────
+		// ─── Lock direzionale sul plateau di interazione ──────────────────────
 
 		let downLocked = false;
 
@@ -100,10 +97,11 @@ export function burnoutMobile(node) {
 			setDownLock(false);
 
 			ctx.add(() => {
-				const tl = gsap.timeline();
-				// La parola esplode verso l'osservatore e svanisce; il cerchio la segue
-				tl.to(wordEl, { scale: 2, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
+				const tlExplode = gsap.timeline();
+				// La parola esplode verso l'osservatore e svanisce; il cerchio e il testo iniziale la seguono
+				tlExplode.to(wordEl, { scale: 2, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
 					.to(holdEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
+					.to(textStickyEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
 					.set(outroEl, { opacity: 1 })
 					.fromTo(
 						outroChildren,
@@ -145,89 +143,73 @@ export function burnoutMobile(node) {
 		window.addEventListener('pointercancel', onPointerUp);
 		gsap.ticker.add(tick);
 
-		// ─── Trigger ──────────────────────────────────────────────────────────
+		// ─── Timeline di Scrollytelling mobile ─────────────────────────────────
 
-		/** @type {ScrollTrigger | undefined} */
-		let titleTrigger;
+		/** @type {gsap.core.Timeline | undefined} */
+		let scrollTl;
 
 		ctx.add(() => {
-			// Commento solo il PERCHÉ: l'ingresso a tempo fisso (one-shot) e il pin gestito da GSAP
-			// con pinSpacing garantiscono un allineamento perfetto e continuo, rimuovendo i vuoti di layout tipici del pin CSS.
-			titleTrigger = ScrollTrigger.create({
-				trigger: textBlockEl,
-				start: 'top top',
-				end: '+=150%',
-				pin: true,
-				pinSpacing: true,
-				onEnter: () => {
-					gsap.to(titleEl, {
-						opacity: 1,
-						y: 0,
-						duration: 0.8,
-						ease: 'power2.out',
-						overwrite: 'auto'
-					});
-				},
-				onLeaveBack: () => {
-					gsap.to(titleEl, {
-						opacity: 0,
-						y: 20,
-						duration: 0.4,
-						ease: 'power2.out',
-						overwrite: 'auto'
-					});
-				}
-			});
+			// Impostiamo lo stato iniziale degli elementi prima dell'avvio dello scroll
+			gsap.set(titleEl, { opacity: 0, y: 20 });
+			gsap.set(holdEl, { opacity: 0, y: '40vh', pointerEvents: 'none' });
 
-			// Commento solo il PERCHÉ: callback direzionali (non onToggle) come in gameDownLock.js,
-			// per evitare che il jitter sub-pixel sul confine generi cicli unlock→lock→scrollTo.
-			// Lo start spostato di 2px tiene il target dello scrollTo dentro il range attivo.
-			let snapPosition = 0;
-			ScrollTrigger.create({
-				// Il trigger è il wrapper del pin (in flusso): il blocco sticky al suo interno
-				// si muove e darebbe confini instabili
-				trigger: holdPinEl,
-				start: 'top top+=2',
-				end: 'bottom top',
-				onEnter: (self) => {
-					snapPosition = self.start + 2;
-					setDownLock(true, snapPosition);
-				},
-				onEnterBack: (self) => {
-					snapPosition = self.start + 2;
-					setDownLock(true, snapPosition);
-				},
-				onLeaveBack: () => setDownLock(false),
-				// Commento solo il PERCHÉ: preventDefault non ferma un fling già partito (a dito
-				// sollevato non arrivano più touchmove da bloccare), quindi rientrando con inerzia
-				// il confine veniva superato. Finché il lock è attivo, ogni frame oltre il confine
-				// viene riagganciato: il fling muore contro il muro invece di attraversarlo.
-				// Il ramo !downLocked è il failsafe per gli ingressi che sfuggono ai callback
-				// direzionali (es. secondo tentativo dopo una risalita): dentro il range senza
-				// lock e senza completamento = stato illegale, si ri-aggancia subito.
-				onUpdate: (self) => {
-					if (hasCompleted) return;
-					if (!downLocked && self.isActive) {
-						snapPosition = self.start + 2;
-						setDownLock(true, snapPosition);
-					} else if (downLocked && self.scroll() > snapPosition + 1) {
-						getLenis()?.scrollTo(snapPosition, { immediate: true, force: true });
+			scrollTl = gsap.timeline({
+				scrollTrigger: {
+					trigger: node,
+					start: 'top top',
+					end: '+=250%',
+					pin: true,
+					pinSpacing: true,
+					scrub: 1.2,
+					invalidateOnRefresh: true,
+					onUpdate: (self) => {
+						if (hasCompleted) return;
+						// Il lock si attiva al 70% del progresso, dove il cerchio hold è fully revealed
+						const lockProgress = 0.7;
+						const snapPos = self.start + (self.end - self.start) * lockProgress;
+						if (!downLocked && self.progress >= lockProgress) {
+							setDownLock(true, snapPos);
+						} else if (downLocked && self.scroll() > snapPos + 1) {
+							getLenis()?.scrollTo(snapPos, { immediate: true, force: true });
+						}
+					},
+					onLeaveBack: () => {
+						setDownLock(false);
 					}
 				}
 			});
+
+			// Fase 1: Revel della frase "È la performance." al centro (0% -> 30%)
+			scrollTl.to(titleEl, {
+				opacity: 1,
+				y: 0,
+				duration: 1.0,
+				ease: 'power2.out'
+			});
+
+			// Fase 2: Spostamento testo in alto e comparsa cerchio dal basso (30% -> 70%)
+			scrollTl.to(textStickyEl, {
+				y: '-22vh',
+				duration: 1.5,
+				ease: 'power2.inOut'
+			}, 'transition');
+
+			scrollTl.to(holdEl, {
+				opacity: 1,
+				y: '15vh',
+				pointerEvents: 'auto',
+				duration: 1.5,
+				ease: 'power2.inOut'
+			}, 'transition');
+
+			// Fase 3: Plateau / stasi per consentire l'interazione sul cerchio (70% -> 100%)
+			scrollTl.to({}, { duration: 1.5 });
 		});
 
-		// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto o dopo un
-		// resize desktop↔mobile successivo al completamento
-		// Commento solo il PERCHÉ: sincronizza lo stato iniziale del titolo al mount se il refresh
-		// avviene ad una posizione di scroll in cui il trigger è già attivo.
-		if (titleTrigger && titleTrigger.progress > 0) {
-			gsap.set(titleEl, { opacity: 1, y: 0 });
-		} else {
-			gsap.set(titleEl, { opacity: 0, y: 20 });
-		}
+		// Stato iniziale coerente se montato a completamento già avvenuto
 		if (hasCompleted) {
 			ctx.add(() => {
+				gsap.set(textStickyEl, { autoAlpha: 0 });
 				gsap.set(holdEl, { autoAlpha: 0 });
 				gsap.set(outroEl, { opacity: 1 });
 			});
