@@ -69,7 +69,7 @@
 				[
 					{
 						type: 'text',
-						content: 'Quando l’aspettativa esterna si \nfa insostenibile, la pressione si \ntrasforma in '
+						content: "Quando l'aspettativa esterna si \nfa insostenibile, la pressione si \ntrasforma in "
 					},
 					{
 						type: 'keyword',
