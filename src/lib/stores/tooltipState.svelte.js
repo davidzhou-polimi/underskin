@@ -29,6 +29,9 @@ export const tooltip = {
      * @param {boolean} [centered] - Se true, il centro del tooltip coincide con il cursore
      */
     show(text, type = 'semplice', cursor = 'pointer', centered = false) {
+        // Il tooltip segue il cursore: senza puntatore fine (touch) non ha una posizione affidabile
+        // e finirebbe fuori viewport, quindi su mobile resta disattivato del tutto.
+        if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
         state.text = text;
         state.type = type;
         state.visible = true;
