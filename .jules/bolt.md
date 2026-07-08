@@ -11,3 +11,7 @@
 ## 2024-07-28 - Layout thrashing in mousemove with requestAnimationFrame throttle
 **Learning:** Calling `getBoundingClientRect()` synchronously inside a high-frequency `mousemove` event handler causes severe layout thrashing, as it forces the browser to calculate layouts constantly. Statically caching `getBoundingClientRect()` outside of the `mousemove` event is incorrect because the element's bounding box might legitimately change due to scrolling or CSS transitions on hover (e.g., scaling up). Throttling DOM reads via `requestAnimationFrame` avoids layout thrashing while correctly ensuring the `isInside` check works properly when the layout does change during interaction.
 **Action:** Throttle the high frequency execution in `mousemove` using `requestAnimationFrame` instead of caching `getBoundingClientRect` outside of it completely if elements inside are subjected to transform/scroll modifications.
+
+## 2024-08-01 - Layout thrashing in scroll loop
+**Learning:** Calling `getBoundingClientRect()` inside a high-frequency scroll event (like Lenis' `on('scroll')`) causes severe layout thrashing because it forces the browser to calculate layouts constantly on every scroll frame.
+**Action:** Cache the absolute position of the element (`rect.bottom + window.scrollY`) and the window dimensions (`window.innerHeight`) when the component mounts and on `resize`. Inside the scroll loop, calculate relative positions using the cached values and `window.scrollY` instead of reading from the DOM.

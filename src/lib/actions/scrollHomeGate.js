@@ -262,13 +262,28 @@ export function scrollHomeGate(node, params = {}) {
 		window.removeEventListener('touchmove', onTouchMoveGate, { capture: true });
 	}
 
+	// ⚡ Bolt Optimization: Cache the node's absolute bottom position to avoid
+	// calling getBoundingClientRect() inside the high-frequency Lenis scroll loop,
+	// which causes layout thrashing.
+	let nodeBottom = 0;
+	let cachedInnerHeight = window.innerHeight;
+
+	function updateCache() {
+		const rect = node.getBoundingClientRect();
+		nodeBottom = rect.bottom + window.scrollY;
+		cachedInnerHeight = window.innerHeight;
+	}
+
 	function checkGate() {
 		if (hasNavigated) return;
-		const rect = node.getBoundingClientRect();
-		const atBottom = rect.bottom <= window.innerHeight + 2;
+		// ⚡ Bolt Optimization: Calculate atBottom without querying the DOM (no layout thrashing)
+		const atBottom = (nodeBottom - window.scrollY) <= cachedInnerHeight + 2;
 		if (atBottom && !isGateActive) activateGate();
 		else if (!atBottom && isGateActive) deactivateGate();
 	}
+
+	window.addEventListener('resize', updateCache, { passive: true });
+	updateCache(); // cache iniziale
 
 	const lenis = getLenis();
 	lenis?.on('scroll', checkGate);
@@ -308,6 +323,7 @@ export function scrollHomeGate(node, params = {}) {
 
 	return {
 		destroy() {
+			window.removeEventListener('resize', updateCache);
 			lenis?.off('scroll', checkGate);
 			deactivateGate();
 			ctx.revert();
