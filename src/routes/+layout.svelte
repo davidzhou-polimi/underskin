@@ -144,6 +144,9 @@
         heroExit.run();
         navigationState.hasNavigated = true;
         navigationState.fromHome = navigation.from?.url.pathname === '/';
+        // Arma il ritardo teatrale per la sola transizione di questo cambio pagina (dalla home la
+        // pausa dopo l'uscita del titolo è più lunga); lo consuma transitionConfig al primo uso.
+        navigationState.gradientDelay = navigationState.fromHome ? 0.6 : 0.3;
         /** @type {any} */
         const canvas = document.querySelector('.interactive-gradient-canvas');
         canvas?.__gradientRenderer?.resetScroll();

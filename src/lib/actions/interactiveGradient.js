@@ -118,15 +118,14 @@ export function interactiveGradient(canvas, params = {}) {
 		const proxy = renderer.getAnimatableState();
 		renderer.config = { ...renderer.config, ...newConfig };
 
-		// Commento solo il PERCHÉ: se stiamo navigando tra pagine (client-side), ritardiamo la transizione
-		// del gradiente per permettere al titolo della pagina uscente di sfumare (via heroExit).
-		// Se veniamo dalla Home, l'utente ha richiesto una pausa teatrale di 0.3s *dopo* l'uscita del titolo (0.3s),
-		// quindi il delay totale è 0.6s. Altrimenti, il delay è di 0.3s (il gradiente parte appena il titolo scompare).
-		// Se è un caricamento iniziale (hard load), il gradiente prende posizione immediatamente (0s delay).
-		let delay = 0;
-		if (typeof navigationState !== 'undefined' && navigationState.hasNavigated) {
-			delay = navigationState.fromHome ? 0.6 : 0.3;
-		}
+		// Commento solo il PERCHÉ: nelle navigazioni client-side la transizione va ritardata per far
+		// sfumare il titolo della pagina uscente (via heroExit) — 0.6s dalla Home (pausa teatrale dopo
+		// l'uscita del titolo), 0.3s altrove. Il delay è armato da onNavigate e CONSUMATO qui one-shot:
+		// vale per la sola transizione del cambio pagina. Le transizioni scroll-driven successive
+		// (hero che si schiarisce, footer di /about) e l'hard load partono immediate — leggere
+		// hasNavigated (mai azzerato) ritardava per sempre ogni transizione dopo la prima navigazione.
+		const delay = navigationState.gradientDelay;
+		navigationState.gradientDelay = 0;
 
 		activeTween = gsap.to(proxy, {
 			...targetState,
