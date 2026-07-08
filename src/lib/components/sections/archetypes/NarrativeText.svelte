@@ -8,6 +8,7 @@
 
 		import { narrativeReveal } from '$lib/actions/archetypes/narrativeReveal.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 
 	/**
 	 * @typedef {Object} Segment
@@ -32,22 +33,11 @@
 		mobileParagraphs = undefined
 	} = $props();
 
-	let isMobile = $state(false);
-
-	$effect(() => {
-		/* Commento solo il PERCHÉ: monitora la larghezza dello schermo per stabilire se visualizzare i testi
-		   in configurazione mobile (line-break e formulazione ottimizzata) o desktop. */
-		const updateMedia = () => {
-			isMobile = window.innerWidth <= 768;
-		};
-		updateMedia();
-		window.addEventListener('resize', updateMedia);
-		return () => window.removeEventListener('resize', updateMedia);
-	});
-
-	// Commento solo il PERCHÉ: calcola reattivamente il set di paragrafi da visualizzare in base all'orientamento/larghezza schermo
+	// Commento solo il PERCHÉ: calcola reattivamente il set di paragrafi in base al breakpoint mobile,
+	// leggendo lo store media condiviso (matchMedia, stessa soglia dei @media CSS) invece di un
+	// listener resize locale duplicato.
 	const activeParagraphs = $derived(
-		(isMobile && mobileParagraphs) ? mobileParagraphs : paragraphs
+		(media.isMobile && mobileParagraphs) ? mobileParagraphs : paragraphs
 	);
 </script>
 
@@ -68,14 +58,13 @@
 								role="tooltip"
 								tabindex="-1"
 								onmouseenter={() => {
-									/* Commento solo il PERCHÉ: disabilita la visualizzazione dei tooltip su mobile 
-									   poiché l'evento hover non è naturale ed intralcerebbe lo scorrimento touch. */
-									if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
+									/* Commento solo il PERCHÉ: su mobile l'hover non è naturale e intralcerebbe
+									   lo scroll touch; il guard usa lo store media condiviso. */
+									if (media.isMobile) return;
 									tooltip.show(segment.tooltip ?? '', 'paragrafo');
 								}}
 								onmouseleave={() => {
-									/* Commento solo il PERCHÉ: disabilita la pulizia dei tooltip su mobile in linea con onmouseenter */
-									if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
+									if (media.isMobile) return;
 									tooltip.hide();
 								}}
 							>

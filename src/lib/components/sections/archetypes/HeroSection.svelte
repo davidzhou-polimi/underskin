@@ -42,8 +42,9 @@
                     {title}
                 </h1>
 
-                <!-- Layout Mobile: marquee a scorrimento continuo -->
-                <div use:heroParallax={{ trigger: sectionRef }} class="marquee-container mobile-only">
+                <!-- Layout Mobile: marquee a scorrimento continuo. aria-hidden perché puramente
+                     decorativo e col testo ripetuto ×4: lo screen reader legge l'h1 (sr-only su mobile). -->
+                <div use:heroParallax={{ trigger: sectionRef }} class="marquee-container mobile-only" aria-hidden="true">
                     <div class="marquee-track">
                         <span class="marquee-item">{title}</span>
                         <span class="marquee-item glass-text">{title}</span>
@@ -108,6 +109,18 @@
         .desktop-only {
             display: none;
         }
+        /* Commento solo il PERCHÉ: l'h1 resta nell'albero di accessibilità come heading della
+           sezione (sr-only) invece di sparire con display:none: il marquee visivo è aria-hidden,
+           quindi questo è l'unico testo che lo screen reader annuncia. */
+        .blob-text.desktop-only {
+            display: block;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
         .mobile-only {
             display: block;
         }
@@ -147,7 +160,6 @@
             /* Commento solo il PERCHÉ: mutua i medesimi valori di colore e trasparenza del token globale .glass-effect (neutral-100 al 60% per il riempimento, neutral-50 al 40% per il bordo) applicandoli direttamente ai caratteri del testo tramite background-clip */
             background-color: rgb(from var(--neutral-100) r g b / 0.6);
             background-clip: text;
-            -webkit-background-clip: text;
             color: transparent;
             -webkit-text-stroke: 1px rgb(from var(--neutral-50) r g b / 0.4);
         }
