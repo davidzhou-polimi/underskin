@@ -35,7 +35,7 @@ export function createArchetypeGradientConfig(baseColors) {
 	// Nella coda della pagina (dal reveal del carosello dentro ZoomTransition fino a
 	// ContinueNarration) il gradiente va a intensity 0: invisibile ma presente, pronto per un
 	// reveal animato al posto di una comparsa improvvisa quando si naviga verso home.
-	// nearConclusion arriva dal trigger di visibilità di scrollHomeGate; carouselRevealed
+	// nearConclusion arriva dal trigger di visibilità di continueNarrationReveal; carouselRevealed
 	// dall'attraversamento del label 'reveal' nella timeline di zoomTextTransition.
 	let nearConclusion = $state(false);
 	let carouselRevealed = $state(false);

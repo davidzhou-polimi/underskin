@@ -4,7 +4,8 @@
     import { goto } from "$app/navigation";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
-    import { scrollHomeGate } from "$lib/actions/scrollHomeGate.js";
+    import { continueNarrationReveal } from "$lib/actions/continueNarrationReveal.js";
+    import { media } from "$lib/stores/mediaQuery.svelte.js";
 
     /**
      * @type {{
@@ -55,7 +56,7 @@
 <section
     id="continue-narration"
     class="continue-section"
-    use:scrollHomeGate={{ onNavigate: handleButtonClick, threshold: 1000, onVisibilityChange }}
+    use:continueNarrationReveal={{ onVisibilityChange }}
 >
     <div class="continue-container">
         <div class="center-content">
@@ -69,6 +70,8 @@
                     y: 40,
                     duration: 0.7,
                     triggerOptions: { toggleActions: "play none none reverse" },
+                    // Su mobile niente slide-up: le card sono subito visibili
+                    enabled: !media.isMobile,
                 }}
             >
                 {#each filteredArchetypes as item (item.name)}
@@ -161,7 +164,7 @@
         display: flex;
         justify-content: center;
         width: 100%;
-        /* nascosto dal primo paint; GSAP lo porta a opacity:1 in activateGate */
+        /* nascosto dal primo paint; GSAP lo porta a opacity:1 quando si tocca il fondo pagina */
         opacity: 0;
     }
 
@@ -170,6 +173,21 @@
         .cards-grid {
             flex-direction: column;
             gap: var(--spacing-4);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .continue-container {
+            /* Il max-width 320px (--spacing-17 mobile) strozzava le card orizzontali
+               deformandole; i fili laterali sono gli stessi della navbar (--spacing-6) */
+            max-width: none;
+            padding-inline: var(--spacing-6);
+        }
+
+        .cards-grid {
+            /* Metà del gap tablet: in colonna su viewport bassi le due card devono restare
+               entrambe leggibili senza spingere il bottone fuori dall'inquadratura */
+            gap: var(--spacing-2);
         }
     }
 </style>

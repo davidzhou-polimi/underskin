@@ -11,8 +11,13 @@ import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
  * @param {number} [params.duration] - Durata dell'animazione di ciascuna card (default: 0.8)
  * @param {string} [params.ease] - Curva di easing GSAP (default: 'power3.out')
  * @param {Object} [params.triggerOptions] - Opzioni aggiuntive o override per ScrollTrigger
+ * @param {boolean} [params.enabled] - Se false l'action non fa nulla (default: true)
  */
 export function staggerReveal(node, params = {}) {
+	// Uscita PRIMA del gsap.set: disabilitare dopo averlo eseguito lascerebbe
+	// gli elementi a opacity:0 per sempre.
+	if (params.enabled === false) return;
+
 	const selector = params.selector ?? '.archetype-card-container';
 	const yOffset = params.y ?? 60;
 	const staggerTime = params.stagger ?? 0.15;
