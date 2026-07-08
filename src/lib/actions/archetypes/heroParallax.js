@@ -56,6 +56,7 @@ export function heroParallax(node, params = {}) {
 			delay,
 			ease: 'power2.out',
 			onComplete: () => {
+				node.classList.add('entry-complete');
 				// Commento solo il PERCHÉ: lo ScrollTrigger viene inizializzato solo dopo che l'entrata
 				// è completata per evitare conflict di ownership tra il tween di entrata e lo scrub.
 				// gsap.context isola i tween e li distrugge atomicamente nel destroy().
