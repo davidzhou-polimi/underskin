@@ -106,6 +106,18 @@
 		white-space: pre-line;
 	}
 
+	/* Su mobile la colonna è stretta e la bandiera lascia righe molto frastagliate:
+	   il centrato bilancia i paragrafi (richiesta QA). Desktop resta bandiera.
+	   I \n nei paragrafi sono a-capo calibrati sulla misura desktop: qui collassano a spazio
+	   (white-space normale) e il bilanciamento delle righe è delegato a text-wrap: balance. */
+	@media (max-width: 768px) {
+		.narrative-text {
+			text-align: center;
+			white-space: normal;
+			text-wrap: balance;
+		}
+	}
+
 	.highlighted-keyword {
 		position: relative;
 		display: inline;

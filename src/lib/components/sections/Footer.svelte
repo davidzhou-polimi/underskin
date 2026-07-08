@@ -143,8 +143,15 @@
         </svg>
     </button>
     <div class="footer-bottom">
-        <p class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</p>
-        <p class="footer-text">© 2026</p>
+        {#if media.isMobile}
+            <!-- Colophon su due righe bilanciate: il © si fonde con l'anno accademico,
+                 niente riga orfana sotto il logo a colonna centrata. -->
+            <p class="footer-text">Laboratorio di Web e Digital Design</p>
+            <p class="footer-text">a.a. 2025/26 · © 2026</p>
+        {:else}
+            <p class="footer-text">Laboratorio di Web e Digital Design, a.a. 2025/26</p>
+            <p class="footer-text">© 2026</p>
+        {/if}
     </div>
 </footer>
 
@@ -272,11 +279,17 @@
         .footer-bottom {
             flex-direction: column;
             align-items: center;
-            gap: var(--spacing-2);
+            /* Le due righe sono un unico colophon, non blocchi separati: gap minimo */
+            gap: var(--spacing-1);
             text-align: center;
-            /* Commento solo il PERCHÉ: usa un margine positivo per distanziare 
-               la nota di copyright dall'SVG vettoriale su schermi piccoli */
-            margin-block-start: var(--spacing-2);
+            /* Commento solo il PERCHÉ: margine positivo che, al netto del margin-block-end
+               negativo dell'SVG, stacca davvero le note dai discendenti del logo */
+            margin-block-start: var(--spacing-3);
+        }
+
+        .footer-text {
+            /* Note di servizio: non devono pesare quanto il testo di lettura (16px del body) */
+            font-size: var(--text-service-size);
         }
 
         /* Commento solo il PERCHÉ: il posizionamento fisso al centro esatto del viewport
