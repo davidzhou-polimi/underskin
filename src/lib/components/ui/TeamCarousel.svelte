@@ -56,6 +56,21 @@
     let dragOffset = $state(0);
     let autoplayActive = $state(true);
 
+    const AUTOPLAY_RESUME_DELAY = 5000; // quiete dopo l'ultima interazione prima della ri-arma
+    let autoplayResumeTimer = 0;
+
+    /* Su mobile non c'è hover che possa far ripartire nulla: senza ri-arma la prima
+       interazione (swipe, tap su card o dot) spegnerebbe l'autoplay per sempre.
+       Ogni interazione azzera e riavvia il conto alla rovescia; desktop invariato. */
+    function suspendAutoplay() {
+        autoplayActive = false;
+        window.clearTimeout(autoplayResumeTimer);
+        if (!media.isMobile) return;
+        autoplayResumeTimer = window.setTimeout(() => { autoplayActive = true; }, AUTOPLAY_RESUME_DELAY);
+    }
+
+    $effect(() => () => window.clearTimeout(autoplayResumeTimer));
+
     // ─── Navigation ───────────────────────────────────────────────────────────
 
     function next() {
@@ -73,7 +88,7 @@
     function selectIndex(index) {
         activeIndex = index;
         isHovered = false;
-        autoplayActive = false; // Disattiva autoplay su interazione
+        suspendAutoplay();
     }
 
     // ─── Touch Events per Swipe e Drag ────────────────────────────────────────
@@ -85,7 +100,7 @@
     }
 
     function handleSwipeStart() {
-        autoplayActive = false; // Disattiva autoplay su interazione
+        suspendAutoplay();
     }
 </script>
 
@@ -104,16 +119,18 @@
             aria-label="Carousel Track"
         >
             {#each activeItems as member, i (member.name)}
+                <!-- Hover-pause solo desktop: su touch il tap emette mouseenter senza mai il
+                     mouseleave corrispondente, e l'autoplay resterebbe in pausa per sempre -->
                 <div
                      class="carousel-item"
                      role="group"
                      aria-roledescription="card"
-                     onmouseenter={i === activeIndex
+                     onmouseenter={i === activeIndex && !media.isMobile
                          ? () => {
                                isHovered = true;
                            }
                          : null}
-                     onmouseleave={i === activeIndex
+                     onmouseleave={i === activeIndex && !media.isMobile
                          ? () => {
                                isHovered = false;
                            }

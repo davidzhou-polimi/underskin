@@ -2,6 +2,7 @@
 	import { hoverLift } from '$lib/actions/hoverLift.js';
 	import { hoverHorizontalCard } from '$lib/actions/archetypes/hoverHorizontalCard.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import { goto } from '$app/navigation';
 
 	/**
@@ -40,6 +41,12 @@
 
 	/** @type {HTMLVideoElement | null} */
 	let videoElement = $state(null);
+
+	// I sorgenti arrivano come path .webm (VP9): su Safari — specie iOS — VP9 è assente o decodificato
+	// via software (video che non partono o caricano lentissimi). L'MP4 H.264 va per primo perché è
+	// decodificato in hardware ovunque; il webm resta come fallback teorico. Non ci fidiamo di
+	// canPlayType: Safari dichiara il webm anche quando poi lo decodifica male.
+	let videoMp4Src = $derived(videoSrc ? videoSrc.replace(/\.webm$/, '.mp4') : '');
 
 	// Avviamo o stoppiamo la riproduzione in base allo stato attivo o all'hover dell'utente
 	$effect(() => {
@@ -93,7 +100,7 @@
 <button
     class="archetype-card-container"
     class:is-horizontal={horizontal}
-    use:hoverLift
+    use:hoverLift={{ disabled: media.isMobile }}
     use:hoverHorizontalCard={{ enabled: horizontal }}
     onclick={handleCardClick}
     onmouseenter={() => { isHovered = true; if (showTooltip) tooltip.show('Esplora', 'semplice', 'pointer'); }}
@@ -108,28 +115,25 @@
             {#if imageSrc}
                 <img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
             {:else if videoSrc}
-                <!-- Niente preload esplicito: questi webm non hanno le Cues in testa al file
-                     (assente l'equivalente del "faststart"), quindi preload="metadata"/"none"
-                     costringono comunque il browser a inseguire range vicini alla fine del file
-                     per trovare un frame decodificabile, risultando in card vuote finché non si
-                     chiama play(). Il default lascia al browser l'euristica originale (che
-                     mostrava già il thumbnail correttamente). Per un vero risparmio andrebbero
-                     ri-processati i webm con le Cues spostate in testa (mkvpropedit/ffmpeg -movflags
-                     equivalente), fuori dallo scope di questo fix. -->
-                <video 
-                    bind:this={videoElement} 
-                    src={videoSrc} 
-                    muted 
-                    {loop} 
+                <!-- Niente preload esplicito: il default lascia al browser l'euristica originale
+                     (che mostrava già il thumbnail correttamente). L'mp4 è generato con
+                     -movflags +faststart, quindi il metadata è in testa al file. -->
+                <video
+                    bind:this={videoElement}
+                    muted
+                    {loop}
                     onended={onVideoEnded}
                     ontimeupdate={(e) => {
                         if (onTimeUpdate && isPlaying) {
                             onTimeUpdate(e.currentTarget.currentTime, e.currentTarget.duration || 1);
                         }
                     }}
-                    playsinline 
+                    playsinline
                     class="athlete-video"
-                ></video>
+                >
+                    <source src={videoMp4Src} type="video/mp4" />
+                    <source src={videoSrc} type="video/webm" />
+                </video>
             {/if}
 
             <!-- Overlay di colore con mix-blend-mode per applicare il colore dell'archetipo -->
@@ -275,10 +279,12 @@
 		}
 
 		.archetype-card-container.is-horizontal {
-			/* Commento solo il PERCHÉ: ridimensiona le card orizzontali su mobile 
-			   per assicurarne il perfetto inserimento nei flussi orizzontali/carousel */
-			width: 340px;
-			height: 260px;
+			/* Riempie il box del contenitore mantenendo il rapporto del desktop (461×357):
+			   con width/height fisse indipendenti il max-width:100% deformava la card
+			   quando il contenitore era più stretto */
+			width: 100%;
+			height: auto;
+			aspect-ratio: 461 / 357;
 		}
 	}
 </style>

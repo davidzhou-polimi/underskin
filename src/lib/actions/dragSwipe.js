@@ -45,7 +45,6 @@ export function dragSwipe(node, params = {}) {
 		startY = e.touches[0].clientY;
 		axis = 'none';
 		currentOffset = 0;
-		onStart?.();
 	};
 
 	/** @param {TouchEvent} e */
@@ -56,6 +55,9 @@ export function dragSwipe(node, params = {}) {
 		if (axis === 'none') {
 			if (Math.abs(dx) < AXIS_LOCK_THRESHOLD && Math.abs(dy) < AXIS_LOCK_THRESHOLD) return;
 			axis = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+			// onStart solo a vero intento di swipe (lock orizzontale): sul touchstart scattava per
+			// ogni tap o scroll verticale col dito sul track, e l'autoplay moriva quasi subito.
+			if (axis === 'horizontal') onStart?.();
 		}
 		if (axis !== 'horizontal') return;
 

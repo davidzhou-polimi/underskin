@@ -4,6 +4,7 @@
     import { archetypeScrolly } from "$lib/actions/home/archetypeScrolly.js";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
     import { dragSwipe } from "$lib/actions/dragSwipe.js";
+    import { media } from "$lib/stores/mediaQuery.svelte.js";
 
     /**
      * @typedef {Object} Props
@@ -47,6 +48,36 @@
     let dotsPillElement = $state(null);
     let progressRatio = $state(0);
     let dragOffset = $state(0);
+    /** @type {HTMLElement | null} */
+    let sectionElement = $state(null);
+    let sectionInView = $state(false);
+
+    const AUTOPLAY_RESUME_DELAY = 5000; // quiete dopo l'ultima interazione prima della ri-arma
+    let autoplayResumeTimer = 0;
+
+    /* Su mobile non c'è hover che possa far ripartire nulla: senza ri-arma la prima
+       interazione (swipe, tap su card o dot) spegnerebbe l'autoplay per sempre.
+       Ogni interazione azzera e riavvia il conto alla rovescia; desktop invariato. */
+    function suspendAutoplay() {
+        autoplayActive = false;
+        window.clearTimeout(autoplayResumeTimer);
+        if (!media.isMobile) return;
+        autoplayResumeTimer = window.setTimeout(() => { autoplayActive = true; }, AUTOPLAY_RESUME_DELAY);
+    }
+
+    $effect(() => () => window.clearTimeout(autoplayResumeTimer));
+
+    // I video devono girare solo con la sezione in vista: al mount la card attiva
+    // partirebbe subito, ben prima che il carosello sia stato raggiunto dallo scroll.
+    $effect(() => {
+        if (!sectionElement) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { sectionInView = entry.isIntersecting; },
+            { threshold: 0.1 }
+        );
+        observer.observe(sectionElement);
+        return () => observer.disconnect();
+    });
 
     // ─── Navigazione ───────────────────────────────────────────────────────────
 
@@ -63,7 +94,7 @@
     /** @param {number} index */
     function selectIndex(index) {
         activeIndex = index;
-        autoplayActive = false; // Disattiva autoplay su interazione
+        suspendAutoplay();
         progressRatio = 0;
     }
 
@@ -90,7 +121,7 @@
     }
 
     function handleSwipeStart() {
-        autoplayActive = false; // Disattiva autoplay su interazione
+        suspendAutoplay();
     }
 
     // ─── Touch Drag sulla barra dei Dot ────────────────────────────────────────
@@ -98,7 +129,7 @@
     /** @param {TouchEvent} e */
     function handleDotsTouch(e) {
         if (!dotsPillElement) return;
-        autoplayActive = false; // Disattiva autoplay su interazione
+        suspendAutoplay();
 
         // Previene lo scorrimento di pagina nativo durante il drag dei dot
         if (e.cancelable) {
@@ -124,6 +155,7 @@
     id="archetypes"
     class="archetype-section"
     use:archetypeScrolly
+    bind:this={sectionElement}
 >
     <!-- Mobile-only quote: animata da archetypeScrolly -->
     <blockquote class="perf-quote mobile-only">
@@ -166,7 +198,7 @@
                             imageSrc={member.imageSrc ?? ""}
                             type={member.type}
                             clickable={clickable}
-                            isPlaying={i === activeIndex}
+                            isPlaying={i === activeIndex && sectionInView}
                             loop={!autoplayActive}
                             onVideoEnded={i === activeIndex ? handleVideoEnded : undefined}
                             onTimeUpdate={i === activeIndex ? handleVideoTimeUpdate : undefined}
@@ -286,7 +318,9 @@
 
     .carousel-viewport {
         width: 100%;
-        height: 385px;
+        /* 380px di card + 15px di headroom sopra e sotto: il lift da hover/tap (y:-15)
+           veniva tagliato dall'overflow:hidden col vecchio 385px. */
+        height: 415px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -342,7 +376,10 @@
 
     /* DOTS NAVIGATION STYLES */
     .dots-navigation-container {
-        margin-top: var(--spacing-6);
+        /* Distanza visiva card→pill = spacing-6 (32px mobile) come nel TeamCarousel: qui però
+           il viewport (415px) è più alto della card (380px) per l'headroom dello sfoglio, quindi
+           il margine sconta i 17.5px di headroom sotto la card. */
+        margin-top: calc(var(--spacing-6) - (415px - 380px) / 2);
         z-index: 10;
         display: flex;
         justify-content: center;
@@ -424,7 +461,12 @@
 
         .perf-quote.mobile-only {
             position: absolute;
-            top: 50%;
+            /* 25svh+25lvh = punto medio tra viewport con barra browser visibile (svh) e nascosta
+               (lvh): la sezione è alta 100vh (=lvh) e un ancoraggio a 50% risultava basso a barra
+               visibile; il punto medio dimezza l'errore e lo distribuisce sui due stati (~15px
+               ciascuno) senza avvicinare la quote alla navbar più dello scarto minimo. In
+               emulazione desktop svh=lvh → equivale a 50%. */
+            top: calc(25svh + 25lvh);
             left: 0;
             width: 100%;
             margin-top: -60px; /* Commento solo il PERCHÉ: centra verticalmente il testo di circa 120px di altezza senza generare conflitti con transform di GSAP */
@@ -434,10 +476,28 @@
 
         .archetypes-carousel-container.mobile-only {
             position: absolute;
-            top: 50%;
+            /* Stesso ancoraggio al punto medio svh/lvh della quote qui sopra: quote e carosello
+               devono condividere il riferimento verticale (la quote è agganciata al carosello). */
+            top: calc(25svh + 25lvh);
             left: 0;
             width: 100%;
-            margin-top: -192px; /* Commento solo il PERCHÉ: centra verticalmente il carosello mobile di circa 385px di altezza senza generare conflitti con transform di GSAP */
+            /* Posiziona l'INSIEME quote+carosello. La quote è agganciata al carosello da GSAP
+               (archetypeScrolly: bordo inferiore a QUOTE_GAP=--spacing-4 sopra la card), quindi
+               l'ensemble non dipende dai vh. Base: centratura "spazio sopra la quote = spazio
+               sotto i dots" = (quoteH + gap − 500px) / 2, con quoteH = 3 righe × 1.5 line-height ×
+               var(--text-l) (token già ridefinito nel breakpoint mobile) e 500px = 15px di
+               headroom card + 485px di blocco (viewport 415 + margine dots 32 + pill 38).
+               Il +--spacing-2 finale NON è centratura: il raddoppio del gap (16→32) è pagato
+               interamente dallo spazio sotto i dots, così la quote resta alla stessa quota di
+               prima rispetto alla navbar invece di salire.
+               Il ramo max() è il floor per gli schermi molto bassi: tiene la quote ad almeno
+               --spacing-2 dal top sacrificando i dots in basso, non il testo; il termine
+               25svh+25lvh rispecchia il nuovo ancoraggio del top (prima 50vh = 50% di 100vh).
+               Margin e non transform per non generare conflitti con i transform di GSAP. */
+            margin-top: max(
+                calc((3 * 1.5 * var(--text-l) + var(--spacing-4) - 500px) / 2 + var(--spacing-2)),
+                calc(3 * 1.5 * var(--text-l) + var(--spacing-4) + var(--spacing-2) - 15px - (25svh + 25lvh))
+            );
             z-index: 2;
             display: flex;
             flex-direction: column;
