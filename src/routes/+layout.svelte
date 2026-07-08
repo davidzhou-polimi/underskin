@@ -41,10 +41,29 @@
     // Commento solo il PERCHÉ: il RAF condiviso (gsap.ticker guida lenis.raf) e il wiring di ScrollTrigger
     // si attivano in onMount, quando il DOM è pronto; nessun secondo requestAnimationFrame per evitare desync.
     onMount(() => {
+        // Back/forward cache (swipe-back dei browser mobile): la pagina torna viva senza alcun
+        // evento di navigazione SvelteKit, con scroll e trigger nello stato congelato — spesso
+        // incoerente (barra URL diversa → metriche cambiate → si atterra a metà pagina).
+        // Comportamento scelto: back = sempre in cima, come già accade su desktop via popstate.
+        /** @param {PageTransitionEvent} e */
+        const onPageShow = (e) => {
+            if (!e.persisted) return;
+            const l = getLenis();
+            if (l) {
+                l.start();
+                l.resize();
+                l.scrollTo(0, { immediate: true, force: true });
+            } else {
+                window.scrollTo(0, 0);
+            }
+            ScrollTrigger.refresh();
+        };
+        window.addEventListener('pageshow', onPageShow);
+
         const lenis = getLenis();
         if (!lenis) {
             window.scrollTo(0, 0);
-            return;
+            return () => window.removeEventListener('pageshow', onPageShow);
         }
 
         lenis.on('scroll', ScrollTrigger.update);
@@ -58,6 +77,7 @@
 
         return () => {
             gsap.ticker.remove(tick);
+            window.removeEventListener('pageshow', onPageShow);
         };
     });
 
@@ -66,8 +86,21 @@
     // trigger. Farlo al contrario valuta pin-spacer e scrub a scroll ≠ 0 (finestra ancora alla
     // posizione della pagina uscente), producendo spazio extra attorno ai pin e l'assestamento
     // visibile dello scrub. Eccezione: dagli archetipi il posizionamento lo gestisce cinematicScroll.
-    afterNavigate(() => {
+    afterNavigate((navigation) => {
         const lenis = getLenis();
+
+        // Su popstate SvelteKit ri-applica la Y salvata PRIMA di questi callback: il reset sotto
+        // vince già, ma su mobile restano attori tardivi (barra URL retrattile, restore parziali).
+        // Un colpo di coda a frame successivi rende il "back = in cima" deterministico ovunque.
+        if (navigation.type === 'popstate' && !navigationState.fromArchetype) {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                if (window.scrollY === 0) return;
+                const l = getLenis();
+                if (l) l.scrollTo(0, { immediate: true, force: true });
+                else window.scrollTo(0, 0);
+                ScrollTrigger.refresh();
+            }));
+        }
 
         if (!navigationState.fromArchetype) {
             if (lenis) {
@@ -175,6 +208,7 @@
     class="app-shell"
     role="application"
     onmousemove={(e) => tooltip.updatePosition(e.clientX, e.clientY)}
+    oncontextmenu={(e) => e.preventDefault()}
     style:cursor={tooltipState.cursor}
 >
     {@render children()}
