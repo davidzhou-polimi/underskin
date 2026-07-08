@@ -7,6 +7,7 @@
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { scrollHintAfterUnlock } from '$lib/utils/scrollHintAfterUnlock.js';
 	import { fade } from 'svelte/transition';
 
 	// Stati reattivi (Rune Svelte 5)
@@ -17,7 +18,6 @@
 	/** Flag di sicurezza per evitare input dello scroll durante le transizioni dei testi */
 	let isAnimatingStep = $state(false);
 	let showQuizScrollHint = $state(false);
-	let quizHintTimeout = 0;
 
 	// L'Observer GSAP che intercetta i gesti durante il lock vive in quizAnimation.js
 	// (regola progetto: tutto GSAP nelle actions); qui si decide solo QUANDO è attivo.
@@ -70,7 +70,7 @@
 		return () => unlockScroll();
 	});
 
-	// Commento solo il PERCHÉ: svela l'indicatore di scroll dopo 3 secondi di inattività nel primo step dei risultati,
+	// Commento solo il PERCHÉ: svela l'indicatore di scroll con un breve delay nel primo step dei risultati,
 	// o immediatamente nello step finale che consente di uscire, facilitando la comprensione dello scrollytelling.
 	$effect(() => {
 		if (quizState === 'results') {
@@ -78,17 +78,13 @@
 				showQuizScrollHint = true;
 			} else {
 				showQuizScrollHint = false;
-				window.clearTimeout(quizHintTimeout);
-				quizHintTimeout = window.setTimeout(() => {
-					showQuizScrollHint = true;
-				}, 1000);
+				// L'util nasconde il cue definitivamente al primo vero scroll: col solo timeout,
+				// su mobile restava sulla pagina anche dopo che l'utente aveva scrollato oltre.
+				return scrollHintAfterUnlock((visible) => { showQuizScrollHint = visible; });
 			}
 		} else {
 			showQuizScrollHint = false;
-			window.clearTimeout(quizHintTimeout);
 		}
-
-		return () => window.clearTimeout(quizHintTimeout);
 	});
 
 	// Nasconde il tooltip quando quizState cambia mentre il mouse è ancora nell'area
@@ -109,8 +105,10 @@
 		<img src={quoteIconSrc} alt="" role="presentation" class="quote-icon" />
 		<p class="quote-content">
 			At this level, it’s probably 70% mental<br />
-			and 30% physical. [...]<br />
-			I’ve had races where I was confident<br />
+			and 30% physical.
+		</p>
+		<p class="quote-content">
+			[...] I’ve had races where I was confident<br />
 			and performed incredibly well, and<br />
 			others where negativity took over<br />
 			and everything fell apart. Learning to<br />
@@ -180,10 +178,10 @@
 			</div>
 
 			<!-- Barra-maniglia a tutta larghezza: si trascina a step di 10, un tap conferma.
-			     Dopo il primo drag le frecce lasciano il posto a "Scopri" (toggle via .is-confirmable). -->
+			     Dopo il primo drag "Trascina" lascia il posto a "Scopri" (toggle via .is-confirmable). -->
 			<div class="split-handle">
 				<Button ariaLabel="Trascina per bilanciare mentale e fisico, tocca per scoprire">
-					<span class="handle-arrows" aria-hidden="true">↑<span class="handle-dot">•</span>↓</span>
+					<span class="handle-label">Trascina</span>
 					<span class="handle-cta">Scopri</span>
 				</Button>
 			</div>
@@ -502,6 +500,17 @@
 		color: var(--content-primary);
 	}
 
+	/* Solo il bordo interno tra le due parti della citazione: gap del wrapper (--spacing-2)
+	   + --spacing-2 = --spacing-4 visivo, deterministico invece dei margini UA dei <p> (che in
+	   flex non collassano e gonfiavano la distanza). Icona→testo e testo→autore invariati. */
+	.quote-content:has(+ .quote-content) {
+		margin-bottom: 0;
+	}
+
+	.quote-content + .quote-content {
+		margin-top: var(--spacing-2);
+	}
+
 	.quote-author {
 		font-family: var(--font-family-base, sans-serif);
 		font-size: var(--text-xs);
@@ -538,7 +547,7 @@
 
 	.scroll-hint-container {
 		position: absolute;
-		bottom: var(--spacing-8);
+		bottom: var(--scroll-hint-bottom);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 100;
@@ -633,15 +642,17 @@
 		}
 
 		/* Commento solo il PERCHÉ: mentale è trasparente per lasciar trasparire il gradiente
-		   persistente della home (continuità visiva); fisico ha invece un fill solido che lo copre. */
+		   persistente della home (continuità visiva); fisico ha invece un fill solido che lo copre.
+		   Il fallback pre-JS è la POSA DI RIPOSO (confine sul bordo inferiore, fisico collassato
+		   fuori vista): un 50/50 qui si intravedrebbe entrando nella sezione prima dell'ingresso. */
 		.zone-mentale {
 			top: 0;
-			height: 50%;
+			height: 100%;
 			color: var(--content-primary);
 		}
 
 		.zone-fisico {
-			top: 50%;
+			top: 100%;
 			bottom: 0;
 			background-color: var(--background-primary);
 			color: var(--content-primary);
@@ -702,24 +713,12 @@
 			50% { transform: scale(1.06); }
 		}
 
-		.handle-arrows {
-			display: inline-flex;
-			flex-direction: column;
-			align-items: center;
-			line-height: 0.9;
-		}
-
-		.handle-dot {
-			font-size: 0.6em;
-			opacity: 0.7;
-		}
-
-		/* Prima del drag la maniglia mostra le frecce; dopo il primo rilascio diventa "Scopri". */
+		/* Prima del drag la maniglia mostra "Trascina"; dopo il primo rilascio diventa "Scopri". */
 		.handle-cta {
 			display: none;
 		}
 
-		.split-handle:global(.is-confirmable) :global(.handle-arrows) {
+		.split-handle:global(.is-confirmable) :global(.handle-label) {
 			display: none;
 		}
 
@@ -727,10 +726,27 @@
 			display: inline;
 		}
 
-		/* Solo la citazione, centrata, che sostituisce la schermata del drag alla conferma */
+		/* Dopo la prima conferma la label resta "Scopri" anche se la maniglia
+		   rientra (retract/reset): il gesto di drag è ormai acquisito. */
+		.split-handle:global(.has-confirmed) :global(.handle-label) {
+			display: none;
+		}
+
+		.split-handle:global(.has-confirmed) :global(.handle-cta) {
+			display: inline;
+		}
+
+		/* Solo la citazione, centrata, che sostituisce la schermata del drag alla conferma.
+		   Altezza 100svh (non inset:0) in ENTRAMBI gli stati: da fixed l'inset seguirebbe la
+		   viewport dinamica e da absolute la sezione 100vh (viewport lungo) — due centri diversi
+		   che facevano "scattare" la citazione in basso al handoff fixed→absolute. Col riferimento
+		   sempre svh il centro coincide a prescindere dalla barra URL. */
 		.quote-panel {
 			position: absolute;
-			inset: 0;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 100svh;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -748,11 +764,6 @@
 			/* Commento solo il PERCHÉ: adatta la taglia del testo della citazione su mobile per migliorarne la leggibilità */
 			font-size: var(--text-s);
 			text-align: center;
-		}
-
-		.scroll-hint-container {
-			/* Somma la safe-area inferiore così il cue non finisce sotto la chrome/gesture bar del browser. */
-			bottom: calc(var(--spacing-2) + env(safe-area-inset-bottom));
 		}
 
 		/* --- Stili esclusivi della citazione mobile --- */
@@ -781,7 +792,19 @@
 			font-weight: var(--text-regular);
 			line-height: 1.5;
 			color: var(--content-primary);
-			margin: 0 0 var(--spacing-3) 0;
+			margin: 0 0 var(--spacing-2) 0;
+		}
+
+		/* Tutte le distanze interne della quote sono equidistanti a spacing-4 visivo (32px,
+		   come tra i paragrafi narrativi delle pagine archetipo): para→para = gap (s2) + s2,
+		   para→autore = gap (s2) + margin-bottom (s2). Il primo paragrafo azzera il proprio
+		   margine perché il bordo con il secondo è già coperto dal margin-top adiacente. */
+		.mobile-quote .quote-text:has(+ .quote-text) {
+			margin-bottom: 0;
+		}
+
+		.mobile-quote .quote-text + .quote-text {
+			margin-top: var(--spacing-2);
 		}
 
 		.mobile-quote .quote-gradient-text {

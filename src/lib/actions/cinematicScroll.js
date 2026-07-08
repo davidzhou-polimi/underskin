@@ -28,6 +28,22 @@ export function cinematicScroll(node) {
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let scrollTimeout = null;
 
+	// Il flag fromArchetype governa i guard di introReveal/quiz/outro: se resta sporco, l'intro
+	// non riarma mai il suo lock (scroll cue che non scompare). L'onComplete dello scrollTo può
+	// non arrivare mai (tocco utente che interrompe Lenis, navigazione via): il primo gesto
+	// dell'utente equivale a "cinematica conclusa" e pulisce il flag comunque.
+	const clearParam = () => {
+		navigationState.fromArchetype = false;
+		removeGestureListeners();
+	};
+	const gestureEvents = ['pointerdown', 'wheel', 'touchstart'];
+	const addGestureListeners = () => {
+		gestureEvents.forEach((ev) => window.addEventListener(ev, clearParam, { passive: true, once: true }));
+	};
+	const removeGestureListeners = () => {
+		gestureEvents.forEach((ev) => window.removeEventListener(ev, clearParam));
+	};
+
 	// requestAnimationFrame assicura che la pagina sia montata e lo scroll iniziale terminato
 	rafId = requestAnimationFrame(() => {
 		// Commento solo il PERCHÉ: i pin di Preface/Quiz/#archetypes creano pin-spacer che allungano il
@@ -40,14 +56,23 @@ export function cinematicScroll(node) {
 		// Commento solo il PERCHÉ: il ResizeObserver di Lenis è async, quindi dopo il refresh le sue dimensioni
 		// interne sono ancora stale e scrollTo clamperebbe corto (atterrando sul preface): resize() sincrono le aggiorna.
 		lenis?.resize();
-		if (lenis) lenis.scrollTo(archetypesSection, { immediate: true, force: true });
+		// Su mobile #archetypes è uno scrolly pinnato di 2.5 schermate: atterrare al suo inizio
+		// significherebbe attraversare tutto lo scrub per raggiungere l'outro. Si atterra invece
+		// nell'ultimo tratto del pin (carosello già rivelato, timeline a riposo) e da lì lo smooth
+		// scroll verso l'outro è breve e continuo.
+		const mobileScrolly = window.matchMedia('(max-width: 768px)').matches
+			? ScrollTrigger.getById('archetypeScrollyMobile')
+			: undefined;
+		/** @type {HTMLElement | number} */
+		const landingTarget = mobileScrolly
+			? mobileScrolly.start + (mobileScrolly.end - mobileScrolly.start) * 0.8
+			: archetypesSection;
+		if (lenis) lenis.scrollTo(landingTarget, { immediate: true, force: true });
 		else archetypesSection.scrollIntoView({ behavior: 'instant' });
 
 		// Commento solo il PERCHÉ: riduciamo il delay a 50ms per rendere la transizione immediata dopo il posizionamento, mantenendo una piccolissima finestra per l'assestamento del rendering
 		scrollTimeout = setTimeout(() => {
-			const clearParam = () => {
-				navigationState.fromArchetype = false;
-			};
+			addGestureListeners();
 
 			const l = getLenis();
 			if (l) {
@@ -66,6 +91,8 @@ export function cinematicScroll(node) {
 			// Interrompe un eventuale scrollTo in corso fissando la posizione attuale
 			const l = getLenis();
 			if (l) l.scrollTo(window.scrollY, { immediate: true });
+			// Navigare via a metà cinematica lascerebbe il flag sporco per la visita successiva.
+			clearParam();
 		}
 	};
 }

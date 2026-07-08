@@ -1,5 +1,6 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
+import { navigationState } from '$lib/stores/navigationState.svelte.js';
 
 // Durata del micro-stop all'ingresso: quanto basta a uccidere il momentum del flick
 // e far registrare la sezione all'occhio, senza che il freno sembri un blocco.
@@ -104,6 +105,13 @@ export function outroCarouselMobile(node, params) {
 				end: 'bottom top',
 				onEnter: () => {
 					if (hasStopped) return;
+					// Durante lo scroll cinematico "Vai alla conclusione" (fromArchetype ancora alto:
+					// si azzera solo all'onComplete) il lock congelerebbe il glide programmatico di
+					// Lenis a metà corsa: si segna la sosta come già consumata e non si blocca.
+					if (navigationState.fromArchetype) {
+						hasStopped = true;
+						return;
+					}
 					hasStopped = true;
 					lockScroll();
 					stopLockActive = true;

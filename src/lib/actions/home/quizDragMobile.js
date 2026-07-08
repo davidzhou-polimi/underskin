@@ -1,5 +1,6 @@
 import { gsap, ScrollTrigger, Observer, Draggable } from '$lib/utils/gsapSetup.js';
 import { scrollTo } from '$lib/stores/lenis.svelte.js';
+import { navigationState } from '$lib/stores/navigationState.svelte.js';
 
 /**
  * @typedef {Object} QuizDragMobileParams
@@ -82,6 +83,8 @@ export function quizDragMobile(node, params) {
 	let holdTrigger;
 	/** @type {ScrollTrigger | undefined} */
 	let resetTrigger;
+	/** @type {ScrollTrigger | undefined} - pin della quote a quiz concluso (stato results). */
+	let resultsPin;
 
 	// H segue il viewport, non lo scroll: mentre "presa" la sezione è un layer position:fixed
 	// (vedi is-engaged in lockGame), quindi allineato al viewport a prescindere dalla posizione
@@ -178,21 +181,30 @@ export function quizDragMobile(node, params) {
 		.fromTo(zonePcts, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.15')
 		.fromTo(zoneNames, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' }, '+=0.12');
 
-	// Stato di riposo al mount: la timeline stessa (a progresso 0) è la fonte di verità della posa.
-	// H è verosimilmente 0 finché il layout non è pronto: ri-misuriamo e ri-renderizziamo al primo frame.
+	// Stato di riposo al mount: progress(0) da solo NON basta — i fromTo che iniziano più avanti
+	// sull'asse dei tempi non renderizzano finché il playhead non li raggiunge (immediateRender
+	// false nei timeline), quindi al primo passaggio restava il fallback CSS e si intravedeva il
+	// fill di "fisico". La posa va espressa in PERCENTUALI, non in px da innerHeight: al load la
+	// barra URL è visibile (viewport corto) ma la sezione è 100vh (viewport lungo) — un top in px
+	// lascerebbe una striscia di "fisico" visibile sul fondo della sezione al primo passaggio.
+	const renderRestingPose = () => {
+		if (gameActive || entranceTimeline.progress() > 0) return;
+		gsap.set(handle, { opacity: 0 });
+		gsap.set(zoneMentale, { height: '100%' });
+		gsap.set(zoneFisico, { top: '100%' });
+		gsap.set([zonePcts, zoneNames], { opacity: 0 });
+	};
 	entranceTimeline.progress(0);
-	requestAnimationFrame(() => {
-		if (!gameActive && entranceTimeline.progress() === 0) {
-			measure();
-			entranceTimeline.invalidate().progress(0);
-		}
-	});
+	renderRestingPose();
 
 	draggable = Draggable.create(handle, {
 		type: 'y',
 		// La maniglia contiene il Button (clickable): dragClickables mantiene il drag partendo da esso,
 		// mentre onClick resta il tap di conferma.
 		dragClickables: true,
+		// Il gesto può INIZIARE solo dal pulsante: la barra a tutta larghezza (la "linea") è il
+		// target animato ma non una presa — un dito sulla linea non deve trascinare le zone.
+		trigger: handle.querySelector('.pill-button') ?? handle,
 		cursor: 'grab',
 		activeCursor: 'grabbing',
 		onPress() {
@@ -247,6 +259,9 @@ export function quizDragMobile(node, params) {
 		gestureObserver?.disable();
 		// Ferma la pulsazione della maniglia mentre svanisce.
 		handle.classList.remove('is-confirmable');
+		// Il gesto è ormai acquisito: se la maniglia ricompare (retract/reset) la label
+		// resta "Scopri" — la classe non viene mai rimossa per tutta la vita del mount.
+		handle.classList.add('has-confirmed');
 		// La pagina è già hard-locked durante choosing; lockScroll è idempotente e garantisce il freeze
 		// per tutta la durata dell'uscita.
 		lockScroll();
@@ -268,6 +283,19 @@ export function quizDragMobile(node, params) {
 				scrollTo(node, { immediate: true, force: true });
 				node.classList.remove('is-engaged');
 				unlockScroll();
+				// A quiz concluso la sezione tornerebbe un normale blocco in flow: risalendo e
+				// riscendendo la quote scorrerebbe via senza la sosta che hanno le altre sezioni.
+				// Il pin nasce SOLO ora (durante il gioco la presenza è garantita dal layer fixed
+				// di is-engaged) e il momento è sicuro: scroll appena risincronizzato sul top
+				// sezione e quiescente. Il refresh riconcilia i trigger sottostanti con lo spacer.
+				resultsPin = ScrollTrigger.create({
+					trigger: node,
+					start: 'top top',
+					end: '+=100%',
+					pin: true,
+					pinSpacing: true
+				});
+				ScrollTrigger.refresh();
 			}
 		});
 
@@ -304,7 +332,14 @@ export function quizDragMobile(node, params) {
 		// Solo a ingresso completato (gameActive): durante l'ingresso non si riavvolge — evita che il
 		// gesto d'entrata lo interrompa lasciando le zone asimmetriche.
 		if (quizState !== 'choosing' || !locked || !gameActive) return;
+		// Nei drag veloci il dito scivola fuori dalla maniglia e i touchmove (target: le zone, non
+		// ignorate dall'Observer) arrivano qui A DITO ANCORA GIÙ: riavvolgere ora farebbe sparire
+		// l'handle sotto le dita dell'utente. Il gesto legittimo di retract nasce per definizione
+		// fuori dalla maniglia, a press già concluso.
+		if (draggable?.isPressed) return;
 		if (entranceTimeline.reversed()) return; // già in riavvolgimento
+		// Lo snap post-drag e il reverse contenderebbero handle.y: ne resta vivo uno solo.
+		if (snapTween) { snapTween.kill(); snapTween = null; }
 		entranceTimeline.reverse();
 	}
 
@@ -329,6 +364,11 @@ export function quizDragMobile(node, params) {
 	 */
 	function engageHold() {
 		if (quizState !== 'choosing' || locked) return;
+		// Durante lo scroll cinematico "Vai alla conclusione" il salto istantaneo attraversa lo start
+		// del quiz: l'hard-lock qui congelerebbe la pagina (overflow hidden) e lo smooth verso l'outro
+		// non potrebbe più muoverla — si resterebbe fermi sulla domanda. Stesso pattern del micro-stop
+		// dell'Outro: il flag si azzera solo a scroll cinematico concluso.
+		if (navigationState.fromArchetype) return;
 		locked = true;
 		phase = 'hold';
 		// Il layer di gioco passa a position:fixed con z-index alto (vedi CSS .is-engaged): allineato
@@ -405,6 +445,7 @@ export function quizDragMobile(node, params) {
 		handle.classList.remove('is-confirmable');
 		measure();
 		entranceTimeline.invalidate().pause(0);
+		renderRestingPose();
 		setLabels(START);
 		// Ripristina l'opacità delle zone eventualmente azzerata da una conferma interrotta.
 		gsap.set([zoneMentale, zoneFisico], { clearProps: 'opacity' });
@@ -485,6 +526,7 @@ export function quizDragMobile(node, params) {
 			if (gestureObserver) gestureObserver.kill();
 			if (holdTrigger) holdTrigger.kill();
 			if (resetTrigger) resetTrigger.kill();
+			if (resultsPin) resultsPin.kill();
 			if (timeline) timeline.kill();
 			// Evita che uno smontaggio a metà interazione lasci la pagina bloccata.
 			unlockScroll();
