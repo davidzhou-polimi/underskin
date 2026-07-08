@@ -74,7 +74,6 @@
                     sizes="(max-width: 768px) 100vw, 461px"
                     alt={name}
                     class="team-member-image"
-                    loading="lazy"
                     decoding="async"
                 />
             {/if}

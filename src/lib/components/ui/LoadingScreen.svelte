@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/state';
 	import { loadingOrbit } from '$lib/actions/loadingOrbit.js';
 	import { loadingState } from '$lib/stores/loadingState.svelte.js';
 	import { lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
@@ -42,6 +43,22 @@
 		});
 	}
 
+	// Su /about il reveal scopre subito le foto del team (sono l'unica immagine above-the-fold del
+	// sito): alzare il velo prima che siano decodificate le farebbe comparire a scatti dopo il
+	// loader. Attendere le <img> reali del DOM (non un preload di path) copre esattamente la
+	// risoluzione che il browser ha scelto dallo srcset. Timeout proprio: una foto lenta non deve
+	// trascinare il loader fino al cap globale.
+	/** @param {number} [timeoutMs] */
+	function whenAboutImagesReady(timeoutMs = 4500) {
+		if (!page.url.pathname.startsWith('/about')) return Promise.resolve(undefined);
+		const imgs = Array.from(document.querySelectorAll('.team-member-image'));
+		if (imgs.length === 0) return Promise.resolve(undefined);
+		const decoded = Promise.all(
+			imgs.map((img) => /** @type {HTMLImageElement} */ (img).decode().catch(() => undefined))
+		);
+		return Promise.race([decoded, new Promise((r) => setTimeout(r, timeoutMs))]);
+	}
+
 	function onReveal() {
 		// Sblocca l'entrata della pagina (es. introReveal) a metà del fade-out dell'overlay, in
 		// overlap con la maschera che finisce di aprirsi: il timing esatto vive in loadingOrbit.js (REVEAL_AT).
@@ -72,7 +89,7 @@
 			? document.fonts.load('italic 400 1rem "Rethink Sans"').catch(() => undefined)
 			: Promise.resolve();
 
-		Promise.all([fonts, italic, whenGradientReady()]).then(() => {
+		Promise.all([fonts, italic, whenGradientReady(), whenAboutImagesReady()]).then(() => {
 			const wait = Math.max(0, MIN_MS - (performance.now() - start));
 			minTimer = setTimeout(() => (outro = true), wait);
 		});
@@ -107,10 +124,11 @@
 		z-index: 9999;
 		background-color: var(--background-primary);
 		overflow: hidden;
-		/* Raggio dell'orbita: parametro d'animazione (non un token di design). Fluido così la distanza
-		   tra le lucine scala con lo schermo; il cap 30px tiene il desktop com'era. GSAP lo legge
-		   risolto in px dalla matrice computata delle lucine al takeover. */
-		--orbit-radius: clamp(20px, 7vmin, 30px);
+		/* Raggio dell'orbita: parametro d'animazione (non un token di design). Proporzionale alla
+		   dimensione delle lucine (30px/48px = 0.625 sul desktop, invariato) così su mobile, dove
+		   --spacing-6 scende a 32px, il raggio scala insieme e il gap resta in proporzione. GSAP lo
+		   legge risolto in px dalla matrice computata delle lucine al takeover. */
+		--orbit-radius: calc(var(--spacing-6) * 0.625);
 	}
 
 	/* L'orbita ruota in CSS (compositor) per TUTTA l'idle: si anima già dal frame prerenderizzato
