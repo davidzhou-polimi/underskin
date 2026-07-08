@@ -1,5 +1,5 @@
 <script>
-	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
+	import { performanceReveal } from "$lib/actions/home/performanceReveal.js";
 </script>
 
 <section
@@ -8,12 +8,26 @@
 	use:performanceReveal={{ pinMobile: true }}
 >
 	<div class="statement-content">
-		<blockquote 
-			class="statement-quote" 
-		>
-			Riconoscere l'atleta dietro il dato è un 
-			<span class="gradient-text animate-gradient-text my-archetypes-color">atto di empatia</span>,<br />
+		<!-- Desktop Quote -->
+		<blockquote class="statement-quote desktop-only">
+			Riconoscere l'atleta dietro il dato è un
+			<span
+				class="gradient-text animate-gradient-text my-archetypes-color"
+				>atto di empatia</span
+			>,<br />
 			il primo passo verso una cultura dello sport più umana.
+		</blockquote>
+
+		<!-- Mobile Quote -->
+		<blockquote class="statement-quote mobile-only">
+			Riconoscere l'atleta dietro<br />
+			il dato è un
+			<span
+				class="gradient-text animate-gradient-text my-archetypes-color"
+				>atto di empatia</span
+			>,<br />
+			il primo passo verso una<br />
+			cultura dello sport più umana.
 		</blockquote>
 	</div>
 </section>
@@ -43,7 +57,7 @@
 	}
 
 	.statement-quote {
-		font-family: 'Rethink Sans', sans-serif;
+		font-family: "Rethink Sans", sans-serif;
 		font-weight: var(--text-important-weight);
 		/* Commento solo il PERCHÉ: utilizza il token --text-xl (3.5rem) per dare 
 		   la massima forza visiva e autorevolezza alla dichiarazione di chiusura dell'About */
@@ -66,5 +80,33 @@
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
+	}
+
+	.desktop-only {
+		display: block;
+	}
+
+	.mobile-only {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.about-statement-section {
+			/* Commento solo il PERCHÉ: applica un margine superiore negativo su mobile per far entrare la sezione in anticipo rispetto allo scroll nativo */
+			margin-top: -40vh;
+		}
+
+		.desktop-only {
+			display: none;
+		}
+
+		.mobile-only {
+			display: block;
+		}
+
+		.statement-quote {
+			/* Commento solo il PERCHÉ: resetta la larghezza massima per prevenire tagli di layout su schermi piccoli */
+			max-width: none;
+		}
 	}
 </style>

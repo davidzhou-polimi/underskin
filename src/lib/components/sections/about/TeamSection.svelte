@@ -63,6 +63,11 @@
 	}
 
 	@media (max-width: 768px) {
+		.team-section {
+			/* Commento solo il PERCHÉ: applica un margine superiore negativo su mobile per ridurre lo spazio vuoto e riavvicinare il carosello alla citazione precedente */
+			margin-top: -10vh;
+		}
+
 		.team-section__container {
 			/* Commento solo il PERCHÉ: rimuove il limite max-width (che si contrae a 320px su mobile via token spacing-17) 
 			   permettendo al viewport del carosello di estendersi al 100% e mostrare le card successive sui bordi */
