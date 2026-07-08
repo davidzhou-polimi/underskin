@@ -1,8 +1,9 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { navbarSlide } from '$lib/actions/navbarSlide.js';
+	import { loadingState } from '$lib/stores/loadingState.svelte.js';
 	import { getLenis, lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
 
@@ -45,6 +46,47 @@
 		hidden = hideByDefault;
 	});
 
+	// Commento solo il PERCHÉ: valore effettivo passato a navbarSlide, differenziato per piattaforma.
+	// Desktop (`complete && hidden`): durante il loading resta a yPercent 0 dietro il velo opaco del
+	// loader → alla scoperta la barra è GIÀ lì (nessuno slide-in) e scivola via solo quando l'auto-hide
+	// imposta hidden=true. Mobile (`hidden || !complete`): invariato, così conserva l'ingresso cerimoniale.
+	const navbarHidden = $derived(
+		media.isMobile ? hidden || !loadingState.complete : loadingState.complete && hidden
+	);
+
+	// Commento solo il PERCHÉ: al completamento del loading l'intro (home) resta presente e si nasconde
+	// dopo delay lungo (~2s); ogni altra pagina caricata col loader si nasconde dopo il delay breve delle
+	// transizioni (~0.8s). Il primo hide parte qui (non al mount): sotto il loader il timer scadrebbe e
+	// non si vedrebbe la barra nascondersi.
+	// untrack sul pathname: la lettura NON deve rendere l'effect reattivo alla navigazione, il cui timing
+	// è governato dall'effect sul pathname più sotto.
+	$effect(() => {
+		if (!loadingState.complete || media.isMobile) return;
+		if (untrack(() => page.url.pathname) === '/') armIntroAutoHide();
+		else scheduleNavHide();
+	});
+
+	// Commento solo il PERCHÉ: navigando da una voce di menu il mouse resta "sopra" la navbar
+	// (isHovered=true, nessun mouseleave), che terrebbe l'auto-hide sospeso sulla nuova pagina.
+	// Su desktop, a ogni cambio rotta reale nascondiamo la barra dopo un breve delay (NAV_HIDE_DELAY),
+	// azzerando prima l'hold da hover/focus perché si nasconda anche col cursore sulla barra. Timer
+	// dedicato (non autoHideTimeout): il reset scroll a inizio pagina non deve sovrascriverlo a 2s.
+	// Il confronto con lastPath salta il run iniziale (nessuna navigazione) e non legge
+	// loadingState.complete, così il reveal post-loading non scatena questo hide (→ intro intatta).
+	let lastPath = page.url.pathname;
+	$effect(() => {
+		const path = page.url.pathname; // dipendenza reattiva: rieseguito a ogni navigazione
+		if (media.isMobile) {
+			lastPath = path;
+			return;
+		}
+		if (path === lastPath) return;
+		lastPath = path;
+		isHovered = false;
+		isFocused = false;
+		scheduleNavHide();
+	});
+
 	// Commento solo il PERCHÉ: rileva il passaggio da mobile a desktop (es. ridimensionando la finestra)
 	// e chiude automaticamente il menu mobile se aperto, per evitare che rimanga un overlay orfano.
 	$effect(() => {
@@ -59,6 +101,12 @@
 
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let autoHideTimeout;
+
+	// Delay dedicato all'hide dopo un cambio pagina (transizioni): la barra resta un istante sulla
+	// nuova pagina e poi scivola via. Timer separato da autoHideTimeout per non essere sovrascritto.
+	const NAV_HIDE_DELAY = 800;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let navHideTimeout;
 
 	const logoLabel = 'UnderSkin';
 
@@ -82,15 +130,40 @@
 	 */
 	const startAutoHideTimer = () => {
 		clearTimeout(autoHideTimeout);
-		/* Evita di nascondere la barra se il menu è aperto, se l'utente la sta sorvolando col mouse o la sta navigando con la tastiera */
+		/* Evita di nascondere la barra se il menu è aperto, se l'utente la sta sorvolando col mouse
+		   o la sta navigando con la tastiera. L'esenzione "in cima niente auto-hide" è solo mobile:
+		   su desktop la barra si nasconde anche a inizio pagina (mouse al bordo alto e wheel-up
+		   restano le affordance per richiamarla). Finché il loader copre lo schermo NON si arma:
+		   altrimenti hidden diventerebbe true prima del reveal e la barra non si vedrebbe entrare. */
 		if (
 			autoHideDelay <= 0 ||
+			!loadingState.complete ||
 			isMenuOpen ||
-			window.scrollY <= 10 ||
+			(media.isMobile && window.scrollY <= 10) ||
 			isHovered ||
 			isFocused
 		)
 			return;
+		autoHideTimeout = setTimeout(requestHide, autoHideDelay);
+	};
+
+	// Hide ritardato per transizioni e pagine non-intro caricate col loader. Mostra subito la barra e
+	// annulla ogni timer pendente (incl. l'auto-hide dell'intro, che potrebbe essere GIÀ scattato tra il
+	// click e l'esecuzione dell'effect): così è garantito che resti visibile per NAV_HIDE_DELAY e poi
+	// esca — l'unico hide effettivo è questo, a ~0.8s.
+	const scheduleNavHide = () => {
+		hidden = false;
+		clearTimeout(autoHideTimeout);
+		clearTimeout(navHideTimeout);
+		navHideTimeout = setTimeout(requestHide, NAV_HIDE_DELAY);
+	};
+
+	// Intro (home): primo hide post-loading. Ignora l'hover fisico — al load il cursore può trovarsi
+	// sulla barra (era coperta dal velo del loader, nessun mouseenter) ma NON deve tenerla attaccata al
+	// puntatore: si nasconde dopo autoHideDelay come una transizione di pagina. L'hover-hold vero (mouse
+	// mosso sulla barra visibile) resta in startAutoHideTimer/onmouseenter, per l'interazione a metà pagina.
+	const armIntroAutoHide = () => {
+		clearTimeout(autoHideTimeout);
 		autoHideTimeout = setTimeout(requestHide, autoHideDelay);
 	};
 
@@ -180,8 +253,10 @@
 				scrollRafId = 0;
 				const currentScrollY = window.scrollY;
 
-				// Commento solo il PERCHÉ: in cima alla pagina la navbar rimane sempre visibile, su qualunque dispositivo.
-				if (currentScrollY <= 10) {
+				// Commento solo il PERCHÉ: in cima alla pagina la navbar resta sempre visibile solo su
+				// mobile (dove non c'è mouse per richiamarla); su desktop prosegue la normale logica a
+				// delta, così la barra appare risalendo e poi si auto-nasconde anche a inizio pagina.
+				if (currentScrollY <= 10 && media.isMobile) {
 					hidden = false;
 					lastScrollY = currentScrollY;
 					clearTimeout(autoHideTimeout);
@@ -303,6 +378,7 @@
 			clearTimeout(scrollTimeout);
 			clearTimeout(mouseRevealTimeout);
 			clearTimeout(autoHideTimeout);
+			clearTimeout(navHideTimeout);
 		};
 	});
 </script>
@@ -331,7 +407,8 @@
 <!-- svelte-ignore a11y_no_redundant_roles -->
 <header
 	class="navbar"
-	use:navbarSlide={{ hidden, onAnimating: (v) => (isNavbarSliding = v) }}
+	class:menu-open={isMenuOpen}
+	use:navbarSlide={{ hidden: navbarHidden, onAnimating: (v) => (isNavbarSliding = v) }}
 	role="banner"
 	onmouseenter={() => {
 		// Commento solo il PERCHÉ: su mobile il tap emula mouseenter e terrebbe isHovered=true (bloccando
@@ -378,14 +455,9 @@
 			aria-expanded={isMenuOpen}
 			aria-label={isMenuOpen ? "Chiudi menu" : "Apri menu"}
 		>
-			<svg class:is-active={!isMenuOpen} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-				<line x1="3" y1="6" x2="21" y2="6"></line>
-				<line x1="3" y1="12" x2="21" y2="12"></line>
-				<line x1="3" y1="18" x2="21" y2="18"></line>
-			</svg>
-			<svg class:is-active={isMenuOpen} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-				<line x1="18" y1="6" x2="6" y2="18"></line>
-				<line x1="6" y1="6" x2="18" y2="18"></line>
+			<svg class="menu-icon" class:is-open={isMenuOpen} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+				<line class="menu-icon-line menu-icon-line--top" x1="4" y1="9" x2="20" y2="9"></line>
+				<line class="menu-icon-line menu-icon-line--bottom" x1="4" y1="15" x2="20" y2="15"></line>
 			</svg>
 		</button>
 	</nav>
@@ -425,6 +497,14 @@
 		/* Con viewport-fit=cover la barra fissa passerebbe sotto la status bar / notch: la safe-area
 		   superiore spinge il contenuto sotto l'area di sistema. 0 su desktop → nessun cambiamento. */
 		padding-top: env(safe-area-inset-top);
+	}
+
+	/* L'overlay del menu (z-index 999) vive DENTRO questo header: il suo 999 conta solo nel
+	   contesto di stacking della navbar, che a livello di pagina vale 10 — i dot dei caroselli
+	   lo scavalcherebbero. A menu aperto l'intero contesto sale sopra tutto; a menu chiuso lo
+	   stacking resta quello di sempre (i layer fixed esistenti, es. quiz engaged, non cambiano). */
+	.navbar.menu-open {
+		z-index: 1000;
 	}
 
 	.navbar__inner {
@@ -522,17 +602,25 @@
 		color: var(--content-light-primary);
 	}
 
-	/* Commento solo il PERCHÉ: sovrappone i due SVG (hamburger e close) nella stessa cella del CSS Grid 
-	   e ne gestisce la visibilità reciproca con un semplice effetto di dissolvenza incrociata (cross-fade) */
-	.menu-toggle-btn svg {
+	.menu-icon {
 		grid-column: 1;
 		grid-row: 1;
-		opacity: 0;
-		transition: opacity var(--transition-duration-normal) var(--easing-standard);
 	}
 
-	.menu-toggle-btn svg.is-active {
-		opacity: 1;
+	/* Commento solo il PERCHÉ: le due linee traslano verso il centro (y 9→12 e 15→12) mentre
+	   ruotano di ±45°, così l'hamburger si morphizza nella X senza scambiare due icone */
+	.menu-icon-line {
+		transform-box: fill-box;
+		transform-origin: center;
+		transition: transform var(--transition-duration-normal) var(--easing-standard);
+	}
+
+	.menu-icon.is-open .menu-icon-line--top {
+		transform: translateY(3px) rotate(45deg);
+	}
+
+	.menu-icon.is-open .menu-icon-line--bottom {
+		transform: translateY(-3px) rotate(-45deg);
 	}
 
 	/* Overlay Mobile */
@@ -540,9 +628,9 @@
 		position: fixed;
 		inset: 0;
 		width: 100vw;
-		/* svh statico: l'overlay copre l'area visibile senza eccedere sotto la chrome. vh fallback. */
+		/* dvh dinamico: l'overlay segue la comparsa/scomparsa della barra URL. vh fallback. */
 		height: 100vh;
-		height: 100svh;
+		height: 100dvh;
 		/* Commento solo il PERCHÉ: imposta l'effetto ghiaccio semitrasparente azzurrato del brand */
 		background-color: rgb(from var(--background-primary) r g b / 0.85);
 		backdrop-filter: blur(12px);

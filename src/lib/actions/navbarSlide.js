@@ -14,6 +14,9 @@ export function navbarSlide(node, params = { hidden: false }) {
 	let onAnimating = params.onAnimating;
 	/** @type {gsap.core.Tween | null} */
 	let tween = null;
+	// La prima comparsa è per costruzione quella post-loading (hidden include !loadingState.complete):
+	// lì l'ingresso deve essere lento e cerimoniale; i mostra/nascondi legati allo scroll restano rapidi.
+	let hasRevealedOnce = !currentHidden;
 
 	// Stato iniziale senza animazione (evita flash alla prima render)
 	gsap.set(node, { yPercent: currentHidden ? -100 : 0 });
@@ -28,11 +31,14 @@ export function navbarSlide(node, params = { hidden: false }) {
 
 			if (tween) tween.kill();
 
+			const isFirstReveal = !newHidden && !hasRevealedOnce;
+			if (!newHidden) hasRevealedOnce = true;
+
 			onAnimating?.(true);
 			tween = gsap.to(node, {
 				yPercent: newHidden ? -100 : 0,
-				duration: newHidden ? 0.5 : 0.3,
-				ease: newHidden ? 'power2.in' : 'power2.out',
+				duration: newHidden ? 0.5 : (isFirstReveal ? 1.2 : 0.3),
+				ease: newHidden ? 'power2.in' : (isFirstReveal ? 'power3.out' : 'power2.out'),
 				overwrite: true,
 				onComplete: () => onAnimating?.(false)
 			});
