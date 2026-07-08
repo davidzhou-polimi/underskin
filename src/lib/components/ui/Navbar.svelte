@@ -463,7 +463,8 @@
 
 	.logo-nav:hover,
 	.logo-nav:focus-visible {
-		color: var(--content-light-secondary);
+		/* Commento solo il PERCHÉ: cambia il colore di hover con una sfumatura della scala dei neutri (neutral-500) per schiarirlo e garantirne la neutralità cromatica su tutti gli archetipi */
+		color: var(--neutral-300);
 	}
 
 	/* Menu Links */
@@ -487,16 +488,20 @@
 		text-decoration: none;
 		transition:
 			color var(--transition-duration-fast) var(--easing-standard),
-			font-weight var(--transition-duration-fast) var(--easing-standard);
+			font-weight var(--transition-duration-fast) var(--easing-standard),
+			letter-spacing var(--transition-duration-fast) var(--easing-standard);
 	}
 
 	.link-nav__item:hover,
 	.link-nav__item:focus-visible {
-		color: var(--content-light-secondary);
+		/* Commento solo il PERCHÉ: cambia il colore di hover con una sfumatura della scala dei neutri (neutral-500) per schiarirlo e garantirne la neutralità cromatica su tutti gli archetipi */
+		color: var(--neutral-500);
 	}
 
 	.link-nav__item--active {
-		font-weight: var(--text-nav-active-weight);
+		/* Commento solo il PERCHÉ: cambia il peso tipografico dello stato attivo con var(--text-extrabold) per renderlo visivamente prominente. Aggiunge una spaziatura extra per compensare l'espansione dei caratteri in grassetto e salvaguardare la leggibilità. */
+		font-weight: var(--text-extrabold);
+		letter-spacing: 0.03em;
 	}
 
 	/* Commento solo il PERCHÉ: display:contents dissolve il box del wrapper su desktop, così
@@ -610,12 +615,21 @@
 		text-align: left;
 		padding: 0;
 		cursor: pointer;
+		transition: 
+			color var(--transition-duration-fast) var(--easing-standard),
+			letter-spacing var(--transition-duration-fast) var(--easing-standard);
+	}
+
+	.mobile-nav-item:hover,
+	.mobile-nav-item:focus-visible {
+		/* Commento solo il PERCHÉ: cambia il colore di hover con una sfumatura della scala dei neutri (neutral-500) anche su mobile per coerenza visiva e neutralità cromatica */
+		color: var(--neutral-500);
 	}
 
 	.mobile-nav-item--active {
-		/* Commento solo il PERCHÉ: cambia unicamente di peso (700) nello stato attivo 
-		   corrispondente al comportamento di selezione del menu desktop */
-		font-weight: var(--text-nav-active-weight);
+		/* Commento solo il PERCHÉ: cambia unicamente di peso (800) nello stato attivo coordinato con il comportamento di selezione del menu desktop. Aggiunge una spaziatura extra per compensare l'espansione dei caratteri in grassetto e salvaguardare la leggibilità. */
+		font-weight: var(--text-extrabold);
+		letter-spacing: 0.03em;
 	}
 
 	@media (max-width: 768px) {
