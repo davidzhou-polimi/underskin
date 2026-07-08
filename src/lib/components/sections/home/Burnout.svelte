@@ -261,7 +261,7 @@
             justify-content: center;
             /* Commento solo il PERCHÉ: gap aumentato a var(--spacing-6) (48px) per evitare 
                collisioni o sovrapposizioni tra le scritte BURN e OUT. */
-            gap: var(--spacing-6);
+            gap: var(--spacing-2);
             pointer-events: none;
             /* Commento solo il PERCHÉ: z-index alzato a 4 (davanti a testi e cerchio) per 
                riprodurre l'effetto di sovrapposizione tridimensionale (vetro sopra i testi) presente su desktop. */
