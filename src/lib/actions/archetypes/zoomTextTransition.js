@@ -158,22 +158,11 @@ export function zoomTextTransition(node, params = {}) {
 						/* Pin più corto rispetto al desktop per una navigazione più snella su mobile */
 						end: '+=210%',
 						pin: true,
+						/* Niente snap: lo scrub continuo lascia il controllo al dito — lo snap
+						   asimmetrico (fino a 2.4s di animazione autonoma) è ciò che rendeva
+						   brusco il rilascio del pin verso il free-scroll. */
 						scrub: 1.5,
 						anticipatePin: 1,
-						snap: {
-							snapTo: (value) => {
-								const trigger = ScrollTrigger.getById('zoomTriggerMobile');
-								const direction = trigger ? trigger.direction : 1;
-								if (direction === 1) {
-									return value > 0.30 ? 1.0 : 0.20;
-								} else {
-									return value < 0.80 ? 0.20 : 1.0;
-								}
-							},
-							duration: { min: 1.4, max: 2.4 },
-							delay: 0.02,
-							ease: 'power3.out'
-						},
 						onUpdate: (self) => {
 							if (!onRevealChange) return;
 							const anim = /** @type {gsap.core.Timeline} */ (self.animation);
@@ -192,26 +181,29 @@ export function zoomTextTransition(node, params = {}) {
 				  .to(titleBlock, { opacity: 1, y: 0, duration: 1.0, ease: 'power2.out' }, '-=0.3')
 
 				  // 3. Hold — la composizione rimane visibile
-				  .to({}, { duration: 2.5 })
+				  .to({}, { duration: 2.0 })
 
-				  // 4. Uscita: l'intera composizione sfuma verso l'alto
+				  // 4. Uscita lenta: il testo sfuma mentre il carosello è già in dissolvenza
+				  //    d'ingresso — è il tratto di vero crossfade tra le due scene
 				  .to(zoomTextMobile, {
 						opacity: 0,
 						y: -24,
-						duration: 1.0,
-						ease: 'power2.in'
+						duration: 1.6,
+						ease: 'power2.inOut'
 				  })
 
-				  // 5. Reveal sezione successiva
-				  .addLabel('reveal', '-=0.9')
+				  // 5. Reveal sezione successiva: parte appena dopo l'inizio dell'uscita del testo
+				  //    (qui scatta anche la transizione ~0.8s del gradiente, fusa nel crossfade)
+				  .addLabel('reveal', '<+=0.2')
 				  .to(nextContent, {
 						autoAlpha: 1,
-						duration: 2.2,
-						ease: 'power2.out'
+						duration: 2.4,
+						ease: 'power2.inOut'
 				  }, 'reveal')
 
-				  // 6. Buffer
-				  .to({}, { duration: 2.0 });
+				  // 6. Buffer lungo: il reveal si esaurisce molto prima della fine del pin,
+				  //    così l'unpin avviene a scena ferma e non si percepisce lo stacco
+				  .to({}, { duration: 2.5 });
 			}, node);
 
 			return () => ctx.revert();

@@ -157,6 +157,17 @@
     }
 
     @media (max-width: 768px) {
+        /* Neutralizza la sovrapposizione: su mobile il -25vh anticipava l'aggancio del pin
+           (anticipatePin) creando un salto d'ingresso; il desktop mantiene l'overlap.
+           svh (statico, pattern IntroSection): il box pinnato coincide col viewport visibile
+           a barra browser mostrata, così il contenuto centrato (deck atleti) non scivola
+           sotto la piega; niente thrashing di ScrollTrigger, a differenza di dvh. */
+        .zoom-section {
+            margin-top: 0;
+            height: 100vh;
+            height: 100svh;
+        }
+
         .zoom-svg {
             display: none;
         }
