@@ -101,8 +101,10 @@
 
       <div class="closing-sentence">
         <h3 class="main-sentence">
-          Quando vincere diventa l'unico traguardo accettabile,
-          l'atleta smette di essere una persona e diventa solo un numero.
+          Quando vincere diventa l'unico<br />
+          traguardo accettabile, l'atleta<br />
+          smette di essere una persona e<br />
+          diventa solo un numero.
         </h3>
       </div>
     </div>
@@ -113,8 +115,8 @@
     <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
       <h3 class="main-sentence">
           Quando vincere diventa l'unico traguardo<br>
-          accettabile, l'atleta smette di essere<br>
-          una persona e diventa solo un numero.
+          accettabile, l'atleta smette di essere una<br>
+          persona e diventa solo un numero.
       </h3>
     </div>
 
@@ -304,7 +306,6 @@
     }
 
     .closing-sentence {
-      max-width: 80vw;
       text-align: center;
     }
 

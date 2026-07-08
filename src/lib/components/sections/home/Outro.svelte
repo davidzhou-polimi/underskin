@@ -149,7 +149,7 @@
 	</div>
 
 	<div class="mobile-carousel">
-		<h2 class="mobile-title">Non tutto si vede sul podio</h2>
+		<h2 class="mobile-title">Non tutto si vede<br />sul podio</h2>
 
 		<div class="mobile-arc" bind:clientWidth={arcWidth}>
 			<svg
@@ -197,7 +197,12 @@
 			<span class="mobile-percentage">{stages[0].target}%</span>
 			<div class="mobile-captions">
 				{#each stages as stage}
-					<p class="mobile-caption">{stage.lines.join(' ')}</p>
+					<p class="mobile-caption">
+						<!-- Commento solo il PERCHÉ: preserva i ritorni a capo originari definiti in 'stages' per ottimizzare la leggibilità ed evitare sovrapposizioni su schermi mobili -->
+						{#each stage.lines as line, lineIdx}
+							{#if lineIdx > 0}<br />{/if}{line}
+						{/each}
+					</p>
 				{/each}
 			</div>
 		</div>
@@ -290,7 +295,9 @@
 		   incollato per un viewport di scroll, così anche chi scorre veloce non lo attraversa
 		   senza vederlo — un semplice snap programmatico perdeva contro l'inerzia del touch. */
 		.outro-scroll-container {
-			height: 200svh;
+			height: 100svh;
+			position: relative;
+			box-sizing: border-box;
 		}
 
 		.scene {
@@ -299,26 +306,33 @@
 
 		.mobile-carousel {
 			display: flex;
-			position: sticky;
-			top: 0;
+			/* Commento solo il PERCHÉ: il pinning è delegato interamente a GSAP tramite 
+			   outroCarouselMobile, rendendo il comportamento e lo spazio fluidi ed omogenei. */
+			position: relative;
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			gap: var(--spacing-6);
+			/* Commento solo il PERCHÉ: ridotto a 24px per recuperare spazio verticale 
+			   dato che il titolo mobile ora si sviluppa su due righe. */
+			gap: var(--spacing-5);
 			height: 100svh;
-			padding: var(--spacing-8) var(--spacing-4);
+			/* Commento solo il PERCHÉ: aumentato il padding superiore a var(--spacing-9) (48px) per 
+			   spingere il titolo e il contenuto verso il basso, lontano dalla Dynamic Island. */
+			padding: var(--spacing-9) var(--spacing-4) var(--spacing-5);
 			box-sizing: border-box;
 			overflow: hidden;
 		}
 
-		/* Commento solo il PERCHÉ: dimensioni richieste esplicitamente ai valori DESKTOP della
-		   scala (40/128/24px): la media query globale dei token li ridurrebbe (24/56/18px),
-		   quindi qui i rem sono hardcodati. */
+		/* Commento solo il PERCHÉ: i rem sono hardcodati a un valore mobile intermedio (28px) 
+		   anziché scalare sui token globali per garantire leggibilità ed evitare sovrapposizioni 
+		   con gli elementi dell'interfaccia di sistema nativa (es. Dynamic Island). */
 		.mobile-title {
 			font-family: var(--font-family-base);
-			font-size: 2.5rem; /* token approssimativo: --text-l a valore desktop */
+			font-size: 2.25rem;
 			font-weight: var(--text-important-weight);
-			line-height: 1.25;
+			/* Commento solo il PERCHÉ: line-height ridotto a 1.2 per rendere il titolo a due righe
+			   visivamente compatto ed elegante. */
+			line-height: 1.2;
 			color: var(--content-primary);
 			margin: 0;
 			text-align: center;
@@ -328,6 +342,9 @@
 			width: 100%;
 			height: 120px;
 			flex: none;
+			/* Commento solo il PERCHÉ: aggiunto margine superiore per distanziare 
+			   l'arco dal titolo sovrastante ed evitare sovrapposizioni visive. */
+			margin-top: var(--spacing-3);
 		}
 
 		.mobile-arc svg {
@@ -355,23 +372,29 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: var(--spacing-3);
+			/* Commento solo il PERCHÉ: gap ridotto a var(--spacing-2) (16px) per legare 
+			   maggiormente la percentuale e la sua didascalia. */
+			gap: var(--spacing-2);
 			width: 100%;
 		}
 
 		.mobile-percentage {
 			font-family: var(--font-family-base);
-			font-size: 8rem; /* token approssimativo: --text-2xl a valore desktop */
+			/* Commento solo il PERCHÉ: valore mobile intermedio (88px) hardcodato per ridurre 
+			   l'altezza del blocco ed evitare spinte distorsive sul resto del layout. */
+			font-size: 7rem;
 			font-weight: var(--text-title-weight);
 			line-height: 1;
 			color: var(--content-primary);
+			margin-top: -20px;
 		}
 
 		.mobile-captions {
 			position: relative;
 			width: 100%;
-			/* Riserva l'altezza di due righe per evitare salti di layout nel cross-fade */
-			min-height: calc(2.8 * 1.5rem);
+			/* Commento solo il PERCHÉ: l'altezza minima previene spostamenti improvvisi 
+			   del layout durante il cross-fade, tarata su 2.8 volte la dimensione del font (20px). */
+			min-height: calc(3 * 1.25rem);
 		}
 
 		.mobile-caption {
@@ -380,7 +403,9 @@
 			top: 0;
 			margin: 0;
 			font-family: var(--font-family-base);
-			font-size: 1.5rem; /* token approssimativo: --text-s a valore desktop */
+			/* Commento solo il PERCHÉ: valore intermedio (20px) per differenziare la didascalia 
+			   dalla percentuale centrale migliorando la leggibilità. */
+			font-size: 1.25rem;
 			font-weight: 700;
 			line-height: 1.4;
 			color: var(--content-primary);

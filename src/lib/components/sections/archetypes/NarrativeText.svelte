@@ -21,14 +21,34 @@
 	 * @property {string} sectionId - L'ID univoco per lo scrollytelling
 	 * @property {'favorito' | 'infortunato' | 'insoddisfatto'} theme - Tema grafico del profilo
 	 * @property {Segment[][]} paragraphs - Elenco strutturato di paragrafi contenenti segmenti
+	 * @property {Segment[][]} [mobileParagraphs] - Elenco strutturato di paragrafi alternativi per mobile
 	 */
 
 	/** @type {Props} */
 	let {
 		sectionId,
 		theme,
-		paragraphs = []
+		paragraphs = [],
+		mobileParagraphs = undefined
 	} = $props();
+
+	let isMobile = $state(false);
+
+	$effect(() => {
+		/* Commento solo il PERCHÉ: monitora la larghezza dello schermo per stabilire se visualizzare i testi
+		   in configurazione mobile (line-break e formulazione ottimizzata) o desktop. */
+		const updateMedia = () => {
+			isMobile = window.innerWidth <= 768;
+		};
+		updateMedia();
+		window.addEventListener('resize', updateMedia);
+		return () => window.removeEventListener('resize', updateMedia);
+	});
+
+	// Commento solo il PERCHÉ: calcola reattivamente il set di paragrafi da visualizzare in base all'orientamento/larghezza schermo
+	const activeParagraphs = $derived(
+		(isMobile && mobileParagraphs) ? mobileParagraphs : paragraphs
+	);
 </script>
 
 <section
@@ -39,7 +59,7 @@
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container">
 		<div class="narrative-wrapper">
-			{#each paragraphs as paragraph}
+			{#each activeParagraphs as paragraph}
 				<p class="narrative-text">
 					{#each paragraph as segment}
 						{#if segment.type === 'keyword'}
@@ -47,8 +67,17 @@
 								class="highlighted-keyword gradient-text animate-gradient-text {theme}-color"
 								role="tooltip"
 								tabindex="-1"
-								onmouseenter={() => tooltip.show(segment.tooltip ?? '', 'paragrafo')}
-								onmouseleave={() => tooltip.hide()}
+								onmouseenter={() => {
+									/* Commento solo il PERCHÉ: disabilita la visualizzazione dei tooltip su mobile 
+									   poiché l'evento hover non è naturale ed intralcerebbe lo scorrimento touch. */
+									if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
+									tooltip.show(segment.tooltip ?? '', 'paragrafo');
+								}}
+								onmouseleave={() => {
+									/* Commento solo il PERCHÉ: disabilita la pulizia dei tooltip su mobile in linea con onmouseenter */
+									if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
+									tooltip.hide();
+								}}
 							>
 								{segment.content}
 							</span>
@@ -106,18 +135,6 @@
 		white-space: pre-line;
 	}
 
-	/* Su mobile la colonna è stretta e la bandiera lascia righe molto frastagliate:
-	   il centrato bilancia i paragrafi (richiesta QA). Desktop resta bandiera.
-	   I \n nei paragrafi sono a-capo calibrati sulla misura desktop: qui collassano a spazio
-	   (white-space normale) e il bilanciamento delle righe è delegato a text-wrap: balance. */
-	@media (max-width: 768px) {
-		.narrative-text {
-			text-align: center;
-			white-space: normal;
-			text-wrap: balance;
-		}
-	}
-
 	.highlighted-keyword {
 		position: relative;
 		display: inline;
@@ -164,5 +181,13 @@
 		-webkit-text-fill-color: transparent;
 
 		background-size: 300% 100%;
+	}
+
+	@media (max-width: 768px) {
+		.narrative-text {
+			/* Commento solo il PERCHÉ: imposta l'allineamento a epigrafe (centrato) per i paragrafi su mobile
+			   in conformità con lo stile editoriale e intimo dei testi narrativi. */
+			text-align: center;
+		}
 	}
 </style>

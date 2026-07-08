@@ -1,35 +1,66 @@
 <script>
 	import { scrollableTextSwap } from '$lib/actions/about/scrollableTextSwap.js';
+	import { media } from '$lib/stores/mediaQuery.svelte.js';
 </script>
 
 <section class="about-text-swap" use:scrollableTextSwap>
 	<div class="text-container">
 		<!-- Primo Blocco di Testo -->
 		<div class="text-block text-block-current">
-			<p class="about-narrative-text">
-				Le Olimpiadi Invernali di Milano-Cortina 2026 sono<br />
-				un sistema di misurazione millimetrica: centesimi di<br />
-				secondo, punteggi decimali, medaglieri rigidi.
-			</p>
-			<p class="about-narrative-text">
-				Ma cosa succede quando riduciamo un essere<br />
-				umano a un <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">puro dato oggettivo</span>?
-			</p>
+			{#if media.isMobile}
+				<p class="about-narrative-text">
+					Le Olimpiadi Invernali di<br />
+					Milano-Cortina 2026 sono<br />
+					un sistema di misurazione<br />
+					millimetrica: centesimi di<br />
+					secondo, medaglieri rigidi.
+				</p>
+				<p class="about-narrative-text">
+					Ma cosa succede quando<br />
+					riduciamo un essere umano<br />
+					a un <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">puro dato oggettivo</span>?
+				</p>
+			{:else}
+				<p class="about-narrative-text">
+					Le Olimpiadi Invernali di Milano-Cortina 2026 sono<br />
+					un sistema di misurazione millimetrica: centesimi di<br />
+					secondo, punteggi decimali, medaglieri rigidi.
+				</p>
+				<p class="about-narrative-text">
+					Ma cosa succede quando riduciamo un essere<br />
+					umano a un <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">puro dato oggettivo</span>?
+				</p>
+			{/if}
 		</div>
 
 		<!-- Secondo Blocco di Testo -->
 		<div class="text-block text-block-next">
-			<p class="about-narrative-text">
-				UnderSkin nasce per scavare sotto la superficie<br />
-				della performance d'élite, per andare <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">oltre il mito</span><br />
-				intramontabile dell'atleta invincibile.
-			</p>
-			<p class="about-narrative-text">
-				Vogliamo dare voce a tutto ciò che normalmente<br />
-				non si vede: la pressione delle aspettative, il peso<br />
-				psicologico del "quasi", il corpo che cede e la lenta<br />
-				<span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">ricostruzione di sé</span>.
-			</p>
+			{#if media.isMobile}
+				<p class="about-narrative-text">
+					UnderSkin nasce per scavare<br />
+					sotto la superficie della<br />
+					performance, per andare <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">oltre<br />
+					il mito</span> dell’atleta invincibile.
+				</p>
+				<p class="about-narrative-text">
+					Diamo voce a ciò che non si<br />
+					vede: le aspettative, il peso<br />
+					del "quasi", il corpo che cede<br />
+					e la lenta <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">ricostruzione di sé</span>.
+				</p>
+			{:else}
+				<p class="about-narrative-text">
+					UnderSkin nasce per scavare sotto la superficie<br />
+					della performance d'élite, per andare <span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">oltre il mito</span><br />
+					intramontabile dell'atleta invincibile.
+				</p>
+				<p class="about-narrative-text">
+					Vogliamo dare voce a tutto ciò che normalmente<br />
+					non si vede: la pressione delle aspettative, il peso<br />
+					psicologico del "quasi", il corpo che cede e la lenta<br />
+					<span class="highlighted-keyword gradient-text animate-gradient-text about-theme-color">ricostruzione di sé</span>.
+				</p>
+			{/if}
 		</div>
 	</div>
 </section>
@@ -122,5 +153,21 @@
 		--gradient-c1: var(--archetipi-favorito);
 		--gradient-c2: var(--archetipi-insoddisfatto);
 		--gradient-c3: var(--archetipi-infortunato);
+	}
+
+	@media (max-width: 768px) {
+		.text-block {
+			/* Commento solo il PERCHÉ: rimuove i vincoli di larghezza massima e contrazione fit-content 
+			   su mobile per dare all'utente il controllo assoluto sulla lunghezza delle righe tramite i br manuali. */
+			max-width: none;
+			width: 100%;
+			padding: 0 var(--spacing-4);
+		}
+
+		.about-narrative-text {
+			/* Commento solo il PERCHÉ: allinea il testo ad epigrafe (centrato) su schermi mobili
+			   per un layout intimo e fluido */
+			text-align: center;
+		}
 	}
 </style>

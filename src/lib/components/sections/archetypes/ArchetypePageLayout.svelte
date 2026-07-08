@@ -17,6 +17,7 @@
 	 * @property {string} narrativeSectionId
 	 * @property {string[]} colors
 	 * @property {Segment[][]} paragraphs
+	 * @property {Segment[][]} [mobileParagraphs]
 	 *
 	 * @typedef {Object} Props
 	 * @property {'favorito' | 'infortunato' | 'insoddisfatto'} archetype
@@ -63,6 +64,36 @@
 						content: ": un blocco in cui la mente\nostacola ciò che l'allenamento aveva reso naturale."
 					}
 				]
+			],
+			mobileParagraphs: [
+				[
+					{
+						type: 'text',
+						content: 'Quando l’aspettativa esterna si \nfa insostenibile, la pressione si \ntrasforma in '
+					},
+					{
+						type: 'keyword',
+						content: 'Fear of Failure'
+					},
+					{
+						type: 'text',
+						content: '.'
+					}
+				],
+				[
+					{
+						type: 'text',
+						content: "L'ossessione della perfezione \nporta al "
+					},
+					{
+						type: 'keyword',
+						content: 'Choking Under Pressure'
+					},
+					{
+						type: 'text',
+						content: ": \nun blocco mentale che cancella \ngli automatismi dell'allenamento."
+					}
+				]
 			]
 		},
 		infortunato: {
@@ -100,7 +131,37 @@
 					},
 					{
 						type: 'text',
-						content: ': smettendo di \ncompetere con il ricordo del dolore.'
+						content: ', smettendo di \ncompetere con il ricordo del dolore.'
+					}
+				]
+			],
+			mobileParagraphs: [
+				[
+					{
+						type: 'text',
+						content: 'Dopo il recupero, molti atleti \nconvivono con la '
+					},
+					{
+						type: 'keyword',
+						content: 'kinesiophobia'
+					},
+					{
+						type: 'text',
+						content: ' \ne la perdita di fiducia.'
+					}
+				],
+				[
+					{
+						type: 'text',
+						content: 'Tornare in gara richiede un '
+					},
+					{
+						type: 'keyword',
+						content: 'reset\nmentale'
+					},
+					{
+						type: 'text',
+						content: ', smettendo di competere \ncontro il ricordo del dolore.'
 					}
 				]
 			]
@@ -144,6 +205,36 @@
 						content: ': la mente\ncontinua a guardare ciò che è mancato, cancellando\nquello che è stato raggiunto.'
 					}
 				]
+			],
+			mobileParagraphs: [
+				[
+					{
+						type: 'text',
+						content: "A volte il podio non basta.\nChi sfiora l'oro è intrappolato\nnel "
+					},
+					{
+						type: 'keyword',
+						content: 'pensiero controfattuale'
+					},
+					{
+						type: 'text',
+						content: '.'
+					}
+				],
+				[
+					{
+						type: 'text',
+						content: 'È il '
+					},
+					{
+						type: 'keyword',
+						content: "paradosso dell'argento"
+					},
+					{
+						type: 'text',
+						content: ':\nla mente fissa solo ciò che\nè mancato, dimenticando il\ntraguardo raggiunto.'
+					}
+				]
 			]
 		}
 	};
@@ -166,7 +257,12 @@
 
 	{@render uniqueSection()}
 
-	<NarrativeText sectionId={config.narrativeSectionId} theme={archetype} paragraphs={config.paragraphs} />
+	<NarrativeText
+		sectionId={config.narrativeSectionId}
+		theme={archetype}
+		paragraphs={config.paragraphs}
+		mobileParagraphs={config.mobileParagraphs}
+	/>
 
 	<ZoomTransition theme={archetype} onRevealChange={(revealed) => { gradient.carouselRevealed = revealed; }}>
 		{#snippet children()}

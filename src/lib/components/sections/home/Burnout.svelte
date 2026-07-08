@@ -28,23 +28,22 @@
 
     </div>
 
-    <!-- Su mobile la sezione è una sequenza in flusso: blocco testi pinnato che poi scorre
-         via, seguito dal blocco del cerchio. Vive FUORI dalla sticky-viewport desktop. -->
+    <!-- Su mobile la sezione è pinnata via GSAP in un unico viewport:
+         inizialmente il testo è centrato, poi si sposta in alto e fa entrare il cerchio. -->
     <div class="mobile-flow">
-        <div class="m-text-block">
+        <div class="m-container">
             <div class="m-text-sticky">
                 <h4 class="subtitle">La salute mentale non è<br />separata dalla performance.</h4>
                 <h2 class="m-title gradient-text animate-gradient-text my-archetypes-color">
                     È la performance.
                 </h2>
             </div>
-        </div>
 
-        <div class="m-hold-pin">
-        <div class="m-hold-block">
             <div class="m-word-layer" aria-hidden="true">
-                <div class="glass-effect m-burnout-word"></div>
+                <div class="glass-effect m-burnout-word m-burn-part"></div>
+                <div class="glass-effect m-burnout-word m-out-part"></div>
             </div>
+
 
             <div class="m-hold">
                 <div class="m-hold-target">
@@ -66,12 +65,11 @@
             </div>
 
             <div class="m-outro">
-                <h2 class="new-title">Il burnout nasce in silenzio.</h2>
+                <h2 class="new-title">Il burnout nasce<br />in silenzio.</h2>
                 <h4 class="new-subtitle">
-                    Cresce ogni volta che un atleta viene ridotto a un tempo, una medaglia, un risultato.
+                    Cresce ogni volta che un atleta<br />viene ridotto a un tempo, una<br />medaglia, un risultato.
                 </h4>
             </div>
-        </div>
         </div>
     </div>
 </section>
@@ -207,26 +205,44 @@
 
         .mobile-flow {
             display: block;
+            position: relative;
+            height: 100svh;
+            width: 100%;
+            overflow: hidden;
         }
 
-        /* Commento solo il PERCHÉ: 250svh = 150svh di pin (reveal lento del titolo + plateau
-           di lettura); esaurito il pin il blocco scorre via naturalmente verso l'alto */
-        .m-text-block {
-            height: 250svh;
+        .m-container {
+            position: relative;
+            height: 100svh;
+            width: 100%;
+            overflow: hidden;
         }
 
         .m-text-sticky {
-            position: sticky;
-            top: 0;
-            height: 100svh;
+            /* Commento solo il PERCHÉ: il pinning è delegato interamente a GSAP tramite 
+               burnoutMobile. È posizionato in absolute ed allineato inizialmente al centro del viewport. */
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: var(--spacing-7);
-            padding: 0 var(--spacing-4);
+            /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-4) (32px) per legare 
+               maggiormente la frase introduttiva e la sua conclusione "È la performance." */
+            gap: var(--spacing-3);
+            padding: var(--spacing-12) var(--spacing-4) 0;
             box-sizing: border-box;
             text-align: center;
+            z-index: 2;
+        }
+
+        .subtitle {
+            /* Commento solo il PERCHÉ: valore mobile incrementato a var(--text-m) (20px) per 
+               dare maggiore presenza visiva alla frase introduttiva prima dello scroll. */
+            font-size: var(--text-m);
         }
 
         .m-title {
@@ -236,59 +252,73 @@
             opacity: 0;
         }
 
-        /* Commento solo il PERCHÉ: 200svh = 100svh di pin per il blocco del cerchio: così la
-           scena si ferma sotto gli occhi anche risalendo dal fondo pagina, non solo scendendo */
-        .m-hold-pin {
-            height: 200svh;
-        }
-
-        .m-hold-block {
-            position: sticky;
-            top: 0;
-            height: 100svh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Il cerchio resta ancorato nella fascia bassa dello schermo */
-            justify-content: flex-end;
-            padding-bottom: var(--spacing-12);
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
         .m-word-layer {
             position: absolute;
             inset: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* Commento solo il PERCHÉ: la parola trema via transform GSAP; un translate CSS di
-               centratura verrebbe sovrascritto, quindi centra il wrapper flex e non l'elemento */
+            /* Commento solo il PERCHÉ: gap aumentato a var(--spacing-6) (48px) per evitare 
+               collisioni o sovrapposizioni tra le scritte BURN e OUT. */
+            gap: var(--spacing-2);
             pointer-events: none;
-            z-index: 1;
+            /* Commento solo il PERCHÉ: z-index alzato a 4 (davanti a testi e cerchio) per 
+               riprodurre l'effetto di sovrapposizione tridimensionale (vetro sopra i testi) presente su desktop. */
+            z-index: 4;
         }
 
         .m-burnout-word {
-            width: 140vw;
-            aspect-ratio: 5376 / 891;
             flex: none;
             border: none;
-            mask-image: url('../../../assets/BURNOUT.svg');
-            mask-size: contain;
-            mask-repeat: no-repeat;
-            mask-position: center;
-            /* Stato iniziale: è il press-and-hold a farla emergere */
             opacity: 0;
             will-change: transform, opacity;
         }
 
+        .m-burn-part {
+            /* Commento solo il PERCHÉ: scala e maschera la prima parte del SVG ("BURN")
+               portandola all'80vw di larghezza per riempire e dominare la scena su mobile */
+            width: 80vw;
+            aspect-ratio: 2953 / 891;
+            mask-image: url('../../../assets/BURNOUT.svg');
+            mask-size: 182.05% auto;
+            mask-repeat: no-repeat;
+            mask-position: left center;
+            /* Commento solo il PERCHÉ: l'origin in fondo garantisce che la lettera cresca verso l'alto,
+               allontanandosi sempre dalla riga OUT sottostante invece di avvicinarsi. */
+            transform-origin: center bottom;
+        }
+
+        .m-out-part {
+            /* Commento solo il PERCHÉ: scala e maschera la seconda parte del SVG ("OUT")
+               portandola alla stessa larghezza di BURN (80vw) per allineare geometricamente i blocchi. */
+            width: 80vw;
+            aspect-ratio: 2371 / 891;
+            mask-image: url('../../../assets/BURNOUT.svg');
+            mask-size: 226.74% auto;
+            mask-repeat: no-repeat;
+            mask-position: right center;
+            /* Commento solo il PERCHÉ: l'origin in cima garantisce che la lettera cresca verso il basso,
+               allontanandosi sempre dalla riga BURN soprastante invece di avvicinarsi. */
+            transform-origin: center top;
+        }
+
         .m-hold {
-            position: relative;
+            /* Commento solo il PERCHÉ: posizionamento assoluto centrato; la comparsa e la traslazione
+               (y: 32vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: var(--spacing-4);
-            z-index: 2;
+            /* Commento solo il PERCHÉ: gap ridotto a 10px per compattare lo spazio verticale,
+               mantenendo l'etichetta visibile a schermo anche quando il cerchio è molto in basso. */
+            gap: 20px;
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .m-hold-target {
@@ -300,10 +330,29 @@
             user-select: none;
         }
 
+        @keyframes m-circle-pulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.96);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.04);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(0.96);
+            }
+        }
+
         .m-hold-target svg {
             display: block;
             width: 100%;
             height: 100%;
+            transform-origin: center;
+            /* Commento solo il PERCHÉ: applica un'animazione pulsante all'anello tratteggiato 
+               per catturare l'attenzione e rendere chiara l'interattività del bottone. */
+            animation: m-circle-pulse 2s infinite ease-in-out;
         }
 
         .m-hold-fill {
@@ -333,10 +382,14 @@
             align-items: center;
             justify-content: center;
             gap: var(--spacing-2);
-            padding: 0 var(--spacing-4);
+            /* Commento solo il PERCHÉ: applica un padding-top di var(--spacing-12) (80px) in 
+               linea con .m-text-sticky per allineare otticamente il testo finale sotto la Navbar. */
+            padding: var(--spacing-12) var(--spacing-4) 0;
             text-align: center;
             pointer-events: none;
-            z-index: 3;
+            /* Commento solo il PERCHÉ: z-index impostato a 5 per posizionarlo sopra il word-layer 
+               in vetro al completamento del gioco. */
+            z-index: 5;
             opacity: 0;
         }
     }
