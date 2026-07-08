@@ -20,9 +20,11 @@ export function shatterGlass(node, params = { fragments: [] }) {
 		if (ctx) ctx.revert();
 
 		ctx = gsap.context(() => {
-			// Altezza del box reale (CSS 100vh = viewport lungo) e non window.innerHeight (corto al
-			// mount): i frammenti cadono oltre il bordo del pannello anche a URL bar ritratta.
-			const fallHeight = node.getBoundingClientRect().height;
+			// Altezza del pannello sticky (CSS 100vh = viewport lungo) e non del wrapper 300vh né di
+			// window.innerHeight (corto al mount): i frammenti cadono oltre il bordo del pannello
+			// anche a URL bar ritratta.
+			const panel = node.querySelector('.sticky-container');
+			const fallHeight = panel ? panel.getBoundingClientRect().height : window.innerHeight;
 
 			// Sfuma la lastra di vetro iniziale in base alla vicinanza allo scroll per dare fisicità prima dell'impatto
 			gsap.fromTo(
@@ -61,16 +63,17 @@ export function shatterGlass(node, params = { fragments: [] }) {
 				}
 			);
 
-			// Timeline principale bloccata nello scroll per scandire il ritmo del racconto visivo dello shatter
+			// Timeline principale a scrub sul wrapper 300vh: il fermo-immagine è affidato allo sticky
+			// CSS del componente, NON al pin GSAP — niente pin-spacer, quindi nessun ricalcolo ai
+			// refresh mobile che riavvolgeva lo scrub e rompeva il vetro in loop.
 			const tl = gsap.timeline({
 				scrollTrigger: {
 					trigger: node,
 					start: 'top top',
-					end: '+=200%',
-					/* Commento solo il PERCHÉ: imposta scrub a true per sincronizzare istantaneamente l'animazione di rottura 
+					end: 'bottom bottom',
+					/* Commento solo il PERCHÉ: imposta scrub a true per sincronizzare istantaneamente l'animazione di rottura
 					   con il movimento dello scrollbar, prevenendo sfasamenti o lag grafici quando si risale velocemente */
-					scrub: true,
-					pin: true
+					scrub: true
 				}
 			});
 
@@ -135,12 +138,18 @@ export function shatterGlass(node, params = { fragments: [] }) {
 	}
 
 	init(params.fragments);
+	let lastFragments = params.fragments;
 
 	return {
 		/**
 		 * @param {{ fragments?: Array<any> }} newParams
 		 */
 		update(newParams) {
+			// update() scatta a ogni flush reattivo del componente (l'oggetto params è sempre nuovo):
+			// il revert+rebuild del trigger pinnato va fatto solo se i frammenti sono davvero cambiati,
+			// altrimenti il ricalcolo del pin-spacer riavvolge lo scrub in corso.
+			if (newParams.fragments === lastFragments) return;
+			lastFragments = newParams.fragments;
 			init(newParams.fragments);
 		},
 		destroy() {

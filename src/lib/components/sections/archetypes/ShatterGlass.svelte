@@ -58,8 +58,10 @@
       const rect = stickyContainer.getBoundingClientRect();
       const w = Math.round(rect.width);
       const h = Math.round(rect.height);
-      // Lo show/hide della URL bar non cambia il box 100vh → niente rigenerazione (evita thrash).
-      if (w === plateWidth && h === plateHeight) return;
+      // Rigenera SOLO al cambio di larghezza (rotazione/resize reale). Le variazioni di sola
+      // altezza sono la firma della barra URL mobile: rigenerare lì fa revert+rebuild del
+      // trigger pinnato mid-scrub e il vetro si rompe in loop.
+      if (w === plateWidth) return;
       plateWidth = w;
       plateHeight = h;
       fragments = generateVoronoiShards();
@@ -122,15 +124,21 @@
     line-height: 1.5;
   }
 
+  /* 300vh = viewport visibile + 200% di corsa di scrub (l'ex pin GSAP "+=200%").
+     Niente overflow:hidden qui: renderebbe il wrapper lo scrollport di riferimento
+     dello sticky, che smetterebbe di agganciarsi alla viewport. */
   .scroll-wrapper {
-    height: 100vh;
+    height: 300vh;
     width: 100%;
     background-color: transparent;
-    overflow: hidden;
   }
 
+  /* Sticky CSS al posto del pin GSAP: nessun pin-spacer da inserire/ricalcolare ai refresh
+     di ScrollTrigger — era il meccanismo che su mobile riavvolgeva lo scrub e faceva
+     rompere il vetro in loop. */
   .sticky-container {
-    position: relative;
+    position: sticky;
+    top: 0;
     width: 100%;
     height: 100vh;
     display: flex;

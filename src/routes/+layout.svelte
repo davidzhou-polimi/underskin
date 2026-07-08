@@ -11,6 +11,7 @@
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
+    import { loadingState } from "$lib/stores/loadingState.svelte.js";
     import { heroExit } from "$lib/stores/heroExit.svelte.js";
     import { gradientConfig } from "$lib/stores/gradientConfig.svelte.js";
     import { scroll } from "$lib/stores/scroll.svelte.js";
@@ -120,6 +121,18 @@
     $effect(() => {
         page.url.pathname;
         tooltip.hide();
+    });
+
+    // Commento solo il PERCHÉ: all'hard load i pin (scrollableTextSwap, performanceReveal, sectionPin)
+    // vengono misurati durante l'idratazione, PRIMA che i web-font siano caricati: dopo il font-swap
+    // le metriche restano stantie (testi che scattano, sezioni tagliate su /about). Il loader attende
+    // document.fonts.ready, quindi al complete le misure sono definitive: un solo refresh, a pagina
+    // in cima e scroll quiescente. loadingState.complete non torna mai false: l'effect è one-shot.
+    let hasRefreshedPostLoading = false;
+    $effect(() => {
+        if (!loadingState.complete || hasRefreshedPostLoading) return;
+        hasRefreshedPostLoading = true;
+        requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
     let meta = $derived(

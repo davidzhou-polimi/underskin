@@ -74,6 +74,18 @@ export function scrollReveal(node, params = {}) {
 			tl.scrollTrigger.refresh();
 			tl.progress(tl.scrollTrigger.progress, true);
 		}
+
+		// Secondo resync differito: al re-mount dopo navigazione client il trigger nasce con lo
+		// scroll ancora alla Y della pagina precedente, e il reset autoritativo di afterNavigate
+		// (scrollTo(0)+refresh) arriva DOPO — lo scrub rientrerebbe con smoothing visibile (testi
+		// già "rivelati" che glitchano). A doppio rAF lo scroll è quiescente e l'allineamento è
+		// istantaneo; sull'hard load è un no-op.
+		let rafDesktop = requestAnimationFrame(() => {
+			rafDesktop = requestAnimationFrame(() => {
+				if (tl.scrollTrigger) tl.progress(tl.scrollTrigger.progress, true);
+			});
+		});
+		return () => cancelAnimationFrame(rafDesktop);
 	});
 
 	// Breakpoint Mobile
@@ -146,6 +158,15 @@ export function scrollReveal(node, params = {}) {
 			tl.scrollTrigger.refresh();
 			tl.progress(tl.scrollTrigger.progress, true);
 		}
+
+		// Secondo resync differito: stesso razionale del ramo desktop (trigger nato a scroll
+		// stantio dopo navigazione client, reset autoritativo di afterNavigate successivo).
+		let rafMobile = requestAnimationFrame(() => {
+			rafMobile = requestAnimationFrame(() => {
+				if (tl.scrollTrigger) tl.progress(tl.scrollTrigger.progress, true);
+			});
+		});
+		return () => cancelAnimationFrame(rafMobile);
 	});
 
 	return {

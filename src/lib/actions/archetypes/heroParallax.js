@@ -1,4 +1,4 @@
-import { gsap } from '$lib/utils/gsapSetup.js';
+import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { onLoadingComplete } from '$lib/stores/loadingState.svelte.js';
 import { heroExit } from '$lib/stores/heroExit.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
@@ -74,6 +74,14 @@ export function heroParallax(node, params = {}) {
 						}
 					);
 				}, node);
+
+				// Questo è l'ULTIMO trigger della pagina a nascere (dopo delay + tween d'ingresso):
+				// alla navigazione client il refresh globale di afterNavigate è già passato, e i pin
+				// misurati al mount (scroll ancora stantio) resterebbero non riconciliati — su /about
+				// producevano sovrapposizioni tra textswap, statement e team che solo il reload
+				// (refresh post-fonts) sanava. Ora che il set di trigger è completo e lo scroll è
+				// quiescente, un refresh di assestamento rende le geometrie definitive.
+				ScrollTrigger.refresh();
 
 				// Commento solo il PERCHÉ: registriamo la funzione in heroExit che verrà chiamata dal layout
 				// in onNavigate, *prima* che Svelte smonti la pagina. Questo garantisce che getBoundingClientRect()

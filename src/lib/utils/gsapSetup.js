@@ -8,6 +8,10 @@ import { Draggable } from 'gsap/dist/Draggable';
 // action. Import type-safe: `import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js'`.
 if (typeof window !== 'undefined') {
 	gsap.registerPlugin(ScrollTrigger, Observer, Draggable);
+	// Su touch lo show/hide della barra URL emette resize di sola altezza: il refresh completo
+	// che ne seguirebbe ricalcola i pin-spacer mentre si è DENTRO un pin scrubbed (es. shatter
+	// glass) riavvolgendone il progresso in loop. Ignora i resize senza cambio di larghezza.
+	ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 export { gsap, ScrollTrigger, Observer, Draggable };

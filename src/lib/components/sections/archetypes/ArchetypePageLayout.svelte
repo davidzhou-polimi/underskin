@@ -186,6 +186,10 @@
 		width: 100%;
 		min-height: 100vh;
 		background-color: transparent;
+		/* clip e non hidden: hidden renderebbe main uno scroll container (overflow-y computa
+		   ad auto) che non scrolla mai, e il position:sticky di ShatterGlass non si aggancerebbe
+		   più al viewport. La riga hidden resta come fallback per i browser senza clip. */
 		overflow-x: hidden;
+		overflow-x: clip;
 	}
 </style>
