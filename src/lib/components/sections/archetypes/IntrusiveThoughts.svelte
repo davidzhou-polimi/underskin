@@ -114,10 +114,9 @@
 
     <div class="sentence-container" style:--blur-amount="{blurAmount}px" style:--opacity-amount={opacityAmount}>
       <h3 class="main-sentence">
-          Quando vincere diventa l'unico<br />
-          traguardo accettabile, l'atleta<br />
-          smette di essere una persona e<br />
-          diventa solo un numero.
+          Quando vincere diventa l'unico traguardo<br>
+          accettabile, l'atleta smette di essere una<br>
+          persona e diventa solo un numero.
       </h3>
     </div>
 
