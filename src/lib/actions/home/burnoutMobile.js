@@ -33,12 +33,12 @@ export function burnoutMobile(node) {
 		const holdEl = node.querySelector('.m-hold');
 		const holdTargetEl = node.querySelector('.m-hold-target');
 		const fillEl = node.querySelector('.m-hold-fill');
-		const wordEl = node.querySelector('.m-burnout-word');
+		const wordEls = node.querySelectorAll('.m-burnout-word');
 		const outroEl = node.querySelector('.m-outro');
 
 		if (
 			!titleEl || !textStickyEl || !holdEl ||
-			!holdTargetEl || !fillEl || !wordEl || !outroEl
+			!holdTargetEl || !fillEl || wordEls.length === 0 || !outroEl
 		) return;
 
 		const outroChildren = outroEl.children;
@@ -77,15 +77,17 @@ export function burnoutMobile(node) {
 		function renderHold() {
 			gsap.set(fillEl, { scale: holdProgress });
 
-			// Commento solo il PERCHÉ: il tremolio è rumore casuale per-frame con ampiezza
-			// proporzionale al progresso (tecnica di shatterGlass.js): più si preme, più trema.
+			// Commento solo il PERCHÉ: applica l'effetto tremolio (rumore per-frame) a entrambe 
+			// le parole spaccate in due, facendole scalare e tremare in sincrono ma indipendenti.
 			const amp = holdProgress * 6;
-			gsap.set(wordEl, {
-				opacity: holdProgress,
-				scale: 0.6 + holdProgress * 0.5,
-				x: (Math.random() - 0.5) * amp,
-				y: (Math.random() - 0.5) * amp,
-				rotation: (Math.random() - 0.5) * amp * 0.15
+			wordEls.forEach((el) => {
+				gsap.set(el, {
+					opacity: holdProgress,
+					scale: 0.6 + holdProgress * 0.7,
+					x: (Math.random() - 0.5) * amp,
+					y: (Math.random() - 0.5) * amp,
+					rotation: (Math.random() - 0.5) * amp * 0.15
+				});
 			});
 		}
 
@@ -105,7 +107,7 @@ export function burnoutMobile(node) {
 
 				const tlExplode = gsap.timeline();
 				// La parola esplode verso l'osservatore e svanisce; il cerchio e il testo iniziale la seguono permanentemente
-				tlExplode.to(wordEl, { scale: 2, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
+				tlExplode.to(wordEls, { scale: 2.5, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
 					.to(holdEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
 					.to(textStickyEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
 					.set(outroEl, { opacity: 1 })
@@ -158,6 +160,8 @@ export function burnoutMobile(node) {
 			// Impostiamo lo stato iniziale degli elementi prima dell'avvio dello scroll
 			gsap.set(titleEl, { opacity: 0, y: 20 });
 			gsap.set(holdEl, { opacity: 0, y: '40vh', pointerEvents: 'none' });
+			/* Commento solo il PERCHÉ: inizializza entrambe le parti della parola a scala ridotta e invisibili. */
+			gsap.set(wordEls, { opacity: 0, scale: 0.6 });
 
 			scrollTl = gsap.timeline({
 				scrollTrigger: {
@@ -202,7 +206,9 @@ export function burnoutMobile(node) {
 
 			scrollTl.to(holdEl, {
 				opacity: 1,
-				y: '15vh',
+				/* Commento solo il PERCHÉ: sposta il cerchio in basso a y: 28vh per evitare che finisca 
+				   fuori dallo schermo o coperto dalla barra di navigazione del browser mobile, mantenendo leggibile l'etichetta. */
+				y: '28vh',
 				pointerEvents: 'auto',
 				duration: 1.5,
 				ease: 'power2.inOut'

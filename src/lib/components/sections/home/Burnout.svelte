@@ -40,7 +40,8 @@
             </div>
 
             <div class="m-word-layer" aria-hidden="true">
-                <div class="glass-effect m-burnout-word"></div>
+                <div class="glass-effect m-burnout-word m-burn-part"></div>
+                <div class="glass-effect m-burnout-word m-out-part"></div>
             </div>
 
             <div class="m-hold">
@@ -254,31 +255,50 @@
             position: absolute;
             inset: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* Commento solo il PERCHÉ: la parola trema via transform GSAP; un translate CSS di
-               centratura verrebbe sovrascritto, quindi centra il wrapper flex e non l'elemento */
+            /* Commento solo il PERCHÉ: gap aumentato a var(--spacing-6) (48px) per evitare 
+               collisioni o sovrapposizioni tra le scritte BURN e OUT. */
+            gap: var(--spacing-6);
             pointer-events: none;
-            z-index: 1;
+            /* Commento solo il PERCHÉ: z-index alzato a 4 (davanti a testi e cerchio) per 
+               riprodurre l'effetto di sovrapposizione tridimensionale (vetro sopra i testi) presente su desktop. */
+            z-index: 4;
         }
 
         .m-burnout-word {
-            width: 140vw;
-            aspect-ratio: 5376 / 891;
             flex: none;
             border: none;
-            mask-image: url('../../../assets/BURNOUT.svg');
-            mask-size: contain;
-            mask-repeat: no-repeat;
-            mask-position: center;
-            /* Stato iniziale: è il press-and-hold a farla emergere */
             opacity: 0;
             will-change: transform, opacity;
         }
 
+        .m-burn-part {
+            /* Commento solo il PERCHÉ: scala e maschera la prima parte del SVG ("BURN")
+               portandola all'80vw di larghezza per riempire e dominare la scena su mobile */
+            width: 80vw;
+            aspect-ratio: 2953 / 891;
+            mask-image: url('../../../assets/BURNOUT.svg');
+            mask-size: 182.05% auto;
+            mask-repeat: no-repeat;
+            mask-position: left center;
+        }
+
+        .m-out-part {
+            /* Commento solo il PERCHÉ: scala e maschera la seconda parte del SVG ("OUT")
+               portandola alla stessa larghezza di BURN (80vw) per allineare geometricamente i blocchi. */
+            width: 80vw;
+            aspect-ratio: 2371 / 891;
+            mask-image: url('../../../assets/BURNOUT.svg');
+            mask-size: 226.74% auto;
+            mask-repeat: no-repeat;
+            mask-position: right center;
+        }
+
         .m-hold {
             /* Commento solo il PERCHÉ: posizionamento assoluto centrato; la comparsa e la traslazione
-               (y: 15vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
+               (y: 28vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
             position: absolute;
             top: 50%;
             left: 50%;
@@ -286,7 +306,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: var(--spacing-4);
+            /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-2) (16px) per mantenere
+               vicini cerchio ed etichetta, evitando tagli o occultamenti causati dalle safe area. */
+            gap: var(--spacing-3);
             z-index: 3;
             opacity: 0;
             pointer-events: none;
@@ -301,10 +323,29 @@
             user-select: none;
         }
 
+        @keyframes m-circle-pulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.96);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.04);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(0.96);
+            }
+        }
+
         .m-hold-target svg {
             display: block;
             width: 100%;
             height: 100%;
+            transform-origin: center;
+            /* Commento solo il PERCHÉ: applica un'animazione pulsante all'anello tratteggiato 
+               per catturare l'attenzione e rendere chiara l'interattività del bottone. */
+            animation: m-circle-pulse 2s infinite ease-in-out;
         }
 
         .m-hold-fill {
@@ -339,7 +380,9 @@
             padding: var(--spacing-12) var(--spacing-4) 0;
             text-align: center;
             pointer-events: none;
-            z-index: 4;
+            /* Commento solo il PERCHÉ: z-index impostato a 5 per posizionarlo sopra il word-layer 
+               in vetro al completamento del gioco. */
+            z-index: 5;
             opacity: 0;
         }
     }
