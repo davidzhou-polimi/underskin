@@ -2,10 +2,10 @@
 	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
 </script>
 
-<section 
-	id="about-statement" 
-	class="about-statement-section" 
-	use:performanceReveal
+<section
+	id="about-statement"
+	class="about-statement-section"
+	use:performanceReveal={{ pinMobile: true }}
 >
 	<div class="statement-content">
 		<blockquote 
@@ -37,6 +37,9 @@
 		width: 100%;
 		display: flex;
 		justify-content: center;
+		/* Nascosto già dal CSS: performanceReveal lo azzera via gsap.set solo dopo il mount,
+		   e nel frattempo il blockquote pieno lampeggerebbe (FOUC pre-idratazione). */
+		opacity: 0;
 	}
 
 	.statement-quote {

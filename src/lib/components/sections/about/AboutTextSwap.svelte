@@ -88,6 +88,10 @@
 
 	.text-block-next {
 		z-index: 0;
+		/* Nascosto già dal CSS: prima che l'action GSAP applichi xPercent/opacity, i due blocchi
+		   assoluti sarebbero visibili sovrapposti per un frame (FOUC pre-idratazione). Solo opacity,
+		   niente transform: un translateX CSS verrebbe letto da GSAP come offset x residuo. */
+		opacity: 0;
 	}
 
 	.about-narrative-text {
