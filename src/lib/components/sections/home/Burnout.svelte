@@ -44,6 +44,7 @@
                 <div class="glass-effect m-burnout-word m-out-part"></div>
             </div>
 
+
             <div class="m-hold">
                 <div class="m-hold-target">
                     <svg viewBox="0 0 320 320" role="presentation" focusable="false">
@@ -283,6 +284,9 @@
             mask-size: 182.05% auto;
             mask-repeat: no-repeat;
             mask-position: left center;
+            /* Commento solo il PERCHÉ: l'origin in fondo garantisce che la lettera cresca verso l'alto,
+               allontanandosi sempre dalla riga OUT sottostante invece di avvicinarsi. */
+            transform-origin: center bottom;
         }
 
         .m-out-part {
@@ -294,11 +298,14 @@
             mask-size: 226.74% auto;
             mask-repeat: no-repeat;
             mask-position: right center;
+            /* Commento solo il PERCHÉ: l'origin in cima garantisce che la lettera cresca verso il basso,
+               allontanandosi sempre dalla riga BURN soprastante invece di avvicinarsi. */
+            transform-origin: center top;
         }
 
         .m-hold {
             /* Commento solo il PERCHÉ: posizionamento assoluto centrato; la comparsa e la traslazione
-               (y: 28vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
+               (y: 32vh, opacity: 1) avvengono in modo coordinato tramite la timeline di GSAP. */
             position: absolute;
             top: 50%;
             left: 50%;
@@ -306,9 +313,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Commento solo il PERCHÉ: gap ridotto a var(--spacing-2) (16px) per mantenere
-               vicini cerchio ed etichetta, evitando tagli o occultamenti causati dalle safe area. */
-            gap: var(--spacing-3);
+            /* Commento solo il PERCHÉ: gap ridotto a 10px per compattare lo spazio verticale,
+               mantenendo l'etichetta visibile a schermo anche quando il cerchio è molto in basso. */
+            gap: 20px;
             z-index: 3;
             opacity: 0;
             pointer-events: none;

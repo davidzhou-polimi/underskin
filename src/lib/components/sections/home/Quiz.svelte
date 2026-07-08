@@ -579,7 +579,7 @@
 		.quiz-intro-cta {
 			/* Commento solo il PERCHÉ: aumenta il font size da text-m (20px) a text-l (24px) su mobile per dare maggiore impatto alla cta */
 			font-size: var(--text-xl);
-			font-weight: var(--text-extrabold);
+			font-weight: var(--text-bold);
 			color: var(--content-primary);
 			margin-top: var(--spacing-2);
 		}

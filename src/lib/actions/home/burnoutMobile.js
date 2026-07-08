@@ -1,5 +1,6 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+import { gradientConfig } from '$lib/stores/gradientConfig.svelte.js';
 
 // Secondi di pressione continua per riempire il cerchio; il rilascio svuota più in fretta
 // per dare la sensazione che lo "sforzo" vada mantenuto con costanza.
@@ -73,21 +74,55 @@ export function burnoutMobile(node) {
 
 		let isPressed = false;
 		let holdProgress = 0;
+		// Commento solo il PERCHÉ: flag attivo durante l'esplosione finale, mantiene il ticker
+		// in esecuzione con ampiezza massima affinché il tremolio continui fino all'uscita.
+		let isExploding = false;
 
 		function renderHold() {
 			gsap.set(fillEl, { scale: holdProgress });
 
+			// Commento solo il PERCHÉ: modula l'opacità del testo e lo sfondo solo se non è in corso l'esplosione finale,
+			// evitando che il ticker continui a sovrascrivere lo stato del gradiente a copertura massima.
+			if (!isExploding) {
+				// Commento solo il PERCHÉ: acceleriamo il fade-out di .m-text-sticky portandolo a 0 entro il primo 50% di progresso (holdProgress = 0.5)
+				// per anticipare l'ingresso della scritta BURNOUT ed evitare sovrapposizioni visive nel viewport.
+				const textFadeProgress = Math.min(1, holdProgress * 2);
+				gsap.set(textStickyEl, { opacity: 1 - textFadeProgress });
+
+				// Commento solo il PERCHÉ: portiamo l'aumento di intensità del gradiente al massimo (coverage 1.0, speed 2.2)
+				// entro il primo 10% di progresso (holdProgress = 0.1) per dare immediato contrasto non appena la scritta "BURNOUT" compare.
+				const gradProgress = Math.min(1, holdProgress * 10);
+				if (gradientConfig.config) {
+					gradientConfig.config = {
+						...gradientConfig.config,
+						coverage: 0.35 + gradProgress * 0.65,
+						speed: 0.6 + gradProgress * 1.6
+					};
+				}
+			}
+
 			// Commento solo il PERCHÉ: applica l'effetto tremolio (rumore per-frame) a entrambe 
 			// le parole spaccate in due, facendole scalare e tremare in sincrono ma indipendenti.
+			// Durante l'esplosione (isExploding) l'ampiezza è bloccata al massimo perché GSAP sovrascrive
+			// scale e opacity con il tween di uscita: usiamo solo x/y/rotation per il tremolio.
 			const amp = holdProgress * 6;
 			wordEls.forEach((el) => {
-				gsap.set(el, {
-					opacity: holdProgress,
-					scale: 0.6 + holdProgress * 0.7,
-					x: (Math.random() - 0.5) * amp,
-					y: (Math.random() - 0.5) * amp,
-					rotation: (Math.random() - 0.5) * amp * 0.15
-				});
+				if (isExploding) {
+					// Solo rumore posizionale: GSAP gestisce già scale e opacity nell'explosion tween
+					gsap.set(el, {
+						x: (Math.random() - 0.5) * amp,
+						y: (Math.random() - 0.5) * amp,
+						rotation: (Math.random() - 0.5) * amp * 0.15
+					});
+				} else {
+					gsap.set(el, {
+						opacity: holdProgress,
+						scale: 0.6 + holdProgress * 0.7,
+						x: (Math.random() - 0.5) * amp,
+						y: (Math.random() - 0.5) * amp,
+						rotation: (Math.random() - 0.5) * amp * 0.15
+					});
+				}
 			});
 		}
 
@@ -95,8 +130,18 @@ export function burnoutMobile(node) {
 			if (hasCompleted) return;
 			hasCompleted = true;
 			isPressed = false;
-			gsap.ticker.remove(tick);
+			isExploding = true;
 			setDownLock(false);
+
+			// Commento solo il PERCHÉ: ripristina immediatamente la luminosità e i colori originali chiari del gradiente
+			// (coverage 0.35 e speed 0.6) nel momento esatto in cui l'esplosione comincia e scatta il secondo paragrafo.
+			if (gradientConfig.config) {
+				gradientConfig.config = {
+					...gradientConfig.config,
+					coverage: 0.35,
+					speed: 0.6
+				};
+			}
 
 			ctx.add(() => {
 				// Commento solo il PERCHÉ: svuotiamo la timeline di scrollytelling iniziale per disattivare
@@ -105,8 +150,15 @@ export function burnoutMobile(node) {
 					scrollTl.clear();
 				}
 
-				const tlExplode = gsap.timeline();
-				// La parola esplode verso l'osservatore e svanisce; il cerchio e il testo iniziale la seguono permanentemente
+				const tlExplode = gsap.timeline({
+					onComplete() {
+						// Commento solo il PERCHÉ: il tremolio va rimosso solo ora, quando la parola
+						// è già svanita: così trema fino all'ultimo frame visibile e non si ferma prima.
+						isExploding = false;
+						gsap.ticker.remove(tick);
+					}
+				});
+				// La parola esplode verso l'osservatore e svanisce tremando; il cerchio e il testo iniziale la seguono permanentemente
 				tlExplode.to(wordEls, { scale: 2.5, autoAlpha: 0, duration: 0.9, ease: 'power2.in' })
 					.to(holdEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
 					.to(textStickyEl, { autoAlpha: 0, scale: 0.85, duration: 0.5, ease: 'power2.out' }, '<')
@@ -125,16 +177,21 @@ export function burnoutMobile(node) {
 		 * @param {number} deltaTime
 		 */
 		function tick(_time, deltaTime) {
-			if (hasCompleted) return;
-			if (!isPressed && holdProgress <= 0) return;
+			// Commento solo il PERCHÉ: durante l'esplosione il ticker rimane attivo per mantenere il tremolio;
+			// la guardia su !hasCompleted verrebbe anche usata per fermare il loop, ma è ora rimpiazzata da isExploding.
+			if (!isExploding && hasCompleted) return;
+			if (!isExploding && !isPressed && holdProgress <= 0) return;
 
-			const dt = deltaTime / 1000;
-			holdProgress = isPressed
-				? Math.min(1, holdProgress + dt / FILL_SECONDS)
-				: Math.max(0, holdProgress - dt / DECAY_SECONDS);
+			// Durante l'esplosione manteniamo holdProgress = 1 per massimizzare l'ampiezza del tremolio
+			if (!isExploding) {
+				const dt = deltaTime / 1000;
+				holdProgress = isPressed
+					? Math.min(1, holdProgress + dt / FILL_SECONDS)
+					: Math.max(0, holdProgress - dt / DECAY_SECONDS);
+			}
 
 			renderHold();
-			if (holdProgress >= 1) complete();
+			if (!isExploding && holdProgress >= 1) complete();
 		}
 
 		function onPointerDown() {
@@ -206,9 +263,9 @@ export function burnoutMobile(node) {
 
 			scrollTl.to(holdEl, {
 				opacity: 1,
-				/* Commento solo il PERCHÉ: sposta il cerchio in basso a y: 28vh per evitare che finisca 
-				   fuori dallo schermo o coperto dalla barra di navigazione del browser mobile, mantenendo leggibile l'etichetta. */
-				y: '28vh',
+				/* Commento solo il PERCHÉ: a y: 32vh il cerchio viene spinto in basso per liberare spazio a BURNOUT,
+				   mentre l'etichetta rimane a schermo grazie al layout compatto definito in Burnout.svelte. */
+				y: '32vh',
 				pointerEvents: 'auto',
 				duration: 1.5,
 				ease: 'power2.inOut'
