@@ -210,7 +210,7 @@
 				[
 					{
 						type: 'text',
-						content: "A volte il podio non basta. Chi \nsfiora l'oro rimane intrappolato \nnel "
+						content: "A volte il podio non basta.\nChi sfiora l'oro è intrappolato\nnel "
 					},
 					{
 						type: 'keyword',
@@ -232,7 +232,7 @@
 					},
 					{
 						type: 'text',
-						content: ': la \nmente fissa solo ciò che è\nmancato, dimenticando il\ntraguardo raggiunto.'
+						content: ':\nla mente fissa solo ciò che\nè mancato, dimenticando il\ntraguardo raggiunto.'
 					}
 				]
 			]

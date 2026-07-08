@@ -10,7 +10,9 @@
 	<div class="sticky-viewport">
 		<div class="text-container">
 			{#if sectionRef}
-				<h1 use:heroParallax={{ trigger: sectionRef }} class="title">IL PROGETTO</h1>
+				<h1 use:heroParallax={{ trigger: sectionRef }} class="title">
+					IL PROGETTO
+				</h1>
 			{/if}
 		</div>
 	</div>
@@ -20,7 +22,7 @@
 	.about-hero {
 		position: relative;
 		width: 100%;
-		height: 100vh;
+		height: 100dvh;
 		background-color: transparent;
 	}
 
@@ -29,7 +31,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 100vh;
+		height: 100dvh;
 		overflow: hidden;
 	}
 
@@ -47,11 +49,18 @@
 	.title {
 		text-align: center;
 		margin: 0;
-		white-space: normal;
-		word-wrap: break-word;
+		white-space: nowrap;
+		word-wrap: normal;
 		max-width: 100%;
 		line-height: 1.05;
 		color: var(--neutral-50);
+		font-size: var(--text-title-size);
+	}
+
+	@media (max-width: 768px) {
+		.title {
+			font-size: var(--text-xl);
+		}
 	}
 </style>
 

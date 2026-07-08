@@ -49,7 +49,7 @@
     .blob-section {
         position: relative;
         width: 100%;
-        height: 100vh;
+        height: 100dvh;
         /* Sfondo trasparente per far passare il gradiente interattivo globale */
         background-color: transparent; 
     }
@@ -58,7 +58,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 100vh;
+        height: 100dvh;
         overflow: hidden;
     }
     .text-container {
@@ -74,10 +74,20 @@
     .blob-text {
         text-align: center;
         margin: 0;
-        white-space: normal;
-        word-wrap: break-word;
+        white-space: nowrap;
+        word-wrap: normal;
         max-width: 100%;
         color: var(--content-dark-primary); 
         line-height: 1.1;
+        font-size: var(--text-title-size);
+    }
+
+    @media (max-width: 768px) {
+        .text-container {
+            padding: 0 var(--spacing-4);
+        }
+        .blob-text {
+            font-size: var(--text-xl);
+        }
     }
 </style>
