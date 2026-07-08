@@ -240,7 +240,7 @@
 
   .scroll-hint-container {
     position: absolute;
-    bottom: var(--spacing-8);
+    bottom: var(--scroll-hint-bottom);
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;

@@ -75,11 +75,33 @@
 	}
 
 	@media (max-width: 768px) {
+		/* Con la barra browser ritirata (ritorni programmatici in cima: navigazione client,
+		   "Vai alla conclusione" + risalita) il viewport visibile è lvh ma la sezione resta
+		   100svh: il cue ancorato al fondo sezione fluttuava ~130px sopra il fondo schermo.
+		   L'offset dvh lo aggancia al fondo REALE (a barra visibile dvh=svh → identico a prima);
+		   position:fixed non è percorribile perché perspective rende la sezione containing block.
+		   overflow-y visibile (clip solo orizzontale, per i cerchi da 30rem) perché il cue possa
+		   sporgere sotto il box sezione; clip non crea scroll container. L'offset del cue vive
+		   nel media block in fondo al foglio: deve seguire la regola base per vincere la cascata. */
+		.intro-section {
+			overflow: visible;
+			overflow-x: clip;
+		}
+
 		.circles-svg {
-			/* Commento solo il PERCHÉ: riduce la dimensione dei cerchi di sfondo per 
+			/* Commento solo il PERCHÉ: riduce la dimensione dei cerchi di sfondo per
 			   mantenerli interamente visibili ed armoniosi sul viewport ridotto dei telefoni */
 			width: 30rem;
 			height: 30rem;
+		}
+
+		.intro-title {
+			/* In uscita le lettere salgono di yPercent -9 sforando il box (line-height 1) e la
+			   mask, ripetendosi sopra il box, le taglia con un bordo netto. Il padding dà headroom
+			   DENTRO l'area mascherata (zona solida 0→85%); il margin compensa così i glifi non si
+			   spostano a riposo. In em: proporzionale al font come l'escursione yPercent. */
+			padding-top: 0.15em;
+			margin-top: calc(var(--spacing-2) - 0.15em);
 		}
 	}
 
@@ -112,12 +134,22 @@
 
 	.scroll-hint {
 		position: absolute;
-		/* Aggiunge la safe-area inferiore (home indicator / gesture bar) al distacco dal fondo, così il
-		   cue resta staccato dai bordi di sistema oltre che dentro la sezione svh. */
-		bottom: calc(var(--spacing-8) + env(safe-area-inset-bottom));
+		bottom: var(--scroll-hint-bottom);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 1;
+		/* Wrapper di sola posizione: su mobile può sporgere sopra la sezione successiva
+		   e non deve intercettarne i tap. */
+		pointer-events: none;
+	}
+
+	@media (max-width: 768px) {
+		.scroll-hint {
+			/* Aggancio al fondo REALE del viewport (vedi commento sul media block più sopra):
+			   a barra visibile dvh=svh → identico alla regola base, che resta come fallback
+			   per i browser senza dvh. */
+			bottom: calc(var(--scroll-hint-bottom) - (100dvh - 100svh));
+		}
 	}
 </style>
 

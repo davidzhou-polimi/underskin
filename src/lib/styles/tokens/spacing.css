@@ -23,6 +23,10 @@
 
 	/* CARD GLASS BORDER/PADDING: Ridotto a var(--spacing-1) per diminuire lo spessore dell'effetto glass */
 	--card-glass-padding: 0.75rem;       /* 12px */
+
+	/* SCROLL HINT: distanza dal fondo unica per tutti i cue di scroll (prima ogni sezione
+	   usava un valore diverso e su mobile alcuni finivano sotto la gesture bar). */
+	--scroll-hint-bottom: calc(var(--spacing-8) + env(safe-area-inset-bottom));
 }
 
 /* ============================================================
@@ -46,6 +50,10 @@
 		--spacing-15: 11rem;       /* 176px invece di 480px */
 		--spacing-16: 15rem;       /* 240px invece di 736px */
 		--spacing-17: 20rem;       /* 320px invece di 992px */
+
+		/* Più alto del proporzionale (--spacing-9 e non -8): i cue risultavano troppo
+		   vicini al bordo/gesture bar sui telefoni. */
+		--scroll-hint-bottom: calc(var(--spacing-9) + env(safe-area-inset-bottom));
 	}
 }
 

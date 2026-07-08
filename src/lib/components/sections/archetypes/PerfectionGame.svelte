@@ -246,6 +246,10 @@
 		font-weight: var(--text-bold);
 		animation: global-shift-gradient 8s linear infinite;
 		display: inline-block;
+		/* La transition su color ereditata da .subtitle repaint-a l'elemento proprio mentre si
+		   attiva il clip-to-text: su GPU mobile il clip si perde a intermittenza e il gradiente
+		   dipinge il suo intero box rettangolare (il "quadrato" al terzo tentativo). */
+		transition: none;
 	}
 
 	.interaction-zone {
@@ -304,6 +308,11 @@
 		filter: blur(var(--spacing-3)); /* Utilizza il token --spacing-3 (1.5rem / 24px) per la sfocatura */
 		opacity: 0.9;
 		z-index: 1;
+		/* Il layer del blur va promosso in anticipo: lo scatto di opacità a fine partita lo
+		   creava/distruggeva al volo e su GPU mobile la rasterizzazione transitoria mostrava
+		   i bordi quadrati del box sfocato. La transition rende comunque il cambio graduale. */
+		will-change: filter, opacity;
+		transition: opacity 0.3s ease;
 	}
 
 	.purple-blob.game-over {
@@ -328,7 +337,7 @@
 
 	.scroll-hint-container {
 		position: absolute;
-		bottom: var(--spacing-8);
+		bottom: var(--scroll-hint-bottom);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 100;
