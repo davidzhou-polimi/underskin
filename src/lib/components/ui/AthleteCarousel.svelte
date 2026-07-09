@@ -305,14 +305,39 @@
 	// mousemove e mouseup sono sul window: il drag continua anche se il puntatore
 	// esce dall'area durante il gesto, senza perdere il tracking.
 	$effect(() => {
+		let rafId = 0;
+		let latestClientX = 0;
+		let latestClientY = 0;
+
 		/** @param {MouseEvent} e */
 		function onWindowMouseMove(e) {
 			if (!motion.isDragging) return;
-			motion.drag(e.clientX);
-			tooltip.updatePosition(e.clientX, e.clientY);
+
+			// Store latest coordinates immediately so the final drag position isn't dropped
+			latestClientX = e.clientX;
+			latestClientY = e.clientY;
+
+			if (rafId) return;
+
+			// ⚡ Bolt Optimization: Throttle mousemove state updates using requestAnimationFrame
+			// to prevent over-calculating positions more often than the display can render.
+			rafId = requestAnimationFrame(() => {
+				rafId = 0;
+				motion.drag(latestClientX);
+				tooltip.updatePosition(latestClientX, latestClientY);
+			});
 		}
 
 		function onWindowMouseUp() {
+			if (rafId) {
+				cancelAnimationFrame(rafId);
+				rafId = 0;
+				// Flush the final pending frame so the end state isn't dropped
+				if (motion.isDragging) {
+					motion.drag(latestClientX);
+					tooltip.updatePosition(latestClientX, latestClientY);
+				}
+			}
 			if (!motion.isDragging) return;
 			motion.endDrag();
 			
@@ -327,6 +352,7 @@
 		return () => {
 			window.removeEventListener('mousemove', onWindowMouseMove);
 			window.removeEventListener('mouseup', onWindowMouseUp);
+			if (rafId) cancelAnimationFrame(rafId);
 		};
 	});
 
