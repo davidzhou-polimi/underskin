@@ -163,6 +163,8 @@ export function draggableThought(node, params) {
   let cachedOtherBoxes = [];
   /** @type {Set<number>} */
   let processedIds = new Set();
+  /** @type {number} */
+  let cachedCollisionThreshold = 0;
 
   // Creazione del Draggable GSAP
   const draggableInstance = Draggable.create(node, {
@@ -194,6 +196,9 @@ export function draggableThought(node, params) {
       });
 
       // ⚡ Bolt Optimization: Popola la cache per evitare querySelectorAll e getBoundingClientRect in onDrag
+      // ⚡ Bolt Optimization: Cache collision threshold (based on window.innerWidth) to prevent reading from DOM on every drag frame
+      cachedCollisionThreshold = Math.min(130, window.innerWidth * 0.28);
+
       const rect1 = node.getBoundingClientRect();
       draggedNodeInitialCenter = {
         cx: rect1.left + rect1.width / 2 - this.x,
@@ -236,10 +241,8 @@ export function draggableThought(node, params) {
         // Commento solo il PERCHÉ: su mobile la viewport è più stretta e i fumetti sono più ravvicinati;
         // una soglia fissa a 130px farebbe scattare tutti in un colpo solo. La soglia si adatta
         // proporzionalmente alla viewport per mantenere un comportamento naturale su qualsiasi schermo.
-        const collisionThreshold = Math.min(130, window.innerWidth * 0.28);
-
         // Soglia magnetica di allontanamento adattiva
-        if (distance < collisionThreshold) {
+        if (distance < cachedCollisionThreshold) {
           processedIds.add(otherBox.id);
           onScatter(otherBox.id);
         }
