@@ -11,3 +11,7 @@
 ## 2024-07-28 - Layout thrashing in mousemove with requestAnimationFrame throttle
 **Learning:** Calling `getBoundingClientRect()` synchronously inside a high-frequency `mousemove` event handler causes severe layout thrashing, as it forces the browser to calculate layouts constantly. Statically caching `getBoundingClientRect()` outside of the `mousemove` event is incorrect because the element's bounding box might legitimately change due to scrolling or CSS transitions on hover (e.g., scaling up). Throttling DOM reads via `requestAnimationFrame` avoids layout thrashing while correctly ensuring the `isInside` check works properly when the layout does change during interaction.
 **Action:** Throttle the high frequency execution in `mousemove` using `requestAnimationFrame` instead of caching `getBoundingClientRect` outside of it completely if elements inside are subjected to transform/scroll modifications.
+
+## 2026-07-12 - Throttling Svelte 5 $state reactivity in high-frequency global events
+**Learning:** Svelte 5's `$state` updates schedule microtasks for reactivity. Updating a global store state (like mouse X/Y coordinates) on an unthrottled `mousemove` event tied to the application shell causes severe microtask churn and layout thrashing (if those states are bound to styles).
+**Action:** Always throttle updates to Svelte `$state` variables using `requestAnimationFrame` when inside high-frequency global event listeners.
