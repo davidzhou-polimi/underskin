@@ -9,6 +9,15 @@ let state = $state({
     centered: false
 });
 
+// ⚡ Bolt Optimization: Cache MediaQueryList to prevent parsing CSS query on every tooltip.show call
+/** @type {MediaQueryList | null} */
+let pointerCoarseQuery = null;
+
+// ⚡ Bolt Optimization: Throttle state updates via requestAnimationFrame to avoid microtask/reactivity churn on high-frequency mousemove events
+let rafId = 0;
+let latestX = 0;
+let latestY = 0;
+
 export const tooltip = {
     // Getter per leggere i valori nel componente
     get current() { return state; },
@@ -18,8 +27,15 @@ export const tooltip = {
      * @param {number} clientY
      */
     updatePosition(clientX, clientY) {
-        state.x = clientX;
-        state.y = clientY;
+        latestX = clientX;
+        latestY = clientY;
+        if (!rafId) {
+            rafId = requestAnimationFrame(() => {
+                state.x = latestX;
+                state.y = latestY;
+                rafId = 0;
+            });
+        }
     },
     
     /**
@@ -31,7 +47,13 @@ export const tooltip = {
     show(text, type = 'semplice', cursor = 'pointer', centered = false) {
         // Il tooltip segue il cursore: senza puntatore fine (touch) non ha una posizione affidabile
         // e finirebbe fuori viewport, quindi su mobile resta disattivato del tutto.
-        if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
+        if (typeof window !== 'undefined') {
+            if (!pointerCoarseQuery) {
+                pointerCoarseQuery = window.matchMedia('(pointer: coarse)');
+            }
+            if (pointerCoarseQuery.matches) return;
+        }
+
         state.text = text;
         state.type = type;
         state.visible = true;
