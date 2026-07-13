@@ -11,3 +11,6 @@
 ## 2024-07-28 - Layout thrashing in mousemove with requestAnimationFrame throttle
 **Learning:** Calling `getBoundingClientRect()` synchronously inside a high-frequency `mousemove` event handler causes severe layout thrashing, as it forces the browser to calculate layouts constantly. Statically caching `getBoundingClientRect()` outside of the `mousemove` event is incorrect because the element's bounding box might legitimately change due to scrolling or CSS transitions on hover (e.g., scaling up). Throttling DOM reads via `requestAnimationFrame` avoids layout thrashing while correctly ensuring the `isInside` check works properly when the layout does change during interaction.
 **Action:** Throttle the high frequency execution in `mousemove` using `requestAnimationFrame` instead of caching `getBoundingClientRect` outside of it completely if elements inside are subjected to transform/scroll modifications.
+## 2024-07-29 - Window properties in GSAP onDrag loop
+**Learning:** Reading `window.innerWidth` and performing mathematical calculations inside a high-frequency GSAP `onDrag` event loop (especially inside a nested loop like `forEach`) forces redundant calculations on every frame.
+**Action:** Cache window properties and related calculations inside the `onPress` callback (which fires once at the start of the drag), and use these cached values during `onDrag`.
