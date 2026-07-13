@@ -9,6 +9,15 @@ let state = $state({
     centered: false
 });
 
+// ⚡ Bolt Optimization: Cache non-reactive variables to prevent Svelte
+// from running reactivity and DOM updates globally when tooltip is hidden.
+let lastX = 0;
+let lastY = 0;
+
+// ⚡ Bolt Optimization: Cache MatchMedia query
+/** @type {MediaQueryList | undefined} */
+let coarsePointerMql;
+
 export const tooltip = {
     // Getter per leggere i valori nel componente
     get current() { return state; },
@@ -18,8 +27,14 @@ export const tooltip = {
      * @param {number} clientY
      */
     updatePosition(clientX, clientY) {
-        state.x = clientX;
-        state.y = clientY;
+        lastX = clientX;
+        lastY = clientY;
+
+        // ⚡ Bolt Optimization: only update reactive state if tooltip is visible
+        if (state.visible) {
+            state.x = clientX;
+            state.y = clientY;
+        }
     },
     
     /**
@@ -31,7 +46,16 @@ export const tooltip = {
     show(text, type = 'semplice', cursor = 'pointer', centered = false) {
         // Il tooltip segue il cursore: senza puntatore fine (touch) non ha una posizione affidabile
         // e finirebbe fuori viewport, quindi su mobile resta disattivato del tutto.
-        if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
+        if (typeof window !== 'undefined') {
+            if (!coarsePointerMql) {
+                coarsePointerMql = window.matchMedia('(pointer: coarse)');
+            }
+            if (coarsePointerMql.matches) return;
+        }
+
+        // ⚡ Bolt Optimization: synchronize reactive state with cached coords right before showing
+        state.x = lastX;
+        state.y = lastY;
         state.text = text;
         state.type = type;
         state.visible = true;
