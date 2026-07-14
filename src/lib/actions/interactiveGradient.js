@@ -54,15 +54,29 @@ export function interactiveGradient(canvas, params = {}) {
 	let winWidth = window.innerWidth;
 	let winHeight = window.innerHeight;
 
+	let mouseX = 0;
+	let mouseY = 0;
+	let isRafScheduled = false;
+
+	function updateMousePosition() {
+		renderer.updateMouse(mouseX, mouseY);
+		isRafScheduled = false;
+	}
+
 	/** @param {MouseEvent} e */
 	function handleMouseMove(e) {
 		// Commento solo il PERCHÉ: su mobile non esiste un cursore reale; il DevTools emula un mousemove
 		// ad ogni tap che sposterebbe il gradiente falsamente. Usiamo matchMedia runtime per essere
 		// reattivi al ridimensionamento della finestra in development, senza dipendere da store Svelte.
 		if (mobileMediaQuery.matches) return;
-		const x = e.clientX / winWidth;
-		const y = 1.0 - (e.clientY / winHeight);
-		renderer.updateMouse(x, y);
+		mouseX = e.clientX / winWidth;
+		mouseY = 1.0 - (e.clientY / winHeight);
+
+		// ⚡ Bolt Optimization: Throttle mousemove with requestAnimationFrame to avoid processing every high-frequency event
+		if (!isRafScheduled) {
+			isRafScheduled = true;
+			requestAnimationFrame(updateMousePosition);
+		}
 	}
 
 	function handleResize() {
