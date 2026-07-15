@@ -153,8 +153,9 @@ Toccare **solo questi tre file**; il resto del codebase si aggiorna automaticame
 | File | Cosa modificare |
 |------|----------------|
 | `svelte.config.js` | `paths.base` (o `process.env.BASE_PATH` nel workflow) — rimuovere se il nuovo host serve dalla root `/` |
-| `src/lib/utils/metaData.js` | `SITE_ORIGIN` — nuovo dominio per le meta tag `og:url` e `og:image` |
+| `src/lib/utils/metaData.js` | `SITE_ORIGIN` — nuovo dominio **incluso il subpath** (es. `https://example.com/underskin`). Include già il base path, quindi `ogImageUrl` e `ogUrl` si costruiscono senza logica aggiuntiva. |
 | `.github/workflows/deploy.yml` | `BASE_PATH` env var e/o la action di deploy se si cambia provider CI |
 
-> Con un dominio custom alla root (es. `underskin.com`) il base path torna a `''`
+> Con un dominio custom alla root (es. `underskin.com`) il base path torna a `''`,
+> `SITE_ORIGIN` diventa semplicemente `'https://underskin.com'`
 > e la complessità legata al subpath sparisce completamente.

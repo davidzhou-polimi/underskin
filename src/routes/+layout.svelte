@@ -24,7 +24,6 @@
     import { snapshotScrollTriggers } from "$lib/utils/scrollDebug.js";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
-    import { base } from '$app/paths';
 
     let { children } = $props();
 
@@ -199,9 +198,14 @@
             : (page.url.pathname in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (page.url.pathname)] : PAGE_META["/"])
     );
 
-    // Gli URL Open Graph devono essere assoluti: i crawler social non risolvono i path relativi
-    const ogImageUrl = `${SITE_ORIGIN}${base}/images/og/share.jpg`;
-    let ogUrl = $derived(`${SITE_ORIGIN}${page.url.pathname}`);
+    // Gli URL Open Graph devono essere assoluti: i crawler social non risolvono i path relativi.
+    // SITE_ORIGIN include già il base path (/underskin) → l'URL è completo e corretto anche in prerender.
+    // Durante il prerender page.url.pathname include il base (/underskin/about), quindi lo strip per evitare duplicazione.
+    const BASE_PATH = '/underskin';
+    const ogImageUrl = `${SITE_ORIGIN}/images/og/share.jpg`;
+    let ogUrl = $derived(
+        `${SITE_ORIGIN}${page.url.pathname.startsWith(BASE_PATH) ? page.url.pathname.slice(BASE_PATH.length) || '/' : page.url.pathname}`
+    );
 </script>
 
 <svelte:head>
