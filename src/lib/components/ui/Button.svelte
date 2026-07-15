@@ -1,5 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
+    import { base } from '$app/paths';
 
     /**
      * SVELTE 5 - COMPONENTE PULSANTE RIUTILIZZABILE (UI)
@@ -35,7 +36,8 @@
         // Commento solo il PERCHÉ: eseguiamo prima il gestore onclick passato come prop, consentendogli di annullare la navigazione se necessario, poi procediamo con goto().
         onclick(event);
         if (href && !event.defaultPrevented) {
-            await goto(href);
+            // Prepone il base path: i chiamanti passano path semplici (es. /about) senza doverlo conoscere
+            await goto(`${base}${href}`);
         }
     };
 </script>

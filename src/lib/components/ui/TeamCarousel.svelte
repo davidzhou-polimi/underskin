@@ -4,6 +4,7 @@
     import { dragSwipe } from "$lib/actions/dragSwipe.js";
     import { autoplay } from "$lib/actions/autoplay.js";
     import { media } from "$lib/stores/mediaQuery.svelte.js";
+    import { base } from '$app/paths';
 
     /**
      * @typedef {Object} Props
@@ -20,32 +21,32 @@
         {
             name: "Fang Ding",
             type: "favorito",
-            imageSrc: "/images/team/fang-ding.webp",
+            imageSrc: `${base}/images/team/fang-ding.webp`,
         },
         {
             name: "Chiara Fois",
             type: "infortunato",
-            imageSrc: "/images/team/chiara-fois.webp",
+            imageSrc: `${base}/images/team/chiara-fois.webp`,
         },
         {
             name: "Ilaria La Spada",
             type: "insoddisfatto",
-            imageSrc: "/images/team/ilaria-la-spada.webp",
+            imageSrc: `${base}/images/team/ilaria-la-spada.webp`,
         },
         {
             name: "Ziying Shao",
             type: "favorito",
-            imageSrc: "/images/team/ziying-shao.webp",
+            imageSrc: `${base}/images/team/ziying-shao.webp`,
         },
         {
             name: "Lucrezia Vallar",
             type: "infortunato",
-            imageSrc: "/images/team/lucrezia-vallar.webp",
+            imageSrc: `${base}/images/team/lucrezia-vallar.webp`,
         },
         {
             name: "David Zhou",
             type: "insoddisfatto",
-            imageSrc: "/images/team/david-zhou.webp",
+            imageSrc: `${base}/images/team/david-zhou.webp`,
         },
     ];
 

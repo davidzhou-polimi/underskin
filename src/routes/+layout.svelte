@@ -24,6 +24,7 @@
     import { snapshotScrollTriggers } from "$lib/utils/scrollDebug.js";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
+    import { base } from '$app/paths';
 
     let { children } = $props();
 
@@ -199,7 +200,7 @@
     );
 
     // Gli URL Open Graph devono essere assoluti: i crawler social non risolvono i path relativi
-    const ogImageUrl = `${SITE_ORIGIN}/images/og/share.jpg`;
+    const ogImageUrl = `${SITE_ORIGIN}${base}/images/og/share.jpg`;
     let ogUrl = $derived(`${SITE_ORIGIN}${page.url.pathname}`);
 </script>
 

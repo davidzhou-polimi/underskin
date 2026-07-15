@@ -2,7 +2,7 @@
 // Questo file viene condiviso sia dal layout SvelteKit sia dallo script Node.js che gira a tempo di build.
 
 // Origin di produzione: serve per og:url/og:image, che i crawler richiedono assoluti
-export const SITE_ORIGIN = 'https://under-skin.netlify.app';
+export const SITE_ORIGIN = 'https://davidzhou-polimi.github.io';
 
 export const PAGE_META = {
 	'/': {

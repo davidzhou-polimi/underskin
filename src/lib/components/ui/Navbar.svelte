@@ -6,6 +6,7 @@
 	import { loadingState } from '$lib/stores/loadingState.svelte.js';
 	import { getLenis, lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
+	import { base } from '$app/paths';
 
 	/**
 	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
@@ -112,11 +113,11 @@
 
 	// Rotte e ancore reali configurate per una navigazione cross-page fluida
 	const links = [
-		{ label: 'Home', sectionId: 'hero', path: '/' },
-		{ label: 'About', sectionId: 'about', path: '/about' },
-		{ label: 'Favorito', sectionId: 'favorito-profile-page', path: '/favorito' },
-		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: '/infortunato' },
-		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: '/insoddisfatto' },
+		{ label: 'Home', sectionId: 'hero', path: `${base}/` },
+		{ label: 'About', sectionId: 'about', path: `${base}/about` },
+		{ label: 'Favorito', sectionId: 'favorito-profile-page', path: `${base}/favorito` },
+		{ label: 'Infortunato', sectionId: 'infortunato-profile-page', path: `${base}/infortunato` },
+		{ label: 'Insoddisfatto', sectionId: 'insoddisfatto-hero', path: `${base}/insoddisfatto` },
 	];
 
 	// Commento solo il PERCHÉ: unico punto che nasconde la barra, così l'invariante "a menu aperto non si
@@ -192,7 +193,7 @@
 
 		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta,
 		// altrimenti esegue una navigazione client-side sicura tramite goto()
-		if (currentPath === link.path || (link.path === '/' && isHome) || (link.path.startsWith('/#') && isHome)) {
+		if (currentPath === link.path || (link.path === `${base}/` && isHome) || (link.path.startsWith(`${base}/#`) && isHome)) {
 			smoothScrollTo(link.sectionId);
 		} else {
 			await goto(link.path);
@@ -220,7 +221,7 @@
 			e.preventDefault();
 			smoothScrollTo('hero');
 		} else {
-			await goto('/');
+			await goto(`${base}/`);
 		}
 	};
 
@@ -230,8 +231,10 @@
 	 * @returns {boolean}
 	 */
 	const getIsActive = (link) => {
-		// Commento solo il PERCHÉ: la navigazione è per-pagina, quindi l'evidenziazione segue la rotta corrente.
-		return page.url.pathname === link.path;
+		// Commento solo il PERCHÉ: page.url.pathname non include il base path (SvelteKit lo rimuove),
+		// quindi confrontiamo rimuovendo il prefisso base da link.path prima del confronto.
+		const normalizedPath = link.path.startsWith(base) ? link.path.slice(base.length) || '/' : link.path;
+		return page.url.pathname === normalizedPath;
 	};
 
 	onMount(() => {

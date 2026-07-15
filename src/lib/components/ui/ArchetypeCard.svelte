@@ -4,6 +4,7 @@
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 
 	/**
 	 * @type {{
@@ -91,7 +92,7 @@
 	const handleCardClick = async () => {
 		// Commento solo il PERCHÉ: eseguiamo la navigazione programmatica solo se la card è configurata come cliccabile
 		if (clickable) {
-			await goto(`/${type}`);
+			await goto(`${base}/${type}`);
 		}
 	};
 </script>

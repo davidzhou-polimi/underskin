@@ -9,6 +9,7 @@
     // Commento solo il PERCHÉ: Importa goto di SvelteKit per navigare programmaticamente 
     // a una pagina senza mostrare l'anteprima dell'URL nel browser all'hover.
     import { goto } from '$app/navigation';
+    import { base } from '$app/paths';
     // Commento solo il PERCHÉ: Importa page per identificare la rotta corrente ed evitare link ricorsivi.
     import { page } from '$app/state';
     // Commento solo il PERCHÉ: Importa lo stato del breakpoint mobile per disabilitare il logo su piccoli schermi.
@@ -126,7 +127,7 @@
         aria-label="UnderSkin - Scopri il progetto"
         onmouseenter={() => isLogoClickable && tooltip.show("Scopri il progetto", "semplice", "pointer")}
         onmouseleave={() => tooltip.hide()}
-        onclick={() => isLogoClickable && goto('/about')}
+        onclick={() => isLogoClickable && goto(`${base}/about`)}
     >
         <!-- L'SVG riempie il 100% dello spazio orizzontale disponibile tra i padding laterali -->
         <svg bind:this={svgEl} class="footer-brand-svg" preserveAspectRatio="none">

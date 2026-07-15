@@ -1,6 +1,7 @@
 <script>
 	import { flipCard } from '$lib/actions/flipCard.js';
 	import { hoverLift } from '$lib/actions/hoverLift.js';
+	import { base } from '$app/paths';
 
 	/**
 	 * @type {{
@@ -92,7 +93,7 @@
 			<!-- Video/Image container -->
 			<div class="media-container">
 				{#if imageSrc}
-					<img src={imageSrc} alt={name} class="athlete-image" loading="lazy" decoding="async" />
+					<img src={imageSrc.startsWith('http') ? imageSrc : `${base}${imageSrc}`} alt={name} class="athlete-image" loading="lazy" decoding="async" />
 				{/if}
 
 				<!-- Color overlay (mix-blend-mode) -->

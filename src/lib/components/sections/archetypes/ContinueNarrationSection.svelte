@@ -2,6 +2,7 @@
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import Button from "$lib/components/ui/Button.svelte";
     import { goto } from "$app/navigation";
+    import { base } from '$app/paths';
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
     import { continueNarrationReveal } from "$lib/actions/continueNarrationReveal.js";
@@ -27,17 +28,17 @@
         {
             name: "Il favorito",
             type: "favorito",
-            videoSrc: "/videos/favorito.webm",
+            videoSrc: `${base}/videos/favorito.webm`,
         },
         {
             name: "L'infortunato",
             type: "infortunato",
-            videoSrc: "/videos/infortunato.webm",
+            videoSrc: `${base}/videos/infortunato.webm`,
         },
         {
             name: "L'insoddisfatto",
             type: "insoddisfatto",
-            videoSrc: "/videos/insoddisfatto.webm",
+            videoSrc: `${base}/videos/insoddisfatto.webm`,
         },
     ];
 
@@ -49,7 +50,7 @@
     // Reindirizziamo alla rotta radice impostando lo store per innescare la transizione cinematica
     const handleButtonClick = () => {
         navigationState.fromArchetype = true;
-        goto("/");
+        goto(`${base}/`);
     };
 </script>
 

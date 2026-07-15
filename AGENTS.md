@@ -131,3 +131,30 @@ Criterio di scelta per la gestione degli effetti:
   - ❌ `import { fadeUp } from '../../lib/actions/fadeUp.js'`
 - Niente barrel files (`index.js`) salvo decisione esplicita – importa sempre dal file diretto.
 - I file in `stores/` si importano direttamente dove servono, senza re-export intermedi.
+
+---
+
+## Deploy
+
+Il sito è configurato per GitHub Pages tramite GitHub Actions (`.github/workflows/deploy.yml`),
+attivato su push al branch `dev`. L'URL di produzione è:
+`https://davidzhou-polimi.github.io/underskin/`
+
+### Base path
+
+GitHub Pages serve il sito sotto `/underskin/` (subpath del dominio), non alla radice `/`.
+Per questo tutti i `goto()`, `href` e path di asset statici usano `base` da `$app/paths`.
+`base` vale `/underskin` in produzione e stringa vuota in locale → nessun impatto su `npm run dev`.
+
+### Cosa cambiare se si migra host o dominio
+
+Toccare **solo questi tre file**; il resto del codebase si aggiorna automaticamente a runtime:
+
+| File | Cosa modificare |
+|------|----------------|
+| `svelte.config.js` | `paths.base` (o `process.env.BASE_PATH` nel workflow) — rimuovere se il nuovo host serve dalla root `/` |
+| `src/lib/utils/metaData.js` | `SITE_ORIGIN` — nuovo dominio per le meta tag `og:url` e `og:image` |
+| `.github/workflows/deploy.yml` | `BASE_PATH` env var e/o la action di deploy se si cambia provider CI |
+
+> Con un dominio custom alla root (es. `underskin.com`) il base path torna a `''`
+> e la complessità legata al subpath sparisce completamente.

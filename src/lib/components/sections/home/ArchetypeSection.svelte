@@ -6,6 +6,7 @@
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
     import { dragSwipe } from "$lib/actions/dragSwipe.js";
     import { media } from "$lib/stores/mediaQuery.svelte.js";
+    import { base } from '$app/paths';
 
     /**
      * @typedef {Object} Props
@@ -26,17 +27,17 @@
         {
             name: "Il favorito",
             type: "favorito",
-            videoSrc: "/videos/favorito.webm",
+            videoSrc: `${base}/videos/favorito.webm`,
         },
         {
             name: "L'infortunato",
             type: "infortunato",
-            videoSrc: "/videos/infortunato.webm",
+            videoSrc: `${base}/videos/infortunato.webm`,
         },
         {
             name: "L'insoddisfatto",
             type: "insoddisfatto",
-            videoSrc: "/videos/insoddisfatto.webm",
+            videoSrc: `${base}/videos/insoddisfatto.webm`,
         },
     ];
 

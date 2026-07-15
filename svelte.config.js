@@ -7,12 +7,17 @@ const config = {
 			pages: 'build',
 			assets: 'build',
 			fallback: undefined,
-			// Genera .gz/.br accanto agli asset: Netlify li serve direttamente
-			precompress: true,
+			// GitHub Pages gestisce già gzip/br lato server
+			precompress: false,
 			strict: true
 		}),
 		prerender: {
 			handleMissingId: 'ignore'
+		},
+		paths: {
+			// In produzione BASE_PATH='/underskin' viene iniettato dal workflow CI.
+			// In locale la variabile non è definita → base path vuoto → nessun impatto su npm run dev.
+			base: process.env.BASE_PATH ?? ''
 		}
 	}
 };
