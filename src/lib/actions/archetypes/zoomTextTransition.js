@@ -1,7 +1,13 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
+import { createPin } from '$lib/actions/scrollytelling/pin.js';
+import { buildAsymmetricSnap } from '$lib/actions/scrollytelling/snap.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 /**
- * Azione Svelte per la transizione cinematografica dentro al testo SVG tramite ScrollTrigger.
+ * Azione Svelte per la transizione cinematografica dentro al testo SVG, costruita sulle
+ * primitive della libreria di scrollytelling (createPin/buildAsymmetricSnap) ma tenuta
+ * come action standalone: le serve la creazione DIFFERITA di un frame (vedi rAF sotto),
+ * che il descrittore dichiarativo non prevede.
  * Su desktop usa lo zoom via viewBox nativo dell'SVG (massima nitidezza a qualsiasi scala).
  * Su mobile usa un fade della composizione tipografica: l'eyebrow appare prima, poi il blocco
  * titolo/anno entra con una leggera traslazione verso il basso, poi tutto sfuma all'uscita.
@@ -37,13 +43,31 @@ export function zoomTextTransition(node, params = {}) {
 	const mm = gsap.matchMedia();
 	let rafId = 0;
 
+	/**
+	 * onUpdate condiviso dai due branch: notifica l'attraversamento della label 'reveal'.
+	 * @param {(revealed: boolean) => void} [cb]
+	 */
+	const makeRevealNotifier = (cb) => {
+		let lastRevealed = false;
+		/** @param {ScrollTrigger} self */
+		return (self) => {
+			if (!cb) return;
+			const anim = /** @type {gsap.core.Timeline} */ (self.animation);
+			const revealed = self.progress >= anim.labels.reveal / anim.duration();
+			if (revealed !== lastRevealed) {
+				lastRevealed = revealed;
+				cb(revealed);
+			}
+		};
+	};
+
 	// Differisce la creazione degli ScrollTrigger al prossimo frame di rendering,
 	// garantendo che tutti i pin-spacer a monte (es. ShatterGlass) siano già nel DOM
 	rafId = requestAnimationFrame(() => {
 		// ===========================================================================
 		// DESKTOP: zoom cinematografico via attributo viewBox SVG
 		// ===========================================================================
-		mm.add('(min-width: 769px)', () => {
+		mm.add(BREAKPOINT.desktop, () => {
 			if (!zoomSvg) return;
 
 			gsap.set(zoomSvg, {
@@ -54,45 +78,8 @@ export function zoomTextTransition(node, params = {}) {
 			});
 			gsap.set(firstText, { opacity: 0, filter: 'blur(15px)', y: 30 });
 
-			let lastRevealed = false;
-
 			const ctx = gsap.context(() => {
-				const tl = gsap.timeline({
-					scrollTrigger: {
-						id: 'zoomTrigger',
-						trigger: node,
-						start: 'top top',
-						/* Spazio di pinning ottimizzato per bilanciare fluidità di lettura ed efficacia dello snap */
-						end: '+=250%',
-						pin: true,
-						scrub: 1.5,
-						anticipatePin: 1,
-						// Snap asimmetrico: in risalita si ferma a 0.20 (testo stabile) invece di 0.0
-						snap: {
-							snapTo: (value) => {
-								const trigger = ScrollTrigger.getById('zoomTrigger');
-								const direction = trigger ? trigger.direction : 1;
-								if (direction === 1) {
-									return value > 0.30 ? 1.0 : 0.20;
-								} else {
-									return value < 0.80 ? 0.20 : 1.0;
-								}
-							},
-							duration: { min: 0.8, max: 1.4 },
-							delay: 0.02,
-							ease: 'power3.out'
-						},
-						onUpdate: (self) => {
-							if (!onRevealChange) return;
-							const anim = /** @type {gsap.core.Timeline} */ (self.animation);
-							const revealed = self.progress >= anim.labels.reveal / anim.duration();
-							if (revealed !== lastRevealed) {
-								lastRevealed = revealed;
-								onRevealChange(revealed);
-							}
-						}
-					}
-				});
+				const tl = gsap.timeline();
 
 				// 1. Comparsa iniziale sincronizzata
 				tl.to(firstText, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1 })
@@ -130,6 +117,30 @@ export function zoomTextTransition(node, params = {}) {
 
 				  // 4. Buffer di riposo
 				  .to({}, { duration: 2.5 });
+
+				createPin(node, {
+					id: 'zoomTrigger',
+					length: 'long',
+					// Override deliberato del preset desktop (1): lo zoom via viewBox chiede uno
+					// smoothing più ammortizzato per restare cinematografico.
+					scrub: 1.5,
+					animation: tl,
+					// Snap asimmetrico: in risalita si ferma a 0.20 (testo stabile) invece di 0.0.
+					// Timing "cinematografico" deliberato al posto della ricetta SNAP standard.
+					snap: buildAsymmetricSnap(
+						(value) => {
+							const trigger = ScrollTrigger.getById('zoomTrigger');
+							const direction = trigger ? trigger.direction : 1;
+							if (direction === 1) {
+								return value > 0.30 ? 1.0 : 0.20;
+							} else {
+								return value < 0.80 ? 0.20 : 1.0;
+							}
+						},
+						{ duration: { min: 0.8, max: 1.4 }, delay: 0.02, ease: 'power3.out' }
+					),
+					onUpdate: makeRevealNotifier(onRevealChange)
+				});
 			}, node);
 
 			return () => ctx.revert();
@@ -140,40 +151,15 @@ export function zoomTextTransition(node, params = {}) {
 		// Eyebrow entra per primo, poi il blocco titolo/anno sale dal basso.
 		// All'uscita l'intera composizione sfuma verso l'alto.
 		// ===========================================================================
-		mm.add('(max-width: 768px)', () => {
+		mm.add(BREAKPOINT.mobile, () => {
 			if (!zoomTextMobile) return;
 
 			// Stato iniziale nascosto completo (l'opacità è già stata azzerata sincronamente sopra)
 			if (eyebrow) gsap.set(eyebrow, { opacity: 0, y: 10 });
 			if (titleBlock) gsap.set(titleBlock, { opacity: 0, y: 30 });
 
-			let lastRevealed = false;
-
 			const ctx = gsap.context(() => {
-				const tl = gsap.timeline({
-					scrollTrigger: {
-						id: 'zoomTriggerMobile',
-						trigger: node,
-						start: 'top top',
-						/* Pin più corto rispetto al desktop per una navigazione più snella su mobile */
-						end: '+=210%',
-						pin: true,
-						/* Niente snap: lo scrub continuo lascia il controllo al dito — lo snap
-						   asimmetrico (fino a 2.4s di animazione autonoma) è ciò che rendeva
-						   brusco il rilascio del pin verso il free-scroll. */
-						scrub: 1.5,
-						anticipatePin: 1,
-						onUpdate: (self) => {
-							if (!onRevealChange) return;
-							const anim = /** @type {gsap.core.Timeline} */ (self.animation);
-							const revealed = self.progress >= anim.labels.reveal / anim.duration();
-							if (revealed !== lastRevealed) {
-								lastRevealed = revealed;
-								onRevealChange(revealed);
-							}
-						}
-					}
-				});
+				const tl = gsap.timeline();
 
 				// 1. Eyebrow entra per primo (piccolo movimento verso l'alto)
 				tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' })
@@ -204,6 +190,20 @@ export function zoomTextTransition(node, params = {}) {
 				  // 6. Buffer lungo: il reveal si esaurisce molto prima della fine del pin,
 				  //    così l'unpin avviene a scena ferma e non si percepisce lo stacco
 				  .to({}, { duration: 2.5 });
+
+				createPin(node, {
+					id: 'zoomTriggerMobile',
+					/* Override deliberato: pin più corto del preset 'long' per una navigazione
+					   più snella su mobile */
+					length: '+=210%',
+					scrub: 'auto',
+					isMobile: true,
+					animation: tl,
+					/* Niente snap: lo scrub continuo lascia il controllo al dito — lo snap
+					   asimmetrico (fino a 2.4s di animazione autonoma) è ciò che rendeva
+					   brusco il rilascio del pin verso il free-scroll. */
+					onUpdate: makeRevealNotifier(onRevealChange)
+				});
 			}, node);
 
 			return () => ctx.revert();

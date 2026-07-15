@@ -1,9 +1,16 @@
 <script>
-    // Commento solo il PERCHÉ: importa l'azione finalScroll per gestire il pinning e l'animazione di reveal
-    import { finalScroll } from '$lib/actions/home/finalScroll.js';
+    import { scrollSection } from '$lib/actions/scrollytelling/scrollSection.js';
 </script>
 
-<section class="finale-section" use:finalScroll aria-label="Chiusura della storia">
+<section
+    class="finale-section"
+    use:scrollSection={{
+        id: "final",
+        pin: { length: "medium", scrub: "auto" },
+        reveal: { preset: "fadeInOut", target: ".finale-phrase", dwell: "short" }
+    }}
+    aria-label="Chiusura della storia"
+>
     <div class="finale-content">
         <h3 class="finale-phrase">La sfida più grande non è sul cronometro, ma…</h3>
     </div>

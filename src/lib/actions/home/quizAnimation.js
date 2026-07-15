@@ -1,13 +1,10 @@
 import { gsap, ScrollTrigger, Observer } from '$lib/utils/gsapSetup.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 
 /**
  * @typedef {Object} QuizAnimationParams
  * @property {string} quizState - Lo stato reattivo del quiz ('choosing' | 'animating' | 'results')
  * @property {boolean} [observerEnabled] - Attiva l'Observer che intercetta wheel/touch durante il lock
- * @property {(() => void)} lockScroll - Funzione per bloccare lo scroll della pagina
- * @property {(() => void)} unlockScroll - Funzione per sbloccare lo scroll della pagina
- * @property {(() => void)} lockScrollDown - Funzione per bloccare lo scroll verso il basso
- * @property {(() => void)} unlockScrollDown - Funzione per sbloccare lo scroll verso il basso
  * @property {((state: string) => void)} onStateChange - Callback per notificare il cambio di stato a Svelte
  * @property {((step: number) => void)} onStepChange - Callback per notificare il cambio di step a Svelte
  * @property {(() => void)} [onEnterBack] - Callback chiamata quando l'utente rientra nella sezione scrollando dall'alto
@@ -17,11 +14,13 @@ import { gsap, ScrollTrigger, Observer } from '$lib/utils/gsapSetup.js';
 
 /**
  * Action Svelte per orchestrare l'intero flusso di animazioni del Quiz.
+ * Il blocco dello scroll passa dal ScrollLockManager (owner 'quiz'): direzionale in fase
+ * di scelta, totale durante animazione/risultati (upgrade senza frame di scroll libero).
  * @param {HTMLElement} node - Il wrapper della sezione del quiz
  * @param {QuizAnimationParams} params - I parametri iniziali di configurazione e le callback
  */
 export function quizAnimation(node, params) {
-	let { quizState, onStateChange, onStepChange, lockScroll, unlockScroll, lockScrollDown, unlockScrollDown } = params;
+	let { quizState, onStateChange, onStepChange } = params;
 	/** @type {() => void} */
 	let onEnterBack = params.onEnterBack ?? (() => {});
 	/** @type {() => void} */
@@ -96,9 +95,11 @@ export function quizAnimation(node, params) {
 				onEnterBack();
 			}
 
-			// Blocca lo scroll verso il basso solo finché l'utente non ha scelto
-			if (self.isActive && quizState === 'choosing') lockScrollDown();
-			if (!self.isActive) unlockScrollDown();
+			// Blocca lo scroll verso il basso solo finché l'utente non ha scelto. Il rilascio è
+			// scopato alla fase 'choosing': a lock totale (lenis fermo) gli eventi ScrollTrigger
+			// sono spuri e non devono strappare il lock di animazione/risultati.
+			if (self.isActive && quizState === 'choosing') scrollLock.acquire('quiz', { mode: 'down' });
+			if (!self.isActive && quizState === 'choosing') scrollLock.release('quiz');
 		}
 	});
 
@@ -149,8 +150,9 @@ export function quizAnimation(node, params) {
 
 		quizState = 'animating';
 		onStateChange('animating');
-		unlockScrollDown();
-		lockScroll();
+		// Upgrade down→full dello stesso owner: il manager ingaggia il nuovo modo prima di
+		// rilasciare il vecchio, senza frame di scroll libero tra i due.
+		scrollLock.acquire('quiz', { mode: 'full' });
 
 		// Calcola lo spostamento Y necessario a centrare il quiz-body nella viewport
 		// una volta che il titolo sparisce: attualmente il flex centra titolo + quiz-body
@@ -230,10 +232,6 @@ export function quizAnimation(node, params) {
 		 */
 		update(newParams) {
 			quizState = newParams.quizState;
-			lockScroll = newParams.lockScroll;
-			unlockScroll = newParams.unlockScroll;
-			lockScrollDown = newParams.lockScrollDown;
-			unlockScrollDown = newParams.unlockScrollDown;
 			onStateChange = newParams.onStateChange;
 			onStepChange = newParams.onStepChange;
 			onEnterBack = newParams.onEnterBack ?? (() => {});
@@ -246,7 +244,7 @@ export function quizAnimation(node, params) {
 		},
 		destroy() {
 			node.removeEventListener('click', handleBtnClick);
-			unlockScrollDown();
+			scrollLock.release('quiz');
 			gestureObserver.kill();
 			if (pinTrigger) pinTrigger.kill();
 			if (resetTrigger) resetTrigger.kill();

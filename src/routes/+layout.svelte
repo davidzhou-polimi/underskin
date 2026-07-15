@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { browser } from '$app/environment';
+    import { browser, dev } from '$app/environment';
     import { afterNavigate, onNavigate } from '$app/navigation';
     import Lenis from 'lenis';
     import 'lenis/dist/lenis.css';
@@ -10,6 +10,7 @@
     import favicon from "$lib/assets/favicon.svg";
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
+    import { scrollLock } from "$lib/stores/scrollLock.svelte.js";
     import { navigationState } from "$lib/stores/navigationState.svelte.js";
     import { loadingState } from "$lib/stores/loadingState.svelte.js";
     import { heroExit } from "$lib/stores/heroExit.svelte.js";
@@ -19,6 +20,8 @@
     import InteractiveGradient from "$lib/components/ui/InteractiveGradient.svelte";
     import LoadingScreen from "$lib/components/ui/LoadingScreen.svelte";
     import CursorTooltip from "$lib/components/ui/CursorTooltip.svelte";
+    import ScrollLockDebug from "$lib/components/ui/ScrollLockDebug.svelte";
+    import { snapshotScrollTriggers } from "$lib/utils/scrollDebug.js";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
     import { page } from "$app/state";
 
@@ -41,6 +44,10 @@
     // Commento solo il PERCHÉ: il RAF condiviso (gsap.ticker guida lenis.raf) e il wiring di ScrollTrigger
     // si attivano in onMount, quando il DOM è pronto; nessun secondo requestAnimationFrame per evitare desync.
     onMount(() => {
+        // Strumentazione della migrazione scrollytelling: snapshot dei trigger diffabile
+        // tra fasi, invocabile dalla console. Solo dev, mai in produzione.
+        if (dev) /** @type {any} */ (window).__scrollSnapshot = snapshotScrollTriggers;
+
         // Back/forward cache (swipe-back dei browser mobile): la pagina torna viva senza alcun
         // evento di navigazione SvelteKit, con scroll e trigger nello stato congelato — spesso
         // incoerente (barra URL diversa → metriche cambiate → si atterra a metà pagina).
@@ -48,6 +55,9 @@
         /** @param {PageTransitionEvent} e */
         const onPageShow = (e) => {
             if (!e.persisted) return;
+            // La pagina rientra dal bfcache con l'eventuale lock congelato di un owner
+            // ormai incoerente: rilascio totale prima del reset di scroll.
+            scrollLock.forceRelease();
             const l = getLenis();
             if (l) {
                 l.start();
@@ -87,6 +97,12 @@
     // posizione della pagina uscente), producendo spazio extra attorno ai pin e l'assestamento
     // visibile dello scrub. Eccezione: dagli archetipi il posizionamento lo gestisce cinematicScroll.
     afterNavigate((navigation) => {
+        // Valvola di sicurezza del ScrollLockManager: la pagina uscente potrebbe essere
+        // smontata a lock attivo (owner morto). Va PRIMA del reset autoritativo di scroll,
+        // altrimenti lo scrollTo(0) sotto combatterebbe con un lenis ancora stopped.
+        // staleOnly: le action della pagina entrante montano prima di questo callback e
+        // possono aver già acquisito un lock legittimo (gate intro) da non strippare.
+        scrollLock.forceRelease({ staleOnly: true });
         const lenis = getLenis();
 
         // Su popstate SvelteKit ri-applica la Y salvata PRIMA di questi callback: il reset sotto
@@ -141,6 +157,10 @@
     // interno del renderer (non lo store) alla baseline; la config transita comunque fluidamente via
     // transitionConfig.
     onNavigate((navigation) => {
+        // Da qui in poi ogni lock detenuto appartiene alla pagina uscente: marcarlo come
+        // stantio permette al forceRelease di afterNavigate di distinguerlo da quelli
+        // che la pagina entrante acquisirà durante il proprio mount.
+        scrollLock.bumpGeneration();
         heroExit.run();
         navigationState.hasNavigated = true;
         navigationState.fromHome = navigation.from?.url.pathname === '/';
@@ -159,7 +179,8 @@
         tooltip.hide();
     });
 
-    // Commento solo il PERCHÉ: all'hard load i pin (scrollableTextSwap, performanceReveal, sectionPin)
+    // Commento solo il PERCHÉ: all'hard load i pin (scrollableTextSwap e quelli creati da
+    // scrollytelling/pin.js)
     // vengono misurati durante l'idratazione, PRIMA che i web-font siano caricati: dopo il font-swap
     // le metriche restano stantie (testi che scattano, sezioni tagliate su /about). Il loader attende
     // document.fonts.ready, quindi al complete le misure sono definitive: un solo refresh, a pagina
@@ -229,6 +250,10 @@
 <!-- Loader unico nel layout root persistente: compare a ogni caricamento hard (e reload), mai nelle
      navigazioni client-side. Reso per ultimo così sta sopra a tutto (oltre allo z-index). -->
 <LoadingScreen />
+
+{#if dev}
+    <ScrollLockDebug />
+{/if}
 
 <style>
     .app-shell {

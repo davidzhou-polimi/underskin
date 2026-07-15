@@ -1,11 +1,15 @@
 <script>
-	import { performanceReveal } from "$lib/actions/home/performanceReveal.js";
+	import { scrollSection } from "$lib/actions/scrollytelling/scrollSection.js";
 </script>
 
 <section
 	id="about-statement"
 	class="about-statement-section"
-	use:performanceReveal={{ pinMobile: true }}
+	use:scrollSection={{
+		id: "aboutStatement",
+		pin: { length: "short", scrub: "auto" },
+		reveal: { preset: "fadeIn", target: ".statement-content", dwell: "medium" }
+	}}
 >
 	<div class="statement-content">
 		<!-- Desktop Quote -->
@@ -51,8 +55,8 @@
 		width: 100%;
 		display: flex;
 		justify-content: center;
-		/* Nascosto già dal CSS: performanceReveal lo azzera via gsap.set solo dopo il mount,
-		   e nel frattempo il blockquote pieno lampeggerebbe (FOUC pre-idratazione). */
+		/* Nascosto già dal CSS: la ricetta fadeIn (scrollytelling/reveal.js) lo azzera via gsap.set
+		   solo dopo il mount, e nel frattempo il blockquote pieno lampeggerebbe (FOUC pre-idratazione). */
 		opacity: 0;
 	}
 

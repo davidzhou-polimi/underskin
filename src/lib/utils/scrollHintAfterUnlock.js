@@ -15,6 +15,10 @@ export function scrollHintAfterUnlock(setVisible, delayMs = 1000) {
 
 	const handleScroll = () => {
 		if (Math.abs(window.scrollY - startY) > 40) {
+			// Dismiss definitivo: senza clearTimeout, uno scroll entro il delay lasciava
+			// vivo il timeout che ri-mostrava l'hint DOPO, a listener ormai rimosso —
+			// era il cue che restava a schermo per sempre sui giochini e post-quiz.
+			window.clearTimeout(timeout);
 			setVisible(false);
 			window.removeEventListener('scroll', handleScroll);
 		}

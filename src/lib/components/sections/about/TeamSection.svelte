@@ -1,6 +1,6 @@
 <script>
 	import TeamCarousel from '$lib/components/ui/TeamCarousel.svelte';
-	import { sectionPin } from '$lib/actions/sectionPin.js';
+	import { scrollSection } from '$lib/actions/scrollytelling/scrollSection.js';
 
 	/**
 	 * @typedef {Object} Props
@@ -14,7 +14,7 @@
 <section
 	id="team"
 	class="team-section"
-	use:sectionPin
+	use:scrollSection={{ id: 'team', pin: true }}
 >
 	<div class="team-section__container">
 		{#if title}

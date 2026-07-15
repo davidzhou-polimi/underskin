@@ -1,6 +1,7 @@
 import { ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { getLenis } from '$lib/stores/lenis.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 // Commento solo il PERCHÉ: replica la curva power2.inOut di GSAP come easing per lenis.scrollTo, così la
 // transizione cinematica resta morbida e identica alla precedente implementazione basata su tween.
@@ -8,6 +9,11 @@ import { navigationState } from '$lib/stores/navigationState.svelte.js';
 const easeInOutPower2 = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 /**
+ * ESENTE dalla libreria di scrollytelling BY DESIGN: è coreografia di NAVIGAZIONE
+ * (atterraggio post-archetipo), non comportamento di sezione — nessun descrittore la
+ * esprime. Dipende dal contratto sugli id: il trigger mobile di ArchetypeSection si
+ * chiama 'archetypeScrollyMobile' (convenzione `${id}Mobile` di scrollSection).
+ *
  * Svelte Action per gestire lo scorrimento cinematico e morbido dopo la provenienza da un archetipo.
  * Evita scatti e flash visivi coordinando il posizionamento istantaneo e lo scroll morbido con Lenis.
  *
@@ -60,7 +66,7 @@ export function cinematicScroll(node) {
 		// significherebbe attraversare tutto lo scrub per raggiungere l'outro. Si atterra invece
 		// nell'ultimo tratto del pin (carosello già rivelato, timeline a riposo) e da lì lo smooth
 		// scroll verso l'outro è breve e continuo.
-		const mobileScrolly = window.matchMedia('(max-width: 768px)').matches
+		const mobileScrolly = window.matchMedia(BREAKPOINT.mobile).matches
 			? ScrollTrigger.getById('archetypeScrollyMobile')
 			: undefined;
 		/** @type {HTMLElement | number} */

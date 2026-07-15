@@ -1,6 +1,7 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 // Durata del micro-stop all'ingresso: quanto basta a uccidere il momentum del flick
 // e far registrare la sezione all'occhio, senza che il freno sembri un blocco.
@@ -30,7 +31,7 @@ export function outroCarouselMobile(node, params) {
 	/** @type {((targetIndex: number) => void) | null} */
 	let applyStage = null;
 
-	mm.add('(max-width: 768px)', () => {
+	mm.add(BREAKPOINT.mobile, () => {
 		const percentageEl = node.querySelector('.mobile-percentage');
 		const captionEls = node.querySelectorAll('.mobile-caption');
 
@@ -117,11 +118,11 @@ export function outroCarouselMobile(node, params) {
 						return;
 					}
 					hasStopped = true;
-					lockScroll();
+					scrollLock.acquire('outro-carousel', { mode: 'full' });
 					stopLockActive = true;
 					unlockCall = gsap.delayedCall(ENTRY_STOP_SECONDS, () => {
 						stopLockActive = false;
-						unlockScroll();
+						scrollLock.release('outro-carousel');
 					});
 				},
 				onLeaveBack: () => {
@@ -137,7 +138,7 @@ export function outroCarouselMobile(node, params) {
 			// Mai lasciare la pagina congelata se si smonta/cambia breakpoint durante il micro-stop
 			if (stopLockActive) {
 				stopLockActive = false;
-				unlockScroll();
+				scrollLock.release('outro-carousel');
 			}
 			ctx.revert();
 		};

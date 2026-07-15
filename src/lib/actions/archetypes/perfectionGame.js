@@ -10,7 +10,6 @@ const MAX_RANGE_DESKTOP = 320;
  * @param {HTMLElement} node Il blob-wrapper a cui è applicata l'azione
  * @param {Object} [options={}] Opzioni dell'azione
  * @param {boolean} [options.isPlaying] Indica se il gioco è in esecuzione
- * @param {HTMLElement} [options.triggerElement] L'elemento che fa da trigger per lo ScrollTrigger
  * @param {Function} [options.onStop] Callback invocata quando il gioco viene fermato, riceve la coordinata finale e il maxRange (raggio massimo di oscillazione) usato per calcolarla
  */
 export function perfectionGameAction(node, options = {}) {
@@ -69,8 +68,12 @@ export function perfectionGameAction(node, options = {}) {
 		}
 
 		// Commento solo il PERCHÉ: mantiene in esecuzione l'oscillazione solo quando la sezione è visibile a schermo, gestendo correttamente anche il ripristino o lo scroll iniziale.
+		// Il trigger si risolve dal nodo e mai da un bind:this dell'antenato: in Svelte 5 quel
+		// bind arriva DOPO l'init delle action figlie, e uno ScrollTrigger senza elemento
+		// risolve 'top 80%' contro la posizione 0 → attivo dal primo pixel di scroll.
 		ScrollTrigger.create({
-			trigger: options.triggerElement,
+			id: 'perfectionPulse',
+			trigger: node.closest('section') ?? node,
 			start: 'top 80%',
 			onToggle: (self) => {
 				if (tween) {

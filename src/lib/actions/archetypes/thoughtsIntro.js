@@ -1,5 +1,5 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { createGameDownLock } from '$lib/actions/archetypes/gameDownLock.js';
+import { createDownLockGate } from '$lib/actions/scrollytelling/downLockGate.js';
 
 /**
  * @typedef {Object} Thought
@@ -34,8 +34,8 @@ export function thoughtsIntro(node, params) {
   const { thoughts, onIntroChange, onReset } = params;
   let hasCompletedOnce = params.hasCompletedOnce ?? false;
 
-  // Blocco direzionale condiviso coi giochini: logica centralizzata in gameDownLock.js
-  const downLock = createGameDownLock(node, hasCompletedOnce);
+  // Blocco direzionale condiviso coi giochini: gate centralizzato sul ScrollLockManager
+  const downLock = createDownLockGate(node, { id: 'thoughts-game', initialCompleted: hasCompletedOnce });
 
   // Utilizzo del context per isolare le istanze e garantire un revert pulito in caso di distruzione del DOM
   const ctx = gsap.context(() => {

@@ -1,5 +1,8 @@
-import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+import { gsap } from '$lib/utils/gsapSetup.js';
+import { getLenis } from '$lib/stores/lenis.svelte.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
+import { createPin } from '$lib/actions/scrollytelling/pin.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 import { gradientConfig } from '$lib/stores/gradientConfig.svelte.js';
 
 // Secondi di pressione continua per riempire il cerchio; il rilascio svuota più in fretta
@@ -17,7 +20,7 @@ const DECAY_SECONDS = 1.2;
  *    completo la parola esplode e svanisce, entrano i testi finali e lo scroll si sblocca.
  *
  * Lo scroll verso il basso è bloccato in cima al blocco del cerchio finché l'interazione
- * non è stata completata almeno una volta (pattern direzionale di gameDownLock.js, più il
+ * non è stata completata almeno una volta (lock direzionale via ScrollLockManager, più il
  * re-ancoraggio anti-fling: preventDefault non ferma un'inerzia già partita).
  *
  * @param {HTMLElement} node - Il contenitore esterno della sezione
@@ -28,7 +31,7 @@ export function burnoutMobile(node) {
 
 	const mm = gsap.matchMedia();
 
-	mm.add('(max-width: 768px)', () => {
+	mm.add(BREAKPOINT.mobile, () => {
 		const titleEl = node.querySelector('.m-title');
 		const textStickyEl = node.querySelector('.m-text-sticky');
 		const holdEl = node.querySelector('.m-hold');
@@ -57,16 +60,12 @@ export function burnoutMobile(node) {
 		function setDownLock(active, snapPosition) {
 			if (active && !hasCompleted) {
 				if (!downLocked) {
-					downLocked = true;
-					lockScrollDown();
-					// Incolla il blocco al top, uccidendo l'eventuale overshoot di inerzia di Lenis
-					if (snapPosition !== undefined) {
-						getLenis()?.scrollTo(snapPosition, { immediate: true, force: true });
-					}
+					// anchor: incolla il blocco al top, uccidendo l'eventuale overshoot di inerzia di Lenis
+					downLocked = scrollLock.acquire('burnout', { mode: 'down', anchor: snapPosition });
 				}
 			} else if (downLocked) {
 				downLocked = false;
-				unlockScrollDown();
+				scrollLock.release('burnout');
 			}
 		}
 
@@ -220,29 +219,27 @@ export function burnoutMobile(node) {
 			/* Commento solo il PERCHÉ: inizializza entrambe le parti della parola a scala ridotta e invisibili. */
 			gsap.set(wordEls, { opacity: 0, scale: 0.6 });
 
-			scrollTl = gsap.timeline({
-				scrollTrigger: {
-					trigger: node,
-					start: 'top top',
-					end: '+=250%',
-					pin: true,
-					pinSpacing: true,
-					scrub: 1.2,
-					invalidateOnRefresh: true,
-					onUpdate: (self) => {
-						if (hasCompleted) return;
-						// Il lock si attiva al 70% del progresso, dove il cerchio hold è fully revealed
-						const lockProgress = 0.7;
-						const snapPos = self.start + (self.end - self.start) * lockProgress;
-						if (!downLocked && self.progress >= lockProgress) {
-							setDownLock(true, snapPos);
-						} else if (downLocked && self.scroll() > snapPos + 1) {
-							getLenis()?.scrollTo(snapPos, { immediate: true, force: true });
-						}
-					},
-					onLeaveBack: () => {
-						setDownLock(false);
+			scrollTl = gsap.timeline();
+			createPin(node, {
+				id: 'burnoutMobile',
+				length: 'long',
+				scrub: 'auto',
+				isMobile: true,
+				animation: scrollTl,
+				onUpdate: (self) => {
+					if (hasCompleted) return;
+					// Il lock si attiva al 70% del progresso, dove il cerchio hold è fully revealed
+					const lockProgress = 0.7;
+					const snapPos = self.start + (self.end - self.start) * lockProgress;
+					if (!downLocked && self.progress >= lockProgress) {
+						setDownLock(true, snapPos);
+					} else if (downLocked && self.scroll() > snapPos + 1) {
+						// Re-ancoraggio anti-fling: un'inerzia già partita supera il preventDefault
+						getLenis()?.scrollTo(snapPos, { immediate: true, force: true });
 					}
+				},
+				onLeaveBack: () => {
+					setDownLock(false);
 				}
 			});
 

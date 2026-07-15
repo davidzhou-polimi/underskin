@@ -10,6 +10,15 @@ class ScrollXState {
 	 * quantità per schermata scrollata, indipendentemente dalla lunghezza della sezione.
 	 */
 	viewports = $state(0);
+
+	/**
+	 * Formula unica di sincronizzazione da uno ScrollTrigger (prima copia-incollata nei
+	 * consumatori): da chiamare nell'onUpdate del trigger che guida il movimento orizzontale.
+	 * @param {ScrollTrigger} self
+	 */
+	syncFromTrigger(self) {
+		this.viewports = (self.progress * (self.end - self.start)) / window.innerHeight;
+	}
 }
 
 export const scrollX = new ScrollXState();

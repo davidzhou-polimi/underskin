@@ -1,13 +1,13 @@
 import { gsap, ScrollTrigger, Observer, Draggable } from '$lib/utils/gsapSetup.js';
 import { scrollTo } from '$lib/stores/lenis.svelte.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
+import { createPin } from '$lib/actions/scrollytelling/pin.js';
 
 /**
  * @typedef {Object} QuizDragMobileParams
  * @property {string} quizState - Stato reattivo del quiz ('choosing' | 'animating' | 'results')
  * @property {(state: string) => void} onStateChange - Notifica a Svelte il cambio di stato
- * @property {() => void} lockScroll - Blocca lo scroll della pagina (hard-lock bidirezionale)
- * @property {() => void} unlockScroll - Sblocca lo scroll della pagina
  */
 
 // Gli step del gioco: coppie 10-90 … 90-10 (mentale = zona superiore).
@@ -21,7 +21,7 @@ const REVEAL = 70; // la "risposta giusta": 70% mentale / 30% fisico
  *
  * Flusso: la domanda è centrata nel viewport, sul solo gradiente della home (nessun fill sotto).
  * Quando il `top` della sezione raggiunge il `top` del viewport la sezione entra in SOSTA ("hold"):
- * pagina in HARD-LOCK bidirezionale (`lockScroll`) e domanda ferma — il gioco NON parte da solo,
+ * pagina in HARD-LOCK bidirezionale (scrollLock mode 'full') e domanda ferma — il gioco NON parte da solo,
  * la domanda è uno stato, non un frame di passaggio. Un gesto avanti avvia la timeline d'ingresso
  * (non scrub): la domanda sfuma mentre "fisico" (unica zona con sfondo) cresce dal bordo inferiore
  * fino a metà schermo, la maniglia appare sul confine e le etichette (percentuale, poi nome)
@@ -43,7 +43,7 @@ const REVEAL = 70; // la "risposta giusta": 70% mentale / 30% fisico
  * @param {QuizDragMobileParams} params
  */
 export function quizDragMobile(node, params) {
-	let { onStateChange, lockScroll, unlockScroll } = params;
+	let { onStateChange } = params;
 	let quizState = params.quizState ?? 'choosing';
 
 	const handle = /** @type {HTMLElement} */ (node.querySelector('.split-handle'));
@@ -262,15 +262,19 @@ export function quizDragMobile(node, params) {
 		// Il gesto è ormai acquisito: se la maniglia ricompare (retract/reset) la label
 		// resta "Scopri" — la classe non viene mai rimossa per tutta la vita del mount.
 		handle.classList.add('has-confirmed');
-		// La pagina è già hard-locked durante choosing; lockScroll è idempotente e garantisce il freeze
-		// per tutta la durata dell'uscita.
-		lockScroll();
+		// La pagina è già hard-locked durante choosing; il re-acquire dello stesso owner è
+		// idempotente e garantisce il freeze per tutta la durata dell'uscita.
+		scrollLock.acquire('quiz', { mode: 'full' });
 		measure();
 
 		const revealY = (REVEAL / 100) * H;
 		const proxy = { v: value };
 
 		timeline = gsap.timeline({
+			// Respiro dopo il tap su "Scopri": ½ della sosta sul risultato 70/30 (0.8s)
+			// a scena ferma, prima che la barra parta — il gesto va "assorbito", non
+			// deve innescare la risposta nello stesso istante.
+			delay: 0.4,
 			onComplete: () => {
 				quizState = 'results';
 				onStateChange('results');
@@ -282,19 +286,13 @@ export function quizDragMobile(node, params) {
 				// coincide col fixed e non c'è salto; da qui scroll libero e trigger di nuovo coerenti.
 				scrollTo(node, { immediate: true, force: true });
 				node.classList.remove('is-engaged');
-				unlockScroll();
+				scrollLock.release('quiz');
 				// A quiz concluso la sezione tornerebbe un normale blocco in flow: risalendo e
 				// riscendendo la quote scorrerebbe via senza la sosta che hanno le altre sezioni.
 				// Il pin nasce SOLO ora (durante il gioco la presenza è garantita dal layer fixed
 				// di is-engaged) e il momento è sicuro: scroll appena risincronizzato sul top
 				// sezione e quiescente. Il refresh riconcilia i trigger sottostanti con lo spacer.
-				resultsPin = ScrollTrigger.create({
-					trigger: node,
-					start: 'top top',
-					end: '+=100%',
-					pin: true,
-					pinSpacing: true
-				});
+				resultsPin = createPin(node, { length: 'short', id: 'quizResults' });
 				ScrollTrigger.refresh();
 			}
 		});
@@ -379,7 +377,7 @@ export function quizDragMobile(node, params) {
 		// dimostrato) ed è ammesso — il layer fixed non ne dipende; il resync autoritativo arriva sotto.
 		scrollTo(node, { immediate: true, force: true });
 		// Hard-lock BIDIREZIONALE: con la pagina non scrollabile il Draggable non ha competitori per il touch.
-		lockScroll();
+		scrollLock.acquire('quiz', { mode: 'full' });
 		// A lock assestato l'inerzia è morta: questo resync atterra ESATTAMENTE sul top, la Preface si
 		// spinna ed esce dal viewport (niente testo in trasparenza dietro la domanda) e i trigger tornano
 		// coerenti. Attraversando lo start dall'alto può riscattare onEnter: la guardia su locked lo assorbe.
@@ -420,7 +418,7 @@ export function quizDragMobile(node, params) {
 		scrollTo(node, { immediate: true, force: true });
 		node.classList.remove('is-engaged');
 		locked = false;
-		unlockScroll();
+		scrollLock.release('quiz');
 		// Una viewport sopra = la schermata narrativa precedente ("120 secondi"); serve anche a far
 		// uscire il trigger dallo stato attivo, così ri-scendendo l'onEnter rientra pulito in sosta.
 		scrollTo(node, { offset: -window.innerHeight });
@@ -441,7 +439,7 @@ export function quizDragMobile(node, params) {
 		node.classList.remove('is-engaged');
 		draggable?.disable();
 		gestureObserver?.disable();
-		unlockScroll();
+		scrollLock.release('quiz');
 		handle.classList.remove('is-confirmable');
 		measure();
 		entranceTimeline.invalidate().pause(0);
@@ -512,8 +510,6 @@ export function quizDragMobile(node, params) {
 		update(newParams) {
 			quizState = newParams.quizState;
 			onStateChange = newParams.onStateChange;
-			lockScroll = newParams.lockScroll;
-			unlockScroll = newParams.unlockScroll;
 		},
 		destroy() {
 			ScrollTrigger.removeEventListener('refresh', onRefresh);
@@ -529,7 +525,7 @@ export function quizDragMobile(node, params) {
 			if (resultsPin) resultsPin.kill();
 			if (timeline) timeline.kill();
 			// Evita che uno smontaggio a metà interazione lasci la pagina bloccata.
-			unlockScroll();
+			scrollLock.release('quiz');
 		}
 	};
 }

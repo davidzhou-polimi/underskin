@@ -1,6 +1,7 @@
 import { InteractiveGradientRenderer, DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
 import { gsap } from '$lib/utils/gsapSetup.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 /**
  * @typedef {Object} GradientParams
@@ -49,7 +50,7 @@ export function interactiveGradient(canvas, params = {}) {
 	/** @type {any} */ (canvas)['__gradientRenderer'] = renderer;
 
 	// ⚡ Bolt Optimization: Cache MediaQueryList to prevent parsing CSS query on every mousemove frame
-	const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+	const mobileMediaQuery = window.matchMedia(BREAKPOINT.mobile);
 	// ⚡ Bolt Optimization: Cache window dimensions to prevent reading from DOM on every mousemove
 	let winWidth = window.innerWidth;
 	let winHeight = window.innerHeight;

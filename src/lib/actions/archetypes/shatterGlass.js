@@ -1,6 +1,11 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 
 /**
+ * ESENTE dalla libreria di scrollytelling (scrollytelling/pin.js) BY DESIGN: niente pin
+ * ScrollTrigger — la permanenza a schermo è affidata a CSS position:sticky perché i
+ * ricalcoli del pin-spacer ai refresh della barra URL mobile rompevano lo scrub.
+ * Non migrare a createPin/scrollSection.
+ *
  * Azione Svelte per coordinare la timeline di rottura del vetro con GSAP.
  * Gestisce l'effetto di parallax e caduta dei frammenti.
  * @param {HTMLElement} node L'elemento del DOM a cui è applicata l'azione

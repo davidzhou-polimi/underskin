@@ -3,10 +3,10 @@
 	 * Assunzioni per questo componente unificato:
 	 * 1. Sostituisce i componenti duplicati specifici gestendo dinamicamente testi e tooltip.
 	 * 2. Riceve come props l'ID della sezione, il tema del profilo e l'elenco dei segmenti testuali/keyword.
-	 * 3. Utilizza scrollReveal per l'ingresso graduale degli elementi.
+	 * 3. Usa scrollSection (preset fadeIn) per pin + ingresso graduale del blocco.
 	 */
 
-		import { narrativeReveal } from '$lib/actions/archetypes/narrativeReveal.js';
+	import { scrollSection } from '$lib/actions/scrollytelling/scrollSection.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
 
@@ -44,7 +44,11 @@
 <section
 	id={sectionId}
 	class="narrative-section"
-	use:narrativeReveal
+	use:scrollSection={{
+		id: sectionId,
+		pin: { length: "short", scrub: "auto" },
+		reveal: { preset: "fadeIn", target: ".content-container", dwell: "medium" }
+	}}
 >
 	<!-- Contenitore centrale del testo narrativo animato allo scroll -->
 	<div class="content-container">

@@ -1,12 +1,19 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { DEFAULT_CONFIG } from '$lib/utils/interactiveGradientRenderer.js';
-import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+import { getLenis } from '$lib/stores/lenis.svelte.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 import { navigationState } from '$lib/stores/navigationState.svelte.js';
 import { introFocusRadius } from '$lib/stores/scrollGradient.svelte.js';
 import { onLoadingComplete } from '$lib/stores/loadingState.svelte.js';
 import { heroExit } from '$lib/stores/heroExit.svelte.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 /**
+ * PARZIALMENTE ESENTE dalla libreria di scrollytelling BY DESIGN: il lock passa dal
+ * ScrollLockManager (owner 'intro', mode 'down'), ma il resto — accoppiamento col
+ * renderer WebGL del gradiente, heroExit, cleanup con ctx.kill() e non revert() —
+ * è troppo bespoke per il descrittore dichiarativo e resta qui.
+ *
  * @param {HTMLElement} node
  */
 export function introReveal(node) {
@@ -41,7 +48,7 @@ export function introReveal(node) {
 	// fondo nella banda sfumata della maschera → titolo tagliato in uscita. ~9% eguaglia i 12px del
 	// desktop (128px), che invece resta sui px storici (zero delta desktop). Letto una volta come
 	// reducedMotion: l'intro non ri-swappa a metà resize (già così col valore px fisso precedente).
-	const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+	const isMobile = typeof window !== 'undefined' && window.matchMedia(BREAKPOINT.mobile).matches;
 	const hiddenY = isMobile ? { yPercent: 9 } : { y: 12 };
 	const shownY = isMobile ? { yPercent: 0 } : { y: 0 };
 	const exitY = isMobile ? { yPercent: -9 } : { y: -12 };
@@ -209,7 +216,7 @@ export function introReveal(node) {
 		const middleCircle = node.querySelector('.circle-middle');
 		const outerCircle = node.querySelector('.circle-outer');
 
-		mm.add('(min-width: 769px)', () => {
+		mm.add(BREAKPOINT.desktop, () => {
 			if (innerCircle)  gsap.to(innerCircle,  { rotation: 360,  duration: 110, repeat: -1, ease: 'none', transformOrigin: 'center center' });
 			if (middleCircle) gsap.to(middleCircle, { rotation: -360, duration: 160, repeat: -1, ease: 'none', transformOrigin: 'center center' });
 			if (outerCircle)  gsap.to(outerCircle,  { rotation: 360,  duration: 220, repeat: -1, ease: 'none', transformOrigin: 'center center' });
@@ -396,20 +403,24 @@ export function introReveal(node) {
 			}
 		}
 
-		// Commento solo il PERCHÉ: stesso meccanismo dei giochini — lock direzionale verso il basso in fase
-		// capture (niente lenis.stop(), che lascerebbe la scrollbar limitata al viewport e un blocco non
-		// affidabile). La callback rileva l'intento di scendere e fa partire l'uscita, ma solo dopo che lo
-		// scroll-hint è comparso (entrata completata). In cima alla pagina lo scroll-su è comunque inerte.
+		// Commento solo il PERCHÉ: stesso meccanismo dei giochini — lock direzionale verso il basso
+		// via ScrollLockManager (mode 'down': niente lenis.stop(), che lascerebbe la scrollbar limitata
+		// al viewport e un blocco non affidabile). onDownIntent rileva l'intento di scendere e fa partire
+		// l'uscita, ma solo dopo che lo scroll-hint è comparso (entrata completata). In cima alla pagina
+		// lo scroll-su è comunque inerte.
 		function lock() {
 			isLocked = true;
-			lockScrollDown(() => {
-				if (isLocked && introRevealed && !isTransitioning) triggerExit();
+			scrollLock.acquire('intro', {
+				mode: 'down',
+				onDownIntent: () => {
+					if (isLocked && introRevealed && !isTransitioning) triggerExit();
+				}
 			});
 		}
 
 		function unlock() {
 			isLocked = false;
-			unlockScrollDown();
+			scrollLock.release('intro');
 		}
 
 		// Lo stato iniziale del lock dipende dalla posizione di scroll al mount (e non da fromArchetype).
@@ -445,7 +456,7 @@ export function introReveal(node) {
 			heroExit.clear();
 			if (disposeGate) disposeGate();
 			if (holdFocus) gsap.ticker.remove(holdFocus);
-			unlockScrollDown();
+			scrollLock.release('intro');
 			mm.revert();
 			// Commento solo il PERCHÉ: kill() ferma tutti i tween e pulisce gli ScrollTrigger del
 			// contesto senza ripristinare nessuna proprietà al valore iniziale. A differenza di revert(),

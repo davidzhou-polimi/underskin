@@ -1,6 +1,5 @@
 <script>
-    import { scrollReveal } from "$lib/actions/scrollReveal.js";
-    import { prefacePin } from "$lib/actions/home/prefacePin.js";
+    import { scrollSection } from "$lib/actions/scrollytelling/scrollSection.js";
 
     // L'animazione delle scie circolari (trailCanvas) è stata rimossa: era già
     // disattivata ma il suo rAF continuava a girare a vuoto. Recuperabile da git
@@ -10,9 +9,15 @@
 <section
     id="preface-text"
     class="preface-section"
-    use:prefacePin={{ end: "+=550%" }}
+    use:scrollSection={{
+        id: "preface",
+        pin: { length: "xlong", scrub: "auto" },
+        reveal: { preset: "lineSwap", target: ".reveal-line", dwell: "short" },
+        snap: true,
+        mobile: { reveal: { preset: "lineStack" } }
+    }}
 >
-    <div class="text-container" use:scrollReveal={{ end: "+=500%" }}>
+    <div class="text-container">
         <div class="preface-list">
             <p class="reveal-line">Milano-Cortina 2026</p>
             <p class="reveal-line">2.900 atleti</p>
@@ -111,9 +116,9 @@
         }
 
         .preface-list .reveal-line:first-child {
-            /* Commento solo il PERCHÉ: replica staticamente lo stato iniziale che scrollReveal.js
-               applica via gsap.set() (y: 25, scale: 1.3) al primo paint, per evitare che la riga
-               scatti visibilmente in quella posizione quando l'azione JS monta */
+            /* Commento solo il PERCHÉ: replica staticamente lo stato iniziale che la ricetta
+               lineStack (scrollytelling/reveal.js) applica via gsap.set() (y: 25, scale: 1.3) al
+               primo paint, per evitare che la riga scatti visibilmente quando l'azione JS monta */
             transform: translateY(25px) scale(1.3);
         }
 

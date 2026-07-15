@@ -1,7 +1,8 @@
 <script>
     import ArchetypeCard from "$lib/components/ui/ArchetypeCard.svelte";
     import { staggerReveal } from "$lib/actions/staggerReveal.js";
-    import { archetypeScrolly } from "$lib/actions/home/archetypeScrolly.js";
+    import { scrollSection } from "$lib/actions/scrollytelling/scrollSection.js";
+    import { archetypeConveyor } from "$lib/actions/home/archetypeScrolly.js";
     import { horizontalCarousel } from "$lib/actions/horizontalCarousel.js";
     import { dragSwipe } from "$lib/actions/dragSwipe.js";
     import { media } from "$lib/stores/mediaQuery.svelte.js";
@@ -154,10 +155,15 @@
 <section
     id="archetypes"
     class="archetype-section"
-    use:archetypeScrolly
+    use:scrollSection={{
+        id: "archetypeScrolly",
+        pin: true,
+        mobile: { pin: { length: "long", scrub: "auto" } },
+        custom: archetypeConveyor
+    }}
     bind:this={sectionElement}
 >
-    <!-- Mobile-only quote: animata da archetypeScrolly -->
+    <!-- Mobile-only quote: animata da archetypeConveyor (custom di scrollSection) -->
     <blockquote class="perf-quote mobile-only">
         La performance non consuma <br />
         solo il corpo: ma modella <br />

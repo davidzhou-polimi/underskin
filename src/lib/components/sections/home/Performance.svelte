@@ -1,8 +1,17 @@
 <script>
-	import { performanceReveal } from '$lib/actions/home/performanceReveal.js';
+	import { scrollSection } from '$lib/actions/scrollytelling/scrollSection.js';
 </script>
 
-<section id="performance" class="performance-section" use:performanceReveal>
+<section
+	id="performance"
+	class="performance-section"
+	use:scrollSection={{
+		id: "performance",
+		pin: { length: "short", scrub: "auto" },
+		reveal: { preset: "fadeIn", target: ".perf-content", dwell: "medium" },
+		mobile: false
+	}}
+>
 	<div class="perf-content">
 		<!-- Desktop Quote -->
 		<blockquote class="perf-quote desktop-only">

@@ -1,5 +1,5 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { createGameDownLock } from '$lib/actions/archetypes/gameDownLock.js';
+import { createDownLockGate } from '$lib/actions/scrollytelling/downLockGate.js';
 
 /**
  * Svelte Action per gestire l'animazione di entrata e i trigger di scroll del Perfection Game.
@@ -14,8 +14,11 @@ import { createGameDownLock } from '$lib/actions/archetypes/gameDownLock.js';
 export function perfectionIntro(node, params) {
 	const { onIntroChange, onReset } = params;
 
-	// Blocco direzionale condiviso coi giochini: logica centralizzata in gameDownLock.js
-	const downLock = createGameDownLock(node, params.hasCompletedOnce ?? false);
+	// Blocco direzionale condiviso coi giochini: gate centralizzato sul ScrollLockManager
+	const downLock = createDownLockGate(node, {
+		id: 'perfection-game',
+		initialCompleted: params.hasCompletedOnce ?? false
+	});
 
 	// Raggruppa i trigger in un contesto GSAP per consentire una rimozione pulita e sicura delle risorse
 	const ctx = gsap.context(() => {

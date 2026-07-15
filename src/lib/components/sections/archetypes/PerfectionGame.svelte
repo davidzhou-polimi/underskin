@@ -13,10 +13,6 @@
 	/** @type {number | null} */
 	let accuracy = $state(null);
 
-	// Riferimento al container nel DOM per attivare l'animazione al suo ingresso in viewport
-	/** @type {HTMLElement | undefined} */
-	let container = $state();
-
 	const MAX_ATTEMPTS = 3;
 
 	// Gestione del testo dinamico basata sulla runa $derived di Svelte 5
@@ -120,9 +116,8 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section 
-	class="perfection-container" 
-	bind:this={container} 
+<section
+	class="perfection-container"
 	use:perfectionIntro={{ onIntroChange: handleIntroChange, onReset: handleReset, hasCompletedOnce }}
 >
 	
@@ -170,7 +165,6 @@
 			class="blob-wrapper"
 			use:perfectionGameAction={{
 				isPlaying: isPlaying,
-				triggerElement: container,
 				onStop: handleStop
 			}}
 		>

@@ -1,31 +1,35 @@
+/**
+ * Gate direzionale "scendi solo dopo aver completato": generalizzazione di
+ * gameDownLock.js sul ScrollLockManager. Finché l'attività non è stata completata
+ * almeno una volta, lo scroll verso il basso è bloccato quando la sezione è in cima
+ * alla viewport; la risalita resta sempre libera.
+ * La geometria del trigger è portata VERBATIM dall'originale: è il design anti-shake
+ * collaudato, non toccarla senza ripetere il regression test su touch reale.
+ */
+
 import { ScrollTrigger } from '$lib/utils/gsapSetup.js';
-import { getLenis, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 
 /**
- * Blocco direzionale condiviso dai giochini archetipo (pensieri intrusivi, perfection game):
- * finché l'attività non è stata completata almeno una volta, lo scroll verso il basso è
- * bloccato quando la sezione è in cima alla viewport; la risalita resta sempre libera.
- * Centralizza la logica prima duplicata tra thoughtsIntro.js e perfectionIntro.js.
- *
- * @param {HTMLElement} node - La sezione del giochino
- * @param {boolean} [initialCompleted] - Se l'utente ha già completato l'attività
+ * @param {HTMLElement} node - la sezione gated
+ * @param {{ id: string, initialCompleted?: boolean }} opts
+ * @returns {{ setCompleted: (completed: boolean) => void, destroy: () => void }}
  */
-export function createGameDownLock(node, initialCompleted = false) {
+export function createDownLockGate(node, { id, initialCompleted = false }) {
 	let hasCompletedOnce = initialCompleted;
-	let downLocked = false;
+	let engaged = false;
 
 	/** @param {boolean} active */
 	function setDownLock(active) {
 		if (active && !hasCompletedOnce) {
-			if (!downLocked) {
-				downLocked = true;
-				lockScrollDown();
-				// Incolla la sezione al top, uccidendo l'eventuale overshoot di inerzia di Lenis
-				getLenis()?.scrollTo(node, { immediate: true, force: true });
+			if (!engaged) {
+				// anchor: incolla la sezione al top uccidendo l'overshoot di inerzia di Lenis —
+				// un solo scrollTo, all'acquire (mai su eventi successivi).
+				engaged = scrollLock.acquire(id, { mode: 'down', anchor: node });
 			}
-		} else if (downLocked) {
-			downLocked = false;
-			unlockScrollDown();
+		} else if (engaged) {
+			engaged = false;
+			scrollLock.release(id);
 		}
 	}
 

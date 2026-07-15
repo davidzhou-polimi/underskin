@@ -1,5 +1,6 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
 import { scrollX } from '$lib/stores/scrollX.svelte.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 /**
  * Azione Svelte per la sequenza orizzontale della sezione Burnout: la scritta gigante
@@ -21,7 +22,7 @@ export function burnoutScroll(node) {
 
 	const mm = gsap.matchMedia();
 
-	mm.add('(min-width: 769px)', () => {
+	mm.add(BREAKPOINT.desktop, () => {
 		/** @param {number} progress */
 		function apply(progress) {
 			const scrollMultiplier = 520;
@@ -54,16 +55,6 @@ export function burnoutScroll(node) {
 			});
 		}
 
-		/**
-		 * Il gradiente legge scrollX in unità viewport: progress * (px scrollati dalla sezione pinnata /
-		 * innerHeight). Così lo sfondo si muove della stessa quantità per schermata, indipendentemente
-		 * dalla lunghezza del contenitore.
-		 * @param {ScrollTrigger} self
-		 */
-		function syncGradient(self) {
-			scrollX.viewports = self.progress * (self.end - self.start) / window.innerHeight;
-		}
-
 		const trigger = ScrollTrigger.create({
 			trigger: node,
 			start: 'top top',
@@ -72,13 +63,14 @@ export function burnoutScroll(node) {
 			invalidateOnRefresh: true,
 			onUpdate: (self) => {
 				apply(self.progress);
-				syncGradient(self);
+				// Formula unica nello store: il gradiente legge scrollX in unità viewport
+				scrollX.syncFromTrigger(self);
 			}
 		});
 
 		// Stato iniziale coerente anche se il mount avviene a scroll già avvenuto (refresh/navigazione)
 		apply(trigger.progress);
-		syncGradient(trigger);
+		scrollX.syncFromTrigger(trigger);
 
 		return () => {
 			trigger.kill();

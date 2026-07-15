@@ -1,7 +1,12 @@
 /**
  * Singleton dello smooth-scroll Lenis condiviso tra actions e componenti non correlati.
- * Espone le helper di lock/unlock e scrollTo così che intro, quiz, navbar ecc. non
- * tocchino mai direttamente l'istanza creata dal layout.
+ *
+ * LIVELLO BASSO — le helper di lock/unlock qui sotto sono INTERNE: le sezioni e i giochi
+ * NON le importano più direttamente, passano dal ScrollLockManager
+ * (stores/scrollLock.svelte.js: owner singolo, modi 'down'/'full', stato veritiero).
+ * Eccezioni ammesse: gli overlay UI a schermo coperto (LoadingScreen, menu Navbar), che
+ * congelano la pagina fuori dal flusso di scrollytelling e convivono coi lock di sezione
+ * su meccanismi indipendenti (lenis.stop/classe vs listener capture).
  */
 
 /** @type {import('lenis').default | null} */

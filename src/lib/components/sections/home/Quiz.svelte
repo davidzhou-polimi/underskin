@@ -2,7 +2,8 @@
 	import { quizAnimation, animateQuizStep } from '$lib/actions/home/quizAnimation.js';
 	import { quizDragMobile } from '$lib/actions/home/quizDragMobile.js';
 	import { tooltip } from '$lib/stores/tooltipState.svelte.js';
-	import { lockScroll, unlockScroll, scrollTo, lockScrollDown, unlockScrollDown } from '$lib/stores/lenis.svelte.js';
+	import { scrollTo } from '$lib/stores/lenis.svelte.js';
+	import { scrollLock } from '$lib/stores/scrollLock.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import quoteIconSrc from '$lib/assets/quote-icon.svg';
 	import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
@@ -56,6 +57,7 @@
 
 	// Commento solo il PERCHÉ: il blocco scroll segue lo stato del quiz; canLeave apre il gate (uscita o ritorno
 	// all'intro). L'Observer (in quizAnimation) segue lo stesso stato via param observerEnabled.
+	// Stesso owner 'quiz' dell'action: acquire/release ripetuti sono idempotenti sul manager.
 	// Il cleanup sblocca allo smontaggio: navigare via mentre observerEnabled è true lascerebbe
 	// altrimenti Lenis stopped e la pagina successiva non scrollerebbe.
 	$effect(() => {
@@ -63,11 +65,11 @@
 		// quindi qui non interferiamo per non sovrapporre due sorgenti di blocco.
 		if (media.isMobile) return;
 		if (observerEnabled) {
-			lockScroll();
+			scrollLock.acquire('quiz', { mode: 'full' });
 		} else {
-			unlockScroll();
+			scrollLock.release('quiz');
 		}
-		return () => unlockScroll();
+		return () => scrollLock.release('quiz');
 	});
 
 	// Commento solo il PERCHÉ: svela l'indicatore di scroll con un breve delay nel primo step dei risultati,
@@ -153,8 +155,6 @@
 		aria-label="Quiz interattivo tra mente e fisico"
 		use:quizDragMobile={{
 			quizState,
-			lockScroll,
-			unlockScroll,
 			onStateChange: (s) => quizState = s
 		}}
 	>
@@ -202,10 +202,6 @@
 		use:quizAnimation={{
 			quizState,
 			observerEnabled,
-			lockScroll,
-			unlockScroll,
-			lockScrollDown,
-			unlockScrollDown,
 			onStateChange: (s) => quizState = s,
 			onStepChange: (step) => textStep = step,
 			onAdvance: advance,

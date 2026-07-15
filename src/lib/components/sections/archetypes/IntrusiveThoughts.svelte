@@ -1,7 +1,8 @@
 <script>
   import { draggableThought } from '$lib/actions/archetypes/draggableThought.js';
   import { thoughtsIntro } from '$lib/actions/archetypes/thoughtsIntro.js';
-  import { thoughtsStackReveal } from '$lib/actions/archetypes/thoughtsStackReveal.js';
+  import { scrollSection } from '$lib/actions/scrollytelling/scrollSection.js';
+  import { thoughtsConveyor } from '$lib/actions/archetypes/thoughtsStackReveal.js';
   import ScrollHint from '$lib/components/ui/ScrollHint.svelte';
   import { scrollHintAfterUnlock } from '$lib/utils/scrollHintAfterUnlock.js';
   import { fade } from 'svelte/transition';
@@ -80,8 +81,17 @@
 {#if media.isMobile}
   <!-- Commento solo il PERCHÉ: su mobile l'interazione drag-to-scatter non è adatta; il gioco
        diventa un reveal guidato dallo scroll (fumetti impilati e obliqui, poi la frase di chiusura),
-       senza lock direzionale. Markup e action dedicati, disgiunti dal percorso desktop. -->
-  <section class="favorite-section favorite-section-mobile" use:thoughtsStackReveal>
+       senza lock direzionale. Markup e action dedicati, disgiunti dal percorso desktop.
+       Pin override +=400%: con 'long' (250%) i 7 fumetti costavano ~0.36vh di scroll l'uno,
+       il tratto più denso del sito; a 400% (~0.57vh) il ritmo si allinea alle card archetipo. -->
+  <section
+    class="favorite-section favorite-section-mobile"
+    use:scrollSection={{
+      id: "thoughtsStack",
+      pin: { length: "+=400%", scrub: "auto" },
+      custom: thoughtsConveyor
+    }}
+  >
     <!-- Commento solo il PERCHÉ: la sezione è pinnata e questo wrapper viene traslato verso l'alto
          dall'action (finto scroll): la colonna resta ancorata nel viewport e si allunga mentre i
          fumetti si accendono, spingendo sopra i precedenti. -->

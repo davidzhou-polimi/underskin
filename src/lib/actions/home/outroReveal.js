@@ -1,4 +1,5 @@
 import { gsap, ScrollTrigger } from '$lib/utils/gsapSetup.js';
+import { BREAKPOINT } from '$lib/actions/scrollytelling/presets.js';
 
 /**
  * @typedef {{ target: number, lines: string[] }} OutroStage
@@ -21,7 +22,7 @@ export function outroReveal(node, params) {
 	// matchMedia crea/distrugge l'intero scrollytelling al variare del breakpoint.
 	const mm = gsap.matchMedia();
 
-	mm.add('(min-width: 769px)', () => {
+	mm.add(BREAKPOINT.desktop, () => {
 		const revealCircleEl = node.querySelector('.reveal-circle');
 		const percentageTextEl = node.querySelector('.circle-percentage');
 		const descriptionEls = node.querySelectorAll('.circle-description');
