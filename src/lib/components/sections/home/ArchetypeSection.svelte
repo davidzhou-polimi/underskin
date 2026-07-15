@@ -125,6 +125,8 @@
     }
 
     // ─── Touch Drag sulla barra dei Dot ────────────────────────────────────────
+    let dotsTouchRafId = 0;
+    let latestTouchX = 0;
 
     /** @param {TouchEvent} e */
     function handleDotsTouch(e) {
@@ -136,18 +138,28 @@
             e.preventDefault();
         }
 
-        const rect = dotsPillElement.getBoundingClientRect();
-        const touchX = e.touches[0].clientX;
+        latestTouchX = e.touches[0].clientX;
 
-        // Calcola la coordinata X relativa all'interno della barra (0-1)
-        const relativeX = Math.max(0, Math.min(1, (touchX - rect.left) / rect.width));
+        // ⚡ Bolt Optimization: Throttle getBoundingClientRect using requestAnimationFrame
+        // to avoid layout thrashing during the high-frequency touchmove event.
+        if (dotsTouchRafId) return;
 
-        // Determina l'indice più vicino ed esegui lo slide
-        const count = activeItems.length;
-        const targetIndex = Math.min(count - 1, Math.floor(relativeX * count));
-        if (targetIndex !== activeIndex) {
-            activeIndex = targetIndex;
-        }
+        dotsTouchRafId = requestAnimationFrame(() => {
+            dotsTouchRafId = 0;
+            if (!dotsPillElement) return;
+
+            const rect = dotsPillElement.getBoundingClientRect();
+
+            // Calcola la coordinata X relativa all'interno della barra (0-1)
+            const relativeX = Math.max(0, Math.min(1, (latestTouchX - rect.left) / rect.width));
+
+            // Determina l'indice più vicino ed esegui lo slide
+            const count = activeItems.length;
+            const targetIndex = Math.min(count - 1, Math.floor(relativeX * count));
+            if (targetIndex !== activeIndex) {
+                activeIndex = targetIndex;
+            }
+        });
     }
 </script>
 
