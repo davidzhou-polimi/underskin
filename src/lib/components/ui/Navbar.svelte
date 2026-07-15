@@ -7,6 +7,7 @@
 	import { getLenis, lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
 	import { media } from '$lib/stores/mediaQuery.svelte.js';
 	import { base } from '$app/paths';
+	import { relativePathname } from '$lib/utils/routePath.js';
 
 	/**
 	 * Scroll morbido via Lenis con fallback nativo (reduced-motion non istanzia Lenis).
@@ -63,7 +64,7 @@
 	// è governato dall'effect sul pathname più sotto.
 	$effect(() => {
 		if (!loadingState.complete || media.isMobile) return;
-		if (untrack(() => page.url.pathname) === '/') armIntroAutoHide();
+		if (relativePathname(untrack(() => page.url.pathname)) === '/') armIntroAutoHide();
 		else scheduleNavHide();
 	});
 
@@ -189,7 +190,7 @@
 	const handleNavClick = async (event, link) => {
 		event.preventDefault();
 		const currentPath = page.url.pathname;
-		const isHome = currentPath === '/';
+		const isHome = relativePathname(currentPath) === '/';
 
 		// Intercetta e gestisce lo scorrimento se l'utente si trova già nella pagina corretta,
 		// altrimenti esegue una navigazione client-side sicura tramite goto()
@@ -217,7 +218,7 @@
 	const handleLogoClick = async (e) => {
 		isMenuOpen = false; // Chiude il menu mobile se l'utente clicca sul logo
 		const currentPath = page.url.pathname;
-		if (currentPath === '/') {
+		if (relativePathname(currentPath) === '/') {
 			e.preventDefault();
 			smoothScrollTo('hero');
 		} else {
@@ -231,10 +232,10 @@
 	 * @returns {boolean}
 	 */
 	const getIsActive = (link) => {
-		// Commento solo il PERCHÉ: page.url.pathname non include il base path (SvelteKit lo rimuove),
-		// quindi confrontiamo rimuovendo il prefisso base da link.path prima del confronto.
+		// Commento solo il PERCHÉ: page.url.pathname include il base path, quindi normalizziamo
+		// entrambi i lati (pathname e link.path) rimuovendo il prefisso base prima del confronto.
 		const normalizedPath = link.path.startsWith(base) ? link.path.slice(base.length) || '/' : link.path;
-		return page.url.pathname === normalizedPath;
+		return relativePathname(page.url.pathname) === normalizedPath;
 	};
 
 	onMount(() => {

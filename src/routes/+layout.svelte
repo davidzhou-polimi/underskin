@@ -8,6 +8,10 @@
     import "modern-normalize/modern-normalize.css";
     import "$lib/styles/tokens.css";
     import favicon from "$lib/assets/favicon.svg";
+    // ?url: stesso URL fingerprintato + base-safe che Vite genera per l'@font-face → il preload
+    // combacia con la fetch reale (niente "preloaded but not used", niente path /static in dev).
+    import fontRegular from "$lib/assets/fonts/RethinkSans-VariableFont_wght.woff2?url";
+    import fontItalic from "$lib/assets/fonts/RethinkSans-Italic-VariableFont_wght.woff2?url";
     import { tooltip } from "$lib/stores/tooltipState.svelte.js";
     import { setLenis, getLenis } from "$lib/stores/lenis.svelte.js";
     import { scrollLock } from "$lib/stores/scrollLock.svelte.js";
@@ -23,6 +27,7 @@
     import ScrollLockDebug from "$lib/components/ui/ScrollLockDebug.svelte";
     import { snapshotScrollTriggers } from "$lib/utils/scrollDebug.js";
     import { PAGE_META, DEFAULT_META, SITE_ORIGIN } from '$lib/utils/metaData.js';
+    import { relativePathname } from '$lib/utils/routePath.js';
     import { page } from "$app/state";
 
     let { children } = $props();
@@ -163,7 +168,7 @@
         scrollLock.bumpGeneration();
         heroExit.run();
         navigationState.hasNavigated = true;
-        navigationState.fromHome = navigation.from?.url.pathname === '/';
+        navigationState.fromHome = navigation.from ? relativePathname(navigation.from.url.pathname) === '/' : false;
         // Arma il ritardo teatrale per la sola transizione di questo cambio pagina (dalla home la
         // pausa dopo l'uscita del titolo è più lunga); lo consuma transitionConfig al primo uso.
         navigationState.gradientDelay = navigationState.fromHome ? 0.6 : 0.3;
@@ -192,26 +197,39 @@
         requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
+    // Questi meta sono baked nell'HTML statico durante il prerender, dove `base` di $app/paths è
+    // VUOTO mentre page.url.pathname include comunque il sottopath di deploy (/underskin/about):
+    // relativePathname (che usa quel `base`) non striperebbe. Ricaviamo il base da SITE_ORIGIN
+    // (unica fonte del sottopath, cfr. AGENTS.md) → robusto sia in prerender sia a runtime.
+    const DEPLOY_BASE = new URL(SITE_ORIGIN).pathname.replace(/\/+$/, '');
+    let metaPath = $derived(
+        page.url.pathname.startsWith(DEPLOY_BASE)
+            ? page.url.pathname.slice(DEPLOY_BASE.length) || '/'
+            : page.url.pathname
+    );
     let meta = $derived(
         page.error
             ? DEFAULT_META
-            : (page.url.pathname in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (page.url.pathname)] : PAGE_META["/"])
+            : (metaPath in PAGE_META ? PAGE_META[/** @type {keyof typeof PAGE_META} */ (metaPath)] : PAGE_META["/"])
     );
 
     // Gli URL Open Graph devono essere assoluti: i crawler social non risolvono i path relativi.
-    // SITE_ORIGIN include già il base path (/underskin) → l'URL è completo e corretto anche in prerender.
-    // Durante il prerender page.url.pathname include il base (/underskin/about), quindi lo strip per evitare duplicazione.
-    const BASE_PATH = '/underskin';
+    // SITE_ORIGIN include già il base path (/underskin) → concatenando il pathname base-less
+    // l'URL è completo e corretto anche in prerender.
     const ogImageUrl = `${SITE_ORIGIN}/images/og/share.jpg`;
-    let ogUrl = $derived(
-        `${SITE_ORIGIN}${page.url.pathname.startsWith(BASE_PATH) ? page.url.pathname.slice(BASE_PATH.length) || '/' : page.url.pathname}`
-    );
+    let ogUrl = $derived(`${SITE_ORIGIN}${metaPath}`);
 </script>
 
 <svelte:head>
     <title>{meta.title}</title>
     <meta name="description" content={meta.description} />
     <link rel="icon" href={favicon} />
+
+    <!-- Regular usato dal primo paint. Italic: unico uso è il quote del quiz (display:none fino
+         al suo step), quindi senza preload il face parte on-demand allo scroll e fa swap; lo
+         precarichiamo in parallelo così il loader (che ora lo attende) aspetta al più ~48 KB. -->
+    <link rel="preload" href={fontRegular} as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href={fontItalic} as="font" type="font/woff2" crossorigin="anonymous" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />

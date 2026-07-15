@@ -16,6 +16,9 @@
     import { media } from '$lib/stores/mediaQuery.svelte.js';
     // Commento solo il PERCHÉ: Importa il componente UI del bottone riutilizzabile del brand.
     import Button from '$lib/components/ui/Button.svelte';
+    // Commento solo il PERCHÉ: i confronti di rotta devono essere base-aware, altrimenti sul deploy
+    // (base '/underskin') page.url.pathname non è mai '/' e la CTA non compare.
+    import { relativePathname } from '$lib/utils/routePath.js';
 
     /** @type {SVGTextElement | null} */
     let textEl = $state(null);
@@ -27,10 +30,11 @@
     // Commento solo il PERCHÉ: isCtaVisible governa dinamicamente entrata/uscita della CTA scroll-driven;
     // non è un flag one-shot, ma uno stato bidirezionale che segue la direzione dello scroll.
     let isCtaVisible = $state(false);
+    const relPath = $derived(relativePathname(page.url.pathname));
     // Commento solo il PERCHÉ: la CTA esiste nel DOM solo se siamo sulla homepage E su mobile;
     // su desktop il componente non viene montato, evitando timer e listener superflui.
-    const showCta = $derived(page.url.pathname === '/' && media.isMobile);
-    const isLogoClickable = $derived(page.url.pathname !== '/about' && !media.isMobile);
+    const showCta = $derived(relPath === '/' && media.isMobile);
+    const isLogoClickable = $derived(relPath !== '/about' && !media.isMobile);
 
     // Funzione per calcolare l'ingombro geometrico esatto dei glifi vettoriali
     function updateSvgViewBox() {

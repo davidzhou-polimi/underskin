@@ -5,6 +5,7 @@
 	import { loadingOrbit } from '$lib/actions/loadingOrbit.js';
 	import { loadingState } from '$lib/stores/loadingState.svelte.js';
 	import { lockScroll, unlockScroll } from '$lib/stores/lenis.svelte.js';
+	import { relativePathname } from '$lib/utils/routePath.js';
 
 	// Durata minima perché l'orbita si legga come intenzionale, e cap massimo di sicurezza
 	// (fallback se WebGL/font/rete restano appesi): oltre il cap si esce comunque.
@@ -50,7 +51,7 @@
 	// trascinare il loader fino al cap globale.
 	/** @param {number} [timeoutMs] */
 	function whenAboutImagesReady(timeoutMs = 4500) {
-		if (!page.url.pathname.startsWith('/about')) return Promise.resolve(undefined);
+		if (!relativePathname(page.url.pathname).startsWith('/about')) return Promise.resolve(undefined);
 		const imgs = Array.from(document.querySelectorAll('.team-member-image'));
 		if (imgs.length === 0) return Promise.resolve(undefined);
 		const decoded = Promise.all(

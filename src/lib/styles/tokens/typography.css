@@ -2,8 +2,9 @@
    i TTF sorgente restano in scripts/fonts per la generazione dell'immagine OG. */
 @font-face {
 	font-family: "Rethink Sans";
-	/* Path relativo a static/: Vite lo bundla con hash e gestisce il base path automaticamente */
-	src: url("../../../../static/fonts/RethinkSans-VariableFont_wght.woff2") format("woff2-variations");
+	/* Asset in src/lib/: Vite lo bundla con hash e applica il base path sia in dev sia in build.
+	   Un path che risalisse in static/ non è servibile in dev (403) → font solo nel fallback. */
+	src: url("../../assets/fonts/RethinkSans-VariableFont_wght.woff2") format("woff2-variations");
 	font-weight: 400 800;
 	font-style: normal;
 	font-display: swap;
@@ -11,8 +12,7 @@
 
 @font-face {
 	font-family: "Rethink Sans";
-	/* Path relativo a static/: Vite lo bundla con hash e gestisce il base path automaticamente */
-	src: url("../../../../static/fonts/RethinkSans-Italic-VariableFont_wght.woff2") format("woff2-variations");
+	src: url("../../assets/fonts/RethinkSans-Italic-VariableFont_wght.woff2") format("woff2-variations");
 	font-weight: 400 800;
 	font-style: italic;
 	font-display: swap;
